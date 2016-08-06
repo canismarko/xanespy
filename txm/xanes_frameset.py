@@ -2,20 +2,25 @@
 #
 # Copyright © 2016 Mark Wolf
 #
-# This file is part of scimap.
+# This file is part of Xanespy.
 #
-# Scimap is free software: you can redistribute it and/or modify
+# Xanespy is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
 #
-# Scimap is distributed in the hope that it will be useful,
+# Xanespy is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 #
 # You should have received a copy of the GNU General Public License
-# along with Scimap. If not, see <http://www.gnu.org/licenses/>.
+# along with Xanespy. If not, see <http://www.gnu.org/licenses/>.
+
+"""Class definitions for working with a whole stack of X-ray
+microscopy frames. Each frame is a micrograph at a different energy. A
+frameset then is a three-dimenional dataset with of dimenions (energy,
+row, column)."""
 
 import functools
 import warnings
@@ -43,8 +48,7 @@ from .frame import (
 from .plotter import FramesetPlotter, FramesetMoviePlotter
 from plots import new_axes, new_image_axes
 import exceptions
-import hdf
-import smp
+# import smp
 
 predefined.define_units()
 
@@ -245,17 +249,18 @@ class XanesFrameset():
     cmap = 'plasma'
 
     # HDF Attributes
-    hdf_default_scope = "frameset"
-    reference_group = hdf.Attr('reference_group', default="default")
-    latest_group = hdf.Attr('latest_group', default="default")
-    map_method = hdf.Attr('map_method', scope="subset")
-    map_name = hdf.Attr('map_name', scope="subset")
-    map_goodness_name = hdf.Attr('map_goodness_name', scope="subset")
-    default_representation = hdf.Attr('default_representation',
-                                  scope="subset",
-                                  default="modulus")
-    latest_group = hdf.Attr('latest_group', default="default")
-    map_method = hdf.Attr('map_method', scope="subset")
+    # TODO: These should be reimplement in a TXMStore object
+    # hdf_default_scope = "frameset"
+    # reference_group = hdf.Attr('reference_group', default="default")
+    # latest_group = hdf.Attr('latest_group', default="default")
+    # map_method = hdf.Attr('map_method', scope="subset")
+    # map_name = hdf.Attr('map_name', scope="subset")
+    # map_goodness_name = hdf.Attr('map_goodness_name', scope="subset")
+    # default_representation = hdf.Attr('default_representation',
+    #                               scope="subset",
+    #                               default="modulus")
+    # latest_group = hdf.Attr('latest_group', default="default")
+    # map_method = hdf.Attr('map_method', scope="subset")
 
     def __init__(self, filename, edge, groupname=None):
         self.hdf_filename = filename

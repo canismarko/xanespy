@@ -2,20 +2,20 @@
 #
 # Copyright © 2016 Mark Wolf
 #
-# This file is part of scimap.
+# This file is part of Xanespy.
 #
-# Scimap is free software: you can redistribute it and/or modify
+# Xanespy is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
 #
-# Scimap is distributed in the hope that it will be useful,
+# Xanespy is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 #
 # You should have received a copy of the GNU General Public License
-# along with Scimap. If not, see <http://www.gnu.org/licenses/>.
+# along with Xanespy. If not, see <http://www.gnu.org/licenses/>.
 
 from collections import namedtuple, OrderedDict
 import os
@@ -36,7 +36,6 @@ from units import unit, predefined
 
 import exceptions
 import plots
-import hdf
 from utilities import xycoord, Pixel, shape, component
 from .particle import Particle
 
@@ -148,22 +147,24 @@ class TXMFrame():
 
     # HDF Attributes
     hdf_default_scope = "frame"
-    energy = hdf.Attr(key='energy')
-    approximate_energy = hdf.Attr('approximate_energy', default=0.0)
-    _starttime = hdf.Attr('starttime')
-    _endtime = hdf.Attr('endtime')
-    _pixel_size_value = hdf.Attr(key="pixel_size_value", default=1)
-    _pixel_size_unit = hdf.Attr(key="pixel_size_unit",  default="px")
-    position_unit = hdf.Attr(key="position_unit", default="m", wrapper=unit)
-    relative_position = hdf.Attr(key="relative_position",
-                                  default=position(0, 0, 0),
-                                  wrapper=lambda coords: position(*coords))
-    sample_position = hdf.Attr(key="sample_position",
-                                 default=(0, 0, 0),
-                                 wrapper=lambda coords: position(*coords))
-    original_filename = hdf.Attr('original_filename')
-    particle_labels_path = hdf.Attr(key="particle_labels_path")
-    active_particle_idx = hdf.Attr(key="active_particle_idx")
+
+    # TODO: These should be reimplement as a TXMStore object
+    # energy = hdf.Attr(key='energy')
+    # approximate_energy = hdf.Attr('approximate_energy', default=0.0)
+    # _starttime = hdf.Attr('starttime')
+    # _endtime = hdf.Attr('endtime')
+    # _pixel_size_value = hdf.Attr(key="pixel_size_value", default=1)
+    # _pixel_size_unit = hdf.Attr(key="pixel_size_unit",  default="px")
+    # position_unit = hdf.Attr(key="position_unit", default="m", wrapper=unit)
+    # relative_position = hdf.Attr(key="relative_position",
+    #                               default=position(0, 0, 0),
+    #                               wrapper=lambda coords: position(*coords))
+    # sample_position = hdf.Attr(key="sample_position",
+    #                              default=(0, 0, 0),
+    #                              wrapper=lambda coords: position(*coords))
+    # original_filename = hdf.Attr('original_filename')
+    # particle_labels_path = hdf.Attr(key="particle_labels_path")
+    # active_particle_idx = hdf.Attr(key="active_particle_idx")
 
     def __init__(self, frameset=None, groupname=None):
         self.frameset = frameset

@@ -2,20 +2,20 @@
 #
 # Copyright © 2016 Mark Wolf
 #
-# This file is part of scimap.
+# This file is part of Xanespy.
 #
-# Scimap is free software: you can redistribute it and/or modify
+# Xanespy is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
 #
-# Scimap is distributed in the hope that it will be useful,
+# Xanespy is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 #
 # You should have received a copy of the GNU General Public License
-# along with Scimap. If not, see <http://www.gnu.org/licenses/>.
+# along with Xanespy. If not, see <http://www.gnu.org/licenses/>.
 
 import os
 import h5py
@@ -29,12 +29,11 @@ import numpy as np
 from PIL import Image
 from scipy.constants import physical_constants
 
-import hdf
 import default_units
 from .xradia import XRMFile, decode_ssrl_params, decode_aps_params
 from .xanes_frameset import XanesFrameset, PtychoFrameset, energy_key
 from .frame import TXMFrame, remove_outliers
-from utilities import prog
+from utilities import prog, prepare_hdf_group
 import exceptions
 
 
@@ -88,7 +87,7 @@ def import_ptychography_frameset(directory: str,
     # modulus_dir = os.path.join(tiff_dir, "modulus")
     # stxm_dir = os.path.join(tiff_dir, "modulus")
     # Prepare the HDF5 file and metadata
-    hdf_group = hdf.prepare_hdf_group(filename=hdf_filename,
+    hdf_group = prepare_hdf_group(filename=hdf_filename,
                                    groupname=hdf_groupname,
                                    dirname=directory)
     hdf_group.attrs["scimap_version"] = CURRENT_VERSION
@@ -241,7 +240,7 @@ def import_ssrl_frameset(directory, hdf_filename=None):
                                                     list(references.keys())))
     # Go through each sample and import
     for sample_name, sample in samples.items():
-        sample_group = hdf.prepare_hdf_group(filename=hdf_filename,
+        sample_group = prepare_hdf_group(filename=hdf_filename,
                                           groupname=sample_name,
                                           dirname=directory)
         imported = sample_group.create_group("imported")
@@ -326,7 +325,7 @@ def import_aps_8BM_frameset(directory, hdf_filename=None):
     # Determine sample name from first file
     metadata = decode_aps_params(files[0])
     # Create HDF groups
-    sample_group = hdf.prepare_hdf_group(filename=hdf_filename,
+    sample_group = prepare_hdf_group(filename=hdf_filename,
                                       groupname=metadata['sample_name'],
                                       dirname=directory)
     ref_name = "reference"
