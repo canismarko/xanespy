@@ -17,4 +17,10 @@
 # You should have received a copy of the GNU General Public License
 # along with Xanespy.  If not, see <http://www.gnu.org/licenses/>.
 
-import exceptions
+import sys
+import os
+
+# Make sure this directory is in python path for imports
+sys.path.append(os.path.dirname(__file__))
+
+from . import exceptions

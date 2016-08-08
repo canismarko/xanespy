@@ -27,6 +27,7 @@ import sys
 
 from tqdm import tqdm
 import numpy as np
+import h5py
 
 xycoord = namedtuple('xycoord', ('x', 'y'))
 Pixel = namedtuple('Pixel', ('vertical', 'horizontal'))
@@ -72,6 +73,7 @@ class Prog:
             kwargs['leave'] = kwargs.get('leave', True)
             ret = tqdm(iterable, *args, **kwargs)
         return ret
+
 
 prog = Prog()
 

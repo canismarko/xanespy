@@ -26,13 +26,10 @@ import warnings
 
 import numpy as np
 from scipy import optimize
-# import pandas as pd
 from pandas import Series
 
-# from . import exceptions
 import exceptions
 import plots
-# import plots
 
 # How strongly to penalize negative peak heights, etc
 BASE_PENALTY = 300

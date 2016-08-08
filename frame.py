@@ -37,7 +37,7 @@ from units import unit, predefined
 import exceptions
 import plots
 from utilities import xycoord, Pixel, shape, component
-from .particle import Particle
+from particle import Particle
 
 predefined.define_units()
 position = namedtuple('position', ('x', 'y', 'z'))

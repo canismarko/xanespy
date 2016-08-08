@@ -41,7 +41,7 @@ from sklearn.utils import validation
 from units import unit, predefined
 
 from utilities import prog, xycoord, Pixel, shape, component
-from peakfitting import Peak
+from .peakfitting import Peak
 from .frame import (
     TXMFrame, PtychoFrame, calculate_particle_labels, pixel_to_xy,
     apply_reference, position)

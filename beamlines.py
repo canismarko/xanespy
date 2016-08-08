@@ -26,8 +26,8 @@ import os
 
 import numpy as np
 
-from xas.edges import KEdge
-from .frame import position
+from edges import KEdge
+from frame import position
 
 ZoneplatePoint = namedtuple('ZoneplatePoint', ('x', 'y', 'z', 'energy'))
 DetectorPoint = namedtuple('DetectorPoint', ('z', 'energy'))

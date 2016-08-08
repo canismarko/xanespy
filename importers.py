@@ -200,14 +200,15 @@ def _average_ssrl_files(files):
     return response
 
 
-def import_ssrl_frameset(directory, hdf_filename=None):
+def import_ssrl_frameset(directory, hdf_filename=None, quiet=False):
     """Import all files in the given directory collected at SSRL beamline
     6-2c and process into framesets. Images are assumed to full-field
     transmission X-ray micrographs and repetitions will be averaged.
     """
+    prog.quiet = quiet
     # Prepare list of dataframes to be imported
     samples = {}
-    references = {}
+    reference_files = {}
     start_time = time()
     total_files = 0 # Counter for progress meter
     curr_file = 0
@@ -221,9 +222,9 @@ def import_ssrl_frameset(directory, hdf_filename=None):
             name, extension = os.path.splitext(filename)
             if extension in format_classes.keys():
                 metadata = decode_ssrl_params(filename)
-                framesetname = metadata['sample_name'] + "rep" + str(metadata['repetition']) + "_" + metadata['position_name']
+                framesetname = metadata['sample_name'] + "_rep" + str(metadata['repetition']) + "_" + metadata['position_name']
                 if metadata['is_background']:
-                    root = references
+                    root = reference_files
                 else:
                     root = samples
                 energies = root.get(framesetname, {})
@@ -234,47 +235,31 @@ def import_ssrl_frameset(directory, hdf_filename=None):
                 energies[metadata['energy']] = replicates
                 total_files += 1
     # Check that in the ssrl flavor, each sample has a reference set
-    if not samples.keys() == references.keys():
+    if not samples.keys() == reference_files.keys():
         msg = "SSRL data should have 1-to-1 sample to reference: {} and {}"
         raise exceptions.DataFormatError(msg.format(list(samples.keys()),
-                                                    list(references.keys())))
+                                                    list(reference_files.keys())))
     # Go through each sample and import
     for sample_name, sample in samples.items():
-        sample_group = prepare_hdf_group(filename=hdf_filename,
-                                          groupname=sample_name,
-                                          dirname=directory)
-        imported = sample_group.create_group("imported")
-        imported.attrs['default_representation'] = 'image_data'
-        imported.attrs['parent'] = ""
-        reference = sample_group.create_group("reference")
-        reference.attrs['default_representation'] = 'image_data'
-        reference.attrs['parent'] = ""
-        absorbance = sample_group.create_group("reference_corrected")
-        absorbance.attrs['default_representation'] = 'image_data'
-        absorbance.attrs['parent'] = imported.name
-        sample_group.attrs['latest_group'] = absorbance.name
+        # Empty arrays for holding results of importing
+        intensities, references, absorbances = [], [], []
+        energies, positions, filenames = [], [], []
+        starttimes, endtimes = [], []
+        pixel_sizes = []
         # Average data for each energy
         for energy in sample:
-            intensity = _average_ssrl_files(sample[energy])
-            key = energy_key.format(float(energy))
-            intensity_group = imported.create_group(key)
-            intensity_group.create_dataset(name="image_data",
-                                           data=intensity.data,
-                                           compression="gzip")
-            # Set some metadata attributes
-            intensity_group.attrs['starttime'] = intensity.starttime.isoformat()
-            intensity_group.attrs['endtime'] = intensity.endtime.isoformat()
+            averaged_I = _average_ssrl_files(sample[energy])
+            intensities.append(averaged_I.data)
+            starttimes.append(averaged_I.starttime.isoformat())
+            endtimes.append(averaged_I.endtime.isoformat())
             file1 = sample[energy][0]
             name, extension = os.path.splitext(file1)
             Importer = format_classes[extension]
             with Importer(file1, flavor='ssrl') as first_file:
-                intensity_group.attrs['pixel_size_value'] = first_file.um_per_pixel()
-                intensity_group.attrs['pixel_size_unit'] = 'um'
-                actual_energy = first_file.energy()
-                intensity_group.attrs['energy'] = actual_energy
-                intensity_group.attrs['approximate_energy'] = round(actual_energy, 1)
-                intensity_group.attrs['sample_position'] = first_file.sample_position()
-                intensity_group.attrs['original_filename'] = file1
+                pixel_sizes.append(first_file.um_per_pixel())
+                energies.append(first_file.energy())
+                positions.append(first_file.sample_position())
+                filenames.append(file1)
             # Increment counter
             curr_file += len(sample[energy])
             # Display progress meter
@@ -285,23 +270,13 @@ def import_ssrl_frameset(directory, hdf_filename=None):
                                            prefix="Importing frames: ")
                 print("\r", status, end='')
             # Average reference frames
-            ref = _average_ssrl_files(references[sample_name][energy])
-            ref_group = reference.create_group(key)
-            ref_group.create_dataset(name="image_data",
-                                     data=ref.data,
-                                     compression="gzip")
+            averaged_ref = _average_ssrl_files(reference_files[sample_name][energy])
+            references.append(averaged_ref.data)
             # Apply reference correction to get absorbance data
-            abs_data = np.log(ref.data / intensity.data)
-            abs_group = absorbance.create_group(key)
-            abs_group.create_dataset(name="image_data",
-                                     data=abs_data,
-                                     compression="gzip")
-            # Copy attrs
-            for key in intensity_group.attrs.keys():
-                ref_group.attrs[key] = intensity_group.attrs[key]
-                abs_group.attrs[key] = intensity_group.attrs[key]
+            abs_data = np.log(averaged_ref.data / averaged_I.data)
+            absorbances.append(abs_data)
             # Increment counter
-            curr_file += len(references[sample_name][energy])
+            curr_file += len(reference_files[sample_name][energy])
             # Display progress meter
             if not prog.quiet:
                 status = tqdm.format_meter(n=curr_file,
@@ -309,6 +284,32 @@ def import_ssrl_frameset(directory, hdf_filename=None):
                                            elapsed=time() - start_time,
                                            prefix="Importing frames: ")
                 print("\r", status, end='')
+        # Save data to HDF5 file
+        sample_group = prepare_hdf_group(filename=hdf_filename,
+                                         groupname=sample_name,
+                                         dirname=directory)
+        print(sample_group.name)
+        store = TXMStore(hdf_filename=hdf_filename,
+                         groupname=sample_group.name,
+                         mode='r+')
+        def save_data(name, data, dtype=None):
+            # Sort by energy
+            data = [d for (E, d) in sorted(zip(energies, data), key=lambda x: x[0])]
+            # Save as new HDF5 dataset
+            sample_group.create_dataset(name=name,
+                                        data=np.array(data, dtype=dtype),
+                                        dtype=dtype)
+        save_data('intensities', data=intensities)
+        save_data('references', data=references)
+        save_data('absorbances', data=absorbances)
+        save_data('pixel_sizes', data=pixel_sizes)
+        sample_group['pixel_sizes'].attrs['unit'] = 'um'
+        save_data('energies', data=energies)
+        save_data('starttimes', data=starttimes, dtype="S32")
+        save_data('endtimes', data=endtimes, dtype="S32")
+        save_data('filenames', data=filenames, dtype="S100")
+        save_data('positions', data=positions)
+        sample_group['positions'].attrs['order'] = "(energy, (x, y, z))"
         sample_group.file.close()
     if not prog.quiet:
         print()  # Blank line to avoid over-writing status message
