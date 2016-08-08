@@ -24,10 +24,12 @@ row, column)."""
 
 import functools
 import warnings
-from typing import Callable, Union
+from typing import Callable
 import math
 from collections import namedtuple
 import os
+import pyximport; pyximport.install()
+from xanes_calculations import transform_images
 
 import pandas as pd
 from matplotlib import cm, pyplot
@@ -35,20 +37,20 @@ from matplotlib.colors import Normalize
 from scipy import linalg
 import h5py
 import numpy as np
-from skimage import morphology, filters, feature, transform, exposure, color
+from skimage import morphology, filters, feature, transform, color
 from sklearn import linear_model
 from sklearn.utils import validation
 from units import unit, predefined
 
 from utilities import prog, xycoord, Pixel, shape, component
-from .peakfitting import Peak
-from .frame import (
+from frame import (
     TXMFrame, PtychoFrame, calculate_particle_labels, pixel_to_xy,
     apply_reference, position)
-from .plotter import FramesetPlotter, FramesetMoviePlotter
+from txmstore import TXMStore
+from plotter import FramesetPlotter, FramesetMoviePlotter
 from plots import new_axes, new_image_axes
 import exceptions
-# import smp
+import smp
 
 predefined.define_units()
 
@@ -61,7 +63,6 @@ def build_series(frames):
     images = [frame.image_data for frame in frames]
     series = pd.Series(images, index=energies)
     return series
-
 
 def merge_framesets(framesets, group="merged"):
     """Combine two set of frame data into one. No energy should be
@@ -265,27 +266,28 @@ class XanesFrameset():
     def __init__(self, filename, edge, groupname=None):
         self.hdf_filename = filename
         self.edge = edge
+        self.groupname = groupname
         # Check to make sure a valid group is given
-        if filename:
-            with self.hdf_file() as hdf_file:
-                # Detect the groupname if only 1 top-level group exists
-                if groupname is None:
-                    if len(hdf_file.keys()) == 1:
-                        new_path = os.path.join("/", list(hdf_file.keys())[0])
-                        self.frameset_group = new_path
-                    else:
-                        msg = "Multiple groups found, please pass `groupname`. "
-                        msg += "Choices are {}".format(list(hdf_file.keys()))
-                        raise exceptions.GroupKeyError(msg)
-                elif groupname not in hdf_file.keys():
-                    # Group not found at top-level in hdf file
-                    msg = "'{}' does not exist. Choices are {}"
-                    msg = msg.format(groupname, list(hdf_file.keys()))
-                    raise exceptions.GroupKeyError(msg)
-                else:
-                    # Valid group, save for later
-                    self.frameset_group = os.path.join("/", groupname)
-            self.active_group = self.latest_group
+        # if filename:
+        #     with self.hdf_file() as hdf_file:
+        #         # Detect the groupname if only 1 top-level group exists
+        #         if groupname is None:
+        #             if len(hdf_file.keys()) == 1:
+        #                 new_path = os.path.join("/", list(hdf_file.keys())[0])
+        #                 self.frameset_group = new_path
+        #             else:
+        #                 msg = "Multiple groups found, please pass `groupname`. "
+        #                 msg += "Choices are {}".format(list(hdf_file.keys()))
+        #                 raise exceptions.GroupKeyError(msg)
+        #         elif groupname not in hdf_file.keys():
+        #             # Group not found at top-level in hdf file
+        #             msg = "'{}' does not exist. Choices are {}"
+        #             msg = msg.format(groupname, list(hdf_file.keys()))
+        #             raise exceptions.GroupKeyError(msg)
+        #         else:
+        #             # Valid group, save for later
+        #             self.frameset_group = os.path.join("/", groupname)
+        # self.active_group = self.latest_group
 
     def __repr__(self):
         s = "<{cls} '{filename}'>"
@@ -331,6 +333,16 @@ class XanesFrameset():
                              energy_key.format(float(energy)))
         frame = self.FrameClass(frameset=self, groupname=group)
         return frame
+
+    def store(self, mode='r'):
+        """Get a TXM Store object that saves and retrieves data from the HDF5
+        file. The mode argument is passed to h5py as is. This method
+        should be used as a context manager, especially if mode is
+        something writeable:
+            with self.store() as store:
+        """
+        return TXMStore(hdf_filename=self.hdf_filename,
+                        groupname=self.groupname, mode=mode)
 
     def save_images(self, directory):
         """Save a series of TIF's of the individual frames in `directory`."""
@@ -492,6 +504,7 @@ class XanesFrameset():
                 frame.image_data.resize(new_data.shape)
             frame.image_data.write_direct(new_data)
 
+    @profile
     def correct_magnification(self):
         """Correct for changes in magnification at different energies.
 
@@ -502,40 +515,53 @@ class XanesFrameset():
         frame. Some beamlines correct for this automatically during
         acquisition: APS 8-BM-B
         """
-        ref_pixel_size = self[0].pixel_size
+        # Current implementation assumes the last two numpy axes are
+        # image dimenions (rows and columns)
+        with self.store() as store:
+            # Determine magnificantion for each frame based on the first one
+            pixel_sizes = store.pixel_sizes
+            magnifications = pixel_sizes[0] / pixel_sizes
+            # Determine translation to get images centered
+            datashape = store.absorbances.shape[:-2]
+            imshape = store.absorbances.shape[-2:]
+            mag2 = magnifications.reshape(*datashape, 1).repeat(2, axis=-1)
+            translations = (1-mag2) * imshape / 2
+            new = transform_images(store.absorbances,
+                             translations=translations,
+                             scales=magnifications)
         # Prepare multiprocessing objects
-        def worker(payload):
-            key = payload['key']
-            energy = payload['energy']
-            data = payload['data']
-            # Determine degree of magnification required
-            px_unit = unit(payload['pixel_size_unit'])
-            pixel_size = px_unit(payload['pixel_size_value'])
-            magnification = ref_pixel_size / pixel_size
-            original_shape = xycoord(x=data.shape[1], y=data.shape[0])
-            # Expand the image by magnification degree and re-center
-            translation = xycoord(
-                x=original_shape.x / 2 * (1 - magnification),
-                y=original_shape.y / 2 * (1 - magnification),
-            )
-            transformation = transform.SimilarityTransform(
-                scale=magnification,
-                translation=translation
-            )
-            # Apply the transformation
-            new_data = transform.warp(data, transformation, order=3)
-            result = {
-                'key': key,
-                'energy': energy,
-                'data': new_data,
-                'pixel_size_value': ref_pixel_size.num,
-                'pixel_size_unit': str(ref_pixel_size.unit),
-            }
-            return result
-        # Launch multiprocessing queue
-        process_with_smp(frameset=self,
-                         worker=worker,
-                         description="Correcting magnification")
+        # def worker(payload):
+        #     key = payload['key']
+        #     energy = payload['energy']
+        #     data = payload['data']
+        #     # Determine degree of magnification required
+        #     px_unit = unit(payload['pixel_size_unit'])
+        #     pixel_size = px_unit(payload['pixel_size_value'])
+        #     magnification = ref_pixel_size / pixel_size
+        #     original_shape = xycoord(x=data.shape[1], y=data.shape[0])
+        #     # Expand the image by magnification degree and re-center
+        #     translation = xycoord(
+        #         x=original_shape.x / 2 * (1 - magnification),
+        #         y=original_shape.y / 2 * (1 - magnification),
+        #     )
+        #     transformation = transform.SimilarityTransform(
+        #         scale=magnification,
+        #         translation=translation
+        #     )
+        #     # Apply the transformation
+        #     new_data = transform.warp(data, transformation, order=3)
+        #     result = {
+        #         'key': key,
+        #         'energy': energy,
+        #         'data': new_data,
+        #         'pixel_size_value': ref_pixel_size.num,
+        #         'pixel_size_unit': str(ref_pixel_size.unit),
+        #     }
+        #     return result
+        # # Launch multiprocessing queue
+        # process_with_smp(frameset=self,
+        #                  worker=worker,
+        #                  description="Correcting magnification")
 
     def apply_translation(self, shift_func, new_name,
                           description="Applying translation"):
@@ -1638,13 +1664,13 @@ class XanesFrameset():
         whiteline = calculate_whiteline(spectrum, edge=self.edge())
         return whiteline
 
-    def fit_whiteline(self, width=4):
-        """Calculate the energy corresponding to the whiteline (maximum
-        absorbance) for the whole frame using gaussian peak fitting.
-        """
-        spectrum = self.xanes_spectrum(edge_jump_filter=True)
-        peak, goodness = fit_whiteline(spectrum, width=width)
-        return peak
+    # def fit_whiteline(self, width=4):
+    #     """Calculate the energy corresponding to the whiteline (maximum
+    #     absorbance) for the whole frame using gaussian peak fitting.
+    #     """
+    #     spectrum = self.xanes_spectrum(edge_jump_filter=True)
+    #     peak, goodness = fit_whiteline(spectrum, width=width)
+    #     return peak
 
     def hdf_file(self, mode='r'):
         """Return an open h5py.File object for this (any maybe other) frameset.

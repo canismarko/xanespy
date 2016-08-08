@@ -34,7 +34,7 @@ except (TypeError, ImportError):
 from utilities import component
 import exceptions
 import plots
-from .animation import FrameAnimation
+from animation import FrameAnimation
 
 
 class FramesetPlotter():

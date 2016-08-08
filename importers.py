@@ -24,15 +24,14 @@ from time import time
 from collections import namedtuple
 
 from tqdm import tqdm
-import pandas as pd
 import numpy as np
 from PIL import Image
 from scipy.constants import physical_constants
 
-import default_units
-from .xradia import XRMFile, decode_ssrl_params, decode_aps_params
-from .xanes_frameset import XanesFrameset, PtychoFrameset, energy_key
-from .frame import TXMFrame, remove_outliers
+from xradia import XRMFile, decode_ssrl_params, decode_aps_params
+from xanes_frameset import XanesFrameset, energy_key
+from frame import remove_outliers
+from txmstore import TXMStore
 from utilities import prog, prepare_hdf_group
 import exceptions
 
@@ -222,7 +221,11 @@ def import_ssrl_frameset(directory, hdf_filename=None, quiet=False):
             name, extension = os.path.splitext(filename)
             if extension in format_classes.keys():
                 metadata = decode_ssrl_params(filename)
-                framesetname = metadata['sample_name'] + "_rep" + str(metadata['repetition']) + "_" + metadata['position_name']
+                framesetname = "{name}_rep{rep}"
+                framesetname = framesetname.format(name=metadata['sample_name'],
+                                                   rep=str(metadata['repetition']))
+                if metadata['position_name']:
+                    framesetname += "_" + metadata['position_name']
                 if metadata['is_background']:
                     root = reference_files
                 else:
@@ -288,26 +291,25 @@ def import_ssrl_frameset(directory, hdf_filename=None, quiet=False):
         sample_group = prepare_hdf_group(filename=hdf_filename,
                                          groupname=sample_name,
                                          dirname=directory)
-        print(sample_group.name)
         store = TXMStore(hdf_filename=hdf_filename,
                          groupname=sample_group.name,
                          mode='r+')
-        def save_data(name, data, dtype=None):
+        def save_data(name, data):
             # Sort by energy
             data = [d for (E, d) in sorted(zip(energies, data), key=lambda x: x[0])]
             # Save as new HDF5 dataset
-            sample_group.create_dataset(name=name,
-                                        data=np.array(data, dtype=dtype),
-                                        dtype=dtype)
+            setattr(store, name, data)
+            # sample_group.create_dataset(name=name,
+            #                             data=np.array(data, dtype=dtype),
+            #                             dtype=dtype)
         save_data('intensities', data=intensities)
         save_data('references', data=references)
         save_data('absorbances', data=absorbances)
         save_data('pixel_sizes', data=pixel_sizes)
         sample_group['pixel_sizes'].attrs['unit'] = 'um'
         save_data('energies', data=energies)
-        save_data('starttimes', data=starttimes, dtype="S32")
-        save_data('endtimes', data=endtimes, dtype="S32")
-        save_data('filenames', data=filenames, dtype="S100")
+        save_data('timestamps', data=zip(starttimes, endtimes))
+        save_data('filenames', data=filenames)
         save_data('positions', data=positions)
         sample_group['positions'].attrs['order'] = "(energy, (x, y, z))"
         sample_group.file.close()
