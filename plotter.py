@@ -23,7 +23,6 @@ from matplotlib import figure, pyplot, cm, animation
 from matplotlib.gridspec import GridSpec
 from matplotlib.cm import get_cmap
 from matplotlib.colors import BoundaryNorm, Normalize
-# from matplotlib.backends.backend_gtk import FigureCanvasGTK
 import numpy as np
 # May not import if not installed
 try:
@@ -358,10 +357,13 @@ class GtkFramesetPlotter(FramesetPlotter):
         image_spec = gridspec.new_subplotspec((0, 0), rowspan=2)
         self.image_ax = self.frame_figure.add_subplot(image_spec)
         plots.set_outside_ticks(self.image_ax)
+        plots.remove_extra_spines(self.image_ax)
         xanes_spec = gridspec.new_subplotspec((0, 1))
         self.xanes_ax = self.frame_figure.add_subplot(xanes_spec)
+        plots.remove_extra_spines(self.xanes_ax)
         edge_spec = gridspec.new_subplotspec((1, 1))
         self.edge_ax = self.frame_figure.add_subplot(edge_spec)
+        plots.remove_extra_spines(self.edge_ax)
 
         # Create mapping axes
         map_spec = gridspec.new_subplotspec((0, 0), rowspan=2)

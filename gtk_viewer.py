@@ -18,11 +18,7 @@
 # along with Xanespy. If not, see <http://www.gnu.org/licenses/>.
 
 import os
-import threading
-import time
-from collections import namedtuple
 
-import numpy as np
 import gi
 from gi.repository import Gtk, Gdk, GObject, GLib
 

@@ -221,12 +221,12 @@ def magnification_correction(frames, pixel_sizes):
     - pixel_sizes : Numpy array of pixel sizes corresponding to
     entries in `frames`.
     """
-    magnifications = pixel_sizes[0] / pixel_sizes
+    scales = pixel_sizes / np.max(pixel_sizes)
     datashape = frames.shape[:-2]
-    imshape = frames.shape[-2:]
-    mag2 = magnifications.reshape(*datashape, 1).repeat(2, axis=-1)
-    translations = (1-mag2) * imshape / 2
-    return (magnifications, translations)
+    imshape = np.array(frames.shape[-2:])
+    scales2D = scales.reshape(*datashape, 1).repeat(2, axis=-1)
+    translations = (imshape-1) * (1-scales2D) / 2
+    return (scales, translations)
 
 def import_ssrl_frameset(directory, hdf_filename=None, quiet=False):
 
@@ -321,14 +321,11 @@ def import_ssrl_frameset(directory, hdf_filename=None, quiet=False):
         absorbances = np.array(absorbances)
         pixel_sizes = np.array(pixel_sizes)
         # Correct magnification changes due to zone-plate movement
-        magnifications = pixel_sizes[0] / pixel_sizes
-        datashape = absorbances.shape[:-2]
-        imshape = absorbances.shape[-2:]
-        mag2 = magnifications.reshape(*datashape, 1).repeat(2, axis=-1)
-        translations = (1-mag2) * imshape / 2
+        scales, translations = magnification_correction(frames=absorbances,
+                                                        pixel_sizes=pixel_sizes)
         transform_images(absorbances, translations=translations,
-                         scales=magnifications, out=absorbances)
-        pixel_sizes[:] = pixel_sizes[0]
+                         scales=scales, out=absorbances)
+        pixel_sizes[:] = np.max(pixel_sizes)
         # Save data to HDF5 file
         sample_group = prepare_hdf_group(filename=hdf_filename,
                                          groupname=sample_name,
