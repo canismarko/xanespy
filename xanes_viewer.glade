@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- Generated with glade 3.19.0 -->
+<!-- Generated with glade 3.20.0 -->
 <interface>
   <requires lib="gtk+" version="3.16"/>
   <object class="GtkAdjustment" id="CurrentFrame">
@@ -270,7 +270,6 @@
     <property name="title" translatable="yes">XANES Frameset Viewer</property>
     <property name="icon">frames-icon.png</property>
     <signal name="delete-event" handler="gtk-quit" swapped="no"/>
-    <signal name="key-release-event" handler="key-release-main" swapped="no"/>
     <child>
       <object class="GtkPaned" id="Panes">
         <property name="visible">True</property>

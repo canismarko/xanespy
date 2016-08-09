@@ -36,12 +36,10 @@ from units import unit, predefined
 
 import exceptions
 import plots
-from utilities import xycoord, Pixel, shape, component
+from utilities import xycoord, Pixel, shape, component, Extent
 from particle import Particle
 
 predefined.define_units()
-position = namedtuple('position', ('x', 'y', 'z'))
-Extent = namedtuple('extent', ('left', 'right', 'bottom', 'top'))
 
 
 def remove_outliers(data, sigma):

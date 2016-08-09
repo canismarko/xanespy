@@ -45,8 +45,12 @@ class FramesetPlotter():
     map_cmap = "plasma"
     active_representation = "modulus" # Default will be used unless changed
 
-    def __init__(self, frameset, map_ax=None, goodness_ax=None):
+    def __init__(self, frameset, map_ax=None, goodness_ax=None, im_ax=None):
         self.map_ax = map_ax
+        if im_ax is None:
+            self.im_ax = plots.new_image_axes()
+        else:
+            self.im_ax = im_ax
         self.goodness_ax = goodness_ax
         self.frameset = frameset
 
@@ -66,7 +70,8 @@ class FramesetPlotter():
 
     def map_normalizer(self, norm_range=None):
         cmap = cm.get_cmap(self.map_cmap)
-        norm = self.frameset.edge().map_normalizer(method=self.frameset.map_method)
+        norm = self.frameset.edge().map_normalizer()
+        # norm = self.frameset.edge().map_normalizer(method=self.frameset.map_method)
         # edge = self.frameset.edge()
         # energies = edge.energies_in_range(norm_range=norm_range)
         # if self.frameset.map_method == "direct":
@@ -160,6 +165,9 @@ class FramesetPlotter():
     def plot_xanes_spectrum(self, *args, **kwargs):
         self.xanes_scatter = self.frameset.plot_xanes_spectrum(ax=self.xanes_ax,
                                                                *args, **kwargs)
+
+    def plot_image(self, data, cmap="gray"):
+        self.im_ax.imshow(data, cmap=cmap, origin="lower")
 
     def set_title(self, title):
         self.map_ax.set_title(title)
@@ -381,7 +389,6 @@ class GtkFramesetPlotter(FramesetPlotter):
     def refresh_artists(self):
         """Prepare artist objects for each frame and animate them for easy
         transitioning."""
-        all_artists = []
         self.plot_xanes_spectrum()
         # Get image artists
         self.image_ax.clear()
@@ -398,48 +405,57 @@ class GtkFramesetPlotter(FramesetPlotter):
                 pass
         # Prepare individual frame artists
         norm = self.frameset.image_normalizer(representation=self.active_representation)
-        for frame in self.frameset:
-            frame_artist = frame.plot_image(
-                ax=self.image_ax,
-                show_particles=False,
-                representation=self.active_representation,
-                norm=norm,
-                animated=True
-            )
-            frame_artist.set_visible(False)
-            # Get Xanes highlight artists
-            energy = frame.energy
-            intensity = spectrum[energy]
-            xanes_artists = self.xanes_ax.plot([energy], [intensity], 'ro',
-                                               animated=True)
-            xanes_artists += self.edge_ax.plot([energy], [intensity], 'ro',
-                                               animated=True)
-            [a.set_visible(False) for a in xanes_artists]
-            # xanes_artists.append(xanes_artist[0])
-            if self.show_particles:
-                # Get particle labels artists
-                particle_artists = frame.plot_particle_labels(
-                    ax=self.image_ax,
-                    extent=frame.extent(),
-                    animated=True
-                )
-                [a.set_visible(False) for a in particle_artists]
-            else:
-                particle_artists = []
-                    # Draw cross-hairs on the map if there's an active pixel
-            if self.active_xy:
-                # Draw cross-hairs on the image axes
-                xline = self.image_ax.axvline(x=self.active_xy.x,
-                                              color='red', linestyle="--",
-                                              animated=True, zorder=10)
-                yline = self.image_ax.axhline(y=self.active_xy.y,
-                                              color='red', linestyle="--",
-                                              animated=True, zorder=10)
-                crosshairs = [xline, yline]
-            else:
-                crosshairs = []
-        #    all_artists.append((frame_artist, *xanes_artists, *particle_artists,
-        #                       *crosshairs))
+        frame_artists = []
+        with self.frameset.store() as store:
+            extent = self.frameset.extent()
+            norm = Normalize(np.min(store.absorbances),
+                             np.max(store.absorbances))
+            for img in store.absorbances.value:
+                artist = self.image_ax.imshow(img, origin='lower',
+                                              animated=True, cmap="gray",
+                                              extent=extent,
+                                              norm=norm)
+                artist.set_visible(False)
+                frame_artists.append(artist)
+        # Prepare XANES highlighting artists
+        xanes_artists = []
+        spectrum = self.frameset.xanes_spectrum()
+        for energy in spectrum.index:
+            artists = self.xanes_ax.plot([energy], [spectrum[energy]],
+                                         'ro', animated=True)
+            artists += self.edge_ax.plot([energy], [spectrum[energy]],
+                                         'ro', animated=True)
+            [a.set_visible(False) for a in artists]
+            xanes_artists.append(artists)
+        #     if self.show_particles:
+        #         # Get particle labels artists
+        #         particle_artists = frame.plot_particle_labels(
+        #             ax=self.image_ax,
+        #             extent=frame.extent(),
+        #             animated=True
+        #         )
+        #         [a.set_visible(False) for a in particle_artists]
+        #     else:
+        #         particle_artists = []
+        #             # Draw cross-hairs on the map if there's an active pixel
+        #     if self.active_xy:
+        #         # Draw cross-hairs on the image axes
+        #         xline = self.image_ax.axvline(x=self.active_xy.x,
+        #                                       color='red', linestyle="--",
+        #                                       animated=True, zorder=10)
+        #         yline = self.image_ax.axhline(y=self.active_xy.y,
+        #                                       color='red', linestyle="--",
+        #                                       animated=True, zorder=10)
+        #         crosshairs = [xline, yline]
+        #     else:
+        #         crosshairs = []
+                # all_artists.append((frame_artist, *xanes_artists,
+                #                     *particle_artists, *crosshairs))
+        # Combined into a 2-D list of artists
+        all_artists = []
+        for frm, xas in zip(frame_artists, xanes_artists):
+            all_artists.append((frm, *xas,))
+        # Add artists to the animation object
         self.frame_animation.artists = all_artists
         self.frame_canvas.draw()
         return all_artists

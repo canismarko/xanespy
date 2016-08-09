@@ -26,9 +26,9 @@ import numpy as np
 import gi
 from gi.repository import Gtk, Gdk, GObject, GLib
 
-from utilities import xycoord
-from .frame import Pixel, xy_to_pixel, pixel_to_xy
-from .plotter import GtkFramesetPlotter
+from utilities import xycoord, position, shape
+from frame import Pixel, xy_to_pixel, pixel_to_xy
+from plotter import GtkFramesetPlotter
 
 
 gi.require_version('Gtk', '3.0')
@@ -102,6 +102,8 @@ class GtkTxmViewer():
         self.plotter = plotter
         self.plotter.create_axes()
         self.frameset = frameset
+        with self.frameset.store() as store:
+            self.energies = store.energies.value
         self.builder = Gtk.Builder()
         # Load the GUI from a glade file
         gladefile = os.path.join(os.path.dirname(__file__),
@@ -120,53 +122,52 @@ class GtkTxmViewer():
         switch.set_active(self.show_map_background)
         # Set some initial values
         self.current_adj = self.builder.get_object('CurrentFrame')
-        self.current_adj.set_property('upper', len(self.frameset) - 1)
+        self.current_adj.set_property('upper', len(self.energies) - 1)
         # Prepare the tree of different subsets
-        with self.frameset.hdf_file(mode='r') as f:
-            parent_group = f[self.frameset.frameset_group]
-            groups = []
-            node = namedtuple('node', ('name', 'display', 'path', 'parent'))
-            for key in parent_group.keys():
-                group = parent_group[key]
-                display = " ".join(
-                    [word.capitalize() for word in key.split("_")]
-                )
-                groups.append(node(name=key,
-                                   display=display,
-                                   path=group.name,
-                                   parent=group.attrs.get('parent', None)))
+        # with self.frameset.hdf_file(mode='r') as f:
+        #     groups = []
+        #     node = namedtuple('node', ('name', 'display', 'path', 'parent'))
+        #     for key in parent_group.keys():
+        #         group = parent_group[key]
+        #         display = " ".join(
+        #             [word.capitalize() for word in key.split("_")]
+        #         )
+        #         groups.append(node(name=key,
+        #                            display=display,
+        #                            path=group.name,
+        #                            parent=group.attrs.get('parent', None)))
         # Remove non-frameset nodes
-        treestore = Gtk.TreeStore(str, str)
-        groups = [g for g in groups if g.parent is not None]
-        top_level = [g for g in groups if g.parent == ""]
-        active_iters = []
-        def add_node(parent_iter, node):
-            new_iter = treestore.append(parent_iter, (node.display, node.name))
-            # Check if this group should be selected
-            if node.path == self.frameset.active_group:
-                active_iters.append(new_iter)
-            groups.pop(groups.index(node))
-            # Resursive function that builds the tree
-            children = [g for g in groups if g.parent == node.path]
-            for child in children:
-                add_node(parent_iter=new_iter, node=child)
-        # Start at the top and build the tree recursively
-        for node in top_level:
-            add_node(parent_iter=None, node=node)
-        treeview = self.builder.get_object("FramesetTreeView")
-        treeview.set_model(treestore)
-        columns = ["display"]
-        for i in range(0, len(columns)):
-            cell = Gtk.CellRendererText()
-            col = Gtk.TreeViewColumn(columns[i], cell, text=i)
-            treeview.append_column(col)
-        if active_iters:
-            # Set current active group
-            active_iter = active_iters[0]
-            active_path = treestore.get_path(active_iter)
-            selection = treeview.get_selection()
-            treeview.expand_to_path(active_path)
-            selection.select_path(active_path)
+        # treestore = Gtk.TreeStore(str, str)
+        # groups = [g for g in groups if g.parent is not None]
+        # top_level = [g for g in groups if g.parent == ""]
+        # active_iters = []
+        # def add_node(parent_iter, node):
+        #     new_iter = treestore.append(parent_iter, (node.display, node.name))
+        #     # Check if this group should be selected
+        #     if node.path == self.frameset.active_group:
+        #         active_iters.append(new_iter)
+        #     groups.pop(groups.index(node))
+        #     # Resursive function that builds the tree
+        #     children = [g for g in groups if g.parent == node.path]
+        #     for child in children:
+        #         add_node(parent_iter=new_iter, node=child)
+        # # Start at the top and build the tree recursively
+        # for node in top_level:
+        #     add_node(parent_iter=None, node=node)
+        # treeview = self.builder.get_object("FramesetTreeView")
+        # treeview.set_model(treestore)
+        # columns = ["display"]
+        # for i in range(0, len(columns)):
+        #     cell = Gtk.CellRendererText()
+        #     col = Gtk.TreeViewColumn(columns[i], cell, text=i)
+        #     treeview.append_column(col)
+        # if active_iters:
+        #     # Set current active group
+        #     active_iter = active_iters[0]
+        #     active_path = treestore.get_path(active_iter)
+        #     selection = treeview.get_selection()
+        #     treeview.expand_to_path(active_path)
+        #     selection.select_path(active_path)
         # Put the non-glade things in the window
         self.plotter.plot_xanes_spectrum()
         # Populate the combobox with list of available representations
@@ -179,13 +180,13 @@ class GtkTxmViewer():
             )
             rep_iter = self.rep_list.append([uppercase, rep])
             # Save active group for later initialization
-            if rep == self.frameset.default_representation:
-                active_rep = rep_iter
+            # if rep == self.frameset.default_representation:
+            #     active_rep = rep_iter
         if self.frameset.is_background():
             self.active_group = bg_iter
         self.rep_combo.set_model(self.rep_list)
-        if active_rep:
-            self.rep_combo.set_active_iter(active_rep)
+        # if active_rep:
+        #     self.rep_combo.set_active_iter(active_rep)
         # Set event handlers
         both_windows = [self.window, self.map_window]
         handlers = {
@@ -199,7 +200,7 @@ class GtkTxmViewer():
                                        windows=[self.window]),
             'last-frame': self.last_frame,
             'first-frame': self.first_frame,
-            'key-release-main': self.key_pressed_main,
+            # 'key-release-main': self.key_pressed_main,
             'key-release-map': WatchCursor(self.navigate_map,
                                            windows=[self.map_window]),
             'toggle-particles': WatchCursor(self.toggle_particles,
@@ -294,33 +295,33 @@ class GtkTxmViewer():
         GLib.idle_add(self.update_map_window)
 
     def update_current_location(self, event):
-        x_label = self.builder.get_object('XCursorLabel')
-        y_label = self.builder.get_object('YCursorLabel')
-        v_label = self.builder.get_object('VCursorLabel')
-        h_label = self.builder.get_object('HCursorLabel')
-        I_label = self.builder.get_object('ICursorLabel')
-        frame = self.current_frame()
-        if event.inaxes == self.plotter.image_ax:
-            # Convert xy position to pixel values
-            xy = xycoord(x=round(event.xdata, 1), y=round(event.ydata, 1))
-            pixel = xy_to_pixel(xy, extent=self.frameset.extent(),
-                                shape=self.frameset.map_shape())
-            x_label.set_text(str(xy.x))
-            y_label.set_text(str(xy.y))
-            v_label.set_text(str(pixel.vertical))
-            h_label.set_text(str(pixel.horizontal))
-            row = np.clip(pixel.vertical, 0, frame.image_data.shape[0]-1)
-            col = np.clip(pixel.horizontal, 0, frame.image_data.shape[1]-1)
-            value = frame.image_data[row][col]
-            I_label.set_text(str(round(value, 4)))
-        else:
-            # Set all the cursor labels to blank values
-            s = "--"
-            x_label.set_text(s)
-            y_label.set_text(s)
-            v_label.set_text(s)
-            h_label.set_text(s)
-            I_label.set_text(s)
+        print('fix gtk_viewer.update_current_location')
+        # x_label = self.builder.get_object('XCursorLabel')
+        # y_label = self.builder.get_object('YCursorLabel')
+        # v_label = self.builder.get_object('VCursorLabel')
+        # h_label = self.builder.get_object('HCursorLabel')
+        # I_label = self.builder.get_object('ICursorLabel')
+        # if event.inaxes == self.plotter.image_ax:
+        #     # Convert xy position to pixel values
+        #     xy = xycoord(x=round(event.xdata, 1), y=round(event.ydata, 1))
+        #     pixel = xy_to_pixel(xy, extent=self.frameset.extent(),
+        #                         shape=self.frameset.map_shape())
+        #     x_label.set_text(str(xy.x))
+        #     y_label.set_text(str(xy.y))
+        #     v_label.set_text(str(pixel.vertical))
+        #     h_label.set_text(str(pixel.horizontal))
+        #     row = np.clip(pixel.vertical, 0, frame.image_data.shape[0]-1)
+        #     col = np.clip(pixel.horizontal, 0, frame.image_data.shape[1]-1)
+        #     value = frame.image_data[row][col]
+        #     I_label.set_text(str(round(value, 4)))
+        # else:
+        #     # Set all the cursor labels to blank values
+        #     s = "--"
+        #     x_label.set_text(s)
+        #     y_label.set_text(s)
+        #     v_label.set_text(s)
+        #     h_label.set_text(s)
+        #     I_label.set_text(s)
 
     def draw_map_plots(self):
         self.plotter.draw_map(show_map=self.show_map,
@@ -425,24 +426,24 @@ class GtkTxmViewer():
         self.update_window()
 
     def last_frame(self, widget):
-        self.current_idx = len(self.frameset) - 1
+        self.current_idx = len(self.energies) - 1
         self.update_window()
 
     def previous_frame(self, widget=None):
         """Go to the next frame in the sequence (or wrap around if at the
         end).
         """
-        self.current_idx = (self.current_idx - 1) % len(self.frameset)
+        self.current_idx = (self.current_idx - 1) % len(self.energies)
         self.update_window()
 
     def max_frame(self, widget=None):
         """Find the frame with the highest intensity and active it"""
-        spectrum = self.frameset.xanes_spectrum()
+        spectrum = self.frameset.spectrum()
         self.current_idx = spectrum.values.argmax()
         self.update_window()
 
     def next_frame(self, widget=None):
-        self.current_idx = (self.current_idx + 1) % len(self.frameset)
+        self.current_idx = (self.current_idx + 1) % len(self.energies)
         self.update_window()
         if self.play_mode:
             keep_going = True
@@ -465,33 +466,38 @@ class GtkTxmViewer():
 
     def update_window(self, widget=None):
         def change_gui():
-            current_frame = self.current_frame()
+            # Get data from frameset data store
+            with self.frameset.store() as store:
+                energy = store.energies[self.current_idx]
+                pos = position(*store.original_positions[self.current_idx])
+                imshape = shape(*store.absorbances[self.current_idx].shape)
             # Set labels on the sidepanel
             energy_label = self.builder.get_object('EnergyLabel')
-            energy_label.set_text(str(current_frame.energy))
+            energy_label.set_text(str(energy))
             x_label = self.builder.get_object('XPosLabel')
-            x_label.set_text(str(current_frame.sample_position.x))
+            x_label.set_text(str(pos.x))
             y_label = self.builder.get_object('YPosLabel')
-            y_label.set_text(str(current_frame.sample_position.y))
+            y_label.set_text(str(pos.y))
             z_label = self.builder.get_object('ZPosLabel')
-            z_label.set_text(str(current_frame.sample_position.z))
-            particle_label = self.builder.get_object('ActiveParticleLabel')
-            particle_label.set_text(str(current_frame.active_particle_idx))
+            z_label.set_text(str(pos.z))
+            # particle_label = self.builder.get_object('ActiveParticleLabel')
+            # particle_label.set_text(str(current_frame.active_particle_idx))
             shape_label = self.builder.get_object('ShapeLabel')
-            shape_label.set_text(str(current_frame.image_data.shape))
+            shape_label.set_text(str(imshape))
             norm_label = self.builder.get_object('NormLabel')
-            norm = self.frameset.image_normalizer(self.plotter.active_representation)
-            norm_text = '[{}, {}]'.format(
-                round(norm.vmin, 2),
-                round(norm.vmax, 2)
-            )
-            norm_label.set_text(norm_text)
+            # norm = self.frameset.image_normalizer(self.plotter.active_representation)
+            # norm_text = '[{}, {}]'.format(
+            #     round(norm.vmin, 2),
+            #     round(norm.vmax, 2)
+            # )
+            # norm_label.set_text(norm_text)
+            norm_label.set_text("Fix me")
             # Check if the "show map" button should be active
             map_btn = self.builder.get_object("ShowMapButton")
-            if self.frameset.map_name:
-                map_btn.set_sensitive(True)
-            else:
-                map_btn.set_sensitive(False)
+            # if self.frameset.map_name:
+            #     map_btn.set_sensitive(True)
+            # else:
+            #     map_btn.set_sensitive(False)
         GLib.idle_add(change_gui)
 
     def progress_modal(self, objs, operation='Working'):
@@ -515,11 +521,8 @@ class GtkTxmViewer():
         Gtk.main()
         Gtk.main_quit()
 
-    def current_image(self):
-        return self.images[self.current_idx]
-
-    def current_frame(self):
-        return self.frameset[self.current_idx]
+    # def current_image(self):
+    #     return self.images[self.current_idx]
 
 
 class FrameChangeSource():

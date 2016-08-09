@@ -35,6 +35,9 @@ from txmstore import TXMStore
 from utilities import prog, prepare_hdf_group
 import exceptions
 
+import pyximport; pyximport.install()
+from xanes_calculations import transform_images
+
 
 format_classes = {
     '.xrm': XRMFile
@@ -199,7 +202,34 @@ def _average_ssrl_files(files):
     return response
 
 
+def magnification_correction(frames, pixel_sizes):
+    """Correct for changes in magnification at different energies.
+
+    As the X-ray energy increases, the focal length of the zone plate
+    changes and so the image is zoomed-out at higher energies. This
+    method applies a correction to each frame to make the
+    magnification similar to that of the first frame. Some beamlines
+    correct for this automatically during acquisition: APS 8-BM-B
+
+    Returns a 2-tuple of (scale, translation) arrays. Each array has
+    the same length as `frames`.
+
+    Arguments
+    ---------
+    - frames : Numpy array of image frames that need to be corrected.
+
+    - pixel_sizes : Numpy array of pixel sizes corresponding to
+    entries in `frames`.
+    """
+    magnifications = pixel_sizes[0] / pixel_sizes
+    datashape = frames.shape[:-2]
+    imshape = frames.shape[-2:]
+    mag2 = magnifications.reshape(*datashape, 1).repeat(2, axis=-1)
+    translations = (1-mag2) * imshape / 2
+    return (magnifications, translations)
+
 def import_ssrl_frameset(directory, hdf_filename=None, quiet=False):
+
     """Import all files in the given directory collected at SSRL beamline
     6-2c and process into framesets. Images are assumed to full-field
     transmission X-ray micrographs and repetitions will be averaged.
@@ -287,6 +317,18 @@ def import_ssrl_frameset(directory, hdf_filename=None, quiet=False):
                                            elapsed=time() - start_time,
                                            prefix="Importing frames: ")
                 print("\r", status, end='')
+        # Convert data to numpy arrays
+        absorbances = np.array(absorbances)
+        pixel_sizes = np.array(pixel_sizes)
+        # Correct magnification changes due to zone-plate movement
+        magnifications = pixel_sizes[0] / pixel_sizes
+        datashape = absorbances.shape[:-2]
+        imshape = absorbances.shape[-2:]
+        mag2 = magnifications.reshape(*datashape, 1).repeat(2, axis=-1)
+        translations = (1-mag2) * imshape / 2
+        transform_images(absorbances, translations=translations,
+                         scales=magnifications, out=absorbances)
+        pixel_sizes[:] = pixel_sizes[0]
         # Save data to HDF5 file
         sample_group = prepare_hdf_group(filename=hdf_filename,
                                          groupname=sample_name,
@@ -299,23 +341,21 @@ def import_ssrl_frameset(directory, hdf_filename=None, quiet=False):
             data = [d for (E, d) in sorted(zip(energies, data), key=lambda x: x[0])]
             # Save as new HDF5 dataset
             setattr(store, name, data)
-            # sample_group.create_dataset(name=name,
-            #                             data=np.array(data, dtype=dtype),
-            #                             dtype=dtype)
         save_data('intensities', data=intensities)
         save_data('references', data=references)
         save_data('absorbances', data=absorbances)
         save_data('pixel_sizes', data=pixel_sizes)
-        sample_group['pixel_sizes'].attrs['unit'] = 'um'
+        sample_group['pixel_sizes'].attrs['unit'] = 'µm'
         save_data('energies', data=energies)
         save_data('timestamps', data=zip(starttimes, endtimes))
         save_data('filenames', data=filenames)
-        save_data('positions', data=positions)
-        sample_group['positions'].attrs['order'] = "(energy, (x, y, z))"
+        save_data('original_positions', data=positions)
+        sample_group['original_positions'].attrs['order'] = "(energy, (x, y, z))"
+        # Convert to relative positions
+        save_data('relative_positions', data=np.zeros_like(positions))
+        sample_group['relative_positions'].attrs['order'] = "(energy, (x, y, z))"
+        # All done, clean up
         sample_group.file.close()
-    if not prog.quiet:
-        print()  # Blank line to avoid over-writing status message
-        print("Remember to run XanesFrameset.correct_magnification()")
 
 
 def import_aps_8BM_frameset(directory, hdf_filename=None):

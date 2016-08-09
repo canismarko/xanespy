@@ -142,7 +142,7 @@ class KEdge(Edge):
         # Perform fitting
         peak = Peak(method="gaussian")
         peak.vertical_offset = vertical_offset
-        peak.fit(data=normed_subset)
+        peak.fit(x=normed_subset.index, y=normed_subset.values)
         # Save results
         self.whiteline_peak = peak
         goodness = peak.goodness(subset)

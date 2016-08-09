@@ -14,6 +14,12 @@ def transform_images(data, translations=None, rotations=None,
         out = np.zeros_like(data)
     # Loop through the images and apply each transformation
     for imidx in range(data.shape[0]):
+        scale = scales[imidx] if scales is not None else None
+        print(scale)
+        translation = translations[imidx] if translations is not None else None
+        print(translation)
+        rot = rotations[imidx] if rotations is not None else None
+        print(rot)
         transformation = transform.SimilarityTransform(
             scale=scales[imidx] if scales is not None else None,
             translation=translations[imidx] if translations is not None else None,

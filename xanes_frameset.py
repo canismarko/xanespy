@@ -28,8 +28,6 @@ from typing import Callable
 import math
 from collections import namedtuple
 import os
-import pyximport; pyximport.install()
-from xanes_calculations import transform_images
 
 import pandas as pd
 from matplotlib import cm, pyplot
@@ -42,15 +40,18 @@ from sklearn import linear_model
 from sklearn.utils import validation
 from units import unit, predefined
 
-from utilities import prog, xycoord, Pixel, shape, component
+from utilities import prog, xycoord, Pixel, shape, component, position, Extent
 from frame import (
     TXMFrame, PtychoFrame, calculate_particle_labels, pixel_to_xy,
-    apply_reference, position)
+    apply_reference)
 from txmstore import TXMStore
 from plotter import FramesetPlotter, FramesetMoviePlotter
 from plots import new_axes, new_image_axes
 import exceptions
 import smp
+
+import pyximport; pyximport.install()
+from xanes_calculations import transform_images
 
 predefined.define_units()
 
@@ -305,34 +306,34 @@ class XanesFrameset():
                     keys.append(group)
         return keys
 
-    def __iter__(self):
-        """Get each frame from the HDF5 file"""
-        energies = self.energies()
-        for E in energies:
-            frame_group = os.path.join(self.active_group, energy_key.format(E))
-            yield self.FrameClass(frameset=self, groupname=frame_group)
+    # def __iter__(self):
+    #     """Get each frame from the HDF5 file"""
+    #     energies = self.energies()
+    #     for E in energies:
+    #         frame_group = os.path.join(self.active_group, energy_key.format(E))
+    #         yield self.FrameClass(frameset=self, groupname=frame_group)
 
-    def __len__(self):
-        return len(self.energies())
+    # def __len__(self):
+    #     return len(self.energies())
 
-    def __getitem__(self, index):
-        """Retrieve the given item. If index is a float, it is assumed to be
-        the energy of the scan in eV, otherwise it will be treated like a
-        normal index."""
-        if isinstance(index, float):
-            # Floats are considered to be scan energies
-            energy = round(index, 2)
-            # Check that the energy is a valid option
-            if energy not in self.energies():
-                raise KeyError(energy)
-        else:
-            # Get energy from index
-            energies = self.energies()
-            energy = energies[index]
-        group = os.path.join(self.active_group,
-                             energy_key.format(float(energy)))
-        frame = self.FrameClass(frameset=self, groupname=group)
-        return frame
+    # def __getitem__(self, index):
+    #     """Retrieve the given item. If index is a float, it is assumed to be
+    #     the energy of the scan in eV, otherwise it will be treated like a
+    #     normal index."""
+    #     if isinstance(index, float):
+    #         # Floats are considered to be scan energies
+    #         energy = round(index, 2)
+    #         # Check that the energy is a valid option
+    #         if energy not in self.energies():
+    #             raise KeyError(energy)
+    #     else:
+    #         # Get energy from index
+    #         energies = self.energies()
+    #         energy = energies[index]
+    #     group = os.path.join(self.active_group,
+    #                          energy_key.format(float(energy)))
+    #     frame = self.FrameClass(frameset=self, groupname=group)
+    #     return frame
 
     def store(self, mode='r'):
         """Get a TXM Store object that saves and retrieves data from the HDF5
@@ -398,8 +399,9 @@ class XanesFrameset():
 
     def representations(self):
         """Retrieve a list of valid representations for these data."""
-        with self.hdf_file() as f:
-            reps = list(f[self[0].frame_group].keys())
+        # with self.hdf_file() as f:
+        #     reps = list(f[self[0].frame_group].keys())
+        reps = ['modulus']
         return reps
 
     def switch_group(self, name=""):
@@ -504,7 +506,6 @@ class XanesFrameset():
                 frame.image_data.resize(new_data.shape)
             frame.image_data.write_direct(new_data)
 
-    @profile
     def correct_magnification(self):
         """Correct for changes in magnification at different energies.
 
@@ -515,53 +516,22 @@ class XanesFrameset():
         frame. Some beamlines correct for this automatically during
         acquisition: APS 8-BM-B
         """
+        warnings.warn(UserError("Mag correction done during import"))
         # Current implementation assumes the last two numpy axes are
         # image dimenions (rows and columns)
-        with self.store() as store:
-            # Determine magnificantion for each frame based on the first one
-            pixel_sizes = store.pixel_sizes
-            magnifications = pixel_sizes[0] / pixel_sizes
-            # Determine translation to get images centered
-            datashape = store.absorbances.shape[:-2]
-            imshape = store.absorbances.shape[-2:]
-            mag2 = magnifications.reshape(*datashape, 1).repeat(2, axis=-1)
-            translations = (1-mag2) * imshape / 2
-            new = transform_images(store.absorbances,
-                             translations=translations,
-                             scales=magnifications)
-        # Prepare multiprocessing objects
-        # def worker(payload):
-        #     key = payload['key']
-        #     energy = payload['energy']
-        #     data = payload['data']
-        #     # Determine degree of magnification required
-        #     px_unit = unit(payload['pixel_size_unit'])
-        #     pixel_size = px_unit(payload['pixel_size_value'])
-        #     magnification = ref_pixel_size / pixel_size
-        #     original_shape = xycoord(x=data.shape[1], y=data.shape[0])
-        #     # Expand the image by magnification degree and re-center
-        #     translation = xycoord(
-        #         x=original_shape.x / 2 * (1 - magnification),
-        #         y=original_shape.y / 2 * (1 - magnification),
-        #     )
-        #     transformation = transform.SimilarityTransform(
-        #         scale=magnification,
-        #         translation=translation
-        #     )
-        #     # Apply the transformation
-        #     new_data = transform.warp(data, transformation, order=3)
-        #     result = {
-        #         'key': key,
-        #         'energy': energy,
-        #         'data': new_data,
-        #         'pixel_size_value': ref_pixel_size.num,
-        #         'pixel_size_unit': str(ref_pixel_size.unit),
-        #     }
-        #     return result
-        # # Launch multiprocessing queue
-        # process_with_smp(frameset=self,
-        #                  worker=worker,
-        #                  description="Correcting magnification")
+        # with self.store(mode='r+') as store:
+        #     # Determine magnificantion for each frame based on the first one
+        #     pixel_sizes = store.pixel_sizes
+        #     magnifications = pixel_sizes[0] / pixel_sizes
+        #     # Determine translation to get images centered
+        #     datashape = store.absorbances.shape[:-2]
+        #     imshape = store.absorbances.shape[-2:]
+        #     mag2 = magnifications.reshape(*datashape, 1).repeat(2, axis=-1)
+        #     translations = (1-mag2) * imshape / 2
+        #     new = transform_images(store.absorbances,
+        #                      translations=translations,
+        #                            scales=magnifications,
+        #                            out=store.absorbances)
 
     def apply_translation(self, shift_func, new_name,
                           description="Applying translation"):
@@ -1292,8 +1262,11 @@ class XanesFrameset():
         median_frame = np.median(frames, axis=0)
         return median_frame
 
-    @functools.lru_cache()
-    def xanes_spectrum(self, pixel=None, edge_jump_filter="",
+    def xanes_spectrum(self, *args, **kwargs):
+        warnings.warn(UserWarning('use spectrum()'))
+        return self.spectrum(*args, **kwargs)
+
+    def spectrum(self, pixel=None, edge_jump_filter="",
                        representation="modulus"):
         """Collapse the dataset down to a two-dimensional spectrum. Returns a
         pandas series containing the resulting spectrum.
@@ -1309,33 +1282,37 @@ class XanesFrameset():
             is logically not-ted and calculated with a more
             conservative threshold.
         """
-        energies = []
-        intensities = []
-        # Calculate masks if necessary
-        if edge_jump_filter == "inverse":
-            mask = ~self.edge_jump_mask(sensitivity=0.4)
-        elif edge_jump_filter:
-            mask = self.edge_jump_mask()
-        # Determine the contribution from each energy frame
-        for frame in self:
-            data = frame.get_data(name=representation)
-            # Determine which subset of pixels to use
-            if pixel is not None:
-                 # Specific pixel is requested
-                intensity = data[pixel.vertical][pixel.horizontal]
-            elif edge_jump_filter:
-                masked_data = np.ma.array(data, mask=mask)
-                # Average absorbances for datasets
-                intensity = np.sum(masked_data) / np.sum(masked_data.mask)
-            else:
-                masked_data = data
-                # Sum absorbances for datasets
-                intensity = np.sum(data) / np.prod(data.shape)
-            # Add to cumulative arrays
-            intensities.append(intensity)
-            energies.append(frame.energy)
-        # Combine into a series
-        series = pd.Series(intensities, index=energies)
+        # energies = []
+        # intensities = []
+        # # Calculate masks if necessary
+        # if edge_jump_filter == "inverse":
+        #     mask = ~self.edge_jump_mask(sensitivity=0.4)
+        # elif edge_jump_filter:
+        #     mask = self.edge_jump_mask()
+        # # Determine the contribution from each energy frame
+        # for frame in self:
+        #     data = frame.get_data(name=representation)
+        #     # Determine which subset of pixels to use
+        #     if pixel is not None:
+        #          # Specific pixel is requested
+        #         intensity = data[pixel.vertical][pixel.horizontal]
+        #     elif edge_jump_filter:
+        #         masked_data = np.ma.array(data, mask=mask)
+        #         # Average absorbances for datasets
+        #         intensity = np.sum(masked_data) / np.sum(masked_data.mask)
+        #     else:
+        #         masked_data = data
+        #         # Sum absorbances for datasets
+        #         intensity = np.sum(data) / np.prod(data.shape)
+        #     # Add to cumulative arrays
+        #     intensities.append(intensity)
+        #     energies.append(frame.energy)
+        # Retrieve data
+        with self.store() as store:
+            energies = store.energies
+            intensities = np.mean(store.absorbances, axis=(1, 2))
+            # Combine into a series
+            series = pd.Series(intensities, index=energies)
         return series
 
     def plot_xanes_spectrum(self, ax=None, pixel=None,
@@ -1557,9 +1534,64 @@ class XanesFrameset():
     def map_shape(self):
         return self[0].image_data.shape
 
-    def extent(self):
-        """Determine physical dimensions for axes values."""
-        return self[0].extent()
+    def extent(self, idx=0):
+        """Determine physical dimensions for axes values.
+
+        Returns: If idx was given, a single tuple of (left, right,
+        bottom, up).
+
+        Arguments
+        ---------
+
+        -idx : Index for a given frame. This allows for faster
+         calculation if only a single frame is required.
+
+        """
+        with self.store() as store:
+            if idx is not None:
+                # Filter to only the requested frame
+                imshape = np.array(store.absorbances[idx].shape) # (rows, cols)
+                pixel_size = store.pixel_sizes[idx]
+                center = store.relative_positions[idx]
+            else:
+                # Include all frames
+                imshape = np.array(store.absorbances.shape)[-2:] # ((rows, cols))
+                pixel_size = store.pixel_sizes.value
+                center = store.relative_positions.value
+        width = imshape[-1] * pixel_size
+        height = imshape[-2] * pixel_size
+        # Calculate boundaries from image shapes
+        if idx is not None:
+            left = (center[-1] - width)/ 2
+            right = (center[-1] + width) / 2
+            bottom = (center[-2] - height) / 2
+            top = (center[-2] + height) / 2
+            ret = Extent(left=left, right=right,
+                         bottom=bottom, top=top)
+        else:
+            left = (center[:,-1] - width)/ 2
+            right = (center[:,-1] + width) / 2
+            bottom = (center[:,-2] - height) / 2
+            top = (center[:,-2] + height) / 2
+            ret = np.array((left, right, bottom, top)).T
+        return ret
+
+    def plot_frame(self, idx, ax=None, cmap="gray", *args, **kwargs):
+        """Plot the frame with given index as an image."""
+        if ax is None:
+            ax = new_image_axes()
+        # Plot image data
+        with self.store() as store:
+            artist = ax.imshow(store.absorbances[idx],
+                               extent=self.extent(idx),
+                               cmap=cmap, origin="lower",
+                               *args, **kwargs)
+            unit = store.pixel_unit
+        # Decorate axes
+        ax = artist.axes
+        ax.set_ylabel(unit)
+        ax.set_xlabel(unit)
+        return artist
 
     def plot_map(self, plotter=None, ax=None, norm_range=None, alpha=1,
                  goodness_filter=False, return_type="axes", active_pixel=None,
@@ -1644,16 +1676,16 @@ class XanesFrameset():
         self.map_method = "whiteline_" + method
         return whiteline, goodness
 
-    def energies(self):
-        energies = []
-        with self.hdf_file() as f:
-            for key in f[self.active_group]:
-                group = f[self.active_group][key]
-                try:
-                    energies.append(group.attrs['approximate_energy'])
-                except KeyError:
-                    pass
-        return energies
+    # def energies(self):
+    #     energies = []
+    #     with self.hdf_file() as f:
+    #         for key in f[self.active_group]:
+    #             group = f[self.active_group][key]
+    #             try:
+    #                 energies.append(group.attrs['approximate_energy'])
+    #             except KeyError:
+    #                 pass
+    #     return energies
 
     def whiteline_energy(self):
         """Calculate the energy corresponding to the whiteline (maximum
@@ -1738,29 +1770,32 @@ class XanesFrameset():
     @functools.lru_cache()
     def image_normalizer(self, representation):
         # Find global limits
-        global_min = 99999999999
-        global_max = 0
-        for frame in self:
-            data = frame.get_data(name=representation)
-            # Remove outliers temporarily
-            sigma = 9
-            median = np.median(data)
-            sdev = np.std(data)
-            d = np.abs(data - median)
-            s = d / sdev if sdev else 0.
-            data[s >= sigma] = median
-            # Check if this frame has the minimum intensity
-            local_min = np.min(data)
-            if local_min < global_min:
-                global_min = local_min
-            # Check if this has the maximum intensity
-            local_max = np.max(data)
-            if local_max > global_max:
-                global_max = local_max
+        # global_min = 99999999999
+        # global_max = 0
+        # for frame in self:
+        #     data = frame.get_data(name=representation)
+        #     # Remove outliers temporarily
+        #     sigma = 9
+        #     median = np.median(data)
+        #     sdev = np.std(data)
+        #     d = np.abs(data - median)
+        #     s = d / sdev if sdev else 0.
+        #     data[s >= sigma] = median
+        #     # Check if this frame has the minimum intensity
+        #     local_min = np.min(data)
+        #     if local_min < global_min:
+        #         global_min = local_min
+        #     # Check if this has the maximum intensity
+        #     local_max = np.max(data)
+        #     if local_max > global_max:
+        #         global_max = local_max
+        with self.store() as store:
+            global_min = np.min(store.absorbances)
+            global_max = np.max(store.absorbances)
         return Normalize(global_min, global_max)
 
     def gtk_viewer(self):
-        from .gtk_viewer import GtkTxmViewer
+        from gtk_viewer import GtkTxmViewer
         viewer = GtkTxmViewer(frameset=self)
         viewer.show()
         # Close the current blank plot

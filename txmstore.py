@@ -106,19 +106,35 @@ class TXMStore():
 
     @property
     def pixel_sizes(self):
-        raise NotImplementedError
+        return self.group()['pixel_sizes']
 
     @pixel_sizes.setter
     def pixel_sizes(self, val):
         self.replace_dataset('pixel_sizes', val)
 
     @property
-    def positions(self):
-        raise NotImplementedError
+    def relative_positions(self):
+        return self.group()['relative_positions']
 
-    @positions.setter
-    def positions(self, val):
-        self.replace_dataset('positions', val)
+    @relative_positions.setter
+    def relative_positions(self, val):
+        self.replace_dataset('relative_positions', val)
+
+    @property
+    def original_positions(self):
+        return self.group()['original_positions']
+
+    @original_positions.setter
+    def original_positions(self, val):
+        self.replace_dataset('original_positions', val)
+
+    @property
+    def pixel_unit(self):
+        return self.group()['pixel_sizes'].attrs['unit']
+
+    @pixel_unit.setter
+    def pixel_unit(self, val):
+        self.group()['pixel_sizes'].attrs['unit'] = val
 
     @property
     def intensities(self):

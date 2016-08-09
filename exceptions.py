@@ -74,3 +74,6 @@ class DatasetExistsError(RuntimeError):
 
 class NoParticleError(Exception):
     pass
+
+class RefinementError(RuntimeError):
+    pass

@@ -29,10 +29,11 @@ from tqdm import tqdm
 import numpy as np
 import h5py
 
+position = namedtuple('position', ('x', 'y', 'z'))
 xycoord = namedtuple('xycoord', ('x', 'y'))
 Pixel = namedtuple('Pixel', ('vertical', 'horizontal'))
 shape = namedtuple('shape', ('rows', 'columns'))
-
+Extent = namedtuple('extent', ('left', 'right', 'bottom', 'top'))
 
 def component(data, name):
     """If complex, turn to given component, otherwise return original data."""
