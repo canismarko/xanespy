@@ -51,7 +51,8 @@ import exceptions
 import smp
 
 import pyximport; pyximport.install()
-from xanes_calculations import transform_images
+from xanes_math import transform_images, register_template, register_correlations
+# from xanes_math import register_correlations, register_template
 
 predefined.define_units()
 
@@ -580,109 +581,111 @@ class XanesFrameset():
         for frame in self:
             frame.sample_position = position(0, 0, frame.sample_position.z)
 
-    def correct_drift(self, new_name="aligned_frames", method="ransac",
-                      loc=xycoord(x=20, y=20), reference_frame=0,
-                      plot_fit=False):
-        """Apply a linear correction for a misalignment of zoneplate in APS
-        8BM-B beamline as of Nov 2015. Deprecated in favor of
-        align_frames method.
+    # def correct_drift(self, new_name="aligned_frames", method="ransac",
+    #                   loc=xycoord(x=20, y=20), reference_frame=0,
+    #                   plot_fit=False):
+    #     """Apply a linear correction for a misalignment of zoneplate in APS
+    #     8BM-B beamline as of Nov 2015. Deprecated in favor of
+    #     align_frames method.
 
-        Arguments
-        ---
+    #     Arguments
+    #     ---
 
-        method (default: "ransac"): Which type of regression to use:
-            "ransac", "linear"
+    #     method (default: "ransac"): Which type of regression to use:
+    #         "ransac", "linear"
 
-        loc (default 20, 20): Which particle to use to track drift
+    #     loc (default 20, 20): Which particle to use to track drift
 
-        reference_frame: index of the frame that stands still
+    #     reference_frame: index of the frame that stands still
 
-        plot_fit (default False): If truthy, plot the resulting fit
-            line of frame drift.
+    #     plot_fit (default False): If truthy, plot the resulting fit
+    #         line of frame drift.
 
-        """
-        # Create new data groups to hold shifted image data
-        # self.fork_group(new_name)
-        # self.fork_labels(new_name + "_labels")
-        # Regression values determined from cell 1 charge on 2015-11-11
-        slope_v = 0.34693115
-        slope_h = -0.28493559
-        # slope_v = 0.32418403
-        # slope_h = -0.25658992
-        E_0 = self[reference_frame].energy
-        # Prepare particle positions for regression
-        centroids = self.particle_centroid_spectrum(loc=loc)
-        x = np.array(centroids.index).reshape(-1, 1)
-        # Perform linear regression (RANSAC ignores outliers)
-        if method == "ransac":
-            regression_v = linear_model.RANSACRegressor(linear_model.LinearRegression())
-            regression_h = linear_model.RANSACRegressor(linear_model.LinearRegression())
-        elif method == "linear":
-            regression_v = linear_model.LinearRegression()
-            regression_h = linear_model.LinearRegression()
-        regression_v.fit(x, centroids.vertical)
-        regression_h.fit(x, centroids.horizontal)
-        if method == "ransac":
-            inliers_v = np.count_nonzero(regression_v.inlier_mask_)
-            regression_v = regression_v.estimator_
-            inliers_h = np.count_nonzero(regression_h.inlier_mask_)
-            regression_h = regression_h.estimator_
-        slope_v = regression_v.coef_[0]
-        slope_h = regression_h.coef_[0]
-        # icpt_v = regression_v.intercept_
-        # icpt_h = regression_h.intercept_
-        error_v = regression_v.score(x, centroids.vertical)
-        error_h = regression_h.score(x, centroids.horizontal)
+    #     """
+    #     # Create new data groups to hold shifted image data
+    #     # self.fork_group(new_name)
+    #     # self.fork_labels(new_name + "_labels")
+    #     # Regression values determined from cell 1 charge on 2015-11-11
+    #     slope_v = 0.34693115
+    #     slope_h = -0.28493559
+    #     # slope_v = 0.32418403
+    #     # slope_h = -0.25658992
+    #     E_0 = self[reference_frame].energy
+    #     # Prepare particle positions for regression
+    #     centroids = self.particle_centroid_spectrum(loc=loc)
+    #     x = np.array(centroids.index).reshape(-1, 1)
+    #     # Perform linear regression (RANSAC ignores outliers)
+    #     if method == "ransac":
+    #         regression_v = linear_model.RANSACRegressor(linear_model.LinearRegression())
+    #         regression_h = linear_model.RANSACRegressor(linear_model.LinearRegression())
+    #     elif method == "linear":
+    #         regression_v = linear_model.LinearRegression()
+    #         regression_h = linear_model.LinearRegression()
+    #     regression_v.fit(x, centroids.vertical)
+    #     regression_h.fit(x, centroids.horizontal)
+    #     if method == "ransac":
+    #         inliers_v = np.count_nonzero(regression_v.inlier_mask_)
+    #         regression_v = regression_v.estimator_
+    #         inliers_h = np.count_nonzero(regression_h.inlier_mask_)
+    #         regression_h = regression_h.estimator_
+    #     slope_v = regression_v.coef_[0]
+    #     slope_h = regression_h.coef_[0]
+    #     # icpt_v = regression_v.intercept_
+    #     # icpt_h = regression_h.intercept_
+    #     error_v = regression_v.score(x, centroids.vertical)
+    #     error_h = regression_h.score(x, centroids.horizontal)
 
-        # Plot results of regression
-        if plot_fit:
-            pyplot.plot(x, centroids.vertical, marker="o", linestyle="None")
-            pyplot.plot(x, centroids.horizontal, marker="o", linestyle="None")
-            pyplot.plot(x, regression_v.predict(x))
-            pyplot.plot(x, regression_h.predict(x))
-            pyplot.legend(["Vertical", "Horizontal"])
+    #     # Plot results of regression
+    #     if plot_fit:
+    #         pyplot.plot(x, centroids.vertical, marker="o", linestyle="None")
+    #         pyplot.plot(x, centroids.horizontal, marker="o", linestyle="None")
+    #         pyplot.plot(x, regression_v.predict(x))
+    #         pyplot.plot(x, regression_h.predict(x))
+    #         pyplot.legend(["Vertical", "Horizontal"])
 
-        # Display status
-        if method == "ransac":
-            description = "Correcting drift (R²: {}v, {}h, #inliers: {}v, {}h)".format(
-                round(error_v, 3), round(error_h, 3),
-                inliers_v, inliers_h
-            )
-        else:
-            description = "Correcting drift (R²: {}v, {}h)".format(
-                round(error_v, 3), round(error_h, 3)
-            )
+    #     # Display status
+    #     if method == "ransac":
+    #         description = "Correcting drift (R²: {}v, {}h, #inliers: {}v, {}h)".format(
+    #             round(error_v, 3), round(error_h, 3),
+    #             inliers_v, inliers_h
+    #         )
+    #     else:
+    #         description = "Correcting drift (R²: {}v, {}h)".format(
+    #             round(error_v, 3), round(error_h, 3)
+    #         )
 
-        # Move frames
-        def shift_func(payload):
-            delta_E = payload['energy'] - E_0
-            correction = xycoord(x=(slope_h * delta_E), y=(slope_v * delta_E))
-            return correction
-        self.apply_translation(shift_func, new_name=new_name, description=description)
-        # Set active particles
-        for frame in self:
-            frame.activate_closest_particle(loc=loc)
+    #     # Move frames
+    #     def shift_func(payload):
+    #         delta_E = payload['energy'] - E_0
+    #         correction = xycoord(x=(slope_h * delta_E), y=(slope_v * delta_E))
+    #         return correction
+    #     self.apply_translation(shift_func, new_name=new_name, description=description)
+    #     # Set active particles
+    #     for frame in self:
+    #         frame.activate_closest_particle(loc=loc)
+
+    def apply_translations(self, crop=True):
+        raise NotImplementedError()
 
     def align_frames(self,
-                     new_name,
                      reference_frame="mean",
                      blur=None,
-                     passes: int=1,
                      method: str="cross_correlation",
-                     methods=[],
                      template=None,
-                     crop=True,
+                     commit=True,
                      representation="modulus"):
         """Use cross correlation algorithm to line up the frames. All frames
-        have their sample position set set to (0, 0) since we don't
+        will have their sample position set to (0, 0) since we don't
         know which one is the real position. This operation will
         interpolate between pixels so introduces error. If multiple
         passes are performed, the translations are saved and combined
-        at the end so this error is only introduced once.
+        at the end so this error is only introduced once. Using the
+        `commit=False` argument allows for multiple different types of
+        registration to be performed in sequence, since uncommitted
+        translations will be applied before the next round of registration.
 
         Arguments
         ---------
-        new_name : HDF groupname to assign to the aligned frameset.
 
         reference_frame (int, str or None) : The index of the frame to
           which all other frames should be aligned. If None, the frame
@@ -692,10 +695,6 @@ class XanesFrameset():
           used. This attribute has no effect if template matching is
           used.
 
-        passes : Number of times to repeat the alignment to try and
-          narrow in on no jitter (default 1). Subsequent passes will use
-          higher oversampling rates.
-
         blur : A type of filter to apply to each frame of the data
           before attempting registration. Choices are "median" or None
 
@@ -703,23 +702,21 @@ class XanesFrameset():
           - "cross_correlation" (default)
           - "template_match"
           (If "template_match" is used, the `template` argument should
-          be provided.)
-
-        methods : List of techniques corresponding to each pass,
-          similar to method arguments. If omitted, the method argument
-          will be used for each pass.
+          also be provided.)
 
         template : Image data that should be matched if the
-          `template_match` method is used. If omitted, the middle 80% of
-          the image will be used.
+          `template_match` method is used.
 
-        crop : If truthy (default), any excess image will be cut off, otherwise
-          it will wrap around, which can be useful for diagnosing
-          overzealous cropping.
+        commit : If truthy (default), the final translation will be
+          applied to the data stored on disk by calling
+          `self.apply_translations(crop=True)`.
 
-        representation : What component of the data to use: 'modulus', 'phase', 'imag' or 'real'.
+        representation : What component of the data to use: 'modulus',
+          'phase', 'imag' or 'real'.
 
         """
+        if not commit:
+            raise NotImplementedError("Add capability of stored translations")
         # Check for valid attributes
         valid_filters = ["median", None]
         if blur not in valid_filters:
@@ -729,223 +726,214 @@ class XanesFrameset():
         Crop = namedtuple("Crop", ('top', 'bottom', 'left', 'right'))
         # Sanity check on `method` argument
         valid_methods = ['cross_correlation', 'template_match']
-        if methods == []:
-            # use the same method each time
-            methods = [method for i in range(0, passes)]
-        for m in methods:
-            if m not in valid_methods:
-                msg = "Unknown method {}. Choices are {}".format(m, valid_methods)
-                raise ValueError(msg)
-        if not len(methods) == passes:
-            msg = "`methods` must be same length as `passes`: {}".format(methods)
+        if method not in valid_methods:
+            msg = "Unknown method {}. Choices are {}".format(m, valid_methods)
             raise ValueError(msg)
         # Guess best reference frame to use
         if reference_frame is "max":
             spectrum = self.xanes_spectrum(representation=representation)
             reference_frame = np.argmax(spectrum.values)
         # Keep track of how many passes and where we started
-        current_pass = 0
         shifts = {} # Keeps track of shifts for final translation
-        all_crops = [] # Keeps track of how to crop the original image
-        original_group = self.active_group
+        # all_crops = [] # Keeps track of how to crop the original image
+        # original_group = self.active_group
         out_range = (0, 1) # For rescaling intensities
-        self.fork_group(new_name)
-        if self.active_labels_groupname:
-            self.fork_labels(new_name + "_labels")
-        # Run through all passes
-        while current_pass < passes:
-            current_method = methods[current_pass]
-            # Retrieve reference frame
-            if reference_frame == "mean":
-                reference_image = self.mean_image()
-            elif reference_frame == "median":
-                reference_image = self.median_image()
-            else:
-                reference_image = self[reference_frame].image_data
-                if blur == "median":
-                    reference_image = filters.median(reference_image,
-                                                     morphology.disk(20))
-            original_shape = shape(*reference_image.shape)
-            if current_method == "cross_correlation":
-                # Higher passes receive more oversampling
-                upsampling = current_pass * 20 + 1
-            elif current_method == "template_match":
-                if template is None:
-                    # Prepare the template that will be matching in the other frames
-                    reference_target = reference_image[
-                        int(0.1*original_shape.rows):int(0.9*original_shape.rows),
-                        int(0.1*original_shape.columns):int(0.9*original_shape.columns)
-                    ]
-                else:
-                    reference_target = template
-                reference_match = feature.match_template(component(reference_image, "imag"),
-                                                         component(reference_target, "imag"),
-                                                         pad_input=True)
-                reference_center = np.unravel_index(reference_match.argmax(),
-                                                    reference_match.shape)
-                reference_center = Pixel(vertical=reference_center[0],
-                                         horizontal=reference_center[1])
-            # Multiprocessing setup
-            def worker(payload):
-                key = payload['key']
-                data = payload['data']
-                # Temporarily rescale the data to be between -1 and 1
-                scaled_data = data
-                if blur == "median":
-                    blurred_data = filters.median(scaled_data, morphology.disk(20))
-                elif blur is None:
-                    blurred_data = np.copy(scaled_data)
-                labels = payload.get('labels', None)
-                if current_method == "cross_correlation":
-                    # Determine what the new translation should be
-                    results = feature.register_translation(reference_image,
-                                                           blurred_data,
-                                                           upsample_factor=upsampling)
-                    shift, error, diffphase = results
-                    shift = xycoord(-shift[1], -shift[0])
-                elif current_method == "template_match":
-                    # Determine what the new translation should be
-                    match = feature.match_template(component(scaled_data, "imag"),
-                                                   component(reference_target, "imag"),
-                                                   pad_input=True)
-                    center = np.unravel_index(match.argmax(), match.shape)
-                    center = Pixel(vertical=center[0], horizontal=center[1])
-                    # Determine the net translation necessary to align to reference frame
-                    shift = xycoord(
-                        x=center.horizontal - reference_center.horizontal,
-                        y=center.vertical - reference_center.vertical,
-                    )
-                # Apply net transformation with bicubic interpolation
-                # transformation = transform.SimilarityTransform(translation=shift)
-                # new_data = transform.warp(data, transformation,
-                #                           order=3, mode="wrap", preserve_range=True)
-                new_data = _transform(data, translation=shift)
-                # # Reset intensities of original values
-                # new_data = exposure.rescale_intensity(new_data,
-                #                                       in_range=out_range,
-                #                                       out_range=in_range)
-                result = {
-                    'key': key,
-                    'energy': payload['energy'],
-                    'data': new_data,
-                    'shift': shift,
-                }
-                # Transform labels
-                if labels:
-                    original_dtype = labels.dtype
-                    labels = labels.astype(np.float64)
-                    new_labels = transform.warp(labels, transformation, order=0, mode="constant", preserve_range=True)
-                    new_labels = new_labels.astype(original_dtype)
-                    result['labels'] = new_labels
-                return result
+        # self.fork_group(new_name)
+        # if self.active_labels_groupname:
+        #     self.fork_labels(new_name + "_labels")
+        # Get data from store
+        with self.store() as store:
+            frames = store.absorbances.value
+        # Calculate proper reference image
+        if reference_frame == 'mean':
+            ref_image = np.mean(frames, axis=0)
+        elif reference_frame == 'median':
+            ref_image = np.median(frames, axis=0)
+        else:
+            ref_image = frames[reference_frame]
+        # Prepare blurring if requested
+        if blur == "median":
+            ref_img = filters.median(reference_image,
+                                     morphology.disk(20))
+        # original_shape = shape(*reference_image.shape)
+        # Calculate translations for each frame
+        if method == "cross_correlation":
+            translations = register_correlations(frames=frames,
+                                                 reference=ref_image)
+        elif method == "template_match":
+            translations = register_template(frame=frames, template=template)
+        # Apply transformations to each frame
+        with self.store(mode='r+') as store:
+            transform_images(data=frames, translations=translations,
+                             out=store.absorbances, mode='wrap')
+        # reference_match = feature.match_template(component(reference_image, "imag"),
+        #                                                  component(reference_target, "imag"),
+        #                                                  pad_input=True)
+        #         reference_center = np.unravel_index(reference_match.argmax(),
+        #                                             reference_match.shape)
+        #         reference_center = Pixel(vertical=reference_center[0],
+        #                                  horizontal=reference_center[1])
+        #     # Multiprocessing setup
+        #     def worker(payload):
+        #         key = payload['key']
+        #         data = payload['data']
+        #         # Temporarily rescale the data to be between -1 and 1
+        #         scaled_data = data
+        #         if blur == "median":
+        #             blurred_data = filters.median(scaled_data, morphology.disk(20))
+        #         elif blur is None:
+        #             blurred_data = np.copy(scaled_data)
+        #         labels = payload.get('labels', None)
+        #         if current_method == "cross_correlation":
+        #             # Determine what the new translation should be
+        #             results = feature.register_translation(reference_image,
+        #                                                    blurred_data,
+        #                                                    upsample_factor=upsampling)
+        #             shift, error, diffphase = results
+        #             shift = xycoord(-shift[1], -shift[0])
+        #         elif current_method == "template_match":
+        #             # Determine what the new translation should be
+        #             match = feature.match_template(component(scaled_data, "imag"),
+        #                                            component(reference_target, "imag"),
+        #                                            pad_input=True)
+        #             center = np.unravel_index(match.argmax(), match.shape)
+        #             center = Pixel(vertical=center[0], horizontal=center[1])
+        #             # Determine the net translation necessary to align to reference frame
+        #             shift = xycoord(
+        #                 x=center.horizontal - reference_center.horizontal,
+        #                 y=center.vertical - reference_center.vertical,
+        #             )
+        #         # Apply net transformation with bicubic interpolation
+        #         # transformation = transform.SimilarityTransform(translation=shift)
+        #         # new_data = transform.warp(data, transformation,
+        #         #                           order=3, mode="wrap", preserve_range=True)
+        #         new_data = _transform(data, translation=shift)
+        #         # # Reset intensities of original values
+        #         # new_data = exposure.rescale_intensity(new_data,
+        #         #                                       in_range=out_range,
+        #         #                                       out_range=in_range)
+        #         result = {
+        #             'key': key,
+        #             'energy': payload['energy'],
+        #             'data': new_data,
+        #             'shift': shift,
+        #         }
+        #         # Transform labels
+        #         if labels:
+        #             original_dtype = labels.dtype
+        #             labels = labels.astype(np.float64)
+        #             new_labels = transform.warp(labels, transformation, order=0, mode="constant", preserve_range=True)
+        #             new_labels = new_labels.astype(original_dtype)
+        #             result['labels'] = new_labels
+        #         return result
 
-            # Save coordinates for determining cropping later on
-            limits = {
-                'left': 0,
-                'right': 0,
-                'top': 0,
-                'bottom': 0,
-            }
+        #     # Save coordinates for determining cropping later on
+        #     limits = {
+        #         'left': 0,
+        #         'right': 0,
+        #         'top': 0,
+        #         'bottom': 0,
+        #     }
 
-            def process_result(payload):
-                key = payload['key']
-                shift = payload.pop('shift')
-                # Check if these shifts set new cropping limits
-                if shift.y > limits['bottom']:
-                    limits['bottom'] = shift.y
-                elif shift.y < limits['top']:
-                    limits['top'] = shift.y
-                if shift.x > limits['right']:
-                    limits['right'] = shift.x
-                elif shift.x < limits['left']:
-                    limits['left'] = shift.x
-                # Save shift for final transformation
-                past_shifts = shifts.get(key, [])
-                past_shifts.append(shift)
-                shifts[key] = past_shifts
-                return payload
+        #     def process_result(payload):
+        #         key = payload['key']
+        #         shift = payload.pop('shift')
+        #         # Check if these shifts set new cropping limits
+        #         if shift.y > limits['bottom']:
+        #             limits['bottom'] = shift.y
+        #         elif shift.y < limits['top']:
+        #             limits['top'] = shift.y
+        #         if shift.x > limits['right']:
+        #             limits['right'] = shift.x
+        #         elif shift.x < limits['left']:
+        #             limits['left'] = shift.x
+        #         # Save shift for final transformation
+        #         past_shifts = shifts.get(key, [])
+        #         past_shifts.append(shift)
+        #         shifts[key] = past_shifts
+        #         return payload
 
-            # Launch the multiprocessing queue
-            description = "Aligning pass {curr}/{total}"
-            description = description.format(curr=current_pass+1,
-                                             total=passes,
-                                             frame=reference_frame)
-            process_with_smp(frameset=self,
-                             worker=worker,
-                             process_result=process_result,
-                             description=description)
-            # Update new positions
-            for frame in self:
-                frame.sample_position = position(0, 0, frame.sample_position.z)
-            # Crop frames and save for later
-            if crop:
-                bottom = math.ceil(abs(limits['top']))
-                top = math.floor(original_shape.rows - abs(limits['bottom']))
-                left = math.ceil(abs(limits['left']))
-                right = math.floor(original_shape.columns - abs(limits['right']))
-                for frame in prog(self, "Cropping frames"):
-                    frame.crop(bottom=bottom, left=left, top=top, right=right)
-                # Save cropping dimensions for final crop after last pass
-                all_crops.append(
-                    Crop(top=top, left=left, bottom=bottom, right=right)
-                )
-            # Increment counter to keep track of current position
-            current_pass += 1
+        #     # Launch the multiprocessing queue
+        #     description = "Aligning pass {curr}/{total}"
+        #     description = description.format(curr=current_pass+1,
+        #                                      total=passes,
+        #                                      frame=reference_frame)
+        #     process_with_smp(frameset=self,
+        #                      worker=worker,
+        #                      process_result=process_result,
+        #                      description=description)
+        #     # Update new positions
+        #     for frame in self:
+        #         frame.sample_position = position(0, 0, frame.sample_position.z)
+        #     # Crop frames and save for later
+        #     if crop:
+        #         bottom = math.ceil(abs(limits['top']))
+        #         top = math.floor(original_shape.rows - abs(limits['bottom']))
+        #         left = math.ceil(abs(limits['left']))
+        #         right = math.floor(original_shape.columns - abs(limits['right']))
+        #         for frame in prog(self, "Cropping frames"):
+        #             frame.crop(bottom=bottom, left=left, top=top, right=right)
+        #         # Save cropping dimensions for final crop after last pass
+        #         all_crops.append(
+        #             Crop(top=top, left=left, bottom=bottom, right=right)
+        #         )
+        #     # Increment counter to keep track of current position
+        #     current_pass += 1
 
-        # Perform a final, complete translation and cropping if necessary
-        if passes > 1:
-            # Revert back to original frameset
-            self.switch_group(os.path.basename(original_group))
-            self.fork_group(new_name)
-            if self.active_labels_groupname:
-                self.fork_labels(new_name + "_labels")
-            # Multiprocessing setup
-            def worker(payload):
-                key = payload['key']
-                data = payload['data']
-                # Temporarily rescale the data to be between -1 and 1
-                labels = payload.get('labels', None)
-                # Compute the net translation needed for this frame
-                curr_shifts = shifts[key]
-                shift = xycoord(
-                    sum([n[0] for n in curr_shifts]),
-                    sum([n[1] for n in curr_shifts])
-                )
-                new_data = _transform(data, translation=shift)
-                result = {
-                    'key': key,
-                    'energy': payload['energy'],
-                    'data': new_data,
-                    'shift': shift,
-                }
-                # Transform labels
-                if labels:
-                    original_dtype = labels.dtype
-                    labels = labels.astype(np.float64)
-                    new_labels = transform.warp(labels,
-                                                transformation,
-                                                order=0,
-                                                mode="constant", preserve_range=True)
-                    new_labels = new_labels.astype(original_dtype)
-                    result['labels'] = new_labels
-                return result
-            process_with_smp(frameset=self,
-                             worker=worker,
-                             description="Final alignment")
-            # Calculate smallest cropping size
-            if crop:
-                top, bottom, left, right = (0, 0, 0, 0)
-                for crop in all_crops:
-                    bottom += crop.bottom
-                    left += crop.left
-                last_crop = all_crops[-1]
-                right = left + last_crop.right - last_crop.left
-                top = bottom + last_crop.top - last_crop.bottom
-                crop = Crop(top=top, left=left, bottom=bottom, right=right)
-                # Crop frames down to size
-                for frame in prog(self, "Final crop"):
-                    frame.crop(left=crop.left, bottom=crop.bottom,
-                               right=crop.right, top=crop.top)
+        # # Perform a final, complete translation and cropping if necessary
+        # if passes > 1:
+        #     # Revert back to original frameset
+        #     self.switch_group(os.path.basename(original_group))
+        #     self.fork_group(new_name)
+        #     if self.active_labels_groupname:
+        #         self.fork_labels(new_name + "_labels")
+        #     # Multiprocessing setup
+        #     def worker(payload):
+        #         key = payload['key']
+        #         data = payload['data']
+        #         # Temporarily rescale the data to be between -1 and 1
+        #         labels = payload.get('labels', None)
+        #         # Compute the net translation needed for this frame
+        #         curr_shifts = shifts[key]
+        #         shift = xycoord(
+        #             sum([n[0] for n in curr_shifts]),
+        #             sum([n[1] for n in curr_shifts])
+        #         )
+        #         new_data = _transform(data, translation=shift)
+        #         result = {
+        #             'key': key,
+        #             'energy': payload['energy'],
+        #             'data': new_data,
+        #             'shift': shift,
+        #         }
+        #         # Transform labels
+        #         if labels:
+        #             original_dtype = labels.dtype
+        #             labels = labels.astype(np.float64)
+        #             new_labels = transform.warp(labels,
+        #                                         transformation,
+        #                                         order=0,
+        #                                         mode="constant", preserve_range=True)
+        #             new_labels = new_labels.astype(original_dtype)
+        #             result['labels'] = new_labels
+        #         return result
+        #     process_with_smp(frameset=self,
+        #                      worker=worker,
+        #                      description="Final alignment")
+        #     # Calculate smallest cropping size
+        #     if crop:
+        #         top, bottom, left, right = (0, 0, 0, 0)
+        #         for crop in all_crops:
+        #             bottom += crop.bottom
+        #             left += crop.left
+        #         last_crop = all_crops[-1]
+        #         right = left + last_crop.right - last_crop.left
+        #         top = bottom + last_crop.top - last_crop.bottom
+        #         crop = Crop(top=top, left=left, bottom=bottom, right=right)
+        #         # Crop frames down to size
+        #         for frame in prog(self, "Final crop"):
+        #             frame.crop(left=crop.left, bottom=crop.bottom,
+        #                        right=crop.right, top=crop.top)
 
     def align_to_particle(self, loc, new_name, reference_frame=None):
         """Use template matching algorithm to line up the frames. Similar to
@@ -1248,12 +1236,12 @@ class XanesFrameset():
                            cmap='gray')
         return artist
 
-    def mean_image(self):
-        """Determine an overall image by taking the mean intensity of each
-        pixel across all frames."""
-        frames = np.array([f.image_data for f in self])
-        avg_frame = np.mean(frames, axis=0)
-        return avg_frame
+    # def mean_image(self):
+    #     """Determine an overall image by taking the mean intensity of each
+    #     pixel across all frames."""
+    #     frames = np.array([f.image_data for f in self])
+    #     avg_frame = np.mean(frames, axis=0)
+    #     return avg_frame
 
     def median_image(self):
         """Determine an overall image by taking the median intensity of each

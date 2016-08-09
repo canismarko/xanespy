@@ -36,7 +36,7 @@ from utilities import prog, prepare_hdf_group
 import exceptions
 
 import pyximport; pyximport.install()
-from xanes_calculations import transform_images
+from xanes_math import transform_images
 
 
 format_classes = {
