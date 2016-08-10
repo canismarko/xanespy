@@ -25,7 +25,6 @@ row, column)."""
 import functools
 import warnings
 from typing import Callable
-import math
 from collections import namedtuple
 import os
 
@@ -40,7 +39,7 @@ from sklearn import linear_model
 from sklearn.utils import validation
 from units import unit, predefined
 
-from utilities import prog, xycoord, Pixel, shape, component, position, Extent
+from utilities import prog, xycoord, Pixel, component, position, Extent
 from frame import (
     TXMFrame, PtychoFrame, calculate_particle_labels, pixel_to_xy,
     apply_reference)
@@ -52,12 +51,11 @@ import smp
 
 import pyximport; pyximport.install()
 from xanes_math import transform_images, register_template, register_correlations
-# from xanes_math import register_correlations, register_template
 
 predefined.define_units()
 
 # So all modules can use the same HDF indices
-energy_key = "{:.2f}_eV"
+# energy_key = "{:.2f}_eV"
 
 
 def build_series(frames):
@@ -250,6 +248,10 @@ class XanesFrameset():
     FrameClass = TXMFrame
     active_group = ''
     cmap = 'plasma'
+    # Places to store staged image transformations
+    _translations = None
+    _rotations = None
+    _scales = None
 
     # HDF Attributes
     # TODO: These should be reimplement in a TXMStore object
@@ -517,22 +519,7 @@ class XanesFrameset():
         frame. Some beamlines correct for this automatically during
         acquisition: APS 8-BM-B
         """
-        warnings.warn(UserError("Mag correction done during import"))
-        # Current implementation assumes the last two numpy axes are
-        # image dimenions (rows and columns)
-        # with self.store(mode='r+') as store:
-        #     # Determine magnificantion for each frame based on the first one
-        #     pixel_sizes = store.pixel_sizes
-        #     magnifications = pixel_sizes[0] / pixel_sizes
-        #     # Determine translation to get images centered
-        #     datashape = store.absorbances.shape[:-2]
-        #     imshape = store.absorbances.shape[-2:]
-        #     mag2 = magnifications.reshape(*datashape, 1).repeat(2, axis=-1)
-        #     translations = (1-mag2) * imshape / 2
-        #     new = transform_images(store.absorbances,
-        #                      translations=translations,
-        #                            scales=magnifications,
-        #                            out=store.absorbances)
+        raise NotImplementedError("Mag correction done during import")
 
     def apply_translation(self, shift_func, new_name,
                           description="Applying translation"):
@@ -544,6 +531,7 @@ class XanesFrameset():
         frame. All frames have their sample position set set to (0, 0)
         since we don't know which one is the real position.
         """
+        raise NotImplementedError()
         # Create new data groups to hold shifted image data
         self.fork_group(new_name)
         self.fork_labels(new_name + "_labels")
@@ -664,16 +652,99 @@ class XanesFrameset():
     #     for frame in self:
     #         frame.activate_closest_particle(loc=loc)
 
-    def apply_translations(self, crop=True):
-        raise NotImplementedError()
+    def apply_transformations(self, crop=True, commit=True):
+        """Take any transformations staged with `self.stage_transformations()`
+        and apply them. If commit is truthy, the staged
+        transformations are reset.
+
+        Returns: A numpy array with the transformed images.
+
+        Arguments
+        ---------
+
+        - crop : If truthy, the images will be cropped after being
+        translated, so there are not edges. If falsy, the images will
+        be wrapped.
+
+        - commit : If truthy, the changes will be saved to the HDF5
+          store and the staged transformations will be cleared.
+
+        """
+        if [self._translations, self._rotations, self._scales] == [None, None, None]:
+            # Nothing to apply, so no-op
+            print("not doing anything")
+            with self.store() as store:
+                out = store.absorbances.value
+        else:
+            # Apply the transformations
+            with self.store() as store:
+                # Prepare an array to hold results
+                out = np.zeros_like(store.absorbances)
+                # Apply transformation
+                transform_images(data=store.absorbances,
+                                 translations=self._translations,
+                                 rotations=self._rotations,
+                                 scales=self._scales,
+                                 mode='wrap', out=out)
+            # Calculate and apply cropping bounds for the image stack
+            if crop:
+                tx = self._translations[:,0]
+                ty = self._translations[:,1]
+                new_rows = out.shape[1] - (np.max(ty) - np.min(ty))
+                new_cols = out.shape[2] - (np.max(tx) - np.min(tx))
+                rlower = int(np.ceil(-np.min(ty)))
+                rupper = int(np.floor(new_rows + rlower))
+                clower = int(np.ceil(-np.min(tx)))
+                cupper = int(np.floor(clower + new_cols))
+                out = out[:,rlower:rupper,clower:cupper]
+            # Save result and clear saved transformations if appropriate
+            if commit:
+                with self.store('r+') as store:
+                    store.absorbances = out
+                self._translations = None
+                self._scales = None
+                self._rotations = None
+        # Return calculated result
+        return out
+
+    def stage_transformations(self, translations=None, rotations=None, scales=None):
+
+        """Allows for deferred transformation of the frame data. Since each
+        transformation introduces interpolation error, the best
+        results occur when the translations are saved up and then
+        applied all in one shot. Takes a combination of arrays of
+        translations (x, y), rotations and/or scales and saves them for later
+        application. This method should be used in conjunction
+        apply_transformations().
+        """
+        # Save translations for later
+        if translations is not None:
+            if self._translations is None:
+                self._translations = np.copy(translations)
+            else:
+                self._translations += translations
+        # Save scale factors for later
+        if scales is not None:
+            if self._scales is None:
+                self._scales = np.copy(scales)
+            else:
+                self._scales *= scales
+        # Save rotations for later
+        if rotations is not None:
+            if self._rotations is None:
+                self._rotations = np.copy(rotations)
+            else:
+                self._rotations += rotations
 
     def align_frames(self,
                      reference_frame="mean",
                      blur=None,
                      method: str="cross_correlation",
                      template=None,
+                     passes=1,
                      commit=True,
                      representation="modulus"):
+
         """Use cross correlation algorithm to line up the frames. All frames
         will have their sample position set to (0, 0) since we don't
         know which one is the real position. This operation will
@@ -704,68 +775,73 @@ class XanesFrameset():
           (If "template_match" is used, the `template` argument should
           also be provided.)
 
+        passes : How many times this alignment should be done. Default: 1.
+
         template : Image data that should be matched if the
           `template_match` method is used.
 
         commit : If truthy (default), the final translation will be
           applied to the data stored on disk by calling
-          `self.apply_translations(crop=True)`.
+          `self.apply_translations(crop=True)` after all passes have
+          finished.
 
         representation : What component of the data to use: 'modulus',
           'phase', 'imag' or 'real'.
 
         """
-        if not commit:
-            raise NotImplementedError("Add capability of stored translations")
         # Check for valid attributes
         valid_filters = ["median", None]
         if blur not in valid_filters:
             msg = "Invalid blur filter {}. Choices are {}".format(blur,
                                                                   valid_filters)
             raise AttributeError(msg) from None
-        Crop = namedtuple("Crop", ('top', 'bottom', 'left', 'right'))
         # Sanity check on `method` argument
         valid_methods = ['cross_correlation', 'template_match']
         if method not in valid_methods:
-            msg = "Unknown method {}. Choices are {}".format(m, valid_methods)
+            msg = "Unknown method {}. Choices are {}".format(method, valid_methods)
             raise ValueError(msg)
         # Guess best reference frame to use
         if reference_frame is "max":
             spectrum = self.xanes_spectrum(representation=representation)
             reference_frame = np.argmax(spectrum.values)
         # Keep track of how many passes and where we started
-        shifts = {} # Keeps track of shifts for final translation
         # all_crops = [] # Keeps track of how to crop the original image
         # original_group = self.active_group
-        out_range = (0, 1) # For rescaling intensities
+        # out_range = (0, 1) # For rescaling intensities
         # self.fork_group(new_name)
         # if self.active_labels_groupname:
         #     self.fork_labels(new_name + "_labels")
-        # Get data from store
-        with self.store() as store:
-            frames = store.absorbances.value
-        # Calculate proper reference image
-        if reference_frame == 'mean':
-            ref_image = np.mean(frames, axis=0)
-        elif reference_frame == 'median':
-            ref_image = np.median(frames, axis=0)
-        else:
-            ref_image = frames[reference_frame]
-        # Prepare blurring if requested
-        if blur == "median":
-            ref_img = filters.median(reference_image,
-                                     morphology.disk(20))
-        # original_shape = shape(*reference_image.shape)
-        # Calculate translations for each frame
-        if method == "cross_correlation":
-            translations = register_correlations(frames=frames,
-                                                 reference=ref_image)
-        elif method == "template_match":
-            translations = register_template(frame=frames, template=template)
-        # Apply transformations to each frame
-        with self.store(mode='r+') as store:
-            transform_images(data=frames, translations=translations,
-                             out=store.absorbances, mode='wrap')
+        for pass_ in range(0, passes):
+            # Get data from store
+            frames = self.apply_transformations(crop=True, commit=False)
+            # with self.store() as store:
+            #     frames = store.absorbances.value
+            # Calculate proper reference image
+            if reference_frame == 'mean':
+                ref_image = np.mean(frames, axis=0)
+            elif reference_frame == 'median':
+                ref_image = np.median(frames, axis=0)
+            else:
+                ref_image = frames[reference_frame]
+            # Prepare blurring if requested
+            if blur == "median":
+                ref_image = filters.median(ref_image,
+                                         morphology.disk(20))
+            # original_shape = shape(*reference_image.shape)
+            # Calculate translations for each frame
+            if method == "cross_correlation":
+                translations = register_correlations(frames=frames,
+                                                     reference=ref_image)
+            elif method == "template_match":
+                translations = register_template(frame=frames, template=template)
+            # Save translations for deferred calculation
+            self.stage_transformations(translations=translations)
+        # Apply result of calculations to disk (if requested)
+        if commit:
+            self.apply_transformations(crop=True, commit=True)
+        # with self.store(mode='r+') as store:
+        #     transform_images(data=frames, translations=translations,
+        #                      out=store.absorbances, mode='wrap')
         # reference_match = feature.match_template(component(reference_image, "imag"),
         #                                                  component(reference_target, "imag"),
         #                                                  pad_input=True)

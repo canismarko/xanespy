@@ -29,7 +29,7 @@ from PIL import Image
 from scipy.constants import physical_constants
 
 from xradia import XRMFile, decode_ssrl_params, decode_aps_params
-from xanes_frameset import XanesFrameset, energy_key
+from xanes_frameset import XanesFrameset
 from frame import remove_outliers
 from txmstore import TXMStore
 from utilities import prog, prepare_hdf_group
@@ -47,6 +47,7 @@ format_classes = {
 def _average_frames(*frames):
     """Accept several frames and return the first frame with new image
     data. Assumes metadata from first frame in list."""
+    raise DeprecationWarning("Just use numpy.mean instead.")
     new_image = np.zeros_like(frames[0].image_data(), dtype=np.float)
     # Sum all images
     for frame in frames:
