@@ -43,7 +43,8 @@ def register_correlations(frames, reference, upsample_factor=10):
                                                frames[imidx],
                                                upsample_factor=upsample_factor)
         shift, error, diffphase = results
-        translations[imidx] = shift
+        # Convert (row, col) to (x, y)
+        translations[imidx] = (shift[1], shift[0])
     # Negative in order to properly register with transform_images method
     translations = -translations
     return translations

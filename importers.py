@@ -221,7 +221,7 @@ def magnification_correction(frames, pixel_sizes):
     - pixel_sizes : Numpy array of pixel sizes corresponding to
     entries in `frames`.
     """
-    scales = pixel_sizes / np.max(pixel_sizes)
+    scales = np.min(pixel_sizes) / pixel_sizes
     datashape = frames.shape[:-2]
     imshape = np.array(frames.shape[-2:])
     scales2D = scales.reshape(*datashape, 1).repeat(2, axis=-1)
@@ -325,7 +325,7 @@ def import_ssrl_frameset(directory, hdf_filename=None, quiet=False):
                                                         pixel_sizes=pixel_sizes)
         transform_images(absorbances, translations=translations,
                          scales=scales, out=absorbances)
-        pixel_sizes[:] = np.max(pixel_sizes)
+        pixel_sizes[:] = np.min(pixel_sizes)
         # Save data to HDF5 file
         sample_group = prepare_hdf_group(filename=hdf_filename,
                                          groupname=sample_name,
