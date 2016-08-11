@@ -2,6 +2,34 @@ import numpy as np
 
 from skimage import transform, feature
 
+
+def direct_whitelines(spectra, energies, edge):
+    """Takes an array of X-ray absorbance spectra and calculates the
+    positions of maximum intensities over the near-edge region.
+
+    Arguments
+    ---------
+
+    - spectra : 2D numpy array of absorbance spectra where the last
+      dimension is energy.
+
+    - energies : 1D array of X-ray energies in electron-volts.
+
+    - edge : An XAS Edge object that describes the absorbance edge in
+      question.
+    """
+    # Cut down to only those values on the edge
+    edge_mask = (energies > edge.edge_range[0]) & (energies < edge.edge_range[1])
+    spectra = spectra[...,edge_mask]
+    energies = energies[edge_mask]
+    # Calculate the whiteline positions
+    whiteline_indices = np.argmax(spectra, axis=-1)
+    map_energy = np.vectorize(lambda idx: energies[idx],
+                              otypes=[np.float])
+    whitelines = map_energy(whiteline_indices)
+    # Return results
+    return whitelines
+
 def transform_images(data, translations=None, rotations=None,
                      scales=None, out=None, mode='constant'):
     """Takes an array of images and applies each translation, rotation and

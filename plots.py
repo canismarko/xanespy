@@ -101,6 +101,10 @@ def dual_axes(fig=None, orientation='horizontal'):
     return (ax1, ax2)
 
 
+def plot_txm_map(data, norm_range, edge, ax=None, cmap='plasma'):
+    raise NotImplementedError("Implement plot_txm_map()")
+
+
 def plot_txm_intermediates(images):
     """Accept a dictionary of images and plots them each on its own axes
     using matplotlib's `imshow`. This is a complement to routines that

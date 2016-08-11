@@ -291,7 +291,7 @@ class NCANickelKEdge(KEdge):
     pre_edge = (8250, 8290)
     # post_edge = (8352, 8640)
     post_edge = (8440, 8640)
-    map_range = (8341, 8358)
+    edge_range = (8341, 8358)
 
     def map_normalizer(self, method="direct"):
         return Normalize(*self.map_range)

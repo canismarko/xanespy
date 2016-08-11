@@ -203,3 +203,11 @@ class TXMStore():
         # S100 is the 100-character ACSII string type for numpy
         val = np.array(val, dtype="S100")
         self.replace_dataset('filenames', val, dtype="S100")
+
+    @property
+    def whiteline_map(self):
+        return self.group()['whiteline_map']
+
+    @whiteline_map.setter
+    def whiteline_map(self, val):
+        self.replace_dataset('whiteline_map', val)

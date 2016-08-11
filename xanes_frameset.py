@@ -45,12 +45,12 @@ from frame import (
     apply_reference)
 from txmstore import TXMStore
 from plotter import FramesetPlotter, FramesetMoviePlotter
-from plots import new_axes, new_image_axes
+from plots import new_axes, new_image_axes, plot_txm_map
 import exceptions
 import smp
 
 import pyximport; pyximport.install()
-from xanes_math import transform_images, register_template, register_correlations
+from xanes_math import transform_images, register_template, register_correlations, direct_whitelines
 
 predefined.define_units()
 
@@ -672,7 +672,6 @@ class XanesFrameset():
         """
         if [self._translations, self._rotations, self._scales] == [None, None, None]:
             # Nothing to apply, so no-op
-            print("not doing anything")
             with self.store() as store:
                 out = store.absorbances.value
         else:
@@ -1552,34 +1551,49 @@ class XanesFrameset():
             mask = np.logical_not(mask)
         return mask
 
-    def calculate_map(self, new_name=None, *args, **kwargs):
+    def calculate_map(self):
         """Generate a map based on pixel-wise Xanes spectra. Default is to
         compute X-ray whiteline position."""
         # Get default hdf group name
-        if new_name is None:
-            new_name = "{group}/map".format(group=self.active_group)
-        goodness_name = new_name + "_goodness"
-        # Convert data into an imagestack for mapping
-        energies = self.energies()
-        imagestack = []
-        for frame in self:
-            imagestack.append(frame.image_data)
-        # Get map data
-        map_data, goodness = self.edge().calculate_direct_map(imagestack, energies)
-        # Update the hdf file
-        with self.hdf_file(mode="a") as f:
-            # Delete old datasets
-            try:
-                del self.hdf_file()[new_name]
-                del self.hdf_file()[goodness_name]
-            except KeyError:
-                pass
-            # Save new datasets
-            f.create_dataset(new_name, data=map_data, compression="gzip")
-            f.create_dataset(goodness_name, data=goodness, compression="gzip")
-        self.map_name = new_name
-        self.map_goodness_name = goodness_name
-        return map_data, goodness
+        # if new_name is None:
+        #     new_name = "{group}/map".format(group=self.active_group)
+        # goodness_name = new_name + "_goodness"
+        with self.store() as store:
+            energies = store.energies.value
+            # Convert numpy axes to be in (pixel, energy) form
+            frames = store.absorbances
+            frames = np.moveaxis(frames, 0, -1)
+            orig_shape = frames.shape
+            spectra = frames.reshape((-1, frames.shape[-1]))
+            # Calculate whiteline positions and return to original shape
+            whitelines = direct_whitelines(spectra=spectra,
+                                           energies=energies, edge=self.edge)
+            whitelines = whitelines.reshape(orig_shape[:-1])
+        # Save results to disk
+        with self.store(mode='r+') as store:
+            store.whiteline_map = whitelines
+        return whitelines
+        # # Convert data into an imagestack for mapping
+        # energies = self.energies()
+        # imagestack = []
+        # for frame in self:
+        #     imagestack.append(frame.image_data)
+        # # Get map data
+        # map_data, goodness = self.edge().calculate_direct_map(imagestack, energies)
+        # # Update the hdf file
+        # with self.hdf_file(mode="a") as f:
+        #     # Delete old datasets
+        #     try:
+        #         del self.hdf_file()[new_name]
+        #         del self.hdf_file()[goodness_name]
+        #     except KeyError:
+        #         pass
+        #     # Save new datasets
+        #     f.create_dataset(new_name, data=map_data, compression="gzip")
+        #     f.create_dataset(goodness_name, data=goodness, compression="gzip")
+        # self.map_name = new_name
+        # self.map_goodness_name = goodness_name
+        # return map_data, goodness
 
     def masked_map(self, goodness_filter=True):
         """Generate a map based on pixel-wise Xanes spectra and apply an
@@ -1657,21 +1671,31 @@ class XanesFrameset():
         ax.set_xlabel(unit)
         return artist
 
-    def plot_map(self, plotter=None, ax=None, norm_range=None, alpha=1,
-                 goodness_filter=False, return_type="axes", active_pixel=None,
-                 *args, **kwargs):
-        """Use a default frameset plotter to draw a map of the chemical data."""
-        if plotter is None:
-            plotter = FramesetPlotter(frameset=self, map_ax=ax)
-        artist = plotter.draw_map(norm_range=norm_range, alpha=alpha,
-                                  goodness_filter=goodness_filter,
-                                  *args, **kwargs)
-        # Draw crosshairs for the active pixel if necessary
-        if active_pixel:
-            xy = pixel_to_xy(active_pixel, extent=self.extent(),
-                             shape=self.map_shape())
-            plotter.draw_crosshairs(active_xy=xy)
-        return plotter, artist
+    def plot_map(self, ax=None):
+        if ax is None:
+            ax = new_image_axes()
+        # Do the plotting
+        with self.store() as store:
+            plot_txm_map(data=store.whiteline_map,
+                         norm_range=None,
+                         edge=self.edge)
+            # ax.imshow(store.whiteline_map, cmap='plasma', origin='lower')
+
+    # def plot_map(self, plotter=None, ax=None, norm_range=None, alpha=1,
+    #              goodness_filter=False, return_type="axes", active_pixel=None,
+    #              *args, **kwargs):
+    #     """Use a default frameset plotter to draw a map of the chemical data."""
+    #     if plotter is None:
+    #         plotter = FramesetPlotter(frameset=self, map_ax=ax)
+    #     artist = plotter.draw_map(norm_range=norm_range, alpha=alpha,
+    #                               goodness_filter=goodness_filter,
+    #                               *args, **kwargs)
+    #     # Draw crosshairs for the active pixel if necessary
+    #     if active_pixel:
+    #         xy = pixel_to_xy(active_pixel, extent=self.extent(),
+    #                          shape=self.map_shape())
+    #         plotter.draw_crosshairs(active_xy=xy)
+    #     return plotter, artist
 
     def plot_goodness(self, plotter=None, ax=None, norm_range=None,
                       *args, **kwargs):
