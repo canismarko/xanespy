@@ -1,6 +1,26 @@
+# -*- coding: utf-8 -*-
+#
+# Copyright © 2016 Mark Wolf
+#
+# This file is part of Xanespy.
+#
+# Xanespy is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# Xanespy is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with Xanespy. If not, see <http://www.gnu.org/licenses/>.
+
 """Descriptions of X-ray energy absorption edge."""
 
 import math
+import warnings
 
 import numpy as np
 from pandas import Series
@@ -10,6 +30,9 @@ from matplotlib.colors import Normalize
 import exceptions
 from peakfitting import Peak
 import plots
+
+import pyximport; pyximport.install()
+from xanes_math import normalize_Kedge
 
 
 class Edge():
@@ -52,11 +75,25 @@ class KEdge(Edge):
 
     """
     regions = []
+    E_0 = None
     pre_edge = None
     post_edge = None
     map_range = None
     post_edge_order = 2
     pre_edge_fit = None
+
+    def annotate_spectrum(self, ax):
+        ax.axvline(x=self.edge_range[0], linestyle='-', color="0.55", alpha=0.4)
+        ax.axvline(x=self.edge_range[1], linestyle='-', color="0.55", alpha=0.4)
+
+    def normalize(self, spectra, energies):
+        """Takes a set of spectra and energies and passes them on to the
+        computation module for normalizing by the `normalize_Kedge`
+        function."""
+        ret = normalize_Kedge(spectra=spectra, energies=energies,
+                              pre_edge=self.pre_edge,
+                              post_edge=self.post_edge, E_0=self.E_0)
+        return ret
 
     def all_energies(self):
         energies = []
@@ -112,6 +149,8 @@ class KEdge(Edge):
           object and goodness is a measure of the goodness of fit.
 
         """
+        warnings.warn(UserWarning("KEdge.fit()  not implemented"))
+        return data
         # Determine linear background region in pre-edge
         pre_edge = data.ix[self.pre_edge[0]:self.pre_edge[1]]
         self._pre_edge_fit = linear_model.LinearRegression()
@@ -148,74 +187,74 @@ class KEdge(Edge):
         goodness = peak.goodness(subset)
         return (peak, goodness)
 
-    def calculate_direct_whiteline(self, imagestack, energies, *args, **kwargs):
-        """Calculates the whiteline position of the absorption edge data
-        contained in `data`. This method uses the energy of maximum
-        absorbance and is a faster alternative to `calculate_whiteline`.
-        The "whiteline" for an absorption K-edge is the energy at which
-        the specimin has its highest absorbance. This function will return
-        an 2 arrays with the same shape as each entry in the data
-        series. 1st array gives the energy of the highest absorbance and
-        2nd array contains a mock array of goodness of fits (all values
-        are 1).
+    # def calculate_direct_whiteline(self, imagestack, energies, *args, **kwargs):
+    #     """Calculates the whiteline position of the absorption edge data
+    #     contained in `data`. This method uses the energy of maximum
+    #     absorbance and is a faster alternative to `calculate_whiteline`.
+    #     The "whiteline" for an absorption K-edge is the energy at which
+    #     the specimin has its highest absorbance. This function will return
+    #     an 2 arrays with the same shape as each entry in the data
+    #     series. 1st array gives the energy of the highest absorbance and
+    #     2nd array contains a mock array of goodness of fits (all values
+    #     are 1).
 
-        Arguments
-        ---------
-        data - The X-ray absorbance data. Should be similar to a pandas
-        Series. Assumes that the index is energy. This can be a Series of
-        numpy arrays, which allows calculation of image frames, etc.
+    #     Arguments
+    #     ---------
+    #     data - The X-ray absorbance data. Should be similar to a pandas
+    #     Series. Assumes that the index is energy. This can be a Series of
+    #     numpy arrays, which allows calculation of image frames, etc.
 
-        """
-        # Calculate the indices of the whiteline
-        whiteline_indices = np.argmax(imagestack, axis=0)
-        # Convert indices to energy
-        map_energy = np.vectorize(lambda idx: energies[idx],
-                                  otypes=[np.float])
-        whiteline_energies = map_energy(whiteline_indices)
-        goodness = np.ones_like(whiteline_energies)
-        return (whiteline_energies, goodness)
+    #     """
+    #     # Calculate the indices of the whiteline
+    #     whiteline_indices = np.argmax(imagestack, axis=0)
+    #     # Convert indices to energy
+    #     map_energy = np.vectorize(lambda idx: energies[idx],
+    #                               otypes=[np.float])
+    #     whiteline_energies = map_energy(whiteline_indices)
+    #     goodness = np.ones_like(whiteline_energies)
+    #     return (whiteline_energies, goodness)
 
-    def normalize(self, spectrum: Series) -> Series:
-        """Adjust the given spectrum so that the pre-edge is around 0 and the
-        post-edge is around 1. The `fit()` method should have been
-        previously called, ideally (though not required) on the same data.
-        """
-        # Calculate predicted pre-edge
-        energies = np.array(spectrum.index)
-        preedge = self._pre_edge_fit.predict(energies.reshape(-1, 1))
-        # Calculate predicted absorbance at whiteline
-        E_0 = self._post_edge_xs(self.E_0)
-        try:
-            abs_0 = self._post_edge_fit.predict(E_0)
-        except utils.validation.NotFittedError:
-            raise exceptions.RefinementError() from None
-        pre_E_0 = np.array(self.E_0).reshape(-1, 1)
-        abs_0 = abs_0 - self._pre_edge_fit.predict(pre_E_0)
-        # Perform normalization
-        new_spectrum = (spectrum - preedge) / abs_0
-        return new_spectrum
+    # def normalize(self, spectrum: Series) -> Series:
+    #     """Adjust the given spectrum so that the pre-edge is around 0 and the
+    #     post-edge is around 1. The `fit()` method should have been
+    #     previously called, ideally (though not required) on the same data.
+    #     """
+    #     # Calculate predicted pre-edge
+    #     energies = np.array(spectrum.index)
+    #     preedge = self._pre_edge_fit.predict(energies.reshape(-1, 1))
+    #     # Calculate predicted absorbance at whiteline
+    #     E_0 = self._post_edge_xs(self.E_0)
+    #     try:
+    #         abs_0 = self._post_edge_fit.predict(E_0)
+    #     except utils.validation.NotFittedError:
+    #         raise exceptions.RefinementError() from None
+    #     pre_E_0 = np.array(self.E_0).reshape(-1, 1)
+    #     abs_0 = abs_0 - self._pre_edge_fit.predict(pre_E_0)
+    #     # Perform normalization
+    #     new_spectrum = (spectrum - preedge) / abs_0
+    #     return new_spectrum
 
-    def plot(self, ax=None):
-        """Plot this edge on an axes. If the edge has been fit to data, then
-        this fit will be plotted. Otherwise, just the ranges of the
-        edge will be shown.
-        """
-        if ax is None:
-            ax = plots.new_axes()
-        # Find range of values to plot based on edge energies
-        all_energies = self.all_energies()
-        xmin = min(all_energies)
-        xmax = max(all_energies)
-        x = np.linspace(xmin, xmax, num=50)
-        # Plot pre-edge line
-        y = self._pre_edge_fit.predict(x.reshape(-1, 1))
-        ax.plot(x, y)
-        # Plot post-edge curve
-        y = self._post_edge_fit.predict(self._post_edge_xs(x))
-        ax.plot(x, y)
-        # Plot whiteline fit if performed
-        # if self.whiteline_peak is not None:
-        #     self.whiteline_peak.plot_fit(ax=ax)
+    # def plot(self, ax=None):
+    #     """Plot this edge on an axes. If the edge has been fit to data, then
+    #     this fit will be plotted. Otherwise, just the ranges of the
+    #     edge will be shown.
+    #     """
+    #     if ax is None:
+    #         ax = plots.new_axes()
+    #     # Find range of values to plot based on edge energies
+    #     all_energies = self.all_energies()
+    #     xmin = min(all_energies)
+    #     xmax = max(all_energies)
+    #     x = np.linspace(xmin, xmax, num=50)
+    #     # Plot pre-edge line
+    #     y = self._pre_edge_fit.predict(x.reshape(-1, 1))
+    #     ax.plot(x, y)
+    #     # Plot post-edge curve
+    #     y = self._post_edge_fit.predict(self._post_edge_xs(x))
+    #     ax.plot(x, y)
+    #     # Plot whiteline fit if performed
+    #     # if self.whiteline_peak is not None:
+    #     #     self.whiteline_peak.plot_fit(ax=ax)
 
 class NCANickelLEdge(KEdge):
     E_0 = 853
@@ -230,23 +269,23 @@ class NCANickelLEdge(KEdge):
     _peak1 = 850.91
     _peak2 = 853.16
 
-    def calculate_direct_map(self, imagestack, energies):
-        """Return a map with the ratios of intensities at 851 and 853 eV."""
-        idx1 = energies.index(self._peak1)
-        idx2 = energies.index(self._peak2)
-        # Now calculate the peak ratio
-        peak1 = imagestack[idx1]
-        peak2 = imagestack[idx2]
-        ratio = peak2 / (peak1 + peak2)
-        goodness = (peak1 + peak2)
-        return (ratio, goodness)
+    # def calculate_direct_map(self, imagestack, energies):
+    #     """Return a map with the ratios of intensities at 851 and 853 eV."""
+    #     idx1 = energies.index(self._peak1)
+    #     idx2 = energies.index(self._peak2)
+    #     # Now calculate the peak ratio
+    #     peak1 = imagestack[idx1]
+    #     peak2 = imagestack[idx2]
+    #     ratio = peak2 / (peak1 + peak2)
+    #     goodness = (peak1 + peak2)
+    #     return (ratio, goodness)
 
-    def map_normalizer(self, method="direct"):
-        return Normalize(0, 1)
+    # def map_normalizer(self, method="direct"):
+    #     return Normalize(0, 1)
 
-    def annotate_spectrum(self, ax):
-        ax.axvline(x=self._peak1, linestyle='-', color="0.55", alpha=0.4)
-        ax.axvline(x=self._peak2, linestyle='-', color="0.55", alpha=0.4)
+    # def annotate_spectrum(self, ax):
+    #     ax.axvline(x=self._peak1, linestyle='-', color="0.55", alpha=0.4)
+    #     ax.axvline(x=self._peak2, linestyle='-', color="0.55", alpha=0.4)
 
 # class NickelKEdge(KEdge):
 #     E_0 = 8333
@@ -278,6 +317,7 @@ class LMOMnKEdge(KEdge):
 
 class NCANickelKEdge(KEdge):
     E_0 = 8333
+    shell = 'K'
     regions = [
         (8250, 8310, 20),
         (8324, 8344, 2),
@@ -287,21 +327,13 @@ class NCANickelKEdge(KEdge):
         (8400, 8440, 8),
         (8440, 8640, 50),
     ]
-    # pre_edge = (8250, 8325)
     pre_edge = (8250, 8290)
-    # post_edge = (8352, 8640)
     post_edge = (8440, 8640)
+    map_range = (8341, 8358)
     edge_range = (8341, 8358)
 
-    def map_normalizer(self, method="direct"):
-        return Normalize(*self.map_range)
-
-    def annotate_spectrum(self, ax):
-        ax.axvline(x=self.pre_edge[1], linestyle='-', color="0.55", alpha=0.4)
-        ax.axvline(x=self.post_edge[0], linestyle='-', color="0.55", alpha=0.4)
-
-    def calculate_direct_map(self, imagestack, energies):
-        return self.calculate_direct_whiteline(imagestack, energies)
+    # def calculate_direct_map(self, imagestack, energies):
+    #     return self.calculate_direct_whiteline(imagestack, energies)
 
 
 class NCANickelKEdge61(NCANickelKEdge):

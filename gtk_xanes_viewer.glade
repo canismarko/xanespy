@@ -1099,30 +1099,6 @@
                   </packing>
                 </child>
                 <child>
-                  <object class="GtkLabel" id="EdgeJumpXanesLabel">
-                    <property name="visible">True</property>
-                    <property name="can_focus">False</property>
-                    <property name="label" translatable="yes">Edge Jump Filter:</property>
-                  </object>
-                  <packing>
-                    <property name="expand">False</property>
-                    <property name="fill">True</property>
-                    <property name="position">3</property>
-                  </packing>
-                </child>
-                <child>
-                  <object class="GtkSwitch" id="EdgeJumpXanesSwitch">
-                    <property name="related_action">toggleEdgeJump</property>
-                    <property name="visible">True</property>
-                    <property name="can_focus">True</property>
-                  </object>
-                  <packing>
-                    <property name="expand">False</property>
-                    <property name="fill">True</property>
-                    <property name="position">4</property>
-                  </packing>
-                </child>
-                <child>
                   <object class="GtkLabel" id="NormalizeLabel">
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>

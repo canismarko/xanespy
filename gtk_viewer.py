@@ -19,15 +19,14 @@
 
 import os
 
+import numpy as np
 import gi
+gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk, Gdk, GObject, GLib
 
 from utilities import xycoord, position, shape
 from frame import Pixel, xy_to_pixel, pixel_to_xy
-from plotter import GtkFramesetPlotter
-
-
-gi.require_version('Gtk', '3.0')
+from gtk_plotter import GtkFramesetPlotter
 
 
 WATCH_CURSOR = Gdk.Cursor(Gdk.CursorType.WATCH)
@@ -103,7 +102,7 @@ class GtkTxmViewer():
         self.builder = Gtk.Builder()
         # Load the GUI from a glade file
         gladefile = os.path.join(os.path.dirname(__file__),
-                                 "xanes_viewer.glade")
+                                 "gtk_xanes_viewer.glade")
         self.builder.add_from_file(gladefile)
         self.window = self.builder.get_object('XanesViewerWindow')
         self.image_sw = self.builder.get_object('ImageWindow')
@@ -165,7 +164,7 @@ class GtkTxmViewer():
         #     treeview.expand_to_path(active_path)
         #     selection.select_path(active_path)
         # Put the non-glade things in the window
-        self.plotter.plot_xanes_spectrum()
+        # self.plotter.plot_xanes_spectra()
         # Populate the combobox with list of available representations
         self.rep_combo = self.builder.get_object('ActiveRepresentationCombo')
         self.rep_list = Gtk.ListStore(str, str)
@@ -240,11 +239,10 @@ class GtkTxmViewer():
         GLib.idle_add(self.update_map_window)
 
     def toggle_edge_jump(self, widget, object=None):
+        print(widget)
         self.plotter.apply_edge_jump = widget.get_active()
-        if self.frameset.map_name:
-            # Only replot the map if necessary
-            GLib.idle_add(self.draw_map_plots)
-            GLib.idle_add(self.update_map_window)
+        GLib.idle_add(self.draw_map_plots)
+        GLib.idle_add(self.update_map_window)
         self.refresh_artists()
         self.update_window()
 
@@ -291,33 +289,38 @@ class GtkTxmViewer():
         GLib.idle_add(self.update_map_window)
 
     def update_current_location(self, event):
-        print('fix gtk_viewer.update_current_location')
-        # x_label = self.builder.get_object('XCursorLabel')
-        # y_label = self.builder.get_object('YCursorLabel')
-        # v_label = self.builder.get_object('VCursorLabel')
-        # h_label = self.builder.get_object('HCursorLabel')
-        # I_label = self.builder.get_object('ICursorLabel')
-        # if event.inaxes == self.plotter.image_ax:
-        #     # Convert xy position to pixel values
-        #     xy = xycoord(x=round(event.xdata, 1), y=round(event.ydata, 1))
-        #     pixel = xy_to_pixel(xy, extent=self.frameset.extent(),
-        #                         shape=self.frameset.map_shape())
-        #     x_label.set_text(str(xy.x))
-        #     y_label.set_text(str(xy.y))
-        #     v_label.set_text(str(pixel.vertical))
-        #     h_label.set_text(str(pixel.horizontal))
-        #     row = np.clip(pixel.vertical, 0, frame.image_data.shape[0]-1)
-        #     col = np.clip(pixel.horizontal, 0, frame.image_data.shape[1]-1)
-        #     value = frame.image_data[row][col]
-        #     I_label.set_text(str(round(value, 4)))
-        # else:
-        #     # Set all the cursor labels to blank values
-        #     s = "--"
-        #     x_label.set_text(s)
-        #     y_label.set_text(s)
-        #     v_label.set_text(s)
-        #     h_label.set_text(s)
-        #     I_label.set_text(s)
+        x_label = self.builder.get_object('XCursorLabel')
+        y_label = self.builder.get_object('YCursorLabel')
+        v_label = self.builder.get_object('VCursorLabel')
+        h_label = self.builder.get_object('HCursorLabel')
+        I_label = self.builder.get_object('ICursorLabel')
+        if event.inaxes == self.plotter.image_ax:
+            # Convert xy position to pixel values
+            xy = xycoord(x=round(event.xdata, 1), y=round(event.ydata, 1))
+            with self.frameset.store() as store:
+                frame_shape = store.absorbances.shape[1:]
+            pixel = xy_to_pixel(xy, extent=self.frameset.extent(),
+                                shape=frame_shape)
+            # Write the coordinates to the text labels
+            x_label.set_text(str(xy.x))
+            y_label.set_text(str(xy.y))
+            v_label.set_text(str(pixel.vertical))
+            h_label.set_text(str(pixel.horizontal))
+            # Retrieve and display to absorbance intensity
+            row = np.clip(pixel.vertical, 0, frame_shape[0]-1)
+            col = np.clip(pixel.horizontal, 0, frame_shape[1]-1)
+            with self.frameset.store() as store:
+                value = store.absorbances[self.current_idx,row,col]
+                # value = frame.image_data[row][col]
+            I_label.set_text(str(round(value, 4)))
+        else:
+            # Set all the cursor labels to blank values
+            s = "--"
+            x_label.set_text(s)
+            y_label.set_text(s)
+            v_label.set_text(s)
+            h_label.set_text(s)
+            I_label.set_text(s)
 
     def draw_map_plots(self):
         self.plotter.draw_map(show_map=self.show_map,
@@ -328,7 +331,7 @@ class GtkTxmViewer():
         else:
             color = 'black'
         self.plotter.draw_crosshairs(active_xy=self.active_xy, color=color)
-        self.plotter.draw_map_xanes()
+        # self.plotter.draw_map_xanes()
         self.plotter.plot_histogram()
 
     def update_map_window(self):
@@ -455,7 +458,7 @@ class GtkTxmViewer():
 
     def refresh_artists(self, *args, **kwargs):
         # Redraw xanes spectrum
-        self.plotter.plot_xanes_spectrum()
+        self.plotter.plot_xanes_spectra()
         def connect_animation():
             self.plotter.connect_animation(self.event_source)
         GLib.idle_add(connect_animation)

@@ -44,8 +44,7 @@ from frame import (
     TXMFrame, PtychoFrame, calculate_particle_labels, pixel_to_xy,
     apply_reference)
 from txmstore import TXMStore
-from plotter import FramesetPlotter, FramesetMoviePlotter
-from plots import new_axes, new_image_axes, plot_txm_map
+from plots import new_axes, new_image_axes, plot_txm_map, plot_xanes_spectrum
 import exceptions
 import smp
 
@@ -1329,7 +1328,8 @@ class XanesFrameset():
         warnings.warn(UserWarning('use spectrum()'))
         return self.spectrum(*args, **kwargs)
 
-    def spectrum(self, pixel=None, edge_jump_filter="",
+    @functools.lru_cache()
+    def spectrum(self, pixel=None, edge_jump_filter=False,
                        representation="modulus"):
         """Collapse the dataset down to a two-dimensional spectrum. Returns a
         pandas series containing the resulting spectrum.
@@ -1372,10 +1372,18 @@ class XanesFrameset():
         #     energies.append(frame.energy)
         # Retrieve data
         with self.store() as store:
-            energies = store.energies
-            intensities = np.mean(store.absorbances, axis=(1, 2))
+            energies = store.energies.value
+            frames = store.absorbances
+            if edge_jump_filter:
+                # Filter out background pixels using edge mask
+                mask = self.edge_mask()
+                mask = np.broadcast_to(array=mask,
+                                       shape=(*energies.shape, *mask.shape))
+                frames = np.ma.array(frames, mask=mask)
+            # Take average of all pixel frames
+            spectrum = np.mean(np.reshape(frames, (frames.shape[0], -1)), axis=(1))
             # Combine into a series
-            series = pd.Series(intensities, index=energies)
+            series = pd.Series(spectrum, index=energies)
         return series
 
     def plot_xanes_spectrum(self, ax=None, pixel=None,
@@ -1404,40 +1412,30 @@ class XanesFrameset():
         if norm_range is None:
             norm_range = (self.edge.map_range[0], self.edge.map_range[1])
         norm = Normalize(*norm_range)
-        spectrum = self.xanes_spectrum(pixel=pixel, edge_jump_filter=edge_jump_filter, representation=representation)
+        spectrum = self.spectrum(pixel=pixel,
+                                 edge_jump_filter=edge_jump_filter,
+                                 representation=representation)
         edge = self.edge()
         if ax is None:
             ax = new_axes()
-        # Color code the markers by energy
-        colors = []
-        for energy in spectrum.index:
-            cmap = cm.get_cmap(self.cmap)
-            colors.append(cmap(norm(energy)))
-        if normalize or show_fit:
-            # Prepare an edge for fitting
-            edge.post_edge_order = 1
-            try:
-                edge.fit(spectrum)
-            except (exceptions.RefinementError,
-                    validation.NotFittedError,):
-                # Fit failed, so we can't normalize
-                normalize = False
-                show_fit = False
+        # if normalize or show_fit:
+        #     # Prepare an edge for fitting
+        #     edge.post_edge_order = 1
+        #     try:
+        #         edge.fit(spectrum)
+        #     except (exceptions.RefinementError,
+        #             validation.NotFittedError,):
+        #         # Fit failed, so we can't normalize
+        #         normalize = False
+        #         show_fit = False
         if normalize:
             # Adjust the limits of the spectrum to be between 0 and 1
-            spectrum = edge.normalize(spectrum)
-        ax.plot(spectrum, linestyle=linestyle, *args, **kwargs)
-        xlim = ax.get_xlim()
-        ylim = ax.get_ylim()
-        if show_fit:
-            # Plot the predicted values from edge fitting
-            edge.plot(ax=ax)
-        scatter = ax.scatter(spectrum.index, spectrum.values, c=colors, s=25)
-        # Restore axes limits, they get messed up by scatter()
-        ax.set_xlim(*xlim)
-        ax.set_ylim(*ylim)
-        ax.set_xlabel('Energy /eV')
-        ax.set_ylabel('Absorbance')
+            normalized = edge.normalize(spectrum.values, spectrum.index)
+            spectrum = pd.Series(normalized, index=spectrum.index)
+        scatter = plot_xanes_spectrum(spectrum=spectrum,
+                                      ax=ax,
+                                      energies=spectrum.index,
+                                      norm=Normalize(*self.edge.map_range))
         if pixel is not None:
             xy = pixel_to_xy(pixel, extent=self.extent(), shape=self.map_shape())
             title = 'XANES Spectrum at ({x}, {y}) = {val}'
@@ -1448,7 +1446,7 @@ class XanesFrameset():
                                  val=val)
             ax.set_title(title)
         # Plot lines at edge of normalization range or indicate peak positions
-        edge.annotate_spectrum(ax)
+        edge.annotate_spectrum(ax=scatter.axes)
         # ax.axvline(x=norm_range[0], linestyle='-', color="0.55", alpha=0.4)
         # ax.axvline(x=norm_range[1], linestyle='-', color="0.55", alpha=0.4)
         return scatter
@@ -1474,53 +1472,57 @@ class XanesFrameset():
         ax.set_ylabel('µm')
         return artist
 
-    @functools.lru_cache()
-    def edge_jump_filter(self):
-        """Calculate an image mask filter that represents the difference in
+    def edge_jump(self):
+        """Calculate a image showing the difference in
         signal across the X-ray edge."""
-        # Sort frames into pre-edge and post-edge
         pre_edge = self.edge.pre_edge
         post_edge = self.edge.post_edge
-        pre_images = []
-        post_images = []
-        for frame in self:
-            if pre_edge[0] <= frame.energy <= pre_edge[1]:
-                pre_images.append(frame.image_data)
-            elif post_edge[0] <= frame.energy <= post_edge[1]:
-                post_images.append(frame.image_data)
-        # Convert lists to numpy arrays
-        pre_images = np.array(pre_images)
-        post_images = np.array(post_images)
-        # Find average frames pre-edge/post-edge values
-        pre_average = np.mean(pre_images, axis=0)
-        post_average = np.mean(post_images, axis=0)
-        # Subtract pre-edge from post-edge
-        filtered_img = post_average - pre_average
-        # Apply normalizer? (maybe later)
-        return filtered_img
+        with self.store() as store:
+            # Flatten frames into a 2D array
+            frames = store.absorbances
+            # Prepare masks for the post-edge and the pre-edge
+            Es = store.energies.value
+            pre_edge_mask = (Es >= pre_edge[0]) & (Es <= pre_edge[1])
+            post_edge_mask = (Es >= post_edge[0]) & (Es <= post_edge[1])
+            # Compare the post-edges and pre-edges
+            mean_pre = np.mean(frames[pre_edge_mask, ...], axis=0)
+            mean_post = np.mean(frames[post_edge_mask, ...], axis=0)
+            ej = mean_post - mean_pre
+        return ej
 
-    def edge_jump_mask(self, sensitivity: float=0.7):
-        """Calculate the edge jump image for this frameset, apply some image
-        processing to fill out the space, and convert it into a binary
-        mask.
+    def edge_mask(self, sensitivity: float=1, opening_size=0):
+        """Calculate a mask for what is likely active material at this
+        edge. This is done by comparing the edge-jump to the standard
+        deviation. Foreground material will be identified when the edge-jump
+        accounts for most of the standard deviation.
 
         Arguments
         ---------
-        - sensitivity: A multiplier for the otsu value to determine
+        - sensitivity : A multiplier for the otsu value to determine
           the actual threshold.
+
+        - opening_size : Size of the disk kernel to use for an opening
+          filter to remove salt. Passing zero (default) will result in
+          no opening.
         """
-        edge_jump = self.edge_jump_filter()
-        img_range = (edge_jump.min(), edge_jump.max())
-        threshold = filters.threshold_otsu(component(edge_jump, "modulus"))
-        threshold = img_range[0] + sensitivity * (threshold - img_range[0])
-        mask = edge_jump > threshold
-        mask = morphology.dilation(mask)
+        print('edge jump')
+        edge_jump = self.edge_jump()
+        with self.store() as store:
+            stdev = np.std(store.absorbances, axis=0)
+            edge_ratio = edge_jump / stdev
+        img_bottom = edge_ratio.min()
+        threshold = filters.threshold_otsu(edge_ratio)
+        threshold = img_bottom + sensitivity * (threshold - img_bottom)
+        mask = edge_ratio > threshold
+        if opening_size > 0:
+            mask = morphology.opening(mask, selem=morphology.disk(opening_size))
         mask = np.logical_not(mask)
         return mask
 
     def goodness_filter(self):
         """Calculate an image based on the goodness of fit. `calculate_map`
         will be called if not already calculated."""
+        raise DeprecationWarning()
         if not self.map_goodness_name:
             map_data, goodness = self.calculate_map()
         else:
@@ -1554,10 +1556,6 @@ class XanesFrameset():
     def calculate_map(self):
         """Generate a map based on pixel-wise Xanes spectra. Default is to
         compute X-ray whiteline position."""
-        # Get default hdf group name
-        # if new_name is None:
-        #     new_name = "{group}/map".format(group=self.active_group)
-        # goodness_name = new_name + "_goodness"
         with self.store() as store:
             energies = store.energies.value
             # Convert numpy axes to be in (pixel, energy) form
@@ -1573,33 +1571,13 @@ class XanesFrameset():
         with self.store(mode='r+') as store:
             store.whiteline_map = whitelines
         return whitelines
-        # # Convert data into an imagestack for mapping
-        # energies = self.energies()
-        # imagestack = []
-        # for frame in self:
-        #     imagestack.append(frame.image_data)
-        # # Get map data
-        # map_data, goodness = self.edge().calculate_direct_map(imagestack, energies)
-        # # Update the hdf file
-        # with self.hdf_file(mode="a") as f:
-        #     # Delete old datasets
-        #     try:
-        #         del self.hdf_file()[new_name]
-        #         del self.hdf_file()[goodness_name]
-        #     except KeyError:
-        #         pass
-        #     # Save new datasets
-        #     f.create_dataset(new_name, data=map_data, compression="gzip")
-        #     f.create_dataset(goodness_name, data=goodness, compression="gzip")
-        # self.map_name = new_name
-        # self.map_goodness_name = goodness_name
-        # return map_data, goodness
 
     def masked_map(self, goodness_filter=True):
         """Generate a map based on pixel-wise Xanes spectra and apply an
         edge-jump filter mask. Default is to compute X-ray whiteline
         position.
         """
+        raise DeprecationWarning()
         # Check for cached map of the whiteline position for each pixel
         if not self.map_name:
             map_data, goodness = self.calculate_map()
@@ -1608,9 +1586,6 @@ class XanesFrameset():
                 map_data = f[self.map_name].value
         masked_map = np.ma.array(map_data, mask=self.goodness_mask())
         return masked_map
-
-    def map_shape(self):
-        return self[0].image_data.shape
 
     def extent(self, idx=0):
         """Determine physical dimensions for axes values.
@@ -1672,30 +1647,14 @@ class XanesFrameset():
         return artist
 
     def plot_map(self, ax=None):
-        if ax is None:
-            ax = new_image_axes()
+        """Prepare data and plot a map of whiteline positions."""
         # Do the plotting
         with self.store() as store:
             plot_txm_map(data=store.whiteline_map,
-                         norm_range=None,
-                         edge=self.edge)
-            # ax.imshow(store.whiteline_map, cmap='plasma', origin='lower')
-
-    # def plot_map(self, plotter=None, ax=None, norm_range=None, alpha=1,
-    #              goodness_filter=False, return_type="axes", active_pixel=None,
-    #              *args, **kwargs):
-    #     """Use a default frameset plotter to draw a map of the chemical data."""
-    #     if plotter is None:
-    #         plotter = FramesetPlotter(frameset=self, map_ax=ax)
-    #     artist = plotter.draw_map(norm_range=norm_range, alpha=alpha,
-    #                               goodness_filter=goodness_filter,
-    #                               *args, **kwargs)
-    #     # Draw crosshairs for the active pixel if necessary
-    #     if active_pixel:
-    #         xy = pixel_to_xy(active_pixel, extent=self.extent(),
-    #                          shape=self.map_shape())
-    #         plotter.draw_crosshairs(active_xy=xy)
-    #     return plotter, artist
+                         ax=ax,
+                         norm=None,
+                         edge=self.edge(),
+                         extent=self.extent())
 
     def plot_goodness(self, plotter=None, ax=None, norm_range=None,
                       *args, **kwargs):
@@ -1734,55 +1693,44 @@ class XanesFrameset():
         pl.connect_animation()
         pl.save_movie(filename=filename, *args, **kwargs)
 
-    def whiteline_map(self, method="direct"):
-        """Calculate a map where each pixel is the energy of the whiteline.
+    # def whiteline_map(self, method="direct"):
+    #     """Calculate a map where each pixel is the energy of the whiteline.
 
-        Arguments
-        ---------
-        method: A string declaring which method to use
-          - "gaussian": fit the whiteline with a gaussian peak (accurate)
-          - "direct": Find the energy with maximum absorbance (fast)
-        """
-        imagestack = build_series(self)
-        # Call the appropriate calculation function
-        if method == "gaussian":
-            whiteline, goodness = calculate_gaussian_whiteline(
-                imagestack, edge=self.edge()
-            )
-        elif method == "direct":
-            if not prog.quiet:
-                print("Calculating whiteline map...", end="")
-            whiteline, goodness = calculate_direct_whiteline(
-                imagestack, edge=self.edge()
-            )
-            if not prog.quiet:
-                print("done")
-        else:
-            # Unknown value for method
-            msg = 'Unknown method "{}".'.format(method)
-            raise ValueError(msg)
-        self.map_method = "whiteline_" + method
-        return whiteline, goodness
+    #     Arguments
+    #     ---------
+    #     method: A string declaring which method to use
+    #       - "gaussian": fit the whiteline with a gaussian peak (accurate)
+    #       - "direct": Find the energy with maximum absorbance (fast)
+    #     """
+    #     imagestack = build_series(self)
+    #     # Call the appropriate calculation function
+    #     if method == "gaussian":
+    #         whiteline, goodness = calculate_gaussian_whiteline(
+    #             imagestack, edge=self.edge()
+    #         )
+    #     elif method == "direct":
+    #         if not prog.quiet:
+    #             print("Calculating whiteline map...", end="")
+    #         whiteline, goodness = calculate_direct_whiteline(
+    #             imagestack, edge=self.edge()
+    #         )
+    #         if not prog.quiet:
+    #             print("done")
+    #     else:
+    #         # Unknown value for method
+    #         msg = 'Unknown method "{}".'.format(method)
+    #         raise ValueError(msg)
+    #     self.map_method = "whiteline_" + method
+    #     return whiteline, goodness
 
-    # def energies(self):
-    #     energies = []
-    #     with self.hdf_file() as f:
-    #         for key in f[self.active_group]:
-    #             group = f[self.active_group][key]
-    #             try:
-    #                 energies.append(group.attrs['approximate_energy'])
-    #             except KeyError:
-    #                 pass
-    #     return energies
-
-    def whiteline_energy(self):
-        """Calculate the energy corresponding to the whiteline (maximum
-        absorbance) for the whole frame. This first applies an
-        edge-jump filter.
-        """
-        spectrum = self.xanes_spectrum(edge_jump_filter=True)
-        whiteline = calculate_whiteline(spectrum, edge=self.edge())
-        return whiteline
+    # def whiteline_energy(self):
+    #     """Calculate the energy corresponding to the whiteline (maximum
+    #     absorbance) for the whole frame. This first applies an
+    #     edge-jump filter.
+    #     """
+    #     spectrum = self.xanes_spectrum(edge_jump_filter=True)
+    #     whiteline = calculate_whiteline(spectrum, edge=self.edge())
+    #     return whiteline
 
     # def fit_whiteline(self, width=4):
     #     """Calculate the energy corresponding to the whiteline (maximum

@@ -1,6 +1,73 @@
+# -*- coding: utf-8 -*-
+#
+# Copyright © 2016 Mark Wolf
+#
+# This file is part of Xanespy.
+#
+# Xanespy is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# Xanespy is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with Xanespy. If not, see <http://www.gnu.org/licenses/>.
+
+"""Module containing all the computationally demanding functions. This
+allows for easy optimization of parallelizable algorithms. Most
+functions will operate on large arrays of data, so this file can be
+compiled to C code using Cython.
+"""
+
+import warnings
+
 import numpy as np
 
 from skimage import transform, feature
+
+
+def normalize_Kedge(spectra, energies, E_0, pre_edge, post_edge, post_edge_order=2):
+    """Normalize the K-edge XANES spectrum so that the pre-edge is linear
+    and the EXAFS region projects to an absorbance of 1 and the edge
+    energy (E_0). Algorithm is taken mostly from the Atena 4 manual.
+
+    Returns: Normalized spectra as a numpy array of the same shape as input spectra.
+
+    Arguments
+    ---------
+
+    - spectra : Numpy array where the last dimension represents
+      energy, which should be the same length as `energies` argument.
+
+    - energies : 1-D numpy array with all the energies in electron-volts.
+
+    - E_0 : Energy of the actual edge in electron-volts.
+
+    - pre_edge : 2-tuple with range of energies that represent the
+      pre-edge region.
+
+    - post_edge : 2-tuple with range of energies that represent the
+      post-edge region.
+
+    - post_edge_order : The order of polynomial to use for fitting the
+      post-edge region. Ex: 2 (default) means a quadratic function is
+      used.
+    """
+    warnings.warn(UserWarning("xanes_math.normalize_Kedge not implemented"))
+    # Flatten the spectra to be a two-dimensional array for looping
+    orig_shape = spectra.shape
+    spectra = spectra.reshape(-1, spectra.shape[-1])
+    # Fit the pre-edge region
+    ## TODO
+    # Fit the post-edge region
+    ## TODO
+    # Restore original shape
+    spectra = spectra.reshape(orig_shape)
+    return spectra
 
 
 def direct_whitelines(spectra, energies, edge):
