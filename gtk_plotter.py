@@ -293,7 +293,11 @@ class GtkFramesetPlotter():
             if self.apply_edge_jump:
                 data = np.ma.array(data, mask=self.frameset.edge_mask())
             # Plot the overall map
-            artist = plots.plot_txm_map(data, edge=self.frameset.edge(), ax=self.map_ax)
+            artist = plots.plot_txm_map(data,
+                                        edge=self.frameset.edge(),
+                                        ax=self.map_ax,
+                                        norm=None,
+                                        extent=self.frameset.extent())
             # artist = self.frameset.plot_map(goodness_filter=self.apply_edge_jump,
             #                                 alpha=map_alpha)
             # map_artist = super().draw_map(goodness_filter=self.apply_edge_jump,
@@ -331,61 +335,66 @@ class GtkFramesetPlotter():
     def draw_map_xanes(self, active_pixel=None):
         raise UserWarning("Just call draw_xanes_spectra")
 
-    def plot_xanes_spectra(self, active_pixel=None):
-        print('start plotting')
-        # import pdb; pdb.set_trace()
+    def _plot_spectrum(self, ax, active_pixel=None, zoom=True):
+        """Get the data and plot on the given ax"""
         show_fit = False
         # Decide whether to apply edge jump filter
         if self.active_pixel:
             edge_jump = False
         else:
             edge_jump = self.apply_edge_jump
-        spectrum = self.frameset.spectrum(edge_jump_filter=edge_jump)
+        spectrum = self.frameset.spectrum(edge_jump_filter=edge_jump, pixel=active_pixel)
         norm = Normalize(*self.frameset.edge.map_range)
         # Plot the full XANES spectrum
-        self.map_xanes_ax.clear()
-        self.xanes_ax.clear()
+        ax.clear()
         plots.plot_xanes_spectrum(spectrum=spectrum,
                                   energies=spectrum.index,
                                   norm=norm,
-                                  ax=self.map_xanes_ax)
-        plots.plot_xanes_spectrum(spectrum=spectrum,
-                                  energies=spectrum.index,
-                                  norm=norm,
-                                  ax=self.xanes_ax)
-        # Plot the XANES spectrum zoomed in on the edge
-        self.map_edge_ax.clear()
-        self.edge_ax.clear()
-        plots.plot_xanes_spectrum(spectrum=spectrum,
-                                  energies=spectrum.index,
-                                  norm=norm,
-                                  ax=self.map_edge_ax)
-        plots.plot_xanes_spectrum(spectrum=spectrum,
-                                  energies=spectrum.index,
-                                  norm=norm,
-                                  ax=self.edge_ax)
+                                  ax=ax)
+
+    def plot_map_spectra(self, active_pixel=None):
+        """Plot the XANES spectra on the axes in the map window."""
+        self._plot_spectrum(ax=self.map_xanes_ax, active_pixel=active_pixel)
+        self._plot_spectrum(ax=self.map_edge_ax, active_pixel=active_pixel)
+        # Zoom in on the edge axis
         map_range = self.frameset.edge.map_range
         self.map_edge_ax.set_xlim(map_range[0]-5, map_range[1]+5)
-        self.edge_ax.set_xlim(map_range[0]-5, map_range[1]+5)
         self.map_canvas.draw()
+
+    def plot_frame_spectra(self, active_pixel=None):
+        """Plot the XANES spectra on the axes in the frame window."""
+        self._plot_spectrum(ax=self.xanes_ax, active_pixel=active_pixel)
+        self._plot_spectrum(ax=self.edge_ax, active_pixel=active_pixel)
+        # Zoom in on the edge axis
+        map_range = self.frameset.edge.map_range
+        self.edge_ax.set_xlim(map_range[0]-5, map_range[1]+5)
         self.frame_canvas.draw()
-        # self.frameset.plot_xanes_spectrum(normalize=normalize,
-        #                                   ax=self.xanes_ax,
-        #                                   pixel=self.active_pixel,
-        #                                   show_fit=show_fit,
-        #                                   edge_jump_filter=self.apply_edge_jump,
-        #                                   representation=self.active_representation)
-        # self.xanes_ax.figure.canvas.draw()
-        # # Plot zoomed in edge-view
+        # plots.plot_xanes_spectrum(spectrum=spectrum,
+        #                           energies=spectrum.index,
+        #                           norm=norm,
+        #                           ax=self.map_xanes_ax)
+        # plots.plot_xanes_spectrum(spectrum=spectrum,
+        #                           energies=spectrum.index,
+        #                           norm=norm,
+        #                           ax=self.xanes_ax)
+        # # Plot the XANES spectrum zoomed in on the edge
+        # self.map_edge_ax.clear()
         # self.edge_ax.clear()
-        # ret = self.frameset.plot_xanes_edge(ax=self.edge_ax,
-        #                                     normalize=normalize,
-        #                                     pixel=self.active_pixel,
-        #                                     show_fit=show_fit,
-        #                                     edge_jump_filter=self.apply_edge_jump)
-        # self.edge_ax.figure.canvas.draw()
-        # return ret
-        print('end plotting')
+        # plots.plot_xanes_spectrum(spectrum=spectrum,
+        #                           energies=spectrum.index,
+        #                           norm=norm,
+        #                           ax=self.map_edge_ax)
+        # plots.plot_xanes_spectrum(spectrum=spectrum,
+        #                           energies=spectrum.index,
+        #                           norm=norm,
+        #                           ax=self.edge_ax)
+        # map_range = self.frameset.edge.map_range
+        # self.map_edge_ax.set_xlim(map_range[0]-5, map_range[1]+5)
+        # self.edge_ax.set_xlim(map_range[0]-5, map_range[1]+5)
+
+    def plot_xanes_spectra(self, *args, **kwargs):
+        raise UserWarning("Calling plot_map_spectra instead")
+        return self.plot_map_spectra(*args, **kwargs)
 
     def create_axes(self):
         # Define a grid specification
@@ -427,12 +436,12 @@ class GtkFramesetPlotter():
     def refresh_artists(self):
         """Prepare artist objects for each frame and animate them for easy
         transitioning."""
-        self.plot_xanes_spectra()
+        self.plot_frame_spectra(active_pixel=self.active_pixel)
         # Get image artists
         self.image_ax.clear()
         # Prepare appropriate xanes spectrum
-        spectrum = self.frameset.xanes_spectrum(edge_jump_filter=self.apply_edge_jump,
-                                                pixel=self.active_pixel)
+        spectrum = self.frameset.spectrum(edge_jump_filter=self.apply_edge_jump,
+                                          pixel=self.active_pixel)
         # if self.normalize_xanes:
             # edge = self.frameset.edge()
             # edge.post_edge_order = 1
@@ -457,7 +466,7 @@ class GtkFramesetPlotter():
                 frame_artists.append(artist)
         # Prepare XANES highlighting artists
         xanes_artists = []
-        spectrum = self.frameset.xanes_spectrum(edge_jump_filter=self.apply_edge_jump)
+        spectrum = self.frameset.spectrum(edge_jump_filter=self.apply_edge_jump)
         for energy in spectrum.index:
             artists = self.xanes_ax.plot([energy], [spectrum[energy]],
                                          'ro', animated=True)

@@ -35,6 +35,33 @@ Pixel = namedtuple('Pixel', ('vertical', 'horizontal'))
 shape = namedtuple('shape', ('rows', 'columns'))
 Extent = namedtuple('extent', ('left', 'right', 'bottom', 'top'))
 
+
+def xy_to_pixel(xy, extent, shape):
+    """Take an xy location on an image and convert it to a pixel location
+    suitable for numpy indexing."""
+    ratio_x = (xy.x - extent.left) / (extent.right - extent.left)
+    pixel_h = int(round(ratio_x * shape[1]))
+    ratio_y = (xy.y - extent.bottom) / (extent.top - extent.bottom)
+    # (1 - ratio) for y because images are top indexed
+    pixel_v = int(round(ratio_y * shape[0]))
+    return Pixel(vertical=pixel_v, horizontal=pixel_h)
+
+
+def pixel_to_xy(pixel, extent, shape):
+    """Take an xy location on an image and convert it to a pixel location
+    suitable for numpy indexing."""
+    # ratio_x = (xy.x-extent.left)/(extent.right-extent.left)
+    # pixel_h = int(round(ratio_x * shape[1]))
+    # ratio_y = (xy.y-extent.bottom)/(extent.top-extent.bottom)
+    # # (1 - ratio) for y because images are top indexed
+    # pixel_v = int(round((1 - ratio_y) * shape[0]))
+    ratio_h = (pixel.horizontal / shape[1])
+    x = extent.left + ratio_h * (extent.right - extent.left)
+    ratio_v = (pixel.vertical / shape[0])
+    y = extent.bottom + ratio_v * (extent.top - extent.bottom)
+    return xycoord(x=x, y=y)
+
+
 def component(data, name):
     """If complex, turn to given component, otherwise return original data."""
     if np.any(data.imag):

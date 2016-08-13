@@ -161,7 +161,7 @@ class XRMFile():
         #   For 9 keV, at binning 2, the pixel size is 35.54 nm.  In our
         #   system, the pixel size is proportional to the X-ray energy.
         #   Say you have 8.5 keV, your pixel size at binning 2 will be
-        #   35.54/9*8.5
+        #   36.39296/9*8.5
         if self.flavor == "ssrl":
             energy = self.energy()
             field_size = 36.39296 * energy / 9000

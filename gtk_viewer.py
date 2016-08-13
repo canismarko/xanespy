@@ -24,8 +24,7 @@ import gi
 gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk, Gdk, GObject, GLib
 
-from utilities import xycoord, position, shape
-from frame import Pixel, xy_to_pixel, pixel_to_xy
+from utilities import xycoord, position, shape, Pixel, xy_to_pixel, pixel_to_xy
 from gtk_plotter import GtkFramesetPlotter
 
 
@@ -48,6 +47,7 @@ class WatchCursor():
         self.threading = threading
 
     def __call__(self, *args, delay=0):
+        """Start the watch cursor with a delay of `delay` in milliseconds."""
         def dostuff(*args):
             # Unpack user data
             windows, target, *more = args
@@ -163,9 +163,12 @@ class GtkTxmViewer():
         #     selection = treeview.get_selection()
         #     treeview.expand_to_path(active_path)
         #     selection.select_path(active_path)
-        # Put the non-glade things in the window
-        # self.plotter.plot_xanes_spectra()
+
         # Populate the combobox with list of available representations
+
+        # Put the non-glade things in the window
+        self.plotter.plot_map_spectra()
+        # self.plotter.plot_xanes_spectra()
         self.rep_combo = self.builder.get_object('ActiveRepresentationCombo')
         self.rep_list = Gtk.ListStore(str, str)
         reps = self.frameset.representations()
@@ -196,8 +199,9 @@ class GtkTxmViewer():
             'last-frame': self.last_frame,
             'first-frame': self.first_frame,
             # 'key-release-main': self.key_pressed_main,
-            'key-release-map': WatchCursor(self.navigate_map,
-                                           windows=[self.map_window]),
+            # 'key-press-map': WatchCursor(self.navigate_map,
+            #                                windows=[self.map_window]),
+            'key-press-map': self.navigate_map,
             'toggle-particles': WatchCursor(self.toggle_particles,
                                             windows=both_windows),
             'toggle-normalization': WatchCursor(self.toggle_normalization,
@@ -220,10 +224,8 @@ class GtkTxmViewer():
         self.builder.connect_signals(handlers)
         self.window.connect('delete-event', self.quit)
         # Connect handlers for clicking on a pixel
-        click_pixel = WatchCursor(self.click_map_pixel,
-                                  windows=[self.map_window])
         self.plotter.map_figure.canvas.mpl_connect('button_press_event',
-                                                   click_pixel)
+                                                   self.click_map_pixel)
         # Connect handler for mousing over the frame image
         self.plotter.frame_figure.canvas.mpl_connect('motion_notify_event',
                                                      self.update_current_location)
@@ -239,7 +241,6 @@ class GtkTxmViewer():
         GLib.idle_add(self.update_map_window)
 
     def toggle_edge_jump(self, widget, object=None):
-        print(widget)
         self.plotter.apply_edge_jump = widget.get_active()
         GLib.idle_add(self.draw_map_plots)
         GLib.idle_add(self.update_map_window)
@@ -271,21 +272,24 @@ class GtkTxmViewer():
         if event.inaxes in [self.plotter.map_ax, self.plotter.image_ax]:
             # Convert xy position to pixel values
             xy = xycoord(x=event.xdata, y=event.ydata)
+            with self.frameset.store() as store:
+                map_shape = store.whiteline_map.shape
             self.active_pixel = xy_to_pixel(xy,
                                             extent=self.frameset.extent(),
-                                            shape=self.frameset.map_shape())
+                                            shape=map_shape)
             self.plotter.active_pixel = self.active_pixel
             # Make sure active_xy is in the center of the pixel
             self.active_xy = pixel_to_xy(self.active_pixel,
                                          extent=self.frameset.extent(),
-                                         shape=self.frameset.map_shape())
+                                         shape=map_shape)
             self.plotter.active_xy = self.active_xy
         else:
             self.active_pixel = None
             self.active_xy = None
             self.plotter.active_pixel = None
             self.plotter.active_xy = None
-        GLib.idle_add(self.draw_map_plots)
+        self.plotter.draw_crosshairs(active_xy=self.active_xy)
+        GLib.idle_add(self.plotter.plot_map_spectra, self.active_pixel)
         GLib.idle_add(self.update_map_window)
 
     def update_current_location(self, event):
@@ -354,17 +358,26 @@ class GtkTxmViewer():
             elif event.keyval == Gdk.KEY_Right:
                 horizontal = horizontal + 1
             elif event.keyval == Gdk.KEY_Up:
-                vertical = vertical - 1
-            elif event.keyval == Gdk.KEY_Down:
                 vertical = vertical + 1
+            elif event.keyval == Gdk.KEY_Down:
+                vertical = vertical - 1
             self.active_pixel = Pixel(horizontal=horizontal, vertical=vertical)
+            with self.frameset.store() as store:
+                map_shape = store.whiteline_map.shape
             self.active_xy = pixel_to_xy(self.active_pixel,
                                          extent=self.frameset.extent(),
-                                         shape=self.frameset.map_shape())
+                                         shape=map_shape)
             self.plotter.active_pixel = self.active_pixel
             self.plotter.active_xy = self.active_xy
-        GLib.idle_add(self.draw_map_plots)
+        # Update the UI
+        GLib.idle_add(self.plotter.draw_crosshairs, self.active_xy)
+        GLib.idle_add(self.plotter.plot_map_spectra, self.active_pixel)
         GLib.idle_add(self.update_map_window)
+        # Create a watch cursor if one doesn't yet exist
+        # if getattr(self, 'map_watch_cursor', None) is None:
+        #     self._map_watch_cursor = WatchCursor(slow_stuff, windows=[self.map_window])
+        # self._map_watch_cursor(delay=2000)
+        # GLib.idle_add(self.update_map_window)
 
     def change_active_group(self, selection, object=None):
         """Update to a new frameset HDF group after user has picked tree entry."""
@@ -399,11 +412,11 @@ class GtkTxmViewer():
     def current_idx(self, value):
         self.current_adj.set_property('value', value)
 
-    def key_pressed_main(self, widget, event):
-        if event.keyval == Gdk.KEY_Left:
-            self.previous_frame()
-        elif event.keyval == Gdk.KEY_Right:
-            self.next_frame()
+    # def key_pressed_main(self, widget, event):
+    #     if event.keyval == Gdk.KEY_Left:
+    #         self.previous_frame()
+    #     elif event.keyval == Gdk.KEY_Right:
+    #         self.next_frame()
 
     def toggle_particles(self, widget):
         self.plotter.show_particles = not self.plotter.show_particles
@@ -464,6 +477,9 @@ class GtkTxmViewer():
         GLib.idle_add(connect_animation)
 
     def update_window(self, widget=None):
+        """Method updates the various GTKLabel objects with current status
+        data."""
+        ## This method should contain **only fast updates**, it gets called a lot.
         def change_gui():
             # Get data from frameset data store
             with self.frameset.store() as store:

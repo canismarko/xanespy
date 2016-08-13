@@ -39,9 +39,9 @@ from sklearn import linear_model
 from sklearn.utils import validation
 from units import unit, predefined
 
-from utilities import prog, xycoord, Pixel, component, position, Extent
+from utilities import prog, xycoord, Pixel, component, position, Extent, pixel_to_xy
 from frame import (
-    TXMFrame, PtychoFrame, calculate_particle_labels, pixel_to_xy,
+    TXMFrame, PtychoFrame, calculate_particle_labels,
     apply_reference)
 from txmstore import TXMStore
 from plots import new_axes, new_image_axes, plot_txm_map, plot_xanes_spectrum
@@ -252,45 +252,10 @@ class XanesFrameset():
     _rotations = None
     _scales = None
 
-    # HDF Attributes
-    # TODO: These should be reimplement in a TXMStore object
-    # hdf_default_scope = "frameset"
-    # reference_group = hdf.Attr('reference_group', default="default")
-    # latest_group = hdf.Attr('latest_group', default="default")
-    # map_method = hdf.Attr('map_method', scope="subset")
-    # map_name = hdf.Attr('map_name', scope="subset")
-    # map_goodness_name = hdf.Attr('map_goodness_name', scope="subset")
-    # default_representation = hdf.Attr('default_representation',
-    #                               scope="subset",
-    #                               default="modulus")
-    # latest_group = hdf.Attr('latest_group', default="default")
-    # map_method = hdf.Attr('map_method', scope="subset")
-
     def __init__(self, filename, edge, groupname=None):
         self.hdf_filename = filename
         self.edge = edge
         self.groupname = groupname
-        # Check to make sure a valid group is given
-        # if filename:
-        #     with self.hdf_file() as hdf_file:
-        #         # Detect the groupname if only 1 top-level group exists
-        #         if groupname is None:
-        #             if len(hdf_file.keys()) == 1:
-        #                 new_path = os.path.join("/", list(hdf_file.keys())[0])
-        #                 self.frameset_group = new_path
-        #             else:
-        #                 msg = "Multiple groups found, please pass `groupname`. "
-        #                 msg += "Choices are {}".format(list(hdf_file.keys()))
-        #                 raise exceptions.GroupKeyError(msg)
-        #         elif groupname not in hdf_file.keys():
-        #             # Group not found at top-level in hdf file
-        #             msg = "'{}' does not exist. Choices are {}"
-        #             msg = msg.format(groupname, list(hdf_file.keys()))
-        #             raise exceptions.GroupKeyError(msg)
-        #         else:
-        #             # Valid group, save for later
-        #             self.frameset_group = os.path.join("/", groupname)
-        # self.active_group = self.latest_group
 
     def __repr__(self):
         s = "<{cls} '{filename}'>"
@@ -307,35 +272,6 @@ class XanesFrameset():
                 if parent_group[group].attrs.get('energy', False):
                     keys.append(group)
         return keys
-
-    # def __iter__(self):
-    #     """Get each frame from the HDF5 file"""
-    #     energies = self.energies()
-    #     for E in energies:
-    #         frame_group = os.path.join(self.active_group, energy_key.format(E))
-    #         yield self.FrameClass(frameset=self, groupname=frame_group)
-
-    # def __len__(self):
-    #     return len(self.energies())
-
-    # def __getitem__(self, index):
-    #     """Retrieve the given item. If index is a float, it is assumed to be
-    #     the energy of the scan in eV, otherwise it will be treated like a
-    #     normal index."""
-    #     if isinstance(index, float):
-    #         # Floats are considered to be scan energies
-    #         energy = round(index, 2)
-    #         # Check that the energy is a valid option
-    #         if energy not in self.energies():
-    #             raise KeyError(energy)
-    #     else:
-    #         # Get energy from index
-    #         energies = self.energies()
-    #         energy = energies[index]
-    #     group = os.path.join(self.active_group,
-    #                          energy_key.format(float(energy)))
-    #     frame = self.FrameClass(frameset=self, groupname=group)
-    #     return frame
 
     def store(self, mode='r'):
         """Get a TXM Store object that saves and retrieves data from the HDF5
@@ -401,8 +337,6 @@ class XanesFrameset():
 
     def representations(self):
         """Retrieve a list of valid representations for these data."""
-        # with self.hdf_file() as f:
-        #     reps = list(f[self[0].frame_group].keys())
         reps = ['modulus']
         return reps
 
@@ -1325,7 +1259,7 @@ class XanesFrameset():
         return median_frame
 
     def xanes_spectrum(self, *args, **kwargs):
-        warnings.warn(UserWarning('use spectrum()'))
+        raise (UserWarning('use spectrum()'))
         return self.spectrum(*args, **kwargs)
 
     @functools.lru_cache()
@@ -1337,13 +1271,16 @@ class XanesFrameset():
         Arguments
         ---------
         pixel: A 2-tuple that causes the returned series to represent
-            the spectrum for only 1 pixel in the frameset.
+            the spectrum for only 1 pixel in the frameset. If None, a
+            larger part of the frame will be used, depending on the
+            other arguments.
 
         edge_jump_filter (bool or str): If truthy, only pixels that
             pass the edge jump filter are used to calculate the
             spectrum. If "inverse" is given, then the edge jump filter
             is logically not-ted and calculated with a more
             conservative threshold.
+
         """
         # energies = []
         # intensities = []
@@ -1374,14 +1311,19 @@ class XanesFrameset():
         with self.store() as store:
             energies = store.energies.value
             frames = store.absorbances
-            if edge_jump_filter:
-                # Filter out background pixels using edge mask
-                mask = self.edge_mask()
-                mask = np.broadcast_to(array=mask,
-                                       shape=(*energies.shape, *mask.shape))
-                frames = np.ma.array(frames, mask=mask)
-            # Take average of all pixel frames
-            spectrum = np.mean(np.reshape(frames, (frames.shape[0], -1)), axis=(1))
+            if pixel is not None:
+                pixel = Pixel(*pixel)
+                # Get a spectrum for a single pixel
+                spectrum = frames[..., pixel.vertical, pixel.horizontal]
+            else:
+                if edge_jump_filter:
+                    # Filter out background pixels using edge mask
+                    mask = self.edge_mask()
+                    mask = np.broadcast_to(array=mask,
+                                           shape=(*energies.shape, *mask.shape))
+                    frames = np.ma.array(frames, mask=mask)
+                # Take average of all pixel frames
+                spectrum = np.mean(np.reshape(frames, (frames.shape[0], -1)), axis=(1))
             # Combine into a series
             series = pd.Series(spectrum, index=energies)
         return series
@@ -1472,6 +1414,7 @@ class XanesFrameset():
         ax.set_ylabel('µm')
         return artist
 
+    @functools.lru_cache()
     def edge_jump(self):
         """Calculate a image showing the difference in
         signal across the X-ray edge."""
@@ -1490,6 +1433,7 @@ class XanesFrameset():
             ej = mean_post - mean_pre
         return ej
 
+    @functools.lru_cache()
     def edge_mask(self, sensitivity: float=1, opening_size=0):
         """Calculate a mask for what is likely active material at this
         edge. This is done by comparing the edge-jump to the standard
@@ -1505,7 +1449,6 @@ class XanesFrameset():
           filter to remove salt. Passing zero (default) will result in
           no opening.
         """
-        print('edge jump')
         edge_jump = self.edge_jump()
         with self.store() as store:
             stdev = np.std(store.absorbances, axis=0)

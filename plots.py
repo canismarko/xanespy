@@ -124,7 +124,6 @@ def plot_xanes_spectrum(spectrum, energies, norm=Normalize(),
     if ax is None:
         ax = new_axes()
     norm.autoscale_None(spectrum)
-    print('out here')
     # Color code the markers by energy
     colors = cm.get_cmap(cmap)(norm(energies))
     ax.plot(energies, spectrum, linestyle=linestyle)
@@ -175,9 +174,6 @@ def plot_txm_histogram(data, ax=None, norm=None, bins=100, cmap='plasma'):
     if norm is None:
         norm = Normalize()
         norm.autoscale_None(data)
-    # norm = Normalize(norm_range[0], norm_range[1])
-    # masked_map = self.frameset.masked_map(goodness_filter=goodness_filter)
-    # mask = masked_map.mask
     # # Add a bin for any above and below the range
     # edge = self.frameset.edge()
     # # energies = self.frameset.edge().energies_in_range(norm_range=norm_range)
