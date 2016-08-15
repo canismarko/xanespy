@@ -106,7 +106,7 @@ class Prog:
 prog = Prog()
 
 
-def prepare_hdf_group(filename: str, groupname: str, dirname: str):
+def prepare_hdf_group(*args, **kwargs):
     """Check the filenames and create an hdf file as needed. Will
     overwrite the group if it already exists.
 
@@ -124,28 +124,5 @@ def prepare_hdf_group(filename: str, groupname: str, dirname: str):
     - dirname : Used to derive a default filename if None is passed
       for `filename` attribute.
     """
-    # Get default filename and groupname if necessary
-    if filename is None:
-        real_name = os.path.abspath(dirname)
-        new_filename = os.path.split(real_name)[1]
-        hdf_filename = "{basename}-results.h5".format(basename=new_filename)
-    else:
-        hdf_filename = filename
-    if groupname is None:
-        groupname = os.path.split(os.path.abspath(dirname))[1]
-    # Open actual file
-    hdf_file = h5py.File(hdf_filename)
-    # Alert the user that we're overwriting this group
-    if groupname in hdf_file.keys():
-        if not prog.quiet:
-            msg = 'Group "{groupname}" exists. Overwriting.'
-            print(msg.format(groupname=groupname))
-        del hdf_file[groupname]
-    new_group = hdf_file.create_group(groupname)
-    # User feedback
-    if not prog.quiet:
-        print('Saving to HDF5 file {file} in group {group}'.format(
-            file=hdf_filename,
-            group=groupname)
-        )
-    return new_group
+    raise UserWarning("Use txmstore.prepare_txm_store() instead")
+    # return prepare_txm_store(*args, **kwargs)

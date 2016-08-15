@@ -364,143 +364,156 @@ class XanesFrameset():
             self.active_group = os.path.join(self.frameset_group, name)
         self.clear_caches()
 
-    def fork_group(self, name):
-        """Create a new copy of the current active group inside the HDF parent
-        with name: `name`. If trying to create a node that already
-        exists, this will only work if the parent groups are the same,
-        otherwise we risk breaking the tree. For performance reasons,
-        datasets are copied as links and will be not stored separately
-        until set_image_data is called.
+    def switch_data_group(self, new_name):
+        """Turn on different active data for this frameset's store object."""
+        with self.store(mode='r+') as store:
+            self.active_data_group = new_group
+
+    def fork_data_group(self, new_name):
+        """Turn on different active data for this frameset's store
+        object. Similar to `switch_data_group` except that this method
+        deletes the existing group and copies symlinks from the current one.
         """
-        with self.hdf_file(mode='a') as f:
-            parent_group = f[self.frameset_group]
-            old_group = f[self.active_group]
-            if name in parent_group:
-                # Existing groups require some validation first
-                old_parent = parent_group[name].attrs['parent']
-                if old_parent != self.active_group:
-                    # Trying to replace an existing group from a different path
-                    # This can cause an orphaned tree branch
-                    msg = 'Cannot fork group "{target}".'
-                    msg += ' Choose a new name or switch to group "{parent}" first.'
-                    msg = msg.format(
-                        target=name,
-                        parent=os.path.basename(old_parent)
-                    )
-                    raise exceptions.GroupKeyError(msg)
-                else:
-                    del parent_group[name]
-            # Create a new group to hold the datasets
-            parent_group.copy(source=old_group, dest=name, shallow=True)
-            dest = parent_group[name]
-            new_path = parent_group[name].name
-            parent_group[name].attrs['parent'] = old_group.name
-            # Copy links for actual datasets
-            for E_key in old_group.keys():
-                # Set a dirty bit for later copy-on-write
-                dest[E_key].attrs['_copy_on_write'] = True
-                # Copy sym links for datasets
-                for src_ds in old_group[E_key]:
-                    try:
-                        old_path = old_group[E_key][src_ds].name
-                    except TypeError:
-                        pass
-                    else:
-                        dest[E_key][str(src_ds)] = h5py.SoftLink(old_path)
-                        dest[E_key].attrs["_copy_on_write"] = True
-        self.latest_group = new_path
-        self.switch_group(name)
+        with self.store(mode='r+') as store:
+            store.fork_group(new_name=new_name)
 
-    def fork_labels(self, name):
-        # Create a new group
-        if name in self.hdf_group().keys():
-            del self.hdf_group()[name]
-        self.hdf_group().copy(self.active_labels_groupname, name)
-        labels_group = self.hdf_group()[name]
-        # Update label paths for frame datasets
-        for frame in self:
-            key = frame.image_data.name.split('/')[-1]
-            new_label_name = labels_group[key].name
-            frame.particle_labels_path = new_label_name
-        self.latest_labels = name
-        self.active_labels_groupname = name
-        return labels_group
+    # def fork_group(self, name):
+    #     """Create a new copy of the current active group inside the HDF parent
+    #     with name: `name`. If trying to create a node that already
+    #     exists, this will only work if the parent groups are the same,
+    #     otherwise we risk breaking the tree. For performance reasons,
+    #     datasets are copied as links and will be not stored separately
+    #     until set_image_data is called.
+    #     """
+    #     with self.hdf_file(mode='a') as f:
+    #         parent_group = f[self.frameset_group]
+    #         old_group = f[self.active_group]
+    #         if name in parent_group:
+    #             # Existing groups require some validation first
+    #             old_parent = parent_group[name].attrs['parent']
+    #             if old_parent != self.active_group:
+    #                 # Trying to replace an existing group from a different path
+    #                 # This can cause an orphaned tree branch
+    #                 msg = 'Cannot fork group "{target}".'
+    #                 msg += ' Choose a new name or switch to group "{parent}" first.'
+    #                 msg = msg.format(
+    #                     target=name,
+    #                     parent=os.path.basename(old_parent)
+    #                 )
+    #                 raise exceptions.GroupKeyError(msg)
+    #             else:
+    #                 del parent_group[name]
+    #         # Create a new group to hold the datasets
+    #         parent_group.copy(source=old_group, dest=name, shallow=True)
+    #         dest = parent_group[name]
+    #         new_path = parent_group[name].name
+    #         parent_group[name].attrs['parent'] = old_group.name
+    #         # Copy links for actual datasets
+    #         for E_key in old_group.keys():
+    #             # Set a dirty bit for later copy-on-write
+    #             dest[E_key].attrs['_copy_on_write'] = True
+    #             # Copy sym links for datasets
+    #             for src_ds in old_group[E_key]:
+    #                 try:
+    #                     old_path = old_group[E_key][src_ds].name
+    #                 except TypeError:
+    #                     pass
+    #                 else:
+    #                     dest[E_key][str(src_ds)] = h5py.SoftLink(old_path)
+    #                     dest[E_key].attrs["_copy_on_write"] = True
+    #     self.latest_group = new_path
+    #     self.switch_group(name)
 
-    def apply_references(self, bg_groupname):
-        """Apply reference corrections for this frameset. Converts raw
-        intensity frames to absorbance frames."""
-        self.background_groupname = bg_groupname
-        self.fork_group('absorbance_frames')
-        bg_group = self.hdf_file()[bg_groupname]
-        for frame in prog(self, "Reference correction"):
-            key = frame.image_data.name.split('/')[-1]
-            bg_dataset = bg_group[key]
-            new_data = apply_reference(frame.image_data.value,
-                                       reference_data=bg_dataset.value)
-            # Resize the dataset if necessary
-            if new_data.shape != frame.image_data.shape:
-                frame.image_data.resize(new_data.shape)
-            frame.image_data.write_direct(new_data)
+    # def fork_labels(self, name):
+    #     # Create a new group
+    #     if name in self.hdf_group().keys():
+    #         del self.hdf_group()[name]
+    #     self.hdf_group().copy(self.active_labels_groupname, name)
+    #     labels_group = self.hdf_group()[name]
+    #     # Update label paths for frame datasets
+    #     for frame in self:
+    #         key = frame.image_data.name.split('/')[-1]
+    #         new_label_name = labels_group[key].name
+    #         frame.particle_labels_path = new_label_name
+    #     self.latest_labels = name
+    #     self.active_labels_groupname = name
+    #     return labels_group
 
-    def correct_magnification(self):
-        """Correct for changes in magnification at different energies.
+    # def apply_references(self, bg_groupname):
+    #     """Apply reference corrections for this frameset. Converts raw
+    #     intensity frames to absorbance frames."""
+    #     self.background_groupname = bg_groupname
+    #     self.fork_group('absorbance_frames')
+    #     bg_group = self.hdf_file()[bg_groupname]
+    #     for frame in prog(self, "Reference correction"):
+    #         key = frame.image_data.name.split('/')[-1]
+    #         bg_dataset = bg_group[key]
+    #         new_data = apply_reference(frame.image_data.value,
+    #                                    reference_data=bg_dataset.value)
+    #         # Resize the dataset if necessary
+    #         if new_data.shape != frame.image_data.shape:
+    #             frame.image_data.resize(new_data.shape)
+    #         frame.image_data.write_direct(new_data)
 
-        As the X-ray energy increases, the focal length of the zone
-        plate changes and so the image is zoomed-out at higher
-        energies. This method applies a correction to each frame to
-        make the magnification similar to that of the first
-        frame. Some beamlines correct for this automatically during
-        acquisition: APS 8-BM-B
-        """
-        raise NotImplementedError("Mag correction done during import")
+    # def correct_magnification(self):
+    #     """Correct for changes in magnification at different energies.
 
-    def apply_translation(self, shift_func, new_name,
-                          description="Applying translation"):
-        """Apply a translation to every frame using
-        multiprocessing. `shift_func` should be a function that
-        accepts a dictionary and returns an offset tuple (x, y) of
-        corrections to be applied to the frame and the labels. The
-        dictionary will contain the key, energy, data and labels for a
-        frame. All frames have their sample position set set to (0, 0)
-        since we don't know which one is the real position.
-        """
-        raise NotImplementedError()
-        # Create new data groups to hold shifted image data
-        self.fork_group(new_name)
-        self.fork_labels(new_name + "_labels")
-        # Multiprocessing setup
+    #     As the X-ray energy increases, the focal length of the zone
+    #     plate changes and so the image is zoomed-out at higher
+    #     energies. This method applies a correction to each frame to
+    #     make the magnification similar to that of the first
+    #     frame. Some beamlines correct for this automatically during
+    #     acquisition: APS 8-BM-B
+    #     """
+    #     raise NotImplementedError("Mag correction done during import")
 
-        def worker(payload):
-            # key, data, labels = payload
-            key = payload['key']
-            data = payload['data']
-            labels = payload['labels']
-            # Apply net transformation with bicubic interpolation
-            shift = shift_func(payload)
-            transformation = transform.SimilarityTransform(translation=shift)
-            new_data = transform.warp(data, transformation,
-                                      order=3, mode="wrap", preserve_range=True)
-            # Transform labels
-            original_dtype = labels.dtype
-            labels = labels.astype(np.float64)
-            new_labels = transform.warp(labels, transformation,
-                                        order=0, mode="constant", preserve_range=True)
-            new_labels = new_labels.astype(original_dtype)
-            ret = {
-                'key': key,
-                'energy': payload['energy'],
-                'data': new_data,
-                'labels': new_labels
-            }
-            return ret
+    # def apply_translation(self, shift_func, new_name,
+    #                       description="Applying translation"):
+    #     """Apply a translation to every frame using
+    #     multiprocessing. `shift_func` should be a function that
+    #     accepts a dictionary and returns an offset tuple (x, y) of
+    #     corrections to be applied to the frame and the labels. The
+    #     dictionary will contain the key, energy, data and labels for a
+    #     frame. All frames have their sample position set set to (0, 0)
+    #     since we don't know which one is the real position.
+    #     """
+    #     raise NotImplementedError()
+    #     # Create new data groups to hold shifted image data
+    #     self.fork_group(new_name)
+    #     self.fork_labels(new_name + "_labels")
+    #     # Multiprocessing setup
 
-        # Launch multiprocessing queue
-        process_with_smp(frameset=self,
-                         worker=worker,
-                         description=description)
-        # Update new positions
-        for frame in self:
-            frame.sample_position = position(0, 0, frame.sample_position.z)
+    #     def worker(payload):
+    #         # key, data, labels = payload
+    #         key = payload['key']
+    #         data = payload['data']
+    #         labels = payload['labels']
+    #         # Apply net transformation with bicubic interpolation
+    #         shift = shift_func(payload)
+    #         transformation = transform.SimilarityTransform(translation=shift)
+    #         new_data = transform.warp(data, transformation,
+    #                                   order=3, mode="wrap", preserve_range=True)
+    #         # Transform labels
+    #         original_dtype = labels.dtype
+    #         labels = labels.astype(np.float64)
+    #         new_labels = transform.warp(labels, transformation,
+    #                                     order=0, mode="constant", preserve_range=True)
+    #         new_labels = new_labels.astype(original_dtype)
+    #         ret = {
+    #             'key': key,
+    #             'energy': payload['energy'],
+    #             'data': new_data,
+    #             'labels': new_labels
+    #         }
+    #         return ret
+
+        # # Launch multiprocessing queue
+        # process_with_smp(frameset=self,
+        #                  worker=worker,
+        #                  description=description)
+        # # Update new positions
+        # for frame in self:
+        #     frame.sample_position = position(0, 0, frame.sample_position.z)
 
     # def correct_drift(self, new_name="aligned_frames", method="ransac",
     #                   loc=xycoord(x=20, y=20), reference_frame=0,
@@ -1564,6 +1577,7 @@ class XanesFrameset():
             top = (center[-2] + height) / 2
             ret = Extent(left=left, right=right,
                          bottom=bottom, top=top)
+            print(width)
         else:
             left = (center[:,-1] - width)/ 2
             right = (center[:,-1] + width) / 2

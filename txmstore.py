@@ -19,10 +19,13 @@
 
 """Tools for accessing TXM data stored in an HDF5 file."""
 
+import warnings
+
 import h5py
 import numpy as np
 
 import exceptions
+from utilities import prog
 
 
 class TXMStore():
@@ -71,12 +74,60 @@ class TXMStore():
     def close(self):
         self._file.close()
 
-    def group(self):
+    def fork_data_group(self, new_name):
+        """Turn on different active data group for this store. This method
+        deletes the existing group and copies symlinks from the
+        current one.
+        """
+        # Check that the current and target groups are not the same
+        if new_name == self.active_data_group:
+            msg = "Refusing to fork myself to myself"
+            raise exceptions.CreateGroupError(msg)
+        else:
+            if new_name in self.parent_group().keys():
+                # Delete the old group and overwrite it
+                del self.parent_group()[new_name]
+            # Create the new group
+            self.active_data_group = new_name
+
+    @property
+    def active_data_group(self):
+        return self.parent_group().attrs['active_data_group']
+
+    @active_data_group.setter
+    def active_data_group(self, val):
+        parent_group = self.parent_group()
+        if val in parent_group.keys():
+            # Group already exists, so just save the new reference
+            target_group = parent_group[val]
+        else:
+            # Group does not exist, so copy the old one with symlinks
+            target_group = parent_group.create_group(val)
+            old_group = parent_group[self.active_data_group]
+            for key in old_group.keys():
+                target_group[key] = old_group[key]
+        # Save the new reference to the active group
+        parent_group.attrs['active_data_group'] = target_group.name
+
+    def parent_group(self):
         """Retrieve the top-level HDF5 group object for this file and
         groupname."""
         return self._file[self.groupname]
 
-    def replace_dataset(self, name, data, attrs={}, *args, **kwargs):
+    def data_group(self):
+        """Retrieve the currently active second-level HDF5 group object for
+        this file and groupname. Ex. "imported" or "aligned_frames".
+        """
+        return self._file[self.groupname][self.active_data_group]
+
+    def group(self):
+        """Retrieve the top-level HDF5 group object for this file and
+        groupname."""
+        raise UserWarning('Using data_group() instead')
+        warnings.warn()
+        return self.data_group()
+
+    def replace_dataset(self, name, data, attrs={}, compression=None, *args, **kwargs):
         """Wrapper for h5py.create_dataset that removes the existing dataset
         if it exists.
 
@@ -95,18 +146,20 @@ class TXMStore():
         """
         # Remove the existing dataset if possible
         try:
-            del self.group()[name]
+            del self.data_group()[name]
         except KeyError:
             pass
         # Perform the actual group creation
-        ds = self.group().create_dataset(name=name, data=data, *args, **kwargs)
+        ds = self.data_group().create_dataset(name=name, data=data,
+                                              compression=compression,
+                                              *args, **kwargs)
         # Set metadata attributes
         for key, val in attrs.items():
             ds.attrs[key] = val
 
     @property
     def pixel_sizes(self):
-        return self.group()['pixel_sizes']
+        return self.data_group()['pixel_sizes']
 
     @pixel_sizes.setter
     def pixel_sizes(self, val):
@@ -114,7 +167,7 @@ class TXMStore():
 
     @property
     def relative_positions(self):
-        return self.group()['relative_positions']
+        return self.data_group()['relative_positions']
 
     @relative_positions.setter
     def relative_positions(self, val):
@@ -122,7 +175,7 @@ class TXMStore():
 
     @property
     def original_positions(self):
-        return self.group()['original_positions']
+        return self.data_group()['original_positions']
 
     @original_positions.setter
     def original_positions(self, val):
@@ -130,15 +183,15 @@ class TXMStore():
 
     @property
     def pixel_unit(self):
-        return self.group()['pixel_sizes'].attrs['unit']
+        return self.data_group()['pixel_sizes'].attrs['unit']
 
     @pixel_unit.setter
     def pixel_unit(self, val):
-        self.group()['pixel_sizes'].attrs['unit'] = val
+        self.data_group()['pixel_sizes'].attrs['unit'] = val
 
     @property
     def intensities(self):
-        return self.group()['intensities']
+        return self.data_group()['intensities']
 
     @intensities.setter
     def intensities(self, val):
@@ -146,7 +199,7 @@ class TXMStore():
 
     @property
     def references(self):
-        return self.group()['references']
+        return self.data_group()['references']
 
     @references.setter
     def references(self, val):
@@ -154,7 +207,7 @@ class TXMStore():
 
     @property
     def absorbances(self):
-        return self.group()['absorbances']
+        return self.data_group()['absorbances']
 
     @absorbances.setter
     def absorbances(self, val):
@@ -162,7 +215,7 @@ class TXMStore():
 
     @property
     def pixel_sizes(self):
-        return self.group()['pixel_sizes']
+        return self.data_group()['pixel_sizes']
 
     @pixel_sizes.setter
     def pixel_sizes(self, val):
@@ -170,7 +223,7 @@ class TXMStore():
 
     @property
     def energies(self):
-        return self.group()['energies']
+        return self.data_group()['energies']
 
     @energies.setter
     def energies(self, val):
@@ -178,7 +231,7 @@ class TXMStore():
 
     @property
     def timestamps(self):
-        return self.group()['timestamps']
+        return self.data_group()['timestamps']
 
     @timestamps.setter
     def timestamps(self, val):
@@ -188,7 +241,7 @@ class TXMStore():
 
     @property
     def positions(self):
-        return self.group()['positions']
+        return self.data_group()['positions']
 
     @positions.setter
     def positions(self, val):
@@ -196,7 +249,7 @@ class TXMStore():
 
     @property
     def filenames(self):
-        return self.group()['filenames']
+        return self.data_group()['filenames']
 
     @filenames.setter
     def filenames(self, val):
@@ -206,8 +259,47 @@ class TXMStore():
 
     @property
     def whiteline_map(self):
-        return self.group()['whiteline_map']
+        return self.data_group()['whiteline_map']
 
     @whiteline_map.setter
     def whiteline_map(self, val):
         self.replace_dataset('whiteline_map', val)
+
+
+def prepare_txm_store(filename: str, groupname: str, dirname: str=None):
+    """Check the filenames and create an hdf file as needed. Will
+    overwrite the group if it already exists.
+
+    Returns: An opened TXMStore object ready to accept data (r+ mode).
+
+    Arguments
+    ---------
+
+    - filename : name of the requested hdf file, may be None if not
+      provided, in which case the filename will be generated
+      automatically based on `dirname`.
+
+    - groupname : Requested groupname for these data.
+
+    - dirname : Used to derive a default filename if None is passed
+      for `filename` attribute.
+    """
+    # Get default filename and groupname if necessary
+    if filename is None:
+        real_name = os.path.abspath(dirname)
+        new_filename = os.path.split(real_name)[1]
+        hdf_filename = "{basename}-results.h5".format(basename=new_filename)
+    else:
+        hdf_filename = filename
+    if groupname is None:
+        groupname = os.path.split(os.path.abspath(dirname))[1]
+    # Open actual file
+    hdf_file = h5py.File(hdf_filename, mode='a')
+    # Delete the group if it already exists
+    if groupname in hdf_file.keys():
+        del hdf_file[groupname]
+    new_group = hdf_file.create_group("{}/imported".format(groupname))
+    # Prepare a new TXMStore object to accept data
+    store = TXMStore(hdf_filename=hdf_filename,groupname=groupname, mode="r+")
+    store.active_data_group = 'imported'
+    return store

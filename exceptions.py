@@ -47,10 +47,6 @@ class HDFScopeError(ValueError):
     """Tried to pass an HDF scope that is not recognized."""
     pass
 
-class HDFAttrsError(ValueError):
-    """Class uses hdf_attrs decorator but dosn't have hdfattrs attribute."""
-    pass
-
 class FileExistsError(IOError):
     """Tried to import a TXM frameset but the corresponding HDF file
     already exists."""
@@ -58,7 +54,7 @@ class FileExistsError(IOError):
 
 class CreateGroupError(ValueError):
     """Tried to import a TXM frameset into a group but the corresponding
-    HDF group already exists.
+    HDF group already exists or is otherwise inaccessible.
     """
     pass
 
