@@ -30,6 +30,81 @@ import numpy as np
 from skimage import transform, feature
 
 
+# Helpers for parallelizable code
+
+import sys
+import time
+import threading
+import multiprocessing
+from itertools import count
+
+CPU_COUNT = multiprocessing.cpu_count()
+
+def foreach(f,l,threads=CPU_COUNT,return_=False):
+    """
+    Apply f to each element of l, in parallel
+    """
+
+    if threads>1:
+        iteratorlock = threading.Lock()
+        exceptions = []
+        if return_:
+            n = 0
+            d = {}
+            i = zip(count(),l.__iter__())
+        else:
+            i = l.__iter__()
+
+
+        def runall():
+            while True:
+                iteratorlock.acquire()
+                try:
+                    try:
+                        if exceptions:
+                            return
+                        v = next(i)
+                    finally:
+                        iteratorlock.release()
+                except StopIteration:
+                    return
+                try:
+                    if return_:
+                        n,x = v
+                        d[n] = f(x)
+                    else:
+                        f(v)
+                except:
+                    e = sys.exc_info()
+                    iteratorlock.acquire()
+                    try:
+                        exceptions.append(e)
+                    finally:
+                        iteratorlock.release()
+        threadlist = [threading.Thread(target=runall) for j in range(threads)]
+        for t in threadlist:
+            t.start()
+        for t in threadlist:
+            t.join()
+        if exceptions:
+            a, b, c = exceptions[0]
+            raise (a, b, c)
+        if return_:
+            r = list(d.items())
+            r.sort()
+            return [v for (n,v) in r]
+    else:
+        if return_:
+            return [f(v) for v in l]
+        else:
+            for v in l:
+                f(v)
+            return
+
+def parallel_map(f,l,threads=CPU_COUNT):
+    return foreach(f,l,threads=threads,return_=True)
+
+
 def normalize_Kedge(spectra, energies, E_0, pre_edge, post_edge, post_edge_order=2):
     """Normalize the K-edge XANES spectrum so that the pre-edge is linear
     and the EXAFS region projects to an absorbance of 1 and the edge
@@ -132,14 +207,14 @@ def register_correlations(frames, reference, upsample_factor=10):
     containing (x, y) translations for each frame.
 
     """
-    translations = np.zeros(shape=(frames.shape[0], 2))
-    for imidx in range(frames.shape[0]):
+    def get_translation(frm):
         results = feature.register_translation(reference,
-                                               frames[imidx],
+                                               frm,
                                                upsample_factor=upsample_factor)
         shift, error, diffphase = results
         # Convert (row, col) to (x, y)
-        translations[imidx] = (shift[1], shift[0])
+        return (shift[1], shift[0])
+    translations = np.array(parallel_map(get_translation, frames))
     # Negative in order to properly register with transform_images method
     translations = -translations
     return translations
