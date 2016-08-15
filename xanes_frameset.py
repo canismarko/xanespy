@@ -350,6 +350,7 @@ class XanesFrameset():
         name (str) - The HDF groupname for this frameset. If omitted
           or "", a list of available options will be listed.
         """
+        raise UserWarning("This is not correct anymore")
         with self.hdf_file() as f:
             valid_groups = list(f[self.frameset_group].keys())
         if name not in valid_groups:
@@ -367,7 +368,7 @@ class XanesFrameset():
     def switch_data_group(self, new_name):
         """Turn on different active data for this frameset's store object."""
         with self.store(mode='r+') as store:
-            self.active_data_group = new_group
+            store.active_data_group = new_name
 
     def fork_data_group(self, new_name):
         """Turn on different active data for this frameset's store
@@ -375,7 +376,7 @@ class XanesFrameset():
         deletes the existing group and copies symlinks from the current one.
         """
         with self.store(mode='r+') as store:
-            store.fork_group(new_name=new_name)
+            store.fork_data_group(new_name=new_name)
 
     # def fork_group(self, name):
     #     """Create a new copy of the current active group inside the HDF parent
@@ -616,7 +617,10 @@ class XanesFrameset():
           store and the staged transformations will be cleared.
 
         """
-        if [self._translations, self._rotations, self._scales] == [None, None, None]:
+        not_actionable = (self._translations is None and
+                          self._rotations is None and
+                          self._scales is None)
+        if not_actionable:
             # Nothing to apply, so no-op
             with self.store() as store:
                 out = store.absorbances.value
@@ -1577,7 +1581,6 @@ class XanesFrameset():
             top = (center[-2] + height) / 2
             ret = Extent(left=left, right=right,
                          bottom=bottom, top=top)
-            print(width)
         else:
             left = (center[:,-1] - width)/ 2
             right = (center[:,-1] + width) / 2
