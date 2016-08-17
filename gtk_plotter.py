@@ -257,7 +257,7 @@ class GtkFramesetPlotter():
     active_pixel = None
     normalize_xanes = True
     normalize_map_xanes = True
-    active_representation = "modulus"
+    active_representation = "absorbances"
 
     def __init__(self, frameset):
         self.frameset = frameset
@@ -293,11 +293,12 @@ class GtkFramesetPlotter():
             if self.apply_edge_jump:
                 data = np.ma.array(data, mask=self.frameset.edge_mask())
             # Plot the overall map
+            extent = self.frameset.extent(representation=self.active_representation)
             artist = plots.plot_txm_map(data,
                                         edge=self.frameset.edge(),
                                         ax=self.map_ax,
                                         norm=None,
-                                        extent=self.frameset.extent())
+                                        extent=extent)
             # artist = self.frameset.plot_map(goodness_filter=self.apply_edge_jump,
             #                                 alpha=map_alpha)
             # map_artist = super().draw_map(goodness_filter=self.apply_edge_jump,
@@ -451,17 +452,17 @@ class GtkFramesetPlotter():
             # except exceptions.RefinementError:
             #     pass
         # Prepare individual frame artists
-        norm = self.frameset.image_normalizer(representation=self.active_representation)
         frame_artists = []
         with self.frameset.store() as store:
-            extent = self.frameset.extent()
-            norm = Normalize(np.min(store.absorbances),
-                             np.max(store.absorbances))
-            for img in store.absorbances.value:
+            extent = self.frameset.extent(self.active_representation)
+            frames = store.get_frames(name=self.active_representation)
+            self.norm = Normalize(np.min(frames),
+                                  np.max(frames))
+            for img in frames.value:
                 artist = self.image_ax.imshow(img, origin='lower',
                                               animated=True, cmap="gray",
                                               extent=extent,
-                                              norm=norm)
+                                              norm=self.norm)
                 artist.set_visible(False)
                 frame_artists.append(artist)
         # Prepare XANES highlighting artists

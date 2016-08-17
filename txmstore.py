@@ -41,28 +41,22 @@ class TXMStore():
     ---------
     - hdf_filename : String with the filename to be used.
 
-    - groupname : String with the top-level HDF5 groupname. If None
-    and only 1 group is present, it will be used, otherwise this
-    argument is required.
+    - parent_name : String with the top-level HDF5 groupname.
+
+    - data_name : String wit the second level HDF5 groupname, used for
+      specific data iterations (eg. imported, aligned)
 
     - mode : String, passed directly to h5py.File constructor.
 
     """
     VERSION = 1
-    def __init__(self, hdf_filename: str, groupname: str, mode='r'):
+    def __init__(self, hdf_filename: str,
+                 parent_name: str, data_name: str,
+                 mode='r'):
         self.hdf_filename = hdf_filename
         self._file = h5py.File(self.hdf_filename, mode=mode)
-        keys = self._file.keys()
-        if groupname is None:
-            # Try and automatically determine the group name (if there's only 1)
-            if len(keys) == 1:
-                self.groupname = list(keys)[0]
-            else:
-                # Multiple groupnames, so we can't decide
-                msg = "Cannot determine best groupname please choose from {}"
-                raise exceptions.GroupKeyError(msg.format(list(keys)))
-        else:
-            self.groupname = groupname
+        self.parent_name = parent_name
+        self._data_name = data_name
         self.mode = mode
 
     def __enter__(self):
@@ -74,60 +68,112 @@ class TXMStore():
     def close(self):
         self._file.close()
 
+    @property
+    def data_name(self):
+        return self._data_name
+
+    @data_name.setter
+    def data_name(self, val):
+        if val not in self.parent_group().keys():
+            msg = "Group {} does not exists. Run TXMStore.fork_data_group('{}') first"
+            raise exceptions.CreateGroupError(msg.format(val, val))
+        self._data_name = val
+
+    def data_tree(self):
+        """Create a tree of the possible groups this store could access. The
+        first level is samples, then data_groups (ie. same sample but
+        different analysis status), then representations. Maps are not
+        included in this tree.
+        """
+        # Define a recursive function to walk the groups in the file
+        def walk_groups(parent, level):
+            # Recurse into children
+            keys = getattr(parent, 'keys', lambda: [])
+            datas = []
+            for key in keys():
+                # Check for whether this object is a frameset or a map
+                node = parent[key]
+                grpdata = {
+                    'name': key,
+                    'path': node.name,
+                    'context': node.attrs.get('context', None),
+                    'ndim': getattr(node, 'ndim', 0),
+                    'level': level,
+                    # Resurse
+                    'children': walk_groups(parent=node, level=level+1),
+                }
+                datas.append(grpdata)
+            return datas
+        # Start the recursion at the top
+        tree = walk_groups(self._file, level=0)
+        return tree
+
     def fork_data_group(self, new_name):
         """Turn on different active data group for this store. This method
         deletes the existing group and copies symlinks from the
         current one.
         """
         # Check that the current and target groups are not the same
-        if new_name == self.active_data_group:
+        if new_name == self.data_name:
             msg = "Refusing to fork myself to myself"
             raise exceptions.CreateGroupError(msg)
-        else:
-            if new_name in self.parent_group().keys():
-                # Delete the old group and overwrite it
-                del self.parent_group()[new_name]
-            # Create the new group
-            self.active_data_group = new_name
+        # Delete the old group and overwrite it
+        parent = self.parent_group()
+        if new_name in parent.keys():
+            del parent[new_name]
+        # Copy the old one with symlinks
+        ret = parent.copy(self.data_group(), new_name, shallow=True)
+        target_group = parent[new_name]
+            #         old_gruop = parent_group[self.data_group]
+            #         for key in old_group.keys():
+            #             target_group[key] = old_group[key]
+            #     # Save the new reference to the active group
+            #     self.parent_group().attrs['latest_data_group'] = target_group.name
+        self.latest_data_name = new_name
+        self.data_name = new_name
 
     @property
-    def active_data_group(self):
-        return self.parent_group().attrs['active_data_group']
+    def latest_data_name(self):
+        name = self.parent_group().attrs['latest_data_name']
+        return name
 
-    @active_data_group.setter
-    def active_data_group(self, val):
-        parent_group = self.parent_group()
-        if val in parent_group.keys():
-            # Group already exists, so just save the new reference
-            target_group = parent_group[val]
-        else:
-            # Group does not exist, so copy the old one with symlinks
-            target_group = parent_group.create_group(val)
-            old_group = parent_group[self.active_data_group]
-            for key in old_group.keys():
-                target_group[key] = old_group[key]
-        # Save the new reference to the active group
-        parent_group.attrs['active_data_group'] = target_group.name
+    @latest_data_name.setter
+    def latest_data_name(self, val):
+        self.parent_group().attrs['latest_data_name'] = val
+
+    # @latest_data_name.setter
+    # def latest_data_name(self, val):
+    #     parent_group = self.parent_group()
+    #     if val in parent_group.keys():
+    #         # Group already exists, so just save the new reference
+    #         target_group = parent_group[val]
+    #     else:
+    #         # Group does not exist, so copy the old one with symlinks
+    #         target_group = parent_group.create_group(val)
+    #         old_group = parent_group[self.data_group]
+    #         for key in old_group.keys():
+    #             target_group[key] = old_group[key]
+    #     # Save the new reference to the active group
+    #     self.parent_group().attrs['latest_data_group'] = target_group.name
 
     def parent_group(self):
         """Retrieve the top-level HDF5 group object for this file and
         groupname."""
-        return self._file[self.groupname]
+        return self._file[self.parent_name]
 
     def data_group(self):
         """Retrieve the currently active second-level HDF5 group object for
         this file and groupname. Ex. "imported" or "aligned_frames".
         """
-        return self._file[self.groupname][self.active_data_group]
+        return self.parent_group()[self.data_name]
 
     def group(self):
         """Retrieve the top-level HDF5 group object for this file and
         groupname."""
-        raise UserWarning('Using data_group() instead')
-        warnings.warn()
-        return self.data_group()
+        raise UserWarning('Using data_group() or parent_group() instead')
 
-    def replace_dataset(self, name, data, attrs={}, compression=None, *args, **kwargs):
+    def replace_dataset(self, name, data, context=None, attrs={},
+                        compression=None, *args, **kwargs):
         """Wrapper for h5py.create_dataset that removes the existing dataset
         if it exists.
 
@@ -138,11 +184,15 @@ class TXMStore():
 
         - data : Numpy array of data to be saved.
 
+        - context : A string specifying what kind of data is
+          stored. Eg. "frameset", "metadata", "map".
+
         - attrs : Dictionary containing HDF5 metadata attributes to be
           set on the resulting dataset.
 
         - *args, **kwargs : Will get passed to h5py's `create_dataset`
            method.
+
         """
         # Remove the existing dataset if possible
         try:
@@ -154,8 +204,14 @@ class TXMStore():
                                               compression=compression,
                                               *args, **kwargs)
         # Set metadata attributes
+        if context is not None:
+            ds.attrs['context'] = context
         for key, val in attrs.items():
             ds.attrs[key] = val
+
+    def get_frames(self, name):
+        """Get a set of frames, specified by the value of `name`."""
+        return self.data_group()[name]
 
     @property
     def pixel_sizes(self):
@@ -163,7 +219,7 @@ class TXMStore():
 
     @pixel_sizes.setter
     def pixel_sizes(self, val):
-        self.replace_dataset('pixel_sizes', val)
+        self.replace_dataset('pixel_sizes', val, context='metadata')
 
     @property
     def relative_positions(self):
@@ -171,7 +227,7 @@ class TXMStore():
 
     @relative_positions.setter
     def relative_positions(self, val):
-        self.replace_dataset('relative_positions', val)
+        self.replace_dataset('relative_positions', val, context='metadata')
 
     @property
     def original_positions(self):
@@ -179,7 +235,7 @@ class TXMStore():
 
     @original_positions.setter
     def original_positions(self, val):
-        self.replace_dataset('original_positions', val)
+        self.replace_dataset('original_positions', val, context='metadata')
 
     @property
     def pixel_unit(self):
@@ -195,7 +251,7 @@ class TXMStore():
 
     @intensities.setter
     def intensities(self, val):
-        self.replace_dataset('intensities', val)
+        self.replace_dataset('intensities', val, context='frameset')
 
     @property
     def references(self):
@@ -203,23 +259,15 @@ class TXMStore():
 
     @references.setter
     def references(self, val):
-        self.replace_dataset('references', val)
+        self.replace_dataset('references', val, context='frameset')
 
     @property
     def absorbances(self):
-        return self.data_group()['absorbances']
+        return self.get_frames('absorbances')
 
     @absorbances.setter
     def absorbances(self, val):
-        self.replace_dataset('absorbances', val)
-
-    @property
-    def pixel_sizes(self):
-        return self.data_group()['pixel_sizes']
-
-    @pixel_sizes.setter
-    def pixel_sizes(self, val):
-        self.replace_dataset('pixel_sizes', val)
+        self.replace_dataset('absorbances', val, context="frameset")
 
     @property
     def energies(self):
@@ -227,7 +275,7 @@ class TXMStore():
 
     @energies.setter
     def energies(self, val):
-        self.replace_dataset('energies', val)
+        self.replace_dataset('energies', val, context='metadata')
 
     @property
     def timestamps(self):
@@ -237,15 +285,7 @@ class TXMStore():
     def timestamps(self, val):
         # S32 is the 32-character ACSII string type for numpy
         val = np.array(val, dtype="S32")
-        self.replace_dataset('timestamps', val, dtype="S32")
-
-    @property
-    def positions(self):
-        return self.data_group()['positions']
-
-    @positions.setter
-    def positions(self, val):
-        self.replace_dataset('positions', val)
+        self.replace_dataset('timestamps', val, dtype="S32", context='metadata')
 
     @property
     def filenames(self):
@@ -255,7 +295,7 @@ class TXMStore():
     def filenames(self, val):
         # S100 is the 100-character ACSII string type for numpy
         val = np.array(val, dtype="S100")
-        self.replace_dataset('filenames', val, dtype="S100")
+        self.replace_dataset('filenames', val, dtype="S100", context='metadata')
 
     @property
     def whiteline_map(self):
@@ -263,10 +303,10 @@ class TXMStore():
 
     @whiteline_map.setter
     def whiteline_map(self, val):
-        self.replace_dataset('whiteline_map', val)
+        self.replace_dataset('whiteline_map', val, context='map')
 
 
-def prepare_txm_store(filename: str, groupname: str, dirname: str=None):
+def prepare_txm_store(filename: str, parent_name: str, data_name='imported', dirname: str=None):
     """Check the filenames and create an hdf file as needed. Will
     overwrite the group if it already exists.
 
@@ -279,7 +319,9 @@ def prepare_txm_store(filename: str, groupname: str, dirname: str=None):
       provided, in which case the filename will be generated
       automatically based on `dirname`.
 
-    - groupname : Requested groupname for these data.
+    - parent_name : Requested groupname for this sample.
+
+    - data_name : Requested name for this data iteration.
 
     - dirname : Used to derive a default filename if None is passed
       for `filename` attribute.
@@ -291,15 +333,18 @@ def prepare_txm_store(filename: str, groupname: str, dirname: str=None):
         hdf_filename = "{basename}-results.h5".format(basename=new_filename)
     else:
         hdf_filename = filename
-    if groupname is None:
+    if parent_name is None:
         groupname = os.path.split(os.path.abspath(dirname))[1]
     # Open actual file
     hdf_file = h5py.File(hdf_filename, mode='a')
     # Delete the group if it already exists
-    if groupname in hdf_file.keys():
-        del hdf_file[groupname]
-    new_group = hdf_file.create_group("{}/imported".format(groupname))
+    if parent_name in hdf_file.keys():
+        del hdf_file[parent_name]
+    new_group = hdf_file.create_group("{}/{}".format(parent_name, data_name))
     # Prepare a new TXMStore object to accept data
-    store = TXMStore(hdf_filename=hdf_filename,groupname=groupname, mode="r+")
-    store.active_data_group = 'imported'
+    store = TXMStore(hdf_filename=hdf_filename,
+                     parent_name=parent_name,
+                     data_name=data_name,
+                     mode="r+")
+    store.latest_data_name = 'imported'
     return store

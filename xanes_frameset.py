@@ -46,9 +46,7 @@ from frame import (
 from txmstore import TXMStore
 from plots import new_axes, new_image_axes, plot_txm_map, plot_xanes_spectrum
 import exceptions
-import smp
-
-import pyximport; pyximport.install()
+# import smp
 from xanes_math import transform_images, register_template, register_correlations, direct_whitelines
 
 predefined.define_units()
@@ -247,15 +245,19 @@ class XanesFrameset():
     FrameClass = TXMFrame
     active_group = ''
     cmap = 'plasma'
+    data_name = None
     # Places to store staged image transformations
     _translations = None
     _rotations = None
     _scales = None
 
-    def __init__(self, filename, edge, groupname=None):
+    def __init__(self, filename, edge, groupname):
         self.hdf_filename = filename
         self.edge = edge
-        self.groupname = groupname
+        self.parent_name = groupname
+        # Load cached value for latest data group
+        with self.store() as store:
+            self.data_name = store.latest_data_name
 
     def __repr__(self):
         s = "<{cls} '{filename}'>"
@@ -281,7 +283,9 @@ class XanesFrameset():
             with self.store() as store:
         """
         return TXMStore(hdf_filename=self.hdf_filename,
-                        groupname=self.groupname, mode=mode)
+                        parent_name=self.parent_name,
+                        data_name=self.data_name,
+                        mode=mode)
 
     def save_images(self, directory):
         """Save a series of TIF's of the individual frames in `directory`."""
@@ -350,9 +354,10 @@ class XanesFrameset():
         name (str) - The HDF groupname for this frameset. If omitted
           or "", a list of available options will be listed.
         """
-        raise UserWarning("This is not correct anymore")
-        with self.hdf_file() as f:
-            valid_groups = list(f[self.frameset_group].keys())
+        raise UserWarning("Use switch_data_group() instead")
+        # raise UserWarning("This is not correct anymore")
+        # with self.hdf_file() as f:
+        #     valid_groups = list(f[self.frameset_group].keys())
         if name not in valid_groups:
             msg = "{name} is not a valid group. Choices are {choices}."
             raise exceptions.GroupKeyError(
@@ -367,6 +372,7 @@ class XanesFrameset():
 
     def switch_data_group(self, new_name):
         """Turn on different active data for this frameset's store object."""
+        raise UserWarning("Just set self.data_name instead")
         with self.store(mode='r+') as store:
             store.active_data_group = new_name
 
@@ -377,6 +383,7 @@ class XanesFrameset():
         """
         with self.store(mode='r+') as store:
             store.fork_data_group(new_name=new_name)
+        self.data_name = new_name
 
     # def fork_group(self, name):
     #     """Create a new copy of the current active group inside the HDF parent
@@ -960,150 +967,150 @@ class XanesFrameset():
         #             frame.crop(left=crop.left, bottom=crop.bottom,
         #                        right=crop.right, top=crop.top)
 
-    def align_to_particle(self, loc, new_name, reference_frame=None):
-        """Use template matching algorithm to line up the frames. Similar to
-        `align_frames` but matches only to the particle closest to the
-        argument `loc`.
-        """
-        # Autoguess best reference frame
-        if reference_frame is None:
-            spectrum = self.xanes_spectrum()
-            reference_frame = np.argmax(spectrum.values)
-        # Create new data groups to hold shifted image data
-        self.fork_group(new_name)
-        self.fork_labels(new_name + "_labels")
-        # Determine which particle to use
-        particle = self[reference_frame].activate_closest_particle(loc=loc)
-        particle_img = np.copy(particle.image())
-        # Set all values outside the particle itself to 0
-        particle_img[np.logical_not(particle.mask())] = 0
-        reference_key = self[reference_frame].key()
-        reference_img = self[reference_frame].image_data.value
-        reference_match = feature.match_template(reference_img, particle_img, pad_input=True)
-        reference_center = np.unravel_index(reference_match.argmax(),
-                                            reference_match.shape)
-        reference_center = Pixel(vertical=reference_center[0],
-                                 horizontal=reference_center[1])
+    # def align_to_particle(self, loc, new_name, reference_frame=None):
+    #     """Use template matching algorithm to line up the frames. Similar to
+    #     `align_frames` but matches only to the particle closest to the
+    #     argument `loc`.
+    #     """
+    #     # Autoguess best reference frame
+    #     if reference_frame is None:
+    #         spectrum = self.xanes_spectrum()
+    #         reference_frame = np.argmax(spectrum.values)
+    #     # Create new data groups to hold shifted image data
+    #     self.fork_group(new_name)
+    #     self.fork_labels(new_name + "_labels")
+    #     # Determine which particle to use
+    #     particle = self[reference_frame].activate_closest_particle(loc=loc)
+    #     particle_img = np.copy(particle.image())
+    #     # Set all values outside the particle itself to 0
+    #     particle_img[np.logical_not(particle.mask())] = 0
+    #     reference_key = self[reference_frame].key()
+    #     reference_img = self[reference_frame].image_data.value
+    #     reference_match = feature.match_template(reference_img, particle_img, pad_input=True)
+    #     reference_center = np.unravel_index(reference_match.argmax(),
+    #                                         reference_match.shape)
+    #     reference_center = Pixel(vertical=reference_center[0],
+    #                              horizontal=reference_center[1])
 
-        # Multiprocessing setup
-        def worker(payload):
-            key = payload['key']
-            energy = payload['energy']
-            data = payload['data']
-            labels = payload['labels']
-            # Determine where the reference particle is in this frame's image
-            match = feature.match_template(data, particle_img, pad_input=True)
-            center = np.unravel_index(match.argmax(), match.shape)
-            center = Pixel(vertical=center[0], horizontal=center[1])
-            # Determine the net translation necessary to align to reference frame
-            shift = [
-                center.horizontal - reference_center.horizontal,
-                center.vertical - reference_center.vertical,
-            ]
-            if key == reference_key:
-                # Sanity check to ensure that reference frame does not shift
-                assert shift == [0, 0], "Reference frame is shifted by " + shift
-                ret = {
-                    'key': key,
-                    'energy': energy,
-                    'data': data,
-                    'labels': labels,
-                }
-            else:
-                # Apply the translation with bicubic interpolation
-                transformation = transform.SimilarityTransform(translation=shift)
-                new_data = transform.warp(data, transformation,
-                                          order=3, mode="wrap", preserve_range=True)
-                # Transform labels
-                original_dtype = labels.dtype
-                labels = labels.astype(np.float64)
-                new_labels = transform.warp(labels, transformation, order=0, mode="constant", preserve_range=True)
-                new_labels = new_labels.astype(original_dtype)
-                ret = {
-                    'key': key,
-                    'energy': energy,
-                    'data': new_data,
-                    'labels': new_labels
-                }
-            return ret
+    #     # Multiprocessing setup
+    #     def worker(payload):
+    #         key = payload['key']
+    #         energy = payload['energy']
+    #         data = payload['data']
+    #         labels = payload['labels']
+    #         # Determine where the reference particle is in this frame's image
+    #         match = feature.match_template(data, particle_img, pad_input=True)
+    #         center = np.unravel_index(match.argmax(), match.shape)
+    #         center = Pixel(vertical=center[0], horizontal=center[1])
+    #         # Determine the net translation necessary to align to reference frame
+    #         shift = [
+    #             center.horizontal - reference_center.horizontal,
+    #             center.vertical - reference_center.vertical,
+    #         ]
+    #         if key == reference_key:
+    #             # Sanity check to ensure that reference frame does not shift
+    #             assert shift == [0, 0], "Reference frame is shifted by " + shift
+    #             ret = {
+    #                 'key': key,
+    #                 'energy': energy,
+    #                 'data': data,
+    #                 'labels': labels,
+    #             }
+    #         else:
+    #             # Apply the translation with bicubic interpolation
+    #             transformation = transform.SimilarityTransform(translation=shift)
+    #             new_data = transform.warp(data, transformation,
+    #                                       order=3, mode="wrap", preserve_range=True)
+    #             # Transform labels
+    #             original_dtype = labels.dtype
+    #             labels = labels.astype(np.float64)
+    #             new_labels = transform.warp(labels, transformation, order=0, mode="constant", preserve_range=True)
+    #             new_labels = new_labels.astype(original_dtype)
+    #             ret = {
+    #                 'key': key,
+    #                 'energy': energy,
+    #                 'data': new_data,
+    #                 'labels': new_labels
+    #             }
+    #         return ret
 
-        def process_result(payload):
-            frame = self[payload['key']]
-            frame.activate_closest_particle(loc=loc)
-            return payload
+    #     def process_result(payload):
+    #         frame = self[payload['key']]
+    #         frame.activate_closest_particle(loc=loc)
+    #         return payload
 
-        # Launch the multiprocessing queue
-        description = "Aligning to frame [{}]".format(reference_frame)
-        process_with_smp(frameset=self,
-                         worker=worker,
-                         process_result=process_result,
-                         description=description)
+    #     # Launch the multiprocessing queue
+    #     description = "Aligning to frame [{}]".format(reference_frame)
+    #     process_with_smp(frameset=self,
+    #                      worker=worker,
+    #                      process_result=process_result,
+    #                      description=description)
 
-        # Update new positions
-        for frame in self:
-            frame.sample_position = position(0, 0, frame.sample_position.z)
-        return reference_match
+    #     # Update new positions
+    #     for frame in self:
+    #         frame.sample_position = position(0, 0, frame.sample_position.z)
+    #     return reference_match
 
-    def crop_to_particle(self, loc=None, new_name='cropped_particle'):
-        """Reduce the image size to just show the particle in
-        question. Requires that particles be already labeled using the
-        `label_particles()` method. Can either find the right particle
-        using the `loc` argument, or using each frame's
-        `active_particle_idx` attribute, allowing for more
-        fine-grained control.  particles based on location.
+    # def crop_to_particle(self, loc=None, new_name='cropped_particle'):
+    #     """Reduce the image size to just show the particle in
+    #     question. Requires that particles be already labeled using the
+    #     `label_particles()` method. Can either find the right particle
+    #     using the `loc` argument, or using each frame's
+    #     `active_particle_idx` attribute, allowing for more
+    #     fine-grained control.  particles based on location.
 
-        Arguments
-        ---------
-        - loc : 2-tuple of relative (x, y) position indicated the
-          point to search from. If omitted or None, each frame's
-          `active_particle_idx` attribute will be used.
-        - new_name : Name to give the new group.
-        """
-        # Create a copy of the data group
-        self.fork_group(new_name)
-        # Activate particle if necessary
-        if loc is not None:
-            for frame in prog(self, 'Identifying closest particle'):
-                frame.activate_closest_particle(loc=loc)
-        # Make sure an active particle is assigned to all frames
-        for frame in self:
-            if frame.active_particle_idx is None:
-                msg = "Frame {idx} has no particle assigned. Try {cls}.label_particles()"
-                raise exceptions.NoParticleError(msg.format(idx=frame, cls=frame))
-        # Determine largest bounding box based on all energies
-        boxes = [frame.particles()[frame.active_particle_idx].bbox()
-                 for frame in self]
-        left = min([box.left for box in boxes])
-        bottom = min([box.bottom for box in boxes])
-        top = max([box.top for box in boxes])
-        right = max([box.right for box in boxes])
+    #     Arguments
+    #     ---------
+    #     - loc : 2-tuple of relative (x, y) position indicated the
+    #       point to search from. If omitted or None, each frame's
+    #       `active_particle_idx` attribute will be used.
+    #     - new_name : Name to give the new group.
+    #     """
+    #     # Create a copy of the data group
+    #     self.fork_group(new_name)
+    #     # Activate particle if necessary
+    #     if loc is not None:
+    #         for frame in prog(self, 'Identifying closest particle'):
+    #             frame.activate_closest_particle(loc=loc)
+    #     # Make sure an active particle is assigned to all frames
+    #     for frame in self:
+    #         if frame.active_particle_idx is None:
+    #             msg = "Frame {idx} has no particle assigned. Try {cls}.label_particles()"
+    #             raise exceptions.NoParticleError(msg.format(idx=frame, cls=frame))
+    #     # Determine largest bounding box based on all energies
+    #     boxes = [frame.particles()[frame.active_particle_idx].bbox()
+    #              for frame in self]
+    #     left = min([box.left for box in boxes])
+    #     bottom = min([box.bottom for box in boxes])
+    #     top = max([box.top for box in boxes])
+    #     right = max([box.right for box in boxes])
 
-        # Make sure the expanded box is square
-        def expand_dims(lower, upper, target):
-            center = (lower + upper) / 2
-            new_lower = center - target / 2
-            new_upper = center + target / 2
-            return (new_lower, new_upper)
-        vertical = top - bottom
-        horizontal = right - left
-        if horizontal > vertical:
-            bottom, top = expand_dims(bottom, top, target=horizontal)
-        elif vertical > horizontal:
-            left, right = expand_dims(left, right, target=vertical)
-        # Sanity checks to make sure the new window is square
-        vertical = top - bottom
-        horizontal = right - left
-        assert abs(horizontal) == abs(vertical), "{}h ≠ {}v".format(horizontal, vertical)
-        assert bottom < top
-        assert left < right
-        # Roll each image to have the particle top left
-        for frame in prog(self, 'Cropping frames'):
-            frame.crop(top=top, left=left, bottom=bottom, right=right)
-            # Determine new main particle index
-            new_idx = np.argmax([p.convex_area() for p in frame.particles()])
-            frame.active_particle_idx = new_idx
-            # Set the new relative position for this frames position in the image
-            frame.relative_position = position(*loc, z=frame.sample_position.z)
+    #     # Make sure the expanded box is square
+    #     def expand_dims(lower, upper, target):
+    #         center = (lower + upper) / 2
+    #         new_lower = center - target / 2
+    #         new_upper = center + target / 2
+    #         return (new_lower, new_upper)
+    #     vertical = top - bottom
+    #     horizontal = right - left
+    #     if horizontal > vertical:
+    #         bottom, top = expand_dims(bottom, top, target=horizontal)
+    #     elif vertical > horizontal:
+    #         left, right = expand_dims(left, right, target=vertical)
+    #     # Sanity checks to make sure the new window is square
+    #     vertical = top - bottom
+    #     horizontal = right - left
+    #     assert abs(horizontal) == abs(vertical), "{}h ≠ {}v".format(horizontal, vertical)
+    #     assert bottom < top
+    #     assert left < right
+    #     # Roll each image to have the particle top left
+    #     for frame in prog(self, 'Cropping frames'):
+    #         frame.crop(top=top, left=left, bottom=bottom, right=right)
+    #         # Determine new main particle index
+    #         new_idx = np.argmax([p.convex_area() for p in frame.particles()])
+    #         frame.active_particle_idx = new_idx
+    #         # Set the new relative position for this frames position in the image
+    #         frame.relative_position = position(*loc, z=frame.sample_position.z)
 
     # def align_frame_positions(self):
     #     """Correct for inaccurate motion in the sample motors."""
@@ -1145,6 +1152,8 @@ class XanesFrameset():
         # self.active_labels_groupname = labels_groupname
         # Create a new group
         # labels_group = self.hdf_group().create_group(labels_groupname)
+
+        raise UserWarning("Not functionaly")
 
         # Callables for determining particle labels
         def worker(payload):
@@ -1547,7 +1556,7 @@ class XanesFrameset():
         masked_map = np.ma.array(map_data, mask=self.goodness_mask())
         return masked_map
 
-    def extent(self, idx=0):
+    def extent(self, representation, idx=0):
         """Determine physical dimensions for axes values.
 
         Returns: If idx was given, a single tuple of (left, right,
@@ -1561,14 +1570,15 @@ class XanesFrameset():
 
         """
         with self.store() as store:
+            frames = store.get_frames(representation)
             if idx is not None:
                 # Filter to only the requested frame
-                imshape = np.array(store.absorbances[idx].shape) # (rows, cols)
+                imshape = np.array(frames[idx].shape) # (rows, cols)
                 pixel_size = store.pixel_sizes[idx]
                 center = store.relative_positions[idx]
             else:
                 # Include all frames
-                imshape = np.array(store.absorbances.shape)[-2:] # ((rows, cols))
+                imshape = np.array(frames.shape)[-2:] # ((rows, cols))
                 pixel_size = store.pixel_sizes.value
                 center = store.relative_positions.value
         width = imshape[-1] * pixel_size
@@ -1791,8 +1801,10 @@ class XanesFrameset():
         return Normalize(global_min, global_max)
 
     def gtk_viewer(self):
+        """Launch a GTK gui to view the data in the frameset."""
         from gtk_viewer import GtkTxmViewer
-        viewer = GtkTxmViewer(frameset=self)
+        viewer = GtkTxmViewer(edge=self.edge,
+                              hdf_filename=self.hdf_filename, parent_name=self.parent_name)
         viewer.show()
         # Close the current blank plot
         pyplot.close()

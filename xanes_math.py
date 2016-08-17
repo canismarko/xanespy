@@ -182,20 +182,22 @@ def transform_images(data, translations=None, rotations=None,
     # Create a new array if one is not given
     if out is None:
         out = np.zeros_like(data)
-    # Loop through the images and apply each transformation
-    for imidx in range(data.shape[0]):
+    # Define a function to pass into threads
+    def apply_transform(idx):
         # Get transformation parameters if given
-        scale = scales[imidx] if scales is not None else None
-        translation = translations[imidx] if translations is not None else None
-        rot = rotations[imidx] if rotations is not None else None
+        scale = scales[idx] if scales is not None else None
+        translation = translations[idx] if translations is not None else None
+        rot = rotations[idx] if rotations is not None else None
         # Prepare and execute the transformation
         transformation = transform.SimilarityTransform(
-            scale=scales[imidx] if scales is not None else None,
-            translation=translations[imidx] if translations is not None else None,
-            rotation=rotations[imidx] if rotations is not None else None,
+            scale=scale,
+            translation=translation,
+            rotation=rot,
         )
-        out[imidx] = transform.warp(data[imidx], transformation,
+        out[idx] = transform.warp(data[idx], transformation,
                                     order=3, mode=mode)
+    # Loop through the images and apply each transformation
+    foreach(apply_transform, range(data.shape[0]))
     return out
 
 

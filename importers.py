@@ -35,8 +35,6 @@ from frame import remove_outliers
 from txmstore import TXMStore, prepare_txm_store
 from utilities import prog, prepare_hdf_group
 import exceptions
-
-import pyximport; pyximport.install()
 from xanes_math import transform_images
 
 
@@ -329,8 +327,8 @@ def import_ssrl_frameset(directory, hdf_filename=None, quiet=False):
         pixel_sizes[:] = np.min(pixel_sizes)
         # Save data to HDF5 file
         store = prepare_txm_store(filename=hdf_filename,
-                                         groupname=sample_name,
-                                         dirname=directory)
+                                  parent_name=sample_name,
+                                  dirname=directory)
         def save_data(name, data):
             # Sort by energy
             data = [d for (E, d) in sorted(zip(energies, data), key=lambda x: x[0])]
@@ -436,7 +434,7 @@ def import_aps_8BM_frameset(directory, hdf_filename=None, quiet=False):
             # Save data to disk
             groupname = "{sample}_{fov}".format(sample=sample, fov=position)
             store = prepare_txm_store(filename=hdf_filename,
-                                      groupname=groupname)
+                                      parent_name=groupname)
             all_groupnames.append(groupname)
             def save_data(name, data, energies):
                 """Sort data by energy then save to the store."""

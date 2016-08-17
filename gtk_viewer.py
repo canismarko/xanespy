@@ -22,16 +22,16 @@ import os
 import numpy as np
 import gi
 gi.require_version('Gtk', '3.0')
-from gi.repository import Gtk, Gdk, GObject, GLib
+from gi.repository import Gtk, Gdk, GObject, GLib, GdkPixbuf
 
 from utilities import xycoord, position, shape, Pixel, xy_to_pixel, pixel_to_xy
 from gtk_plotter import GtkFramesetPlotter
+from xanes_frameset import XanesFrameset
 
 
 WATCH_CURSOR = Gdk.Cursor(Gdk.CursorType.WATCH)
 ARROW_CURSOR = Gdk.Cursor(Gdk.CursorType.ARROW)
 
-# print(dir(GObject))
 
 class WatchCursor():
     """Factory returns a function that Perform some slow action `target`
@@ -91,16 +91,22 @@ class GtkTxmViewer():
     show_map_background = False
     apply_edge_jump = False
     """View a XANES frameset using a Gtk GUI."""
-    def __init__(self, frameset, plotter=None):
-        if plotter is None:
-            plotter = GtkFramesetPlotter(frameset=frameset)
-        self.plotter = plotter
+    def __init__(self, edge, hdf_filename, parent_name):
+        # Create a XANES frameset
+        self.edge = edge
+        self.hdf_filename = hdf_filename
+        self.parent_name = parent_name
+        self.frameset = XanesFrameset(filename=self.hdf_filename,
+                                      edge=self.edge,
+                                      groupname=self.parent_name)
+        # Create a new plotter
+        self.plotter = GtkFramesetPlotter(frameset=self.frameset)
         self.plotter.create_axes()
-        self.frameset = frameset
+        # Get some data
         with self.frameset.store() as store:
             self.energies = store.energies.value
-        self.builder = Gtk.Builder()
         # Load the GUI from a glade file
+        self.builder = Gtk.Builder()
         gladefile = os.path.join(os.path.dirname(__file__),
                                  "gtk_xanes_viewer.glade")
         self.builder.add_from_file(gladefile)
@@ -118,51 +124,65 @@ class GtkTxmViewer():
         # Set some initial values
         self.current_adj = self.builder.get_object('CurrentFrame')
         self.current_adj.set_property('upper', len(self.energies) - 1)
-        # Prepare the tree of different subsets
-        # with self.frameset.hdf_file(mode='r') as f:
-        #     groups = []
-        #     node = namedtuple('node', ('name', 'display', 'path', 'parent'))
-        #     for key in parent_group.keys():
-        #         group = parent_group[key]
-        #         display = " ".join(
-        #             [word.capitalize() for word in key.split("_")]
-        #         )
-        #         groups.append(node(name=key,
-        #                            display=display,
-        #                            path=group.name,
-        #                            parent=group.attrs.get('parent', None)))
-        # Remove non-frameset nodes
-        # treestore = Gtk.TreeStore(str, str)
-        # groups = [g for g in groups if g.parent is not None]
-        # top_level = [g for g in groups if g.parent == ""]
-        # active_iters = []
-        # def add_node(parent_iter, node):
-        #     new_iter = treestore.append(parent_iter, (node.display, node.name))
-        #     # Check if this group should be selected
-        #     if node.path == self.frameset.active_group:
-        #         active_iters.append(new_iter)
-        #     groups.pop(groups.index(node))
-        #     # Resursive function that builds the tree
-        #     children = [g for g in groups if g.parent == node.path]
-        #     for child in children:
-        #         add_node(parent_iter=new_iter, node=child)
-        # # Start at the top and build the tree recursively
-        # for node in top_level:
-        #     add_node(parent_iter=None, node=node)
-        # treeview = self.builder.get_object("FramesetTreeView")
-        # treeview.set_model(treestore)
+        # Prepare a tree of the project hierarchy
+        with self.frameset.store() as store:
+            datatree = store.data_tree()
+            active_path = os.path.join(
+                store.data_group().name,
+                self.plotter.active_representation
+            )
+        treestore = Gtk.TreeStore(str, str, GdkPixbuf.Pixbuf, str)
+        active_iters = []
+        icon_theme = Gtk.IconTheme.get_default()
+        def add_node(parent_iter, node):
+            if node['context'] == 'metadata':
+                symbol = icon_theme.load_icon('x-office-spreadsheet', 16, 0)
+            elif node['context'] == 'map':
+                symbol = icon_theme.load_icon('image-x-generic', 16, 0)
+            elif node['context'] == 'frameset':
+                symbol = icon_theme.load_icon('emblem-photos', 16, 0)
+            else:
+                symbol = None
+            items = (node['name'], node['path'], symbol, node['context'])
+            new_iter = treestore.append(parent_iter, items)
+            # Check if this group should be selected
+            if node['path'] == active_path:
+                active_iters.append(new_iter)
+            # Resursive function that builds the tree
+            for child in node['children']:
+                add_node(parent_iter=new_iter, node=child)
+        # Start at the top and build the tree recursively
+        for parent in datatree:
+            add_node(parent_iter=None, node=parent)
+        treeview = self.builder.get_object("FramesetTreeView")
+        treeview.set_model(treestore)
+        # Prepare the columns (icon, display) in the tree
+        text_renderer = Gtk.CellRendererText()
+        px_renderer = Gtk.CellRendererPixbuf()
+        col = Gtk.TreeViewColumn("Name") #, text_renderer, text=0)
+        col.pack_start(px_renderer, True)
+        col.pack_start(text_renderer, True)
+        col.add_attribute(px_renderer, 'pixbuf', 2)
+        col.add_attribute(text_renderer, 'text', 0)
+        treeview.append_column(col)
+        # text_renderer = Gtk.CellRendererText()
+        # col = Gtk.TreeViewColumn("Name", text_renderer, text=0)
+        # treeview.append_column(col)
+        # px_renderer = Gtk.CellRendererPixbuf()
+        # col = Gtk.TreeViewColumn("", px_renderer, pixbuf=2)
+        # treeview.append_column(col)
         # columns = ["display"]
         # for i in range(0, len(columns)):
         #     cell = Gtk.CellRendererText()
         #     col = Gtk.TreeViewColumn(columns[i], cell, text=i)
         #     treeview.append_column(col)
-        # if active_iters:
-        #     # Set current active group
-        #     active_iter = active_iters[0]
-        #     active_path = treestore.get_path(active_iter)
-        #     selection = treeview.get_selection()
-        #     treeview.expand_to_path(active_path)
-        #     selection.select_path(active_path)
+        if active_iters:
+            # Set current active group
+            active_iter = active_iters[0]
+            active_path = treestore.get_path(active_iter)
+            selection = treeview.get_selection()
+            treeview.expand_to_path(active_path)
+            selection.select_path(active_path)
 
         # Populate the combobox with list of available representations
 
@@ -264,7 +284,7 @@ class GtkTxmViewer():
         self.map_window.hide()
         return True
 
-    def launch_map_window(self, widget):
+    def launch_map_window(self, widget=None):
         GLib.idle_add(self.draw_map_plots)
         GLib.idle_add(self.map_window.show_all)
 
@@ -274,6 +294,8 @@ class GtkTxmViewer():
             xy = xycoord(x=event.xdata, y=event.ydata)
             with self.frameset.store() as store:
                 map_shape = store.whiteline_map.shape
+            extent = self.frameset.extent(
+                representation=self.plotter.active_representation)
             self.active_pixel = xy_to_pixel(xy,
                                             extent=self.frameset.extent(),
                                             shape=map_shape)
@@ -293,23 +315,22 @@ class GtkTxmViewer():
         GLib.idle_add(self.update_map_window)
 
     def update_current_location(self, event):
-        x_label = self.builder.get_object('XCursorLabel')
-        y_label = self.builder.get_object('YCursorLabel')
-        v_label = self.builder.get_object('VCursorLabel')
-        h_label = self.builder.get_object('HCursorLabel')
+        pos_label = self.builder.get_object('PosLabel')
+        pos_unit_label = self.builder.get_object('PosUnitLabel')
+        px_label = self.builder.get_object('PxLabel')
         I_label = self.builder.get_object('ICursorLabel')
         if event.inaxes == self.plotter.image_ax:
             # Convert xy position to pixel values
             xy = xycoord(x=round(event.xdata, 1), y=round(event.ydata, 1))
             with self.frameset.store() as store:
                 frame_shape = store.absorbances.shape[1:]
-            pixel = xy_to_pixel(xy, extent=self.frameset.extent(),
+            extent = self.frameset.extent(representation=self.plotter.active_representation)
+            pixel = xy_to_pixel(xy, extent=extent,
                                 shape=frame_shape)
             # Write the coordinates to the text labels
-            x_label.set_text(str(xy.x))
-            y_label.set_text(str(xy.y))
-            v_label.set_text(str(pixel.vertical))
-            h_label.set_text(str(pixel.horizontal))
+            pos_label.set_text("({x}, {y})".format(x=xy.x, y=xy.y))
+            px_label.set_text("[{v}, {h}]".format(v=pixel.vertical,
+                                                  h=pixel.horizontal))
             # Retrieve and display to absorbance intensity
             row = np.clip(pixel.vertical, 0, frame_shape[0]-1)
             col = np.clip(pixel.horizontal, 0, frame_shape[1]-1)
@@ -320,10 +341,8 @@ class GtkTxmViewer():
         else:
             # Set all the cursor labels to blank values
             s = "--"
-            x_label.set_text(s)
-            y_label.set_text(s)
-            v_label.set_text(s)
-            h_label.set_text(s)
+            pos_label.set_text(s)
+            px_label.set_text(s)
             I_label.set_text(s)
 
     def draw_map_plots(self):
@@ -373,24 +392,30 @@ class GtkTxmViewer():
         GLib.idle_add(self.plotter.draw_crosshairs, self.active_xy)
         GLib.idle_add(self.plotter.plot_map_spectra, self.active_pixel)
         GLib.idle_add(self.update_map_window)
-        # Create a watch cursor if one doesn't yet exist
-        # if getattr(self, 'map_watch_cursor', None) is None:
-        #     self._map_watch_cursor = WatchCursor(slow_stuff, windows=[self.map_window])
-        # self._map_watch_cursor(delay=2000)
-        # GLib.idle_add(self.update_map_window)
 
     def change_active_group(self, selection, object=None):
         """Update to a new frameset HDF group after user has picked tree entry."""
         model, treeiter = selection.get_selected()
-        def disable_map_button():
-            # Disable map button until the data are loaded (reset in self.update_window)
-            self.builder.get_object("ShowMapButton").set_sensitive(False)
-        GLib.idle_add(disable_map_button)
+        # GLib.idle_add(disable_map_button)
         # Load new group
-        new_group = model[treeiter][1]
-        self.active_groupname = new_group
-        self.frameset.switch_group(new_group)
-        # # Update UI elements
+        name, path, icon, context = model[treeiter]
+        # parent, data, view = path.split('/')
+        paths = path.split('/')[1:]
+        # Replace XanesFrameset object
+        self.frameset = XanesFrameset(filename=self.hdf_filename,
+                                      edge=self.edge, groupname=paths[0])
+        if len(paths) > 1:
+            # Switch active data group
+            self.frameset.groupname = paths[1]
+        if len(paths) > 2:
+            if context == 'frameset':
+                # Swtich active data representation
+                self.plotter.active_representation = paths[2]
+                self.map_window.close()
+            elif context == 'map':
+                self.launch_map_window()
+                print('map')
+        # Update UI elements
         self.refresh_artists()
         self.update_window()
 
@@ -471,7 +496,7 @@ class GtkTxmViewer():
 
     def refresh_artists(self, *args, **kwargs):
         # Redraw xanes spectrum
-        self.plotter.plot_xanes_spectra()
+        self.plotter.plot_map_spectra()
         def connect_animation():
             self.plotter.connect_animation(self.event_source)
         GLib.idle_add(connect_animation)
@@ -479,7 +504,7 @@ class GtkTxmViewer():
     def update_window(self, widget=None):
         """Method updates the various GTKLabel objects with current status
         data."""
-        ## This method should contain **only fast updates**, it gets called a lot.
+        # This method should contain **only fast updates**, it gets called a lot.
         def change_gui():
             # Get data from frameset data store
             with self.frameset.store() as store:
@@ -488,25 +513,18 @@ class GtkTxmViewer():
                 imshape = shape(*store.absorbances[self.current_idx].shape)
             # Set labels on the sidepanel
             energy_label = self.builder.get_object('EnergyLabel')
-            energy_label.set_text(str(energy))
-            x_label = self.builder.get_object('XPosLabel')
-            x_label.set_text(str(pos.x))
-            y_label = self.builder.get_object('YPosLabel')
-            y_label.set_text(str(pos.y))
-            z_label = self.builder.get_object('ZPosLabel')
-            z_label.set_text(str(pos.z))
-            # particle_label = self.builder.get_object('ActiveParticleLabel')
-            # particle_label.set_text(str(current_frame.active_particle_idx))
+            energy_label.set_text("{E:.2f}".format(E=energy))
             shape_label = self.builder.get_object('ShapeLabel')
-            shape_label.set_text(str(imshape))
+            shape_label.set_text("[{r}, {c}]".format(r=imshape.rows, c=imshape.columns))
             norm_label = self.builder.get_object('NormLabel')
+            norm = self.plotter.norm
             # norm = self.frameset.image_normalizer(self.plotter.active_representation)
             # norm_text = '[{}, {}]'.format(
             #     round(norm.vmin, 2),
             #     round(norm.vmax, 2)
             # )
             # norm_label.set_text(norm_text)
-            norm_label.set_text("Fix me")
+            norm_label.set_text("[{:.2f}, {:.2f}]".format(norm.vmin, norm.vmax))
             # Check if the "show map" button should be active
             map_btn = self.builder.get_object("ShowMapButton")
             # if self.frameset.map_name:
