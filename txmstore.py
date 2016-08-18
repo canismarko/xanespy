@@ -23,6 +23,7 @@ import warnings
 
 import h5py
 import numpy as np
+from skimage.measure import regionprops
 
 import exceptions
 from utilities import prog
@@ -213,6 +214,10 @@ class TXMStore():
         """Get a set of frames, specified by the value of `name`."""
         return self.data_group()[name]
 
+    def get_map(self, name):
+        """Get a map of the frames, specified by the value of `name`."""
+        return self.data_group()[name]
+
     @property
     def pixel_sizes(self):
         return self.data_group()['pixel_sizes']
@@ -299,11 +304,19 @@ class TXMStore():
 
     @property
     def whiteline_map(self):
-        return self.data_group()['whiteline_map']
+        return self.get_map('whiteline_map')
 
     @whiteline_map.setter
     def whiteline_map(self, val):
         self.replace_dataset('whiteline_map', val, context='map')
+
+    @property
+    def particle_labels(self):
+        return self.data_group()['particle_labels']
+
+    @particle_labels.setter
+    def particle_labels(self, val):
+        self.replace_dataset('particle_labels', val, context='map')
 
 
 def prepare_txm_store(filename: str, parent_name: str, data_name='imported', dirname: str=None):

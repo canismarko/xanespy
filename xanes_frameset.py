@@ -34,20 +34,20 @@ from matplotlib.colors import Normalize
 from scipy import linalg
 import h5py
 import numpy as np
-from skimage import morphology, filters, feature, transform, color
+from skimage import morphology, filters, feature, transform, color, measure
 from sklearn import linear_model
 from sklearn.utils import validation
 from units import unit, predefined
 
 from utilities import prog, xycoord, Pixel, component, position, Extent, pixel_to_xy
 from frame import (
-    TXMFrame, PtychoFrame, calculate_particle_labels,
+    TXMFrame, PtychoFrame,
     apply_reference)
 from txmstore import TXMStore
 from plots import new_axes, new_image_axes, plot_txm_map, plot_xanes_spectrum
 import exceptions
 # import smp
-from xanes_math import transform_images, register_template, register_correlations, direct_whitelines
+import xanes_math as xm
 
 predefined.define_units()
 
@@ -637,11 +637,11 @@ class XanesFrameset():
                 # Prepare an array to hold results
                 out = np.zeros_like(store.absorbances)
                 # Apply transformation
-                transform_images(data=store.absorbances,
-                                 translations=self._translations,
-                                 rotations=self._rotations,
-                                 scales=self._scales,
-                                 mode='wrap', out=out)
+                xm.transform_images(data=store.absorbances,
+                                    translations=self._translations,
+                                    rotations=self._rotations,
+                                    scales=self._scales,
+                                    mode='wrap', out=out)
             # Calculate and apply cropping bounds for the image stack
             if crop:
                 tx = self._translations[:,0]
@@ -786,10 +786,10 @@ class XanesFrameset():
             # original_shape = shape(*reference_image.shape)
             # Calculate translations for each frame
             if method == "cross_correlation":
-                translations = register_correlations(frames=frames,
+                translations = xm.register_correlations(frames=frames,
                                                      reference=ref_image)
             elif method == "template_match":
-                translations = register_template(frame=frames, template=template)
+                translations = xm.register_template(frame=frames, template=template)
             # Save translations for deferred calculation
             self.stage_transformations(translations=translations)
         # Apply result of calculations to disk (if requested)
@@ -1144,46 +1144,20 @@ class XanesFrameset():
     #         )
     #         frame.sample_position = new_position
 
-    def label_particles(self):
-        """Use watershed segmentation to identify particles."""
-        # labels_groupname = self.active_group + "_labels"
-        # if labels_groupname in self.hdf_group().keys():
-        #     del self.hdf_group()[labels_groupname]
-        # self.active_labels_groupname = labels_groupname
-        # Create a new group
-        # labels_group = self.hdf_group().create_group(labels_groupname)
+    def label_particles(self, min_distance=20):
+        """Use watershed segmentation to identify particles.
 
-        raise UserWarning("Not functionaly")
-
-        # Callables for determining particle labels
-        def worker(payload):
-            data = payload['data']
-            with warnings.catch_warnings():
-                warnings.simplefilter("ignore")
-                new_data = calculate_particle_labels(data)
-            payload['data'] = new_data
-            return payload
-
-        def process_result(payload):
-            # Save the calculated data
-            key = payload['key']
-            data = payload['data']
-            # labels.create_dataset(key, data=data, compression='gzip')
-            # Write path to saved particle labels
-            frame = self.FrameClass(frameset=self, groupname=payload['key'])
-            frame.particle_labels = data
-            # Return a shell of the original dictionary so smp handler
-            # does not over-right real image data with labels
-            ret = {
-                'key': key
-            }
-            return ret
-
-        # Launch multiprocessing queue
-        process_with_smp(frameset=self,
-                         worker=worker,
-                         process_result=process_result,
-                         description="Detecting particles")
+        Arguments
+        ---------
+        - min_distance : Controls how selective the algorithm is at
+          grouping areas into particles. Lower numbers means more
+          particles, but might split large particles into two.
+        """
+        with self.store('r+') as store:
+            frames = store.absorbances
+            Es = store.energies
+            particles = xm.particle_labels(frames=frames, energies=Es, edge=self.edge())
+            store.particle_labels = particles
 
     def rebin(self, new_shape=None, factor=None):
         """Resample all images into new shape. Arguments `shape` and `factor`
@@ -1232,6 +1206,25 @@ class XanesFrameset():
             ax = new_axes()
             ax.plot(x, spectrum.values, marker="o", linestyle="None")
             ax.plot(x, regression.predict(x))
+
+    def particle_regions(self, map_name="whiteline_map"):
+        """Return a list of regions (1 for each particle) sorted by area.
+        (largest first). This requires that the `label_particles`
+        method be called first.
+
+        Arguments
+        ---------
+        - map_name : string with the attribute name to get for intensity data.
+
+        """
+        with self.store() as store:
+            labels = store.particle_labels.value
+            map_ = store.get_map(map_name).value
+            regions = measure.regionprops(labels,
+                                          intensity_image=map_)
+        # Put in order of descending area
+        regions.sort(key=lambda p: p.area)
+        return regions
 
     def particle_area_spectrum(self, loc=xycoord(20, 20)):
         """Calculate a spectrum based on the area of the particle closest to
@@ -1444,48 +1437,30 @@ class XanesFrameset():
     def edge_jump(self):
         """Calculate a image showing the difference in
         signal across the X-ray edge."""
-        pre_edge = self.edge.pre_edge
-        post_edge = self.edge.post_edge
         with self.store() as store:
-            # Flatten frames into a 2D array
-            frames = store.absorbances
-            # Prepare masks for the post-edge and the pre-edge
-            Es = store.energies.value
-            pre_edge_mask = (Es >= pre_edge[0]) & (Es <= pre_edge[1])
-            post_edge_mask = (Es >= post_edge[0]) & (Es <= post_edge[1])
-            # Compare the post-edges and pre-edges
-            mean_pre = np.mean(frames[pre_edge_mask, ...], axis=0)
-            mean_post = np.mean(frames[post_edge_mask, ...], axis=0)
-            ej = mean_post - mean_pre
+            ej = xm.edge_jump(frames=store.absorbances,
+                              energies=store.energies.value,
+                              edge=self.edge)
         return ej
 
+
     @functools.lru_cache()
-    def edge_mask(self, sensitivity: float=1, opening_size=0):
+    def edge_mask(self, sensitivity: float=1, min_size=0):
         """Calculate a mask for what is likely active material at this
-        edge. This is done by comparing the edge-jump to the standard
-        deviation. Foreground material will be identified when the edge-jump
-        accounts for most of the standard deviation.
+        edge.
 
         Arguments
         ---------
         - sensitivity : A multiplier for the otsu value to determine
           the actual threshold.
 
-        - opening_size : Size of the disk kernel to use for an opening
-          filter to remove salt. Passing zero (default) will result in
-          no opening.
+        - min_size : Objects below this size (in pixels) will be
+          removed. Passing zero (default) will result in no effect.
         """
-        edge_jump = self.edge_jump()
         with self.store() as store:
-            stdev = np.std(store.absorbances, axis=0)
-            edge_ratio = edge_jump / stdev
-        img_bottom = edge_ratio.min()
-        threshold = filters.threshold_otsu(edge_ratio)
-        threshold = img_bottom + sensitivity * (threshold - img_bottom)
-        mask = edge_ratio > threshold
-        if opening_size > 0:
-            mask = morphology.opening(mask, selem=morphology.disk(opening_size))
-        mask = np.logical_not(mask)
+            mask = xm.edge_mask(frames=store.absorbances,
+                                energies=store.energies.value, edge=self.edge(),
+                                sensitivity=sensitivity, min_size=min_size)
         return mask
 
     def goodness_filter(self):
@@ -1522,9 +1497,8 @@ class XanesFrameset():
             mask = np.logical_not(mask)
         return mask
 
-    def calculate_map(self):
-        """Generate a map based on pixel-wise Xanes spectra. Default is to
-        compute X-ray whiteline position."""
+    def calculate_whitelines(self):
+        """Calculate and save a map of the whiteline position of each pixel."""
         with self.store() as store:
             energies = store.energies.value
             # Convert numpy axes to be in (pixel, energy) form
@@ -1533,13 +1507,19 @@ class XanesFrameset():
             orig_shape = frames.shape
             spectra = frames.reshape((-1, frames.shape[-1]))
             # Calculate whiteline positions and return to original shape
-            whitelines = direct_whitelines(spectra=spectra,
+            whitelines = xm.direct_whitelines(spectra=spectra,
                                            energies=energies, edge=self.edge)
             whitelines = whitelines.reshape(orig_shape[:-1])
         # Save results to disk
         with self.store(mode='r+') as store:
             store.whiteline_map = whitelines
-        return whitelines
+
+    def calculate_maps(self):
+        """Generate a set of maps based on pixel-wise Xanes spectra: whiteline
+        position, particle labels."""
+        # Calculate particle_labels
+        self.calculate_whitelines()
+        self.label_particles()
 
     def masked_map(self, goodness_filter=True):
         """Generate a map based on pixel-wise Xanes spectra and apply an

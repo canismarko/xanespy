@@ -25,15 +25,14 @@ compiled to C code using Cython.
 
 import warnings
 
+from scipy import ndimage
 import numpy as np
-
-from skimage import transform, feature
+from skimage import transform, feature, filters, morphology, exposure, measure
 
 
 # Helpers for parallelizable code
 
 import sys
-import time
 import threading
 import multiprocessing
 from itertools import count
@@ -143,6 +142,99 @@ def normalize_Kedge(spectra, energies, E_0, pre_edge, post_edge, post_edge_order
     # Restore original shape
     spectra = spectra.reshape(orig_shape)
     return spectra
+
+
+def edge_mask(frames: np.ndarray, energies: np.ndarray, edge,
+              sensitivity: float=1, min_size=0):
+    """Calculate a mask for what is likely active material at this
+    edge. This is done by comparing the edge-jump to the standard
+    deviation. Foreground material will be identified when the
+    edge-jump accounts for most of the standard deviation.
+
+    Arguments
+    ---------
+    - frames : Array with images at different energies.
+
+    - energies : X-ray energies corresponding to images in
+      `frames`. Must have the same shape along the first dimenion as
+      `frames`.
+
+    - sensitivity : A multiplier for the otsu value to determine
+      the actual threshold.
+
+    - min_size : Objects below this size (in pixels) will be
+      removed. Passing zero (default) will result in no effect. The
+      value "auto" will cause the function to estimate a size at
+      1/100th the average image size.
+
+    """
+    if min_size == "auto":
+        # Guess the best min_size from image shape
+        min_size = (frames.shape[-1] + frames.shape[-2]) / 200
+    # dividing the edge jump by the standard deviation provides sharp constrast
+    ej = edge_jump(frames=frames, energies=energies, edge=edge)
+    stdev = np.std(frames, axis=0)
+    edge_ratio = ej / stdev
+    # Thresholding  to separate background from foreground
+    img_bottom = edge_ratio.min()
+    threshold = filters.threshold_otsu(edge_ratio)
+    threshold = img_bottom + sensitivity * (threshold - img_bottom)
+    mask = edge_ratio > threshold
+    # Remove left-over background fuzz
+    if min_size > 0:
+        mask = morphology.opening(mask, selem=morphology.disk(min_size))
+    # Invert so it removes background instead of particles
+    mask = np.logical_not(mask)
+    return mask
+
+
+def edge_jump(frames: np.ndarray, energies: np.ndarray, edge):
+    # Check that dimensions match
+    if not frames.shape[0] == energies.shape[0]:
+        msg = "First dimenions of frames and energies do not match ({} vs {})"
+        raise ValueError(msg.format(frames.shape[0], energies.shape[0]))
+    pre_edge = edge.pre_edge
+    post_edge = edge.post_edge
+    # Prepare masks for the post-edge and the pre-edge
+    pre_edge_mask = np.logical_and(np.greater_equal(energies, pre_edge[0]),
+                                   np.less_equal(energies, pre_edge[1]))
+    post_edge_mask = np.logical_and(np.greater_equal(energies, post_edge[0]),
+                                   np.less_equal(energies, post_edge[1]))
+    # Compare the post-edges and pre-edges
+    mean_pre = np.mean(frames[pre_edge_mask, ...], axis=0)
+    mean_post = np.mean(frames[post_edge_mask, ...], axis=0)
+    ej = mean_post - mean_pre
+    return ej
+
+
+def particle_labels(frames: np.ndarray, energies: np.ndarray, edge,
+                    min_distance=20):
+    """Prepare a map by segmenting the images into particles.
+
+    Arguments
+    ---------
+
+    - frames : An array of images, each one at a different
+      energy. These will be merged and used for segmentation.
+    """
+    # Get edge-jump mask
+    mask = ~edge_mask(frames, energies=energies, edge=edge, min_size="auto")
+    # Create "edge-distance" image
+    distances = ndimage.distance_transform_edt(mask)
+    in_range = (distances.min(), distances.max())
+    distances = exposure.rescale_intensity(distances,
+                                  in_range=in_range,
+                                  out_range=(0, 1))
+    # Use the local distance maxima as peak centers and compute labels
+    local_maxima = feature.peak_local_max(
+        distances,
+        indices=False,
+        min_distance=min_distance,
+        labels=mask.astype(np.int)
+    )
+    markers = measure.label(local_maxima)
+    labels = morphology.watershed(-distances, markers, mask=mask)
+    return labels
 
 
 def direct_whitelines(spectra, energies, edge):
