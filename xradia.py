@@ -35,58 +35,6 @@ import exceptions
 from utilities import shape, Pixel
 
 
-def decode_aps_params(filename):
-    """Accept the filename of an XRM file and return sample parameters as
-    a dictionary."""
-    regex = re.compile(
-        '(?P<pos>[a-zA-Z0-9_]+)_xanes(?P<sam>[a-zA-Z0-9_]+)_(?P<E_int>[0-9]+)_(?P<E_dec>[0-9])eV.xrm'
-    )
-    match = regex.search(filename).groupdict()
-    energy = float("{}.{}".format(match['E_int'], match['E_dec']))
-    result = {
-        'sample_name': match['sam'],
-        'position_name': match['pos'],
-        'is_background': match['pos'] == 'ref',
-        'energy': energy,
-    }
-    return result
-
-def decode_ssrl_params(filename):
-    """Accept the filename of an XRM file and return sample parameters as
-    a dictionary."""
-    # Beamline 6-2c at SSRL
-    ssrl_regex_bg = re.compile(
-        'rep(\d{2})_(\d{6})_ref_[0-9]+_([-a-zA-Z0-9_]+)_([0-9.]+)_eV_(\d{3})of(\d{3})\.xrm'
-    )
-    ssrl_regex_sample = re.compile(
-        'rep(\d{2})_[0-9]+_([-a-zA-Z0-9_]+)_([0-9.]+)_eV_(\d{3})of(\d{3}).xrm'
-    )
-    # Check for background frames
-    bg_result = ssrl_regex_bg.search(filename)
-    sample_result = ssrl_regex_sample.search(filename)
-    if bg_result:
-        params = {
-            'repetition': int(bg_result.group(1)),
-            'date_string': '',
-            'sample_name': bg_result.group(3).strip("_"),
-            'position_name': '',
-            'is_background': True,
-            'energy': float(bg_result.group(4)),
-        }
-    elif sample_result:
-        params = {
-            'repetition': int(sample_result.group(1)),
-            'date_string': '',
-            'sample_name': sample_result.group(2).strip("_"),
-            'position_name': '',
-            'is_background': False,
-            'energy': float(sample_result.group(3)),
-        }
-    else:
-        msg = "Could not parse filename {filename} using flavor {flavor}"
-        raise exceptions.FilenameParseError(msg.format(filename=filename, flavor='ssrl'))
-    return params
-
 # Some of the byte decoding was taken from
 # https://github.com/data-exchange/data-exchange/blob/master/xtomo/src/xtomo_reader.py
 
@@ -110,10 +58,10 @@ class XRMFile():
         self.flavor = flavor
         self.ole_file = OleFileIO.OleFileIO(self.filename)
         # Filename parameters
-        params = self.parameters_from_filename()
-        self.sample_name = params['sample_name']
-        self.position_name = params['position_name']
-        self.is_background = params['is_background']
+        # params = self.parameters_from_filename()
+        # self.sample_name = params['sample_name']
+        # self.position_name = params['position_name']
+        # self.is_background = params['is_background']
 
     def __enter__(self):
         return self
@@ -131,26 +79,26 @@ class XRMFile():
         """Close original XRM (ole) file on disk."""
         self.ole_file.close()
 
-    def parameters_from_filename(self):
-        """Determine various metadata from the frames filename (sample name etc)."""
-        if self.flavor == 'aps':
-            params = decode_aps_params(self.filename)
-        elif self.flavor == 'aps-old1':
-            # APS beamline 8-BM-B
-            result = self.aps_old1_regex.search(self.filename)
-            params = {
-                'date_string': result.group(1),
-                'sample_name': result.group(2),
-                'position_name': result.group(3),
-                'is_background': result.group(3) == 'bkg',
-                'energy': float(result.group(4)),
-            }
-        elif self.flavor == 'ssrl':
-            params = decode_ssrl_params(self.filename)
-        else:
-            msg = "Unknown flavor for filename: {}"
-            raise exceptions.FileFormatError(msg.format(self.filename))
-        return params
+    # def parameters_from_filename(self):
+    #     """Determine various metadata from the frames filename (sample name etc)."""
+    #     if self.flavor == 'aps':
+    #         params = decode_aps_params(self.filename)
+    #     elif self.flavor == 'aps-old1':
+    #         # APS beamline 8-BM-B
+    #         result = self.aps_old1_regex.search(self.filename)
+    #         params = {
+    #             'date_string': result.group(1),
+    #             'sample_name': result.group(2),
+    #             'position_name': result.group(3),
+    #             'is_background': result.group(3) == 'bkg',
+    #             'energy': float(result.group(4)),
+    #         }
+    #     elif self.flavor == 'ssrl':
+    #         params = decode_ssrl_params(self.filename)
+    #     else:
+    #         msg = "Unknown flavor for filename: {}"
+    #         raise exceptions.FileFormatError(msg.format(self.filename))
+    #     return params
 
     def um_per_pixel(self):
         """Describe the size of a pixel in microns. If this is an SSRL frame,

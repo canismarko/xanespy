@@ -297,12 +297,12 @@ class GtkTxmViewer():
             extent = self.frameset.extent(
                 representation=self.plotter.active_representation)
             self.active_pixel = xy_to_pixel(xy,
-                                            extent=self.frameset.extent(),
+                                            extent=extent,
                                             shape=map_shape)
             self.plotter.active_pixel = self.active_pixel
             # Make sure active_xy is in the center of the pixel
             self.active_xy = pixel_to_xy(self.active_pixel,
-                                         extent=self.frameset.extent(),
+                                         extent=extent,
                                          shape=map_shape)
             self.plotter.active_xy = self.active_xy
         else:
@@ -383,8 +383,10 @@ class GtkTxmViewer():
             self.active_pixel = Pixel(horizontal=horizontal, vertical=vertical)
             with self.frameset.store() as store:
                 map_shape = store.whiteline_map.shape
+            extent = self.frameset.extent(
+                representation=self.plotter.active_representation)
             self.active_xy = pixel_to_xy(self.active_pixel,
-                                         extent=self.frameset.extent(),
+                                         extent=extent,
                                          shape=map_shape)
             self.plotter.active_pixel = self.active_pixel
             self.plotter.active_xy = self.active_xy

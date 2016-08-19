@@ -1207,7 +1207,7 @@ class XanesFrameset():
             ax.plot(x, spectrum.values, marker="o", linestyle="None")
             ax.plot(x, regression.predict(x))
 
-    def particle_regions(self, map_name="whiteline_map"):
+    def particle_regions(self, map_name="whiteline_map", labels=None):
         """Return a list of regions (1 for each particle) sorted by area.
         (largest first). This requires that the `label_particles`
         method be called first.
@@ -1216,9 +1216,13 @@ class XanesFrameset():
         ---------
         - map_name : string with the attribute name to get for intensity data.
 
+        - labels : Dataframe of the same shape as the map, with the
+          particles segmented. If None, the `particle_labels`
+          attribute of the TXM store will be used.
         """
         with self.store() as store:
-            labels = store.particle_labels.value
+            if labels is None:
+                labels = store.particle_labels.value
             map_ = store.get_map(map_name).value
             regions = measure.regionprops(labels,
                                           intensity_image=map_)
@@ -1596,15 +1600,16 @@ class XanesFrameset():
         ax.set_xlabel(unit)
         return artist
 
-    def plot_map(self, ax=None):
+    def plot_map(self, ax=None, map_name="whiteline_map"):
         """Prepare data and plot a map of whiteline positions."""
         # Do the plotting
         with self.store() as store:
-            plot_txm_map(data=store.whiteline_map,
+            data = store.get_map(name=map_name)
+            plot_txm_map(data=data,
                          ax=ax,
                          norm=None,
                          edge=self.edge(),
-                         extent=self.extent())
+                         extent=self.extent(representation='absorbances'))
 
     def plot_goodness(self, plotter=None, ax=None, norm_range=None,
                       *args, **kwargs):
