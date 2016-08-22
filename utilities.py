@@ -82,7 +82,7 @@ class Prog:
     completed. This is mostly just a wrapper around the tqdm
     library. Additionally it makes use of the borg pattern, so setting
     Prog.quiet to True once silences all progress bars. This is useful
-    for testing.
+    for unit testing.
     """
     __global_state = {
         'quiet': False

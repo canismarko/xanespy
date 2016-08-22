@@ -70,7 +70,7 @@ class XRMFile():
         self.close()
 
     def __str__(self):
-        return os.path.basename(self.filename)
+        return self.__repr__()
 
     def __repr__(self):
         return "<XRMFile: '{}'>".format(os.path.basename(self.filename))
@@ -78,27 +78,6 @@ class XRMFile():
     def close(self):
         """Close original XRM (ole) file on disk."""
         self.ole_file.close()
-
-    # def parameters_from_filename(self):
-    #     """Determine various metadata from the frames filename (sample name etc)."""
-    #     if self.flavor == 'aps':
-    #         params = decode_aps_params(self.filename)
-    #     elif self.flavor == 'aps-old1':
-    #         # APS beamline 8-BM-B
-    #         result = self.aps_old1_regex.search(self.filename)
-    #         params = {
-    #             'date_string': result.group(1),
-    #             'sample_name': result.group(2),
-    #             'position_name': result.group(3),
-    #             'is_background': result.group(3) == 'bkg',
-    #             'energy': float(result.group(4)),
-    #         }
-    #     elif self.flavor == 'ssrl':
-    #         params = decode_ssrl_params(self.filename)
-    #     else:
-    #         msg = "Unknown flavor for filename: {}"
-    #         raise exceptions.FileFormatError(msg.format(self.filename))
-    #     return params
 
     def um_per_pixel(self):
         """Describe the size of a pixel in microns. If this is an SSRL frame,
@@ -162,7 +141,7 @@ class XRMFile():
             timezone = pytz.timezone('US/Central')
         else:
             # Unknown flavor. Raising here instead of constructor
-            # means your forgot to put in the proper timezone.
+            # means you forgot to put in the proper timezone.
             msg = "Unknown timezone for flavor '{flavor}'. Assuming UTC"
             warnings.warn(msg.format(flavor=self.flavor))
             timezone = pytz.utc
@@ -188,8 +167,8 @@ class XRMFile():
     def image_data(self):
         """TXM Image frame."""
         # Figure out byte size
-        dimensions = self.image_size()
-        num_bytes = dimensions.horizontal * dimensions.vertical
+        dimensions = self.image_shape()
+        num_bytes = dimensions.columns * dimensions.rows
         # Determine format string
         image_dtype = self.image_dtype()
         if image_dtype == 'uint16':
@@ -229,8 +208,7 @@ class XRMFile():
         dtype_number = self.ole_value('ImageInfo/DataType', '<1I')
         return dtypes[dtype_number]
 
-    def image_size(self):
-        resolution = namedtuple('dimensions', ('horizontal', 'vertical'))
+    def image_shape(self):
         horizontal = self.ole_value('ImageInfo/ImageWidth', '<I')
         vertical = self.ole_value('ImageInfo/ImageHeight', '<I')
-        return resolution(horizontal=horizontal, vertical=vertical)
+        return shape(columns=vertical, rows=horizontal)

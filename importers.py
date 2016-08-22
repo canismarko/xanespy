@@ -22,21 +22,23 @@ import h5py
 import re
 from time import time
 from collections import namedtuple
+import datetime as dt
+import warnings
 
 import pandas as pd
 from tqdm import tqdm
 import numpy as np
 from PIL import Image
 from scipy.constants import physical_constants
+from scipy.ndimage.filters import median_filter
 
-from xradia import XRMFile, decode_ssrl_params, decode_aps_params
+from xradia import XRMFile
 from xanes_frameset import XanesFrameset
 from frame import remove_outliers
 from txmstore import TXMStore, prepare_txm_store
 from utilities import prog, prepare_hdf_group
 import exceptions
-from xanes_math import transform_images
-
+from xanes_math import transform_images, apply_references, parallel_map, foreach
 
 format_classes = {
     '.xrm': XRMFile
@@ -62,6 +64,43 @@ def _average_frames(*frames):
 def import_txm_framesets(*args, **kwargs):
     msg = "This function is ambiguous. Choose from the more specific importers."
     raise NotImplementedError(msg)
+
+
+def read_metadata(filenames, flavor):
+    """Take a list of filenames and return a pandas dataframe with all the
+    metadata."""
+    columns = ('sample_name', 'position_name', 'is_background',
+               'energy', 'shape', 'starttime')
+    df = pd.DataFrame(columns=columns)
+    for filename in prog(filenames, 'Sorting'):
+        ext = os.path.splitext(filename)[-1]
+        if ext not in format_classes.keys():
+            continue # Skip non-TXM files
+        # Extract metadata from the filename
+        if flavor == 'aps':
+            metadata = decode_aps_params(filename)
+        elif flavor == 'ssrl':
+            metadata = deocde_ssrl_params(filename)
+        # Fetch metadata from the file itself
+        with format_classes[ext](filename, flavor=flavor) as f:
+            metadata['shape'] = f.image_shape()
+            # Get total seconds since unix epoch
+            metadata['starttime'] = f.starttime()
+        df.loc[filename] = metadata
+    # Remove any incomplete framesets
+    sam_names, samples = zip(*df.groupby('sample_name'))
+    lengths = np.array([len(df_.groupby('energy')) for df_ in samples])
+    max_length = max(lengths)
+    bad_samples = []
+    for name, length in zip(sam_names, lengths):
+        if length < max_length:
+            df = df[df.sample_name != name]
+            bad_samples.append(name)
+    # Warn the user about dropped frames
+    if bad_samples and not prog.quiet:
+        msg = "Dropping incomplete framesets {}".format(bad_samples)
+        warnings.warn(UserWarning(msg))
+    return df.sort_values(by=['starttime'])
 
 
 def import_ptychography_frameset(directory: str,
@@ -228,6 +267,44 @@ def magnification_correction(frames, pixel_sizes):
     translations = (imshape-1) * (1-scales2D) / 2
     return (scales, translations)
 
+
+def decode_ssrl_params(filename):
+    """Accept the filename of an XRM file and return sample parameters as
+    a dictionary."""
+    # Beamline 6-2c at SSRL
+    ssrl_regex_bg = re.compile(
+        'rep(\d{2})_(\d{6})_ref_[0-9]+_([-a-zA-Z0-9_]+)_([0-9.]+)_eV_(\d{3})of(\d{3})\.xrm'
+    )
+    ssrl_regex_sample = re.compile(
+        'rep(\d{2})_[0-9]+_([-a-zA-Z0-9_]+)_([0-9.]+)_eV_(\d{3})of(\d{3}).xrm'
+    )
+    # Check for background frames
+    bg_result = ssrl_regex_bg.search(filename)
+    sample_result = ssrl_regex_sample.search(filename)
+    if bg_result:
+        params = {
+            'repetition': int(bg_result.group(1)),
+            'date_string': '',
+            'sample_name': bg_result.group(3).strip("_"),
+            'position_name': '',
+            'is_background': True,
+            'energy': float(bg_result.group(4)),
+        }
+    elif sample_result:
+        params = {
+            'repetition': int(sample_result.group(1)),
+            'date_string': '',
+            'sample_name': sample_result.group(2).strip("_"),
+            'position_name': '',
+            'is_background': False,
+            'energy': float(sample_result.group(3)),
+        }
+    else:
+        msg = "Could not parse filename {filename} using flavor {flavor}"
+        raise exceptions.FilenameParseError(msg.format(filename=filename, flavor='ssrl'))
+    return params
+
+
 def import_ssrl_frameset(directory, hdf_filename=None, quiet=False):
     """Import all files in the given directory collected at SSRL beamline
     6-2c and process into framesets. Images are assumed to full-field
@@ -351,6 +428,23 @@ def import_ssrl_frameset(directory, hdf_filename=None, quiet=False):
         store.close()
 
 
+def decode_aps_params(filename):
+    """Accept the filename of an XRM file and return sample parameters as
+    a dictionary."""
+    regex = re.compile(
+        '(?P<pos>[a-zA-Z0-9_]+)_xanes(?P<sam>[a-zA-Z0-9_]+)_(?P<E_int>[0-9]+)_(?P<E_dec>[0-9])eV.xrm'
+    )
+    match = regex.search(filename).groupdict()
+    energy = float("{}.{}".format(match['E_int'], match['E_dec']))
+    result = {
+        'sample_name': match['sam'],
+        'position_name': match['pos'],
+        'is_background': match['pos'] == 'ref',
+        'energy': energy,
+    }
+    return result
+
+# @profile
 def import_aps_8BM_frameset(directory, hdf_filename=None, quiet=False):
     """Import all files in the given directory collected at APS beamline
     8-BM-B and process into framesets. Images are assumed to
@@ -358,25 +452,19 @@ def import_aps_8BM_frameset(directory, hdf_filename=None, quiet=False):
     produce the flux to warrant averaging.
     """
     prog.quiet = quiet
-    files = os.listdir(directory)
+    # files = [os.path.join(dp, f) for dp, dn, os.listdir(directory)
+    files = [os.path.join(dp, f) for dp, dn, filenames in os.walk(directory) for f in filenames]
+    # dirs = [os.path.join(dp, f) for f in fldp, dn, os.listdir(directory)]
+    # print(list(os.walk(directory)))
     # metadata = decode_aps_params(files[0])
     # Prepare a dataframe to hold all the file metadata
-    columns = ('sample_name', 'position_name', 'is_background', 'energy')
-    meta_df = pd.DataFrame(columns=columns)
     # Process filename metadata into the dataframe
-    for filename in files:
-        # Make sure it's a file
-        fullpath = os.path.join(directory, filename)
-        if os.path.splitext(fullpath)[-1] == '.xrm':
-            # Determine what group to put it in
-            metadata = decode_aps_params(filename)
-            new_row = [metadata[c] for c in columns]
-            meta_df.loc[fullpath] = new_row
-    reference_files = meta_df[meta_df['is_background']==True]
-    sample_files = meta_df[meta_df['is_background']==False]
+    metadata = read_metadata(files, flavor='aps')
+    reference_files = metadata[metadata['is_background']==True]
+    sample_files = metadata[metadata['is_background']==False]
     # Prepare counters and functions for progress bar
     curr_file = 0
-    total_files = len(meta_df)
+    total_files = len(metadata)
     init_time = time()
     def set_progbar(val, total, init_time):
         if not prog.quiet:
@@ -387,98 +475,175 @@ def import_aps_8BM_frameset(directory, hdf_filename=None, quiet=False):
                                        unit='fm',
                                        prefix="Importing frames: ")
             print("\r", status, end='') # Avoid new line every time
-    # Import each sample-position combination as a separate frameset
-    all_groupnames = []
-    for sample, outer_group in sample_files.groupby('sample_name'):
-        references = {} # To hold imported reference frames
-        ref_ds = None # To keep track of the reference on disk
-        for position, pos_group in outer_group.groupby('position_name'):
-            energy_group = pos_group.sort_values('energy').groupby('energy')
-            Es, Is = [], []
-            positions, filenames = [], []
-            starttimes, endtimes = [], []
-            pixel_sizes = []
-            for energy, group in energy_group:
-                # Import the data from each frame
+    # Import each sample-position combination
+    h5file = h5py.File(hdf_filename)
+    # Get some shape information for all the datasets
+    shapes = metadata['shape'].unique()
+    assert len(shapes) == 1
+    num_samples = len(reference_files['sample_name'].unique())
+    pos_name = sample_files['position_name'].unique()[0]
+    num_energies = len(reference_files['energy'].unique())
+    ds_shape = (num_samples, num_energies, *shapes[0])
+    chunk_shape = (1, 1, *shapes[0])
+    ## Import reference frames
+    assert len(reference_files.groupby('position_name')) == 1
+    ref_groups = reference_files.groupby('sample_name')
+    imp_group = h5file.require_group("{}/imported".format(pos_name))
+    ref_ds = imp_group.require_dataset('references', shape=ds_shape,
+                                       maxshape=ds_shape,
+                                       chunks=chunk_shape,
+                                       dtype=np.uint16)
+    for sam_idx, (sam_name, sam_df) in enumerate(ref_groups):
+        Is = []
+        for E_idx, (E_name, E_df) in enumerate(sam_df.groupby('energy')):
+            Importer = format_classes[os.path.splitext(E_df.index[0])[-1]]
+            E_files = [Importer(f, flavor="aps") for f in E_df.index]
+            images = np.array([f.image_data() for f in E_files])
+            Is.append(np.mean(images, axis=0))
+            [f.close() for f in E_files]
+            # Update progress bar
+            curr_file += len(E_files)
+            set_progbar(curr_file, total=total_files, init_time=init_time)
+        # import pdb; pdb.set_trace()
+        # Save to disk
+        ref_ds[sam_idx] = np.array(Is)
+    # Import the actual sample frames
+    pos_groups = enumerate(sample_files.groupby('position_name'))
+    for pos_idx, (pos_name, pos_df) in pos_groups:
+        # Create HDF5 datasets to hold the data
+        Importer = format_classes[os.path.splitext(pos_df.index[0])[-1]]
+        with Importer(pos_df.index[0], flavor="aps") as f:
+            im_shape = f.image_data().shape
+            num_samples = len(pos_df.groupby('sample_name'))
+            num_energies = len(pos_df.groupby('energy'))
+        ds_shape = (num_samples, num_energies, *im_shape)
+        h5group = h5file.require_group("{}/imported".format(pos_name))
+        h5file["{}".format(pos_name)].attrs['latest_data_name'] = 'imported'
+        int_ds = h5group.require_dataset('intensities',
+                                         shape=ds_shape,
+                                         maxshape=ds_shape,
+                                         chunks=True,
+                                         dtype=np.uint16)
+        abs_ds = h5group.require_dataset('absorbances',
+                                         shape=ds_shape,
+                                         maxshape=ds_shape,
+                                         dtype=np.float32)
+        px_ds = h5group.require_dataset('pixel_sizes',
+                                        shape=(num_samples, num_energies),
+                                        dtype=np.float16)
+        px_ds.attrs['unit'] = 'µm'
+        E_ds = h5group.require_dataset('energies',
+                                       shape=(num_samples, num_energies),
+                                       dtype=np.float32)
+        timestamp_ds = h5group.require_dataset('timestamps',
+                                               shape=(num_samples, num_energies, 2),
+                                               dtype="S32")
+        filename_ds = h5group.require_dataset('filenames',
+                                              shape=(num_samples, num_energies),
+                                              dtype="S100",
+                                              compression="gzip")
+        orig_pos_ds = h5group.require_dataset('original_positions',
+                                              shape=(num_samples, num_energies, 3),
+                                              dtype=np.float32,
+                                              compression="gzip")
+        rel_pos_ds = h5group.require_dataset('relative_positions',
+                                              shape=(num_samples, num_energies, 3),
+                                              dtype=np.float32)
+        sam_groups = enumerate(pos_df.groupby('sample_name'))
+        for sam_idx, (sam_name, sam_df) in sam_groups:
+            E_groups = sam_df.sort_values('energy').groupby('energy')
+            for E_idx, (energy, group) in enumerate(E_groups):
+                # Import the data from each energy frame...
                 Importer = format_classes[os.path.splitext(group.index[0])[-1]]
                 E_files = [Importer(f, flavor="aps") for f in group.index]
-                Es.append(np.mean(np.array([f.energy() for f in E_files])))
+                # ...x-ray energies...
+                energies = np.array([f.energy() for f in E_files])
+                E_ds[sam_idx,E_idx] = np.mean(energies)
+                # ...intensity data...
                 images = np.array([f.image_data() for f in E_files])
-                Is.append(np.mean(images, axis=0))
+                int_ds[sam_idx,E_idx] = np.mean(images, axis=0)
+                # ...position data...
                 pos = np.array([f.sample_position() for f in E_files])
-                positions.append(np.mean(pos, axis=0))
-                filenames.append(E_files[0])
-                starts = np.array([f.starttime() for f in E_files])
-                starttimes.append(min(starts))
-                ends = np.array([f.endtime() for f in E_files])
-                endtimes.append(min(ends))
+                orig_pos_ds[sam_idx,E_idx] = np.mean(pos, axis=0)
+                # ...filenames...
+                filename_ds[sam_idx,E_idx] = np.array([E_files[0].filename],
+                                                      dtype="S")
+                # ...timestamp data...
+                starts = [f.starttime() for f in E_files]
+                ends = [f.endtime() for f in E_files]
+                timestamp_ds[sam_idx,E_idx] = np.array([min(starts), max(ends)],
+                                                       dtype='S32')
+                # ...pixel size data.
                 px_sizes = np.array([f.um_per_pixel() for f in E_files])
-                pixel_sizes.append(np.mean(px_sizes))
+                px_ds[sam_idx,E_idx] = np.mean(px_sizes)
+                # pixel_sizes.append(np.mean(px_sizes))
                 # Increment progress bars
                 curr_file += len(E_files)
                 set_progbar(curr_file, total=total_files, init_time=init_time)
                 # Get reference if it isn't saved
-                ref = references.get(energy, None)
-                if ref is None:
-                    ref_idx = ((reference_files['sample_name'] == sample)
-                           & (reference_files['energy'] == energy))
-                    ref_fnames = reference_files[ref_idx].index
-                    ref_files = np.array([Importer(f, flavor='aps') for f in ref_fnames])
-                    ref = (np.mean(np.array([f.image_data() for f in ref_files]), axis=0))
-                    references[energy] = ref
-                    # Increment progress bars
-                    curr_file += len(ref_files)
-                    set_progbar(curr_file, total=total_files, init_time=init_time)
+                # ref = references.get(energy, None)
+                # if ref is None:
+                #     ref_idx = ((reference_files['sample_name'] == sample)
+                #            & (reference_files['energy'] == energy))
+                #     ref_fnames = reference_files[ref_idx].index
+                #     ref_files = np.array([Importer(f, flavor='aps') for f in ref_fnames])
+                #     ref = (np.mean(np.array([f.image_data() for f in ref_files]), axis=0))
+                #     references[energy] = ref
+                #     # Increment progress bars
+                #     curr_file += len(ref_files)
+                #     set_progbar(curr_file, total=total_files, init_time=init_time)
                 # Close all the files
                 for f in E_files: f.close()
             # Save data to disk
-            groupname = "{sample}_{fov}".format(sample=sample, fov=position)
-            store = prepare_txm_store(filename=hdf_filename,
-                                      parent_name=groupname)
-            all_groupnames.append(groupname)
-            def save_data(name, data, energies):
-                """Sort data by energy then save to the store."""
-                # Sort by energy
-                data = [d for (E, d) in sorted(zip(energies, data), key=lambda x: x[0])]
-                # Save as new HDF5 dataset
-                setattr(store, name, data)
-            save_data('intensities', data=Is, energies=Es)
-            save_data('energies', data=Es, energies=Es)
-            save_data('pixel_sizes', data=pixel_sizes, energies=Es)
-            store.data_group()['pixel_sizes'].attrs['unit'] = 'µm'
-            save_data('timestamps', data=zip(starttimes, endtimes), energies=Es)
-            save_data('filenames', data=filenames, energies=Es)
-            save_data('original_positions', data=positions, energies=Es)
-            store.data_group()['original_positions'].attrs['order'] = "(energy, (x, y, z))"
-            positions = np.array(positions)
-            save_data('relative_positions', data=np.zeros_like(positions), energies=Es)
-            store.data_group()['relative_positions'].attrs['order'] = "(energy, (x, y, z))"
+            # groupname = "{sample}_{fov}".format(sample=sample, fov=position)
+            # store = prepare_txm_store(filename=hdf_filename,
+            #                           parent_name=groupname)
+            # all_groupnames.append(groupname)
+            # def save_data(name, data, energies):
+            #     """Sort data by energy then save to the store."""
+            #     # Sort by energy
+            #     data = [d for (E, d) in sorted(zip(energies, data), key=lambda x: x[0])]
+            #     # Save as new HDF5 dataset
+            #     setattr(store, name, data)
+            # save_data('intensities', data=Is, energies=Es)
+            # save_data('energies', data=Es, energies=Es)
+            # save_data('pixel_sizes', data=pixel_sizes, energies=Es)
+            # store.data_group()['pixel_sizes'].attrs['unit'] = 'µm'
+            # save_data('timestamps', data=zip(starttimes, endtimes), energies=Es)
+            # save_data('filenames', data=filenames, energies=Es)
+            # save_data('original_positions', data=positions, energies=Es)
+            # store.data_group()['original_positions'].attrs['order'] = "(energy, (x, y, z))"
+            # positions = np.array(positions)
+            # save_data('relative_positions', data=np.zeros_like(positions), energies=Es)
+            # store.data_group()['relative_positions'].attrs['order'] = "(energy, (x, y, z))"
             # Look for reference frames
-            if ref_ds is None:
-                # Save the references to disk
-                save_data('references', data=references.values(),
-                          energies=references.keys())
-                # Save for later so we can link instead of re-writing
-                ref_ds = store.data_group()['references'].name
-            else:
-                # Reference frames are already saved, so just create a hard-link
-                store.data_group()['references'] = store.data_group().file[ref_ds]
-            # Convert to absorbance values
-            transmission = np.divide(store.intensities, store.references)
-            absorbances = -np.log(transmission)
+            # if ref_ds is None:
+            #     # Save the references to disk
+            #     save_data('references', data=references.values(),
+            #               energies=references.keys())
+            #     # Save for later so we can link instead of re-writing
+            #     ref_ds = store.data_group()['references'].name
+            # else:
+            #     # Reference frames are already saved, so just create a hard-link
+            #     store.data_group()['references'] = store.data_group().file[ref_ds]
+            # Save the reference data if not set
+            # Save datasets
+        if not 'references' in h5group.keys():
+            h5group['references'] = ref_ds
+        # Convert to absorbance values
+        apply_references(int_ds, ref_ds, out=abs_ds)
             # Remove dead or hot pixels
-            sigma = 9
-            absorbances = remove_outliers(data=absorbances, sigma=sigma)
+            # median_filter(abs_ds, size=1, output=abs_ds)
+            # sigma = 9
+            # absorbances = remove_outliers(data=absorbances, sigma=sigma)
             # Save absorbances to disk
-            store.absorbances = absorbances
-            store.close()
     # Print a summary of data saved to disk
-    if not quiet:
-        print() # To put in a newline
-        msg = "Saved to HDF5 file {h5file} in {num} groups:"
-        print(msg.format(h5file=hdf_filename, num=len(all_groupnames)))
-        for gname in all_groupnames:
-            print('• {}'.format(gname))
+    # if not quiet:
+    #     print() # To put in a newline
+    #     msg = "Saved to HDF5 file {h5file} in {num} groups:"
+    #     print(msg.format(h5file=hdf_filename, num=len(all_groupnames)))
+    #     for gname in all_groupnames:
+    #         print('• {}'.format(gname))
     # for (sample, pos), group in sample_files.groupby(['sample_name', 'position_name']):
     #     groupname = "{sample}_{fov}".format(sample=sample, fov=pos)
     #     sample_group = prepare_hdf_group(filename=hdf_filename,

@@ -104,6 +104,29 @@ def parallel_map(f,l,threads=CPU_COUNT):
     return foreach(f,l,threads=threads,return_=True)
 
 
+def apply_references(intensities, references, out=None):
+    """Apply a reference correction to convert intensity values to
+    optical depth (-ln(I/I0)) values. Arrays `intensities`, `references` and `out`
+    must all have the same shape where the last two dimensions are
+    image rows and columns.
+    """
+    # Create an empty array to hold the results
+    if out is None:
+        out = np.zeros_like(intensities)
+    assert intensities.shape == references.shape
+    # Reshape to be an array of images
+    image_shape = (intensities.shape[-2], intensities.shape[-1])
+    Is = np.reshape(intensities, (-1, *image_shape))
+    refs = np.reshape(references, (-1, *image_shape))
+    out_shape = out.shape[:-2]
+    # Function for parallelization
+    def calc(idx):
+        out_idx = np.unravel_index(idx, out_shape)
+        out[out_idx] = -np.log(np.divide(Is[idx], refs[idx]))
+    foreach(calc, range(0, Is.shape[0]), threads=1)
+    return out
+
+
 def normalize_Kedge(spectra, energies, E_0, pre_edge, post_edge, post_edge_order=2):
     """Normalize the K-edge XANES spectrum so that the pre-edge is linear
     and the EXAFS region projects to an absorbance of 1 and the edge
