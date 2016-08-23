@@ -24,18 +24,19 @@ compiled to C code using Cython.
 """
 
 import warnings
+import sys
+import threading
+import multiprocessing
+from itertools import count, product
 
 from scipy import ndimage
 import numpy as np
 from skimage import transform, feature, filters, morphology, exposure, measure
 
+from utilities import prog
 
 # Helpers for parallelizable code
 
-import sys
-import threading
-import multiprocessing
-from itertools import count, product
 
 CPU_COUNT = multiprocessing.cpu_count()
 
@@ -106,15 +107,22 @@ def parallel_map(f,l,threads=CPU_COUNT):
     return foreach(f,l,threads=threads,return_=True)
 
 
-def frame_indices(data):
-    """Accept an array of frames and generate slices for each
-    frame. Assumes the last two dimensions of `data` are rows and
+def iter_indices(data, leftover_dims=1, desc=None):
+    """Accept an array of frames, indices, etc. and generate slices for
+    each frame. Assumes the last two dimensions of `data` are rows and
     columns. All other dimensions will be iterated over.
+
+    - leftover_dims : Integer describing which dimensions should not
+      be iterated over. Eg. if data is 3D array and leftover_dims == 1,
+      only first two dimenions will be iterated.
+
+    - desc : String to put in the progress bar.
     """
-    fs_shape = data.shape[:-2]
+    fs_shape = np.asarray(data.shape[:-leftover_dims])
+    length = np.product(fs_shape)
     ranges = [range(0, s) for s in fs_shape]
     indices = product(*ranges)
-    return indices
+    return prog(indices, desc=desc, total=length)
 
 
 def apply_references(intensities, references, out=None):
@@ -290,16 +298,25 @@ def direct_whitelines(spectra, energies, edge):
       question.
     """
     # Cut down to only those values on the edge
-    edge_mask = (energies > edge.edge_range[0]) & (energies < edge.edge_range[1])
-    spectra = spectra[...,edge_mask]
-    energies = energies[edge_mask]
-    # Calculate the whiteline positions
-    whiteline_indices = np.argmax(spectra, axis=-1)
-    map_energy = np.vectorize(lambda idx: energies[idx],
-                              otypes=[np.float])
-    whitelines = map_energy(whiteline_indices)
+    # edge_mask = (energies > edge.edge_range[0]) & (energies < edge.edge_range[1])
+    # spectra = spectra[...,edge_mask]
+    # energies = energies[edge_mask]
+    # # Calculate the whiteline positions
+    # whiteline_indices = np.argmax(spectra, axis=-1)
+    # map_energy = np.vectorize(lambda idx: energies[idx],
+    #                           otypes=[np.float])
+    # whitelines = map_energy(whiteline_indices)
+    # Array to hold resulting energie positions
+    outshape = spectra.shape[:-1]
+    out = np.empty(shape=outshape, dtype=energies.dtype)
+    def get_whiteline(idx):
+        whiteline_idx = (*idx[:energies.ndim-1], np.argmax(spectra[idx]))
+        whiteline = energies[whiteline_idx]
+        out[idx] = whiteline
+    indices = iter_indices(spectra, desc="Direct whiteline", leftover_dims=1)
+    foreach(get_whiteline, indices)
     # Return results
-    return whitelines
+    return out
 
 def transform_images(data, translations=None, rotations=None,
                      scales=None, out=None, mode='constant'):
@@ -334,8 +351,8 @@ def transform_images(data, translations=None, rotations=None,
                                               in_range=(0, 1),
                                               out_range=realrange)
     # Loop through the images and apply each transformation
-    foreach(apply_transform, frame_indices(data))
-    # foreach(apply_transform, range(data.shape[0]))
+    indices = iter_indices(data, desc='Applying', leftover_dims=2)
+    foreach(apply_transform, indices)
     return out
 
 
@@ -357,7 +374,8 @@ def register_correlations(frames, reference, upsample_factor=10):
         shift, error, diffphase = results
         # Convert (row, col) to (x, y)
         translations[idx] = (shift[1], shift[0])
-    foreach(get_translation, frame_indices(frames))
+    indices = iter_indices(frames, desc='Registering', leftover_dims=2)
+    foreach(get_translation, indices)
     # Negative in order to properly register with transform_images method
     translations = -translations
     return translations

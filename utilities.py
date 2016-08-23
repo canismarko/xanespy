@@ -91,7 +91,7 @@ class Prog:
     def __init__(self):
         self.__dict__ = self.__global_state
 
-    def __call__(self, iterable, *args, **kwargs):
+    def __call__(self, iterable, desc=None, *args, **kwargs):
         """Progress meter. Wraps around tqdm with some custom defaults."""
         if self.quiet:
             # Just return the iterable with no progress meter
@@ -99,7 +99,7 @@ class Prog:
         else:
             kwargs['file'] = kwargs.get('file', sys.stdout)
             kwargs['leave'] = kwargs.get('leave', True)
-            ret = tqdm(iterable, *args, **kwargs)
+            ret = tqdm(iterable, desc=desc, *args, **kwargs)
         return ret
 
 

@@ -692,7 +692,8 @@ class XanesFrameset():
                      template=None,
                      passes=1,
                      commit=True,
-                     representation="modulus"):
+                     representation="modulus",
+                     plot_results=True):
         """Use cross correlation algorithm to line up the frames. All frames
         will have their sample position set to (0, 0) since we don't
         know which one is the real position. This operation will
@@ -736,7 +737,10 @@ class XanesFrameset():
         representation : What component of the data to use: 'modulus',
           'phase', 'imag' or 'real'.
 
+        plot_results : If truthy (default), plot the root-mean-square of the
+          translation distance for each pass.
         """
+        pass_distances = []
         # Check for valid attributes
         valid_filters = ["median", None]
         if blur not in valid_filters:
@@ -782,8 +786,18 @@ class XanesFrameset():
                                                      reference=ref_image)
             elif method == "template_match":
                 translations = xm.register_template(frame=frames, template=template)
+            # Add the root-mean-square to the list of distances translated
+            rms = np.sqrt((translations**2).sum(axis=-1).mean())
+            pass_distances.append(rms)
             # Save translations for deferred calculation
             self.stage_transformations(translations=translations)
+        # Plot the results if requested
+        if plot_results:
+            x = range(0, passes)
+            ax = new_axes()
+            ax.plot(x, pass_distances, marker='o', linestyle=":")
+            ax.set_xlabel('Pass')
+            ax.set_ylabel("RMS Translation")
         # Apply result of calculations to disk (if requested)
         if commit:
             self.apply_transformations(crop=True, commit=True)
@@ -1499,13 +1513,10 @@ class XanesFrameset():
             energies = store.energies.value
             # Convert numpy axes to be in (pixel, energy) form
             frames = store.absorbances
-            frames = np.moveaxis(frames, 0, -1)
-            orig_shape = frames.shape
-            spectra = frames.reshape((-1, frames.shape[-1]))
-            # Calculate whiteline positions and return to original shape
+            spectra = np.moveaxis(frames, 1, -1)
+            # Calculate whiteline positions
             whitelines = xm.direct_whitelines(spectra=spectra,
-                                           energies=energies, edge=self.edge)
-            whitelines = whitelines.reshape(orig_shape[:-1])
+                                              energies=energies, edge=self.edge)
         # Save results to disk
         with self.store(mode='r+') as store:
             store.whiteline_map = whitelines
@@ -1515,7 +1526,7 @@ class XanesFrameset():
         position, particle labels."""
         # Calculate particle_labels
         self.calculate_whitelines()
-        self.label_particles()
+        # self.label_particles()
 
     def masked_map(self, goodness_filter=True):
         """Generate a map based on pixel-wise Xanes spectra and apply an
