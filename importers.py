@@ -80,7 +80,7 @@ def read_metadata(filenames, flavor):
         if flavor == 'aps':
             metadata = decode_aps_params(filename)
         elif flavor == 'ssrl':
-            metadata = deocde_ssrl_params(filename)
+            metadata = decode_ssrl_params(filename)
         # Fetch metadata from the file itself
         with format_classes[ext](filename, flavor=flavor) as f:
             metadata['shape'] = f.image_shape()
@@ -283,19 +283,15 @@ def decode_ssrl_params(filename):
     sample_result = ssrl_regex_sample.search(filename)
     if bg_result:
         params = {
-            'repetition': int(bg_result.group(1)),
-            'date_string': '',
-            'sample_name': bg_result.group(3).strip("_"),
-            'position_name': '',
+            'sample_name': "rep{}".format(bg_result.group(1)),
+            'position_name': bg_result.group(3).strip("_"),
             'is_background': True,
             'energy': float(bg_result.group(4)),
         }
     elif sample_result:
         params = {
-            'repetition': int(sample_result.group(1)),
-            'date_string': '',
-            'sample_name': sample_result.group(2).strip("_"),
-            'position_name': '',
+            'sample_name': "rep{}".format(sample_result.group(1)),
+            'position_name': sample_result.group(2).strip("_"),
             'is_background': False,
             'energy': float(sample_result.group(3)),
         }
@@ -310,6 +306,8 @@ def import_ssrl_frameset(directory, hdf_filename=None, quiet=False):
     6-2c and process into framesets. Images are assumed to full-field
     transmission X-ray micrographs and repetitions will be averaged.
     """
+    return import_aps_8BM_frameset(directory, hdf_filename=hdf_filename, quiet=quiet, flavor='ssrl')
+    # Everything else below here is deprecated
     prog.quiet = quiet
     # Prepare list of dataframes to be imported
     samples = {}
@@ -445,7 +443,7 @@ def decode_aps_params(filename):
     return result
 
 # @profile
-def import_aps_8BM_frameset(directory, hdf_filename=None, quiet=False):
+def import_aps_8BM_frameset(directory, hdf_filename=None, quiet=False, flavor="aps"):
     """Import all files in the given directory collected at APS beamline
     8-BM-B and process into framesets. Images are assumed to
     full-field transmission X-ray micrographs. This beamline does not
@@ -459,7 +457,7 @@ def import_aps_8BM_frameset(directory, hdf_filename=None, quiet=False):
     # metadata = decode_aps_params(files[0])
     # Prepare a dataframe to hold all the file metadata
     # Process filename metadata into the dataframe
-    metadata = read_metadata(files, flavor='aps')
+    metadata = read_metadata(files, flavor=flavor)
     reference_files = metadata[metadata['is_background']==True]
     sample_files = metadata[metadata['is_background']==False]
     # Prepare counters and functions for progress bar

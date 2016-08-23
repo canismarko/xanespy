@@ -123,8 +123,8 @@ class TXMStore():
         if new_name in parent.keys():
             del parent[new_name]
         # Copy the old one with symlinks
-        ret = parent.copy(self.data_group(), new_name, shallow=True)
-        target_group = parent[new_name]
+        new_group = parent.copy(self.data_group(), new_name, shallow=True)
+        # target_group = parent[new_name]
             #         old_gruop = parent_group[self.data_group]
             #         for key in old_group.keys():
             #             target_group[key] = old_group[key]
@@ -132,6 +132,7 @@ class TXMStore():
             #     self.parent_group().attrs['latest_data_group'] = target_group.name
         self.latest_data_name = new_name
         self.data_name = new_name
+        return new_group
 
     @property
     def latest_data_name(self):

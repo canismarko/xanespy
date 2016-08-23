@@ -23,30 +23,24 @@ frameset then is a three-dimenional dataset with of dimenions (energy,
 row, column)."""
 
 import functools
-import warnings
 from typing import Callable
-from collections import namedtuple
 import os
 
 import pandas as pd
-from matplotlib import cm, pyplot
+from matplotlib import pyplot
 from matplotlib.colors import Normalize
 from scipy import linalg
 import h5py
 import numpy as np
-from skimage import morphology, filters, feature, transform, color, measure
+from skimage import morphology, filters, transform, color, measure
 from sklearn import linear_model
-from sklearn.utils import validation
 from units import unit, predefined
 
-from utilities import prog, xycoord, Pixel, component, position, Extent, pixel_to_xy
-from frame import (
-    TXMFrame, PtychoFrame,
-    apply_reference)
+from utilities import prog, xycoord, Pixel, Extent, pixel_to_xy
+from frame import TXMFrame, PtychoFrame
 from txmstore import TXMStore
 from plots import new_axes, new_image_axes, plot_txm_map, plot_xanes_spectrum
 import exceptions
-# import smp
 import xanes_math as xm
 
 predefined.define_units()
@@ -615,7 +609,6 @@ class XanesFrameset():
 
         Arguments
         ---------
-
         - crop : If truthy, the images will be cropped after being
         translated, so there are not edges. If falsy, the images will
         be wrapped.
@@ -644,15 +637,15 @@ class XanesFrameset():
                                     mode='wrap', out=out)
             # Calculate and apply cropping bounds for the image stack
             if crop:
-                tx = self._translations[:,0]
-                ty = self._translations[:,1]
-                new_rows = out.shape[1] - (np.max(ty) - np.min(ty))
-                new_cols = out.shape[2] - (np.max(tx) - np.min(tx))
+                tx = self._translations[...,0]
+                ty = self._translations[...,1]
+                new_rows = out.shape[-2] - (np.max(ty) - np.min(ty))
+                new_cols = out.shape[-1] - (np.max(tx) - np.min(tx))
                 rlower = int(np.ceil(-np.min(ty)))
                 rupper = int(np.floor(new_rows + rlower))
                 clower = int(np.ceil(-np.min(tx)))
                 cupper = int(np.floor(clower + new_cols))
-                out = out[:,rlower:rupper,clower:cupper]
+                out = out[...,rlower:rupper,clower:cupper]
             # Save result and clear saved transformations if appropriate
             if commit:
                 with self.store('r+') as store:
@@ -700,7 +693,6 @@ class XanesFrameset():
                      passes=1,
                      commit=True,
                      representation="modulus"):
-
         """Use cross correlation algorithm to line up the frames. All frames
         will have their sample position set to (0, 0) since we don't
         know which one is the real position. This operation will
@@ -761,28 +753,28 @@ class XanesFrameset():
             spectrum = self.xanes_spectrum(representation=representation)
             reference_frame = np.argmax(spectrum.values)
         # Keep track of how many passes and where we started
-        # all_crops = [] # Keeps track of how to crop the original image
-        # original_group = self.active_group
-        # out_range = (0, 1) # For rescaling intensities
-        # self.fork_group(new_name)
-        # if self.active_labels_groupname:
-        #     self.fork_labels(new_name + "_labels")
         for pass_ in range(0, passes):
             # Get data from store
             frames = self.apply_transformations(crop=True, commit=False)
-            # with self.store() as store:
-            #     frames = store.absorbances.value
-            # Calculate proper reference image
+            # Calculate axes to use for proper reference image
             if reference_frame == 'mean':
-                ref_image = np.mean(frames, axis=0)
+                ref_image = np.mean(frames, axis=(0, 1))
             elif reference_frame == 'median':
-                ref_image = np.median(frames, axis=0)
+                ref_image = np.median(frames, axis=(0, 1))
             else:
                 ref_image = frames[reference_frame]
+                # Check that the argument results in 2D image_data
+                if len(ref_image.shape) != 2:
+                    msg = "refrence_frame ({}) does not match shape of frameset {}."
+                    msg += "Please provide a {}-tuple."
+                    msg = msg.format(reference_frame,
+                                     frames.shape,
+                                     len(frames.shape) - 2)
+                    raise IndexError(msg)
             # Prepare blurring if requested
             if blur == "median":
                 ref_image = filters.median(ref_image,
-                                         morphology.disk(20))
+                                           morphology.disk(20))
             # original_shape = shape(*reference_image.shape)
             # Calculate translations for each frame
             if method == "cross_correlation":

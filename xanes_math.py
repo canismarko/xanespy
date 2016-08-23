@@ -35,7 +35,7 @@ from skimage import transform, feature, filters, morphology, exposure, measure
 import sys
 import threading
 import multiprocessing
-from itertools import count
+from itertools import count, product
 
 CPU_COUNT = multiprocessing.cpu_count()
 
@@ -87,7 +87,9 @@ def foreach(f,l,threads=CPU_COUNT,return_=False):
             t.join()
         if exceptions:
             a, b, c = exceptions[0]
-            raise (a, b, c)
+            exception = a(b)
+            exception.with_traceback(c)
+            raise exception
         if return_:
             r = list(d.items())
             r.sort()
@@ -104,7 +106,19 @@ def parallel_map(f,l,threads=CPU_COUNT):
     return foreach(f,l,threads=threads,return_=True)
 
 
+def frame_indices(data):
+    """Accept an array of frames and generate slices for each
+    frame. Assumes the last two dimensions of `data` are rows and
+    columns. All other dimensions will be iterated over.
+    """
+    fs_shape = data.shape[:-2]
+    ranges = [range(0, s) for s in fs_shape]
+    indices = product(*ranges)
+    return indices
+
+
 def apply_references(intensities, references, out=None):
+
     """Apply a reference correction to convert intensity values to
     optical depth (-ln(I/I0)) values. Arrays `intensities`, `references` and `out`
     must all have the same shape where the last two dimensions are
@@ -309,10 +323,19 @@ def transform_images(data, translations=None, rotations=None,
             translation=translation,
             rotation=rot,
         )
-        out[idx] = transform.warp(data[idx], transformation,
-                                    order=3, mode=mode)
+        # (Temporarily rescale intensities so the warp function is happy)
+        realrange = (np.min(data[idx]), np.max(data[idx]))
+        indata = exposure.rescale_intensity(data[idx],
+                                            in_range=realrange,
+                                            out_range=(0, 1))
+        outdata = transform.warp(indata, transformation,
+                                  order=3, mode=mode)
+        out[idx] = exposure.rescale_intensity(outdata,
+                                              in_range=(0, 1),
+                                              out_range=realrange)
     # Loop through the images and apply each transformation
-    foreach(apply_transform, range(data.shape[0]))
+    foreach(apply_transform, frame_indices(data))
+    # foreach(apply_transform, range(data.shape[0]))
     return out
 
 
@@ -324,14 +347,17 @@ def register_correlations(frames, reference, upsample_factor=10):
     containing (x, y) translations for each frame.
 
     """
-    def get_translation(frm):
+    t_shape = (*frames.shape[:-2], 2)
+    translations = np.empty(shape=t_shape, dtype=np.float)
+    def get_translation(idx):
+        frm = frames[idx]
         results = feature.register_translation(reference,
                                                frm,
                                                upsample_factor=upsample_factor)
         shift, error, diffphase = results
         # Convert (row, col) to (x, y)
-        return (shift[1], shift[0])
-    translations = np.array(parallel_map(get_translation, frames))
+        translations[idx] = (shift[1], shift[0])
+    foreach(get_translation, frame_indices(frames))
     # Negative in order to properly register with transform_images method
     translations = -translations
     return translations
