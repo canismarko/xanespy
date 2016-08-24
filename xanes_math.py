@@ -218,7 +218,7 @@ def edge_mask(frames: np.ndarray, energies: np.ndarray, edge,
         min_size = (frames.shape[-1] + frames.shape[-2]) / 200
     # dividing the edge jump by the standard deviation provides sharp constrast
     ej = edge_jump(frames=frames, energies=energies, edge=edge)
-    stdev = np.std(frames, axis=0)
+    stdev = np.std(frames, axis=tuple(range(0, len(frames.shape)-2)))
     edge_ratio = ej / stdev
     # Thresholding  to separate background from foreground
     img_bottom = edge_ratio.min()
@@ -234,6 +234,9 @@ def edge_mask(frames: np.ndarray, energies: np.ndarray, edge,
 
 
 def edge_jump(frames: np.ndarray, energies: np.ndarray, edge):
+    COLS = -1
+    ROWS = -2
+    ENERGY = -3
     # Check that dimensions match
     if not frames.shape[0] == energies.shape[0]:
         msg = "First dimenions of frames and energies do not match ({} vs {})"

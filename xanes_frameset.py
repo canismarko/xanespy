@@ -1436,9 +1436,10 @@ class XanesFrameset():
         """Plot the results of the edge jump filter."""
         if ax is None:
             ax = new_image_axes()
-        ej = self.edge_jump_filter()
-        artist = ax.imshow(ej, extent=self.extent(), cmap=self.cmap,
-                           origin="lower", alpha=alpha)
+        ej = self.edge_jump()
+        artist = ax.imshow(ej, extent=self.extent('absorbances'),
+                           cmap=self.cmap, origin="lower",
+                           alpha=alpha)
         ax.set_xlabel('µm')
         ax.set_ylabel('µm')
         return artist
@@ -1448,7 +1449,7 @@ class XanesFrameset():
         """Calculate a image showing the difference in
         signal across the X-ray edge."""
         with self.store() as store:
-            ej = xm.edge_jump(frames=store.absorbances,
+            ej = xm.edge_jump(frames=store.absorbances.value,
                               energies=store.energies.value,
                               edge=self.edge)
         return ej
@@ -1468,7 +1469,7 @@ class XanesFrameset():
           removed. Passing zero (default) will result in no effect.
         """
         with self.store() as store:
-            mask = xm.edge_mask(frames=store.absorbances,
+            mask = xm.edge_mask(frames=store.absorbances.value,
                                 energies=store.energies.value, edge=self.edge(),
                                 sensitivity=sensitivity, min_size=min_size)
         return mask
@@ -1543,7 +1544,7 @@ class XanesFrameset():
         masked_map = np.ma.array(map_data, mask=self.goodness_mask())
         return masked_map
 
-    def extent(self, representation, idx=0):
+    def extent(self, representation, idx=(0, 0)):
         """Determine physical dimensions for axes values.
 
         Returns: If idx was given, a single tuple of (left, right,
@@ -1560,7 +1561,7 @@ class XanesFrameset():
             frames = store.get_frames(representation)
             if idx is not None:
                 # Filter to only the requested frame
-                imshape = np.array(frames[idx].shape) # (rows, cols)
+                imshape = np.array(frames[idx].shape)[-2:] # (rows, cols)
                 pixel_size = store.pixel_sizes[idx]
                 center = store.relative_positions[idx]
             else:
