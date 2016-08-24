@@ -301,7 +301,7 @@ def direct_whitelines(spectra, energies, edge):
       question.
     """
     # Cut down to only those values on the edge
-    # edge_mask = (energies > edge.edge_range[0]) & (energies < edge.edge_range[1])
+    edge_mask = (energies > edge.edge_range[0]) & (energies < edge.edge_range[1])
     # spectra = spectra[...,edge_mask]
     # energies = energies[edge_mask]
     # # Calculate the whiteline positions
@@ -309,11 +309,20 @@ def direct_whitelines(spectra, energies, edge):
     # map_energy = np.vectorize(lambda idx: energies[idx],
     #                           otypes=[np.float])
     # whitelines = map_energy(whiteline_indices)
-    # Array to hold resulting energie positions
+    # Convert energies to be same shape as spectra
+    mask_shape = (spectra.shape[0],
+                  *[1 for i in range(0, spectra.ndim-edge_mask.ndim)],
+                  spectra.shape[-1])
+    edge_mask = np.broadcast_to(edge_mask.reshape(mask_shape), spectra.shape)
+    # Set values outside the mapping range to be negative infinity
+    subspectra = np.copy(spectra)
+    subspectra[...,~edge_mask] = -np.inf
+    # Prepare a new array to hold results
     outshape = spectra.shape[:-1]
     out = np.empty(shape=outshape, dtype=energies.dtype)
+    # Iterate over spectra and perform calculation
     def get_whiteline(idx):
-        whiteline_idx = (*idx[:energies.ndim-1], np.argmax(spectra[idx]))
+        whiteline_idx = (*idx[:energies.ndim-1], np.argmax(subspectra[idx]))
         whiteline = energies[whiteline_idx]
         out[idx] = whiteline
     indices = iter_indices(spectra, desc="Direct whiteline", leftover_dims=1)

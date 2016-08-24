@@ -1160,12 +1160,36 @@ class XanesFrameset():
           particles, but might split large particles into two.
         """
         with self.store('r+') as store:
-            frames = store.absorbances
+            frames = store.absorbances.value
             Es = store.energies
-            particles = xm.particle_labels(frames=frames, energies=Es, edge=self.edge())
+            particles = xm.particle_labels(frames=frames, energies=Es,
+                                           edge=self.edge(),
+                                           min_distance=min_distance)
             store.particle_labels = particles
 
+    def particle_series(self, map_name="whiteline_map"):
+        """Generate an array of values from map_name averaged across each
+        particle.
+
+        Returns: A 2D array where the first dimension is particles and
+        the second is the first dimension of the map dataset (usually time).
+
+        """
+        steps = []
+        with self.store() as store:
+            data = store.get_map(map_name).value
+            for stepdata in data:
+                particles = self.particle_regions(intensity_image=stepdata)
+                imgs = [p.intensity_image for p in particles]
+                vals = [np.mean(im[im>0]) for im in imgs]
+                steps.append(vals)
+        # Convert from (steps, particles) to (particles, steps)
+        steps = np.array(steps)
+        steps = np.transpose(steps)
+        return steps
+
     def rebin(self, new_shape=None, factor=None):
+
         """Resample all images into new shape. Arguments `shape` and `factor`
         passed to txm.frame.TXMFrame.rebin().
         """
@@ -1213,27 +1237,29 @@ class XanesFrameset():
             ax.plot(x, spectrum.values, marker="o", linestyle="None")
             ax.plot(x, regression.predict(x))
 
-    def particle_regions(self, map_name="whiteline_map", labels=None):
+    def particle_regions(self, intensity_image=None, labels=None):
         """Return a list of regions (1 for each particle) sorted by area.
         (largest first). This requires that the `label_particles`
         method be called first.
 
         Arguments
         ---------
-        - map_name : string with the attribute name to get for intensity data.
+        - intensity_image : 2D array passed on to the skimage
+          `regionprops` function to determine what shows up in the
+          image for each particle.
 
         - labels : Dataframe of the same shape as the map, with the
           particles segmented. If None, the `particle_labels`
           attribute of the TXM store will be used.
+
         """
         with self.store() as store:
             if labels is None:
                 labels = store.particle_labels.value
-            map_ = store.get_map(map_name).value
             regions = measure.regionprops(labels,
-                                          intensity_image=map_)
+                                          intensity_image=intensity_image)
         # Put in order of descending area
-        regions.sort(key=lambda p: p.area)
+        regions.sort(key=lambda p: p.area, reverse=True)
         return regions
 
     def particle_area_spectrum(self, loc=xycoord(20, 20)):
@@ -1268,17 +1294,16 @@ class XanesFrameset():
     def plot_mean_image(self, ax=None):
         if ax is None:
             ax = new_image_axes()
-        data = self.mean_image()
-        artist = ax.imshow(data, extent=self.extent(), origin="lower",
+        with self.store() as store:
+            absorbances = np.reshape(store.absorbances,
+                                     (-1, *store.absorbances.shape[-2:]))
+            data = np.mean(absorbances, axis=0)
+            ax_unit = store.pixel_unit
+        artist = ax.imshow(data, extent=self.extent(representation='absorbances'), origin="lower",
                            cmap='gray')
+        ax.set_xlabel(ax_unit)
+        ax.set_ylabel(ax_unit)
         return artist
-
-    # def mean_image(self):
-    #     """Determine an overall image by taking the mean intensity of each
-    #     pixel across all frames."""
-    #     frames = np.array([f.image_data for f in self])
-    #     avg_frame = np.mean(frames, axis=0)
-    #     return avg_frame
 
     def median_image(self):
         """Determine an overall image by taking the median intensity of each
@@ -1527,7 +1552,7 @@ class XanesFrameset():
         position, particle labels."""
         # Calculate particle_labels
         self.calculate_whitelines()
-        # self.label_particles()
+        self.label_particles()
 
     def masked_map(self, goodness_filter=True):
         """Generate a map based on pixel-wise Xanes spectra and apply an
@@ -1604,11 +1629,11 @@ class XanesFrameset():
         ax.set_xlabel(unit)
         return artist
 
-    def plot_map(self, ax=None, map_name="whiteline_map"):
+    def plot_map(self, ax=None, map_name="whiteline_map", timeidx=0):
         """Prepare data and plot a map of whiteline positions."""
         # Do the plotting
         with self.store() as store:
-            data = store.get_map(name=map_name)
+            data = store.get_map(name=map_name)[timeidx]
             plot_txm_map(data=data,
                          ax=ax,
                          norm=None,

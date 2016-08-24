@@ -27,5 +27,5 @@ import exceptions
 from importers import import_ssrl_frameset, import_aps_8BM_frameset
 from xanes_frameset import XanesFrameset
 from edges import k_edges, l_edges
-from plots import dual_axes
+from plots import dual_axes, new_axes, new_image_axes, plot_txm_map
 import xanes_math as xanes_math
