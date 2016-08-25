@@ -1318,7 +1318,7 @@ class XanesFrameset():
 
     @functools.lru_cache()
     def spectrum(self, pixel=None, edge_jump_filter=False,
-                       representation="modulus"):
+                       representation="modulus", index=0):
         """Collapse the dataset down to a two-dimensional spectrum. Returns a
         pandas series containing the resulting spectrum.
 
@@ -1334,6 +1334,10 @@ class XanesFrameset():
             spectrum. If "inverse" is given, then the edge jump filter
             is logically not-ted and calculated with a more
             conservative threshold.
+
+        index: Which step in the frameset to use. When used to index
+        store().absorbances, this should return a 3D array like
+        (energy, rows, columns).
 
         """
         # energies = []
@@ -1363,8 +1367,8 @@ class XanesFrameset():
         #     energies.append(frame.energy)
         # Retrieve data
         with self.store() as store:
-            energies = store.energies.value
-            frames = store.absorbances
+            energies = store.energies.value[index]
+            frames = store.absorbances[index]
             if pixel is not None:
                 pixel = Pixel(*pixel)
                 # Get a spectrum for a single pixel
@@ -1377,7 +1381,8 @@ class XanesFrameset():
                                            shape=(*energies.shape, *mask.shape))
                     frames = np.ma.array(frames, mask=mask)
                 # Take average of all pixel frames
-                spectrum = np.mean(np.reshape(frames, (frames.shape[0], -1)), axis=(1))
+                flat = (*frames.shape[:frames.ndim-2], -1) # Collapse image dimension
+                spectrum = np.mean(np.reshape(frames, flat), axis=-1)
             # Combine into a series
             series = pd.Series(spectrum, index=energies)
         return series

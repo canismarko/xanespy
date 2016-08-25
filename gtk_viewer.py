@@ -123,7 +123,7 @@ class GtkTxmViewer():
         switch.set_active(self.show_map_background)
         # Set some initial values
         self.current_adj = self.builder.get_object('CurrentFrame')
-        self.current_adj.set_property('upper', len(self.energies) - 1)
+        self.current_adj.set_property('upper', self.energies.shape[-1] - 1)
         # Prepare a tree of the project hierarchy
         with self.frameset.store() as store:
             datatree = store.data_tree()
@@ -218,9 +218,6 @@ class GtkTxmViewer():
                                        windows=[self.window]),
             'last-frame': self.last_frame,
             'first-frame': self.first_frame,
-            # 'key-release-main': self.key_pressed_main,
-            # 'key-press-map': WatchCursor(self.navigate_map,
-            #                                windows=[self.map_window]),
             'key-press-map': self.navigate_map,
             'toggle-particles': WatchCursor(self.toggle_particles,
                                             windows=both_windows),
@@ -323,7 +320,7 @@ class GtkTxmViewer():
             # Convert xy position to pixel values
             xy = xycoord(x=round(event.xdata, 1), y=round(event.ydata, 1))
             with self.frameset.store() as store:
-                frame_shape = store.absorbances.shape[1:]
+                frame_shape = store.absorbances.shape[-2:]
             extent = self.frameset.extent(representation=self.plotter.active_representation)
             pixel = xy_to_pixel(xy, extent=extent,
                                 shape=frame_shape)
@@ -335,7 +332,8 @@ class GtkTxmViewer():
             row = np.clip(pixel.vertical, 0, frame_shape[0]-1)
             col = np.clip(pixel.horizontal, 0, frame_shape[1]-1)
             with self.frameset.store() as store:
-                value = store.absorbances[self.current_idx,row,col]
+                px_idx = (*self.current_idx, row, col)
+                value = store.absorbances[px_idx]
                 # value = frame.image_data[row][col]
             I_label.set_text(str(round(value, 4)))
         else:
@@ -432,18 +430,13 @@ class GtkTxmViewer():
 
     @property
     def current_idx(self):
-        value = self.current_adj.get_property('value')
-        return int(value)
+        E_idx = self.current_adj.get_property('value')
+        frame_idx = self.plotter.frames_index
+        return (frame_idx, E_idx)
 
     @current_idx.setter
     def current_idx(self, value):
-        self.current_adj.set_property('value', value)
-
-    # def key_pressed_main(self, widget, event):
-    #     if event.keyval == Gdk.KEY_Left:
-    #         self.previous_frame()
-    #     elif event.keyval == Gdk.KEY_Right:
-    #         self.next_frame()
+        self.current_adj.set_property('value', value[-1])
 
     def toggle_particles(self, widget):
         self.plotter.show_particles = not self.plotter.show_particles
@@ -482,7 +475,8 @@ class GtkTxmViewer():
         self.update_window()
 
     def next_frame(self, widget=None):
-        self.current_idx = (self.current_idx + 1) % len(self.energies)
+        self.current_idx = (*self.current_idx[:-1],
+                            self.current_idx[-1] + 1 % len(self.energies))
         self.update_window()
         if self.play_mode:
             keep_going = True

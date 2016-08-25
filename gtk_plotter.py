@@ -258,6 +258,7 @@ class GtkFramesetPlotter():
     normalize_xanes = True
     normalize_map_xanes = True
     active_representation = "absorbances"
+    frames_index = 0
 
     def __init__(self, frameset):
         self.frameset = frameset
@@ -458,7 +459,7 @@ class GtkFramesetPlotter():
             frames = store.get_frames(name=self.active_representation)
             self.norm = Normalize(np.min(frames),
                                   np.max(frames))
-            for img in frames.value:
+            for img in frames[self.frames_index]:
                 artist = self.image_ax.imshow(img, origin='lower',
                                               animated=True, cmap="gray",
                                               extent=extent,
