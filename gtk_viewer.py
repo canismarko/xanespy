@@ -414,7 +414,6 @@ class GtkTxmViewer():
                 self.map_window.close()
             elif context == 'map':
                 self.launch_map_window()
-                print('map')
         # Update UI elements
         self.refresh_artists()
         self.update_window()
@@ -432,7 +431,7 @@ class GtkTxmViewer():
     def current_idx(self):
         E_idx = self.current_adj.get_property('value')
         frame_idx = self.plotter.frames_index
-        return (frame_idx, E_idx)
+        return (frame_idx, int(E_idx))
 
     @current_idx.setter
     def current_idx(self, value):

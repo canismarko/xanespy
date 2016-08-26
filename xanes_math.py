@@ -234,9 +234,6 @@ def edge_mask(frames: np.ndarray, energies: np.ndarray, edge,
 
 
 def edge_jump(frames: np.ndarray, energies: np.ndarray, edge):
-    COLS = -1
-    ROWS = -2
-    ENERGY = -3
     # Check that dimensions match
     if not frames.shape[0] == energies.shape[0]:
         msg = "First dimenions of frames and energies do not match ({} vs {})"
@@ -336,10 +333,13 @@ def transform_images(data, translations=None, rotations=None,
     scale. It is assumed that the first dimension of data is the same
     as the length of translations, rotations and scales. Data will be
     written to `out` if given, otherwise returned as a new array.
+
+    Returns: A new array similar dimensions to `data` but with
+      transformations applied and converted to float32 datatype.
     """
     # Create a new array if one is not given
     if out is None:
-        out = np.zeros_like(data)
+        out = np.zeros_like(data, dtype=np.float32)
     # Define a function to pass into threads
     def apply_transform(idx):
         # Get transformation parameters if given
@@ -357,6 +357,7 @@ def transform_images(data, translations=None, rotations=None,
         indata = exposure.rescale_intensity(data[idx],
                                             in_range=realrange,
                                             out_range=(0, 1))
+        indata = indata.astype('float32')
         outdata = transform.warp(indata, transformation,
                                   order=3, mode=mode)
         out[idx] = exposure.rescale_intensity(outdata,

@@ -215,6 +215,10 @@ class TXMStore():
         """Get a set of frames, specified by the value of `name`."""
         return self.data_group()[name]
 
+    def set_frames(self, name, val):
+        """Set data for a set of frames, specificied by the value of `name`."""
+        return self.replace_dataset(name, val, context='frameset')
+
     def get_map(self, name):
         """Get a map of the frames, specified by the value of `name`."""
         return self.data_group()[name]

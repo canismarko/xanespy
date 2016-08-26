@@ -605,7 +605,7 @@ class XanesFrameset():
         and apply them. If commit is truthy, the staged
         transformations are reset.
 
-        Returns: A numpy array with the transformed images.
+        Returns: Transformed array of the absorbances frames.
 
         Arguments
         ---------
@@ -614,7 +614,12 @@ class XanesFrameset():
         be wrapped.
 
         - commit : If truthy, the changes will be saved to the HDF5
-          store and the staged transformations will be cleared.
+          store for absorbances, intensities and references, and the
+          staged transformations will be cleared. Otherwise, only the
+          absorbance data will be transformed and returned.
+
+        - frames_name : Name of the frame group to apply this
+          transformation too (eg. 'absorbances')
 
         """
         not_actionable = (self._translations is None and
@@ -623,37 +628,43 @@ class XanesFrameset():
         if not_actionable:
             # Nothing to apply, so no-op
             with self.store() as store:
-                out = store.absorbances.value
+                out = store.get_frames('absorbances').value
         else:
-            # Apply the transformations
-            with self.store() as store:
-                # Prepare an array to hold results
-                out = np.zeros_like(store.absorbances)
-                # Apply transformation
-                xm.transform_images(data=store.absorbances,
-                                    translations=self._translations,
-                                    rotations=self._rotations,
-                                    scales=self._scales,
-                                    mode='wrap', out=out)
-            # Calculate and apply cropping bounds for the image stack
-            if crop:
-                tx = self._translations[...,0]
-                ty = self._translations[...,1]
-                new_rows = out.shape[-2] - (np.max(ty) - np.min(ty))
-                new_cols = out.shape[-1] - (np.max(tx) - np.min(tx))
-                rlower = int(np.ceil(-np.min(ty)))
-                rupper = int(np.floor(new_rows + rlower))
-                clower = int(np.ceil(-np.min(tx)))
-                cupper = int(np.floor(clower + new_cols))
-                out = out[...,rlower:rupper,clower:cupper]
-            # Save result and clear saved transformations if appropriate
             if commit:
-                with self.store('r+') as store:
-                    store.absorbances = out
-                self._translations = None
-                self._scales = None
-                self._rotations = None
-        # Return calculated result
+                names = ['intensities', 'references', 'absorbances'] # Order matters
+            else:
+                names = ['absorbances']
+            # Apply the transformations
+            for frames_name in names:
+                with self.store() as store:
+                    # Prepare an array to hold results
+                    out = np.zeros_like(store.get_frames(frames_name))
+                    # Apply transformation
+                    xm.transform_images(data=store.get_frames(frames_name),
+                                        translations=self._translations,
+                                        rotations=self._rotations,
+                                        scales=self._scales,
+                                        mode='wrap', out=out)
+                # Calculate and apply cropping bounds for the image stack
+                if crop:
+                    tx = self._translations[...,0]
+                    ty = self._translations[...,1]
+                    new_rows = out.shape[-2] - (np.max(ty) - np.min(ty))
+                    new_cols = out.shape[-1] - (np.max(tx) - np.min(tx))
+                    rlower = int(np.ceil(-np.min(ty)))
+                    rupper = int(np.floor(new_rows + rlower))
+                    clower = int(np.ceil(-np.min(tx)))
+                    cupper = int(np.floor(clower + new_cols))
+                    out = out[...,rlower:rupper,clower:cupper]
+                # Save result and clear saved transformations if appropriate
+                if commit:
+                    with self.store('r+') as store:
+                        store.set_frames(frames_name, out)
+        # Clear the staged transformations
+        if commit:
+            self._translations = None
+            self._scales = None
+            self._rotations = None
         return out
 
     def stage_transformations(self, translations=None, rotations=None, scales=None):
