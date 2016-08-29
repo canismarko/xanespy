@@ -32,6 +32,7 @@ from itertools import count, product
 from scipy import ndimage
 import numpy as np
 from skimage import transform, feature, filters, morphology, exposure, measure
+import matplotlib.pyplot as plt
 
 from utilities import prog
 
@@ -337,9 +338,10 @@ def transform_images(data, translations=None, rotations=None,
     Returns: A new array similar dimensions to `data` but with
       transformations applied and converted to float32 datatype.
     """
+    dt = data.dtype
     # Create a new array if one is not given
     if out is None:
-        out = np.zeros_like(data, dtype=np.float32)
+        out = np.zeros_like(data, dtype=dt)
     # Define a function to pass into threads
     def apply_transform(idx):
         # Get transformation parameters if given
@@ -353,16 +355,17 @@ def transform_images(data, translations=None, rotations=None,
             rotation=rot,
         )
         # (Temporarily rescale intensities so the warp function is happy)
-        realrange = (np.min(data[idx]), np.max(data[idx]))
-        indata = exposure.rescale_intensity(data[idx],
+        indata = data[idx].astype('float32')
+        realrange = (np.min(indata), np.max(indata))
+        indata = exposure.rescale_intensity(indata,
                                             in_range=realrange,
                                             out_range=(0, 1))
-        indata = indata.astype('float32')
         outdata = transform.warp(indata, transformation,
                                   order=3, mode=mode)
-        out[idx] = exposure.rescale_intensity(outdata,
-                                              in_range=(0, 1),
-                                              out_range=realrange)
+        outdata = exposure.rescale_intensity(outdata,
+                                             in_range=(0, 1),
+                                             out_range=realrange)
+        out[idx] = outdata.astype(dt)
     # Loop through the images and apply each transformation
     indices = iter_indices(data, desc='Applying', leftover_dims=2)
     foreach(apply_transform, indices)

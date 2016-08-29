@@ -39,7 +39,7 @@ from units import unit, predefined
 from utilities import prog, xycoord, Pixel, Extent, pixel_to_xy
 from frame import TXMFrame, PtychoFrame
 from txmstore import TXMStore
-from plots import new_axes, new_image_axes, plot_txm_map, plot_xanes_spectrum
+import plots
 import exceptions
 import xanes_math as xm
 
@@ -805,7 +805,7 @@ class XanesFrameset():
         # Plot the results if requested
         if plot_results:
             x = range(0, passes)
-            ax = new_axes()
+            ax = plots.new_axes()
             ax.plot(x, pass_distances, marker='o', linestyle=":")
             ax.set_xlabel('Pass')
             ax.set_ylabel("RMS Translation")
@@ -1244,7 +1244,7 @@ class XanesFrameset():
                          description=description)
         # Plot the background fit used to normalize
         if plot_fit:
-            ax = new_axes()
+            ax = plots.new_axes()
             ax.plot(x, spectrum.values, marker="o", linestyle="None")
             ax.plot(x, regression.predict(x))
 
@@ -1304,7 +1304,7 @@ class XanesFrameset():
 
     def plot_mean_image(self, ax=None):
         if ax is None:
-            ax = new_image_axes()
+            ax = plots.new_image_axes()
         with self.store() as store:
             absorbances = np.reshape(store.absorbances,
                                      (-1, *store.absorbances.shape[-2:]))
@@ -1347,9 +1347,8 @@ class XanesFrameset():
             conservative threshold.
 
         index: Which step in the frameset to use. When used to index
-        store().absorbances, this should return a 3D array like
-        (energy, rows, columns).
-
+            store().absorbances, this should return a 3D array like
+            (energy, rows, columns).
         """
         # energies = []
         # intensities = []
@@ -1429,7 +1428,7 @@ class XanesFrameset():
                                  representation=representation)
         edge = self.edge()
         if ax is None:
-            ax = new_axes()
+            ax = plots.new_axes()
         # if normalize or show_fit:
         #     # Prepare an edge for fitting
         #     edge.post_edge_order = 1
@@ -1444,10 +1443,10 @@ class XanesFrameset():
             # Adjust the limits of the spectrum to be between 0 and 1
             normalized = edge.normalize(spectrum.values, spectrum.index)
             spectrum = pd.Series(normalized, index=spectrum.index)
-        scatter = plot_xanes_spectrum(spectrum=spectrum,
-                                      ax=ax,
-                                      energies=spectrum.index,
-                                      norm=Normalize(*self.edge.map_range))
+        scatter = plots.plot_xanes_spectrum(spectrum=spectrum,
+                                            ax=ax,
+                                            energies=spectrum.index,
+                                            norm=Normalize(*self.edge.map_range))
         if pixel is not None:
             xy = pixel_to_xy(pixel, extent=self.extent(), shape=self.map_shape())
             title = 'XANES Spectrum at ({x}, {y}) = {val}'
@@ -1464,7 +1463,7 @@ class XanesFrameset():
         return scatter
 
     def plot_xanes_edge(self, *args, **kwargs):
-        """Call self.plot_xanes_spectrum() but zoomed in on the edge."""
+        """Call self.plots.plot_xanes_spectrum() but zoomed in on the edge."""
         scatter = self.plot_xanes_spectrum(*args, **kwargs)
         ax = scatter.axes
         # Determine plotting limits
@@ -1476,7 +1475,7 @@ class XanesFrameset():
     def plot_edge_jump(self, ax=None, alpha=1):
         """Plot the results of the edge jump filter."""
         if ax is None:
-            ax = new_image_axes()
+            ax = plots.new_image_axes()
         ej = self.edge_jump()
         artist = ax.imshow(ej, extent=self.extent('absorbances'),
                            cmap=self.cmap, origin="lower",
@@ -1631,7 +1630,7 @@ class XanesFrameset():
     def plot_frame(self, idx, ax=None, cmap="gray", *args, **kwargs):
         """Plot the frame with given index as an image."""
         if ax is None:
-            ax = new_image_axes()
+            ax = plots.new_image_axes()
         # Plot image data
         with self.store() as store:
             artist = ax.imshow(store.absorbances[idx],
@@ -1650,11 +1649,11 @@ class XanesFrameset():
         # Do the plotting
         with self.store() as store:
             data = store.get_map(name=map_name)[timeidx]
-            plot_txm_map(data=data,
-                         ax=ax,
-                         norm=None,
-                         edge=self.edge(),
-                         extent=self.extent(representation='absorbances'))
+            plots.plot_txm_map(data=data,
+                               ax=ax,
+                               norm=None,
+                               edge=self.edge(),
+                               extent=self.extent(representation='absorbances'))
 
     def plot_goodness(self, plotter=None, ax=None, norm_range=None,
                       *args, **kwargs):
@@ -1670,11 +1669,13 @@ class XanesFrameset():
                        active_pixel=None,
                        *args, **kwargs):
         """Use a default frameset plotter to draw a map of the chemical data."""
-        if plotter is None:
-            plotter = FramesetPlotter(frameset=self, map_ax=ax)
-        artists = plotter.plot_histogram(norm_range=norm_range,
-                                         goodness_filter=goodness_filter,
-                                         *args, **kwargs)
+        with self.store() as store:
+            data = store.whiteline_map.value
+        # Get bins for the energy steps
+        edge = self.edge()
+        energies = edge.energies_in_range(edge.map_range)
+        artists = plots.plot_txm_histogram(data=data, ax=ax,
+                                           cmap=self.cmap, bins=energies)
         return artists
 
     def movie_plotter(self):
@@ -1921,7 +1922,7 @@ class PtychoFrameset(XanesFrameset):
         # Plot background for evaluation
         if plot_background:
             if ax is None:
-                ax = new_axes()
+                ax = plots.new_axes()
             ax.plot(Es, I_0s)
             ax.set_title("Background Intensity used for Reference Correction")
             ax.set_xlabel("Energy (eV)")

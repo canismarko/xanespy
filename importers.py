@@ -68,7 +68,7 @@ def import_txm_framesets(*args, **kwargs):
 def read_metadata(filenames, flavor):
     """Take a list of filenames and return a pandas dataframe with all the
     metadata."""
-    columns = ('sample_name', 'position_name', 'is_background',
+    columns = ('timestep_name', 'position_name', 'is_background',
                'energy', 'shape', 'starttime')
     df = pd.DataFrame(columns=columns)
     for filename in prog(filenames, 'Preparing metadata'):
@@ -87,13 +87,13 @@ def read_metadata(filenames, flavor):
             metadata['starttime'] = f.starttime()
         df.loc[filename] = metadata
     # Remove any incomplete framesets
-    sam_names, samples = zip(*df.groupby('sample_name'))
-    lengths = np.array([len(df_.groupby('energy')) for df_ in samples])
+    timestep_names, timesteps = zip(*df.groupby('timestep_name'))
+    lengths = np.array([len(df_.groupby('energy')) for df_ in timesteps])
     max_length = max(lengths)
     bad_samples = []
-    for name, length in zip(sam_names, lengths):
+    for name, length in zip(timestep_names, lengths):
         if length < max_length:
-            df = df[df.sample_name != name]
+            df = df[df.timestep_name != name]
             bad_samples.append(name)
     # Warn the user about dropped frames
     if bad_samples and not prog.quiet:
@@ -282,14 +282,14 @@ def decode_ssrl_params(filename):
     sample_result = ssrl_regex_sample.search(filename)
     if bg_result:
         params = {
-            'sample_name': "rep{}".format(bg_result.group(1)),
+            'timestep_name': "rep{}".format(bg_result.group(1)),
             'position_name': bg_result.group(3).strip("_"),
             'is_background': True,
             'energy': float(bg_result.group(4)),
         }
     elif sample_result:
         params = {
-            'sample_name': "rep{}".format(sample_result.group(1)),
+            'timestep_name': "rep{}".format(sample_result.group(1)),
             'position_name': sample_result.group(2).strip("_"),
             'is_background': False,
             'energy': float(sample_result.group(3)),
@@ -435,7 +435,7 @@ def decode_aps_params(filename):
     match = regex.search(filename).groupdict()
     energy = float("{}.{}".format(match['E_int'], match['E_dec']))
     result = {
-        'sample_name': match['sam'],
+        'timestep_name': match['sam'],
         'position_name': match['pos'],
         'is_background': match['pos'] == 'ref',
         'energy': energy,
@@ -478,34 +478,36 @@ def import_frameset(directory, flavor, hdf_filename=None, quiet=False):
     # Get some shape information for all the datasets
     shapes = metadata['shape'].unique()
     assert len(shapes) == 1
-    num_samples = len(reference_files['sample_name'].unique())
+    num_samples = len(reference_files['timestep_name'].unique())
     pos_name = sample_files['position_name'].unique()[0]
     num_energies = len(reference_files['energy'].unique())
     ds_shape = (num_samples, num_energies, *shapes[0])
     chunk_shape = (1, 1, *shapes[0])
     ## Import reference frames
     assert len(reference_files.groupby('position_name')) == 1
-    ref_groups = reference_files.groupby('sample_name')
+    ref_groups = reference_files.groupby('timestep_name')
     imp_group = h5file.require_group("{}/imported".format(pos_name))
     ref_ds = imp_group.require_dataset('references', shape=ds_shape,
                                        maxshape=ds_shape,
                                        chunks=chunk_shape,
                                        dtype=np.uint16)
     ref_ds.attrs['context'] = 'frameset'
-    for sam_idx, (sam_name, sam_df) in enumerate(ref_groups):
+    for ts_idx, (ts_name, ts_df) in enumerate(ref_groups):
         Is = []
-        for E_idx, (E_name, E_df) in enumerate(sam_df.groupby('energy')):
+        for E_idx, (E_name, E_df) in enumerate(ts_df.groupby('energy')):
             Importer = format_classes[os.path.splitext(E_df.index[0])[-1]]
             E_files = [Importer(f, flavor=flavor) for f in E_df.index]
             images = np.array([f.image_data() for f in E_files])
-            Is.append(np.mean(images, axis=0))
+            kernel = np.array([[0, 1, 0],[1, 1, 1],[0, 1, 0]])
+            image = median_filter(np.mean(images, axis=0), footprint=kernel)
+            Is.append(image)
             [f.close() for f in E_files]
             # Update progress bar
             curr_file += len(E_files)
             set_progbar(curr_file, total=total_files, init_time=init_time)
         # import pdb; pdb.set_trace()
         # Save to disk
-        ref_ds[sam_idx] = np.array(Is)
+        ref_ds[ts_idx] = np.array(Is)
     # Import the actual sample frames
     pos_groups = enumerate(sample_files.groupby('position_name'))
     for pos_idx, (pos_name, pos_df) in pos_groups:
@@ -513,7 +515,7 @@ def import_frameset(directory, flavor, hdf_filename=None, quiet=False):
         Importer = format_classes[os.path.splitext(pos_df.index[0])[-1]]
         with Importer(pos_df.index[0], flavor=flavor) as f:
             im_shape = f.image_data().shape
-            num_samples = len(pos_df.groupby('sample_name'))
+            num_samples = len(pos_df.groupby('timestep_name'))
             num_energies = len(pos_df.groupby('energy'))
         ds_shape = (num_samples, num_energies, *im_shape)
         h5group = h5file.require_group("{}/imported".format(pos_name))
@@ -556,33 +558,43 @@ def import_frameset(directory, flavor, hdf_filename=None, quiet=False):
                                               shape=(num_samples, num_energies, 3),
                                               dtype=np.float32)
         rel_pos_ds.attrs['context'] = 'metadata'
-        sam_groups = enumerate(pos_df.groupby('sample_name'))
-        for sam_idx, (sam_name, sam_df) in sam_groups:
-            E_groups = sam_df.sort_values('energy').groupby('energy')
+        dt = h5py.special_dtype(vlen=str)
+        timestep_ds = h5group.require_dataset('timestep_names',
+                                              shape=(num_samples,),
+                                              dtype=dt)
+        timestep_ds.attrs['context'] = 'metadata'
+        timestep_groups = enumerate(pos_df.groupby('timestep_name'))
+        for ts_idx, (ts_name, ts_df) in timestep_groups:
+            # Save name to HDF file
+            timestep_ds[ts_idx] = ts_name
+            # Import the data from each energy frame...
+            E_groups = ts_df.sort_values('energy').groupby('energy')
             for E_idx, (energy, group) in enumerate(E_groups):
-                # Import the data from each energy frame...
                 Importer = format_classes[os.path.splitext(group.index[0])[-1]]
                 E_files = [Importer(f, flavor=flavor) for f in group.index]
                 # ...x-ray energies...
                 energies = np.array([f.energy() for f in E_files])
-                E_ds[sam_idx,E_idx] = np.mean(energies)
+                E_ds[ts_idx,E_idx] = np.mean(energies)
                 # ...intensity data...
                 images = np.array([f.image_data() for f in E_files])
-                int_ds[sam_idx,E_idx] = np.mean(images, axis=0)
+                kernel = np.array([[0, 1, 0],[1, 1, 1],[0, 1, 0]])
+                image = median_filter(np.mean(images, axis=0), footprint=kernel)
+                int_ds[ts_idx,E_idx] = image
                 # ...position data...
                 pos = np.array([f.sample_position() for f in E_files])
-                orig_pos_ds[sam_idx,E_idx] = np.mean(pos, axis=0)
+                orig_pos_ds[ts_idx,E_idx] = np.mean(pos, axis=0)
                 # ...filenames...
-                filename_ds[sam_idx,E_idx] = np.array([E_files[0].filename],
+                filename_ds[ts_idx,E_idx] = np.array([E_files[0].filename],
                                                       dtype="S")
                 # ...timestamp data...
                 starts = [f.starttime() for f in E_files]
                 ends = [f.endtime() for f in E_files]
-                timestamp_ds[sam_idx,E_idx] = np.array([min(starts), max(ends)],
+                timestamp_ds[ts_idx,E_idx] = np.array([min(starts), max(ends)],
                                                        dtype='S32')
                 # ...pixel size data.
                 px_sizes = np.array([f.um_per_pixel() for f in E_files])
-                px_ds[sam_idx,E_idx] = np.mean(px_sizes)
+                px_ds[ts_idx,E_idx] = np.mean(px_sizes)
+
                 # pixel_sizes.append(np.mean(px_sizes))
                 # Increment progress bars
                 curr_file += len(E_files)

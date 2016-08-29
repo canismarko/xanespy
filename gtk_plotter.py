@@ -278,10 +278,10 @@ class GtkFramesetPlotter():
     apply_edge_jump = False
     active_xy = None
     active_pixel = None
+    active_timestep = 0
     normalize_xanes = True
     normalize_map_xanes = True
     active_representation = "absorbances"
-    frames_index = 0
 
     def __init__(self, frameset):
         self.frameset = frameset
@@ -313,33 +313,36 @@ class GtkFramesetPlotter():
             map_alpha = 1
         if show_map:
             with self.frameset.store() as store:
-                data = store.whiteline_map.value
+                data = store.whiteline_map[self.active_timestep]
             if self.apply_edge_jump:
                 data = np.ma.array(data, mask=self.frameset.edge_mask())
             # Plot the overall map
             extent = self.frameset.extent(representation=self.active_representation)
-            artist = plots.plot_txm_map(data,
-                                        edge=self.frameset.edge(),
-                                        ax=self.map_ax,
-                                        norm=None,
+            edge = self.frameset.edge()
+            artist = plots.plot_txm_map(data, edge=edge,
+                                        ax=self.map_ax, norm=None,
                                         extent=extent)
-            # artist = self.frameset.plot_map(goodness_filter=self.apply_edge_jump,
-            #                                 alpha=map_alpha)
-            # map_artist = super().draw_map(goodness_filter=self.apply_edge_jump,
-            #                               alpha=map_alpha)
             artists.append(artist)
         # Force redraw
         self.map_canvas.draw()
         return artists
 
     def plot_histogram(self):
+        self.map_hist_ax.clear()
         # Get data
         with self.frameset.store() as store:
-            data = store.whiteline_map.value
+            data = store.whiteline_map[self.active_timestep]
         if self.apply_edge_jump:
-            data = np.ma.array(data, mask=self.frameset.edge_mask())
+            mask = self.frameset.edge_mask()
+            # data = np.ma.array(data, mask=mask)
+            data = data[~mask]
+        # Get bins at each energy step
+        edge = self.frameset.edge()
+        energies = edge.energies_in_range(edge.map_range)
         # Plot histogram
-        plots.plot_txm_histogram(data=data, ax=self.map_hist_ax, cmap=self.map_cmap)
+        plots.plot_txm_histogram(data=data, ax=self.map_hist_ax,
+                                 cmap=self.map_cmap, bins=energies)
+        self.map_hist_ax.figure.canvas.draw()
 
     def draw_crosshairs(self, active_xy=None, color="black"):
         # Remove old cross-hairs
@@ -368,7 +371,9 @@ class GtkFramesetPlotter():
             edge_jump = False
         else:
             edge_jump = self.apply_edge_jump
-        spectrum = self.frameset.spectrum(edge_jump_filter=edge_jump, pixel=active_pixel)
+        spectrum = self.frameset.spectrum(edge_jump_filter=edge_jump,
+                                          pixel=active_pixel,
+                                          index=self.active_timestep)
         norm = Normalize(*self.frameset.edge.map_range)
         # Plot the full XANES spectrum
         ax.clear()
@@ -440,6 +445,13 @@ class GtkFramesetPlotter():
         map_spec = gridspec.new_subplotspec((0, 0), rowspan=2)
         self.map_ax = self.map_figure.add_subplot(map_spec)
         plots.set_outside_ticks(self.map_ax)
+        # Add colorbar
+        # Add a colorbar to the plot
+        edge = self.frameset.edge()
+        Es = edge.energies_in_range(edge.map_range)
+        norm = Normalize(*edge.map_range)
+        cbar_artist = plots.draw_colorbar(ax=self.map_ax, cmap=self.map_cmap,
+                                          norm=norm, energies=Es)
         xanes_spec = gridspec.new_subplotspec((0, 1), colspan=2)
         self.map_xanes_ax = self.map_figure.add_subplot(xanes_spec)
         self.map_hist_ax = self.map_figure.add_subplot(2, 4, 7)
@@ -482,7 +494,7 @@ class GtkFramesetPlotter():
             frames = store.get_frames(name=self.active_representation)
             self.norm = Normalize(np.min(frames),
                                   np.max(frames))
-            for img in frames[self.frames_index]:
+            for img in frames[self.active_timestep]:
                 artist = self.image_ax.imshow(img, origin='lower',
                                               animated=True, cmap="gray",
                                               extent=extent,
@@ -491,7 +503,8 @@ class GtkFramesetPlotter():
                 frame_artists.append(artist)
         # Prepare XANES highlighting artists
         xanes_artists = []
-        spectrum = self.frameset.spectrum(edge_jump_filter=self.apply_edge_jump)
+        spectrum = self.frameset.spectrum(edge_jump_filter=self.apply_edge_jump,
+                                          index=self.active_timestep)
         for energy in spectrum.index:
             artists = self.xanes_ax.plot([energy], [spectrum[energy]],
                                          'ro', animated=True)

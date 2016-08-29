@@ -103,6 +103,23 @@ def dual_axes(fig=None, orientation='horizontal'):
 
 
 def draw_colorbar(ax, cmap, norm, energies):
+    """Draw a colorbar on the side of a mapping axes to show to range of
+    colors used. Returns an artist for the newly plotter colorbar.
+
+    Arguments
+    ---------
+    - ax : Matplotlib axes object against which to plot.
+
+    - cmap : String or mpl Colormap instance indicating which colormap
+      to use.
+
+    - norm : mpl Normalize object that describes the range of values to
+      use.
+
+    - energies : Iterable of values to put as the tick marks on the
+      colorbar.
+
+    """
     mappable = cm.ScalarMappable(norm=norm, cmap=cmap)
     mappable.set_array(np.arange(0, 3))
     # Add the colorbar to the axes
@@ -120,7 +137,28 @@ def plot_xanes_spectrum(spectrum, energies, norm=Normalize(),
                         show_fit=False, ax=None, linestyle=':',
                         cmap="plasma"):
     """Plot a XANES spectrum on an axes. Applies some color formatting if
-    `edge` is a valid XANES Edge object."""
+    `edge` is a valid XANES Edge object.
+
+    Arguments
+    ---------
+
+    - spectrum : Array of intensity values.
+
+    - energies : Array of energy values.
+
+    - norm : Matplotlib Normalize() object that shows the map
+      range. This will be used to annotate the plot if it is give.
+
+    - show_fit : Whether to plot lines showing the best fit.
+
+    - ax : Matplotlib Axes on which to plot. If not given, a new axes
+      will be generated.
+
+    - linestyle : Passed on to matplotlib.
+
+    - cmap : Colormap, passed on to matplotlib
+
+    """
     if ax is None:
         ax = new_axes()
     norm.autoscale_None(spectrum)
@@ -137,6 +175,12 @@ def plot_xanes_spectrum(spectrum, energies, norm=Normalize(),
     ax.set_ylim(*ylim)
     ax.set_xlabel('Energy /eV')
     ax.set_ylabel('Absorbance')
+    # Plot the edges of the map range
+    if norm is not None:
+        vlineargs = {'linestyle': '--', 'alpha': 0.7,
+                     'color': "lightgrey", 'zorder': 0}
+        ax.axvline(norm.vmin, **vlineargs)
+        ax.axvline(norm.vmax, **vlineargs)
     return scatter
 
 
@@ -167,21 +211,21 @@ def plot_txm_histogram(data, ax=None, norm=None, bins=100, cmap='plasma'):
     color-coding related to normalization value.
     """
     if ax is None:
-        ax = plots.new_axes()
+        ax = new_axes()
     # Flatten the data so it can be nicely plotted
-    data = data.flatten()
+    data = np.round(data.flatten(), decimals=0)
     # Set normalizer
     if norm is None:
         norm = Normalize()
         norm.autoscale_None(data)
-    # # Add a bin for any above and below the range
+    # Add a bin for any above and below the range
     # edge = self.frameset.edge()
-    # # energies = self.frameset.edge().energies_in_range(norm_range=norm_range)
-    # # energies = [
-    # #     2 * energies[0] - energies[1],
-    # #     *energies,
-    # #     2 * energies[-1] - energies[-2]
-    # # ]
+    # energies = self.frameset.edge().energies_in_range(norm_range=norm_range)
+    # energies = [
+    #     2 * energies[0] - energies[1],
+    #     *energies,
+    #     2 * energies[-1] - energies[-2]
+    # ]
     # clipped_map =  np.clip(masked_map, edge.map_range[0], edge.map_range[1])
     n, bins, patches = ax.hist(data, bins=bins)
     # Set colors on histogram

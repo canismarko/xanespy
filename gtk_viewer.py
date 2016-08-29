@@ -186,6 +186,12 @@ class GtkTxmViewer():
 
         # Populate the combobox with list of available representations
 
+        # Populate the combobox with the list of timestep names (eg ocv, soc1)
+        ts_combo = self.builder.get_object('TimestepCombo')
+        with self.frameset.store() as store:
+            for idx, ts in enumerate(store.timestep_names):
+                ts_combo.append(str(idx), "{idx} - {ts}".format(idx=idx, ts=ts))
+        ts_combo.set_active(self.plotter.active_timestep)
         # Put the non-glade things in the window
         self.plotter.plot_map_spectra()
         # self.plotter.plot_xanes_spectra()
@@ -224,6 +230,8 @@ class GtkTxmViewer():
             'toggle-normalization': WatchCursor(self.toggle_normalization,
                                                 windows=both_windows),
             'update-window': self.update_window,
+            'change-timestep': WatchCursor(self.change_timestep,
+                                               windows=both_windows),
             'change-active-group': WatchCursor(self.change_active_group,
                                                windows=[self.window]),
             'change-representation': WatchCursor(self.change_representation,
@@ -290,7 +298,7 @@ class GtkTxmViewer():
             # Convert xy position to pixel values
             xy = xycoord(x=event.xdata, y=event.ydata)
             with self.frameset.store() as store:
-                map_shape = store.whiteline_map.shape
+                map_shape = store.whiteline_map[self.plotter.active_timestep].shape
             extent = self.frameset.extent(
                 representation=self.plotter.active_representation)
             self.active_pixel = xy_to_pixel(xy,
@@ -352,7 +360,6 @@ class GtkTxmViewer():
         else:
             color = 'black'
         self.plotter.draw_crosshairs(active_xy=self.active_xy, color=color)
-        # self.plotter.draw_map_xanes()
         self.plotter.plot_histogram()
 
     def update_map_window(self):
@@ -393,8 +400,19 @@ class GtkTxmViewer():
         GLib.idle_add(self.plotter.plot_map_spectra, self.active_pixel)
         GLib.idle_add(self.update_map_window)
 
+    def change_timestep(self, widget):
+        new_idx = widget.get_active()
+        self.plotter.active_timestep = new_idx
+        self.refresh_artists()
+        try:
+            self.plotter.draw_map()
+        except:
+            pass
+        self.update_window()
+
     def change_active_group(self, selection, object=None):
-        """Update to a new frameset HDF group after user has picked tree entry."""
+        """Update to a new frameset HDF group after user has picked tree
+        entry."""
         model, treeiter = selection.get_selected()
         # GLib.idle_add(disable_map_button)
         # Load new group
@@ -402,17 +420,19 @@ class GtkTxmViewer():
         # parent, data, view = path.split('/')
         paths = path.split('/')[1:]
         # Replace XanesFrameset object
-        self.frameset = XanesFrameset(filename=self.hdf_filename,
-                                      edge=self.edge, groupname=paths[0])
+        # self.frameset = XanesFrameset(filename=self.hdf_filename,
+        #                               edge=self.edge, groupname=paths[0])
+        self.frameset.parent_name = paths[0]
         if len(paths) > 1:
             # Switch active data group
-            self.frameset.groupname = paths[1]
+            self.frameset.data_name = paths[1]
         if len(paths) > 2:
             if context == 'frameset':
                 # Swtich active data representation
                 self.plotter.active_representation = paths[2]
                 self.map_window.close()
             elif context == 'map':
+                print("TODO: Decide how to show the proper map")
                 self.launch_map_window()
         # Update UI elements
         self.refresh_artists()
@@ -430,7 +450,7 @@ class GtkTxmViewer():
     @property
     def current_idx(self):
         E_idx = self.current_adj.get_property('value')
-        frame_idx = self.plotter.frames_index
+        frame_idx = self.plotter.active_timestep
         return (frame_idx, int(E_idx))
 
     @current_idx.setter

@@ -221,7 +221,21 @@ class TXMStore():
 
     def get_map(self, name):
         """Get a map of the frames, specified by the value of `name`."""
-        return self.data_group()[name]
+        if name in self.data_group().keys():
+            data = self.data_group()[name]
+        else:
+            msg = "dataset '{}' not found in file '{}'"
+            msg = msg.format(name, self.hdf_filename)
+            raise exceptions.GroupKeyError(msg)
+        return data
+
+    @property
+    def timestep_names(self):
+        return self.data_group()['timestep_names']
+
+    @timestep_names.setter
+    def timestep_names(self, val):
+        self.replace_dataset('timestep_names', val, context='metadata')
 
     @property
     def pixel_sizes(self):
@@ -317,7 +331,7 @@ class TXMStore():
 
     @property
     def particle_labels(self):
-        return self.data_group()['particle_labels']
+        return self.get_map('particle_labels')
 
     @particle_labels.setter
     def particle_labels(self, val):
