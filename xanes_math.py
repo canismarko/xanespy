@@ -19,8 +19,7 @@
 
 """Module containing all the computationally demanding functions. This
 allows for easy optimization of parallelizable algorithms. Most
-functions will operate on large arrays of data, so this file can be
-compiled to C code using Cython.
+functions will operate on large arrays of data.
 """
 
 import warnings
@@ -28,10 +27,13 @@ import sys
 import threading
 import multiprocessing
 from itertools import count, product
+from collections import namedtuple
 
 from scipy import ndimage
+from scipy.optimize import curve_fit
 import numpy as np
 from skimage import transform, feature, filters, morphology, exposure, measure
+from sklearn import linear_model, svm, utils
 import matplotlib.pyplot as plt
 
 from utilities import prog
@@ -150,44 +152,55 @@ def apply_references(intensities, references, out=None):
     return out
 
 
-def normalize_Kedge(spectra, energies, E_0, pre_edge, post_edge, post_edge_order=2):
-    """Normalize the K-edge XANES spectrum so that the pre-edge is linear
-    and the EXAFS region projects to an absorbance of 1 and the edge
-    energy (E_0). Algorithm is taken mostly from the Atena 4 manual.
+# def normalize_Kedge(spectra, energies, E_0, pre_edge, post_edge,
+#                     post_edge_order=2, out=None):
+#     """Normalize the K-edge XANES spectrum so that the pre-edge is linear
+#     and the EXAFS region projects to an absorbance of 1 and the edge
+#     energy (E_0). Algorithm is taken mostly from the Atena 4 manual.
 
-    Returns: Normalized spectra as a numpy array of the same shape as input spectra.
+#     Returns: Normalized spectra as a numpy array of the same shape as
+#     input spectra.
 
-    Arguments
-    ---------
+#     Arguments
+#     ---------
 
-    - spectra : Numpy array where the last dimension represents
-      energy, which should be the same length as `energies` argument.
+#     - spectra : Numpy array where the last dimension represents
+#       energy, which should be the same length as `energies` argument.
 
-    - energies : 1-D numpy array with all the energies in electron-volts.
+#     - energies : 1-D numpy array with all the energies in electron-volts.
 
-    - E_0 : Energy of the actual edge in electron-volts.
+#     - E_0 : Energy of the actual edge in electron-volts.
 
-    - pre_edge : 2-tuple with range of energies that represent the
-      pre-edge region.
+#     - pre_edge : 2-tuple with range of energies that represent the
+#       pre-edge region.
 
-    - post_edge : 2-tuple with range of energies that represent the
-      post-edge region.
+#     - post_edge : 2-tuple with range of energies that represent the
+#       post-edge region.
 
-    - post_edge_order : The order of polynomial to use for fitting the
-      post-edge region. Ex: 2 (default) means a quadratic function is
-      used.
-    """
-    warnings.warn(UserWarning("xanes_math.normalize_Kedge not implemented"))
-    # Flatten the spectra to be a two-dimensional array for looping
-    orig_shape = spectra.shape
-    spectra = spectra.reshape(-1, spectra.shape[-1])
-    # Fit the pre-edge region
-    ## TODO
-    # Fit the post-edge region
-    ## TODO
-    # Restore original shape
-    spectra = spectra.reshape(orig_shape)
-    return spectra
+#     - post_edge_order : The order of polynomial to use for fitting the
+#       post-edge region. Ex: 2 (default) means a quadratic function is
+#       used.
+
+#     - out : Numpy array to hold the results. If not given, a new array
+#       similar to `spectra` will be created.
+
+#     """
+#     if out is None:
+#         out = np.empty_like(spectra)
+#     # Expand the dimensions of the arrays to be consistent
+#     ## TODO
+#     # Define the workhorse function
+#     def fit_spectrum(idx):
+#         Es = energies[idx]
+#         Is = spectra[idx]
+#         plt.plot(Es, Is)
+
+#         ## TODO
+#     # Guess initial parameters
+#     # Launch the threaded processing
+#     iter_spectra = iter_indices(spectra, leftover_dims=1, desc="Fitting K-Edge")
+#     foreach(fit_spectrum, iter_spectra)
+#     return out
 
 
 def edge_mask(frames: np.ndarray, energies: np.ndarray, edge,
@@ -283,6 +296,186 @@ def particle_labels(frames: np.ndarray, energies: np.ndarray, edge,
     return labels
 
 
+kedge_params = (
+    'scale', 'voffset', 'E0', # Global parameters
+    'sigw', # Sharpness of the edge sigmoid
+    'pre_m', 'pre_b', # Linear pre-edge slope/intercept
+    'ga', 'gb', 'gc', # Gaussian height, center and width
+)
+KEdgeParams = namedtuple('KEdgeParams', kedge_params)
+
+def predict_edge(energies, *params):
+    """Defines the curve function that gets fit to the data for an absorbance K-edge.
+
+    Arguments
+    ---------
+    - energies : Array with energy values to be predicted.
+
+    - *params : The curve parameters that should be used for the
+       prediction. Their order is described by kedge_params
+       variable.
+    """
+    # Named tuple to help keep track of parameters
+    Params = namedtuple('Params', kedge_params)
+    p = Params(*params)
+    x = energies
+    # Adjust the x's to be relative to E_0
+    x = x - p.E0
+    # Sigmoid
+    sig = np.arctan(x*p.sigw) / np.pi + 1/2
+    # Gaussian
+    gaus = p.ga*np.exp(-(x-p.gb)**2/2/p.gc**2)
+    # Background
+    bg = x * p.pre_m + p.pre_b
+    curve = sig + gaus + bg
+    return p.scale * curve - p.voffset
+
+
+def fit_kedge(spectra, energies, p0, out=None):
+    """Use least squares to fit a set of curves to the data. Currently
+    this is a line for the baseline absorbance decreasing at higher
+    energies, plus a sigmoid for the edge and a gaussian for the
+    whiteline.
+
+    Returns an array with a similar shape to spectra but the last axis
+    is replaced with fitting parameters, describe by the named tupled
+    `KParams` defined in this module.
+
+    Arguments
+    ---------
+
+    - spectra : An array containing absorbance data. Assumes that the
+      index is energy. This can be a multi-dimensional array, which
+      allows calculation of image frames, etc. The last axis should be
+      X-ray energy.
+
+    - energies : Array of X-ray energies. Must have same shape as `spectra`.
+
+    - p0 : A tuple with the initial guess. The correct order is
+      described by kedge_params.
+
+    - out : Numpy array to hold the results. If omitted, a new array
+    will be created.
+
+    """
+    # Empty array to hold the results if none are given
+    if out is None:
+        result_shape = (*spectra.shape[:-1], len(kedge_params))
+        out = np.empty(shape=result_shape)
+    # Define the workhorse function to do the actual fitting
+    def fit_spectrum(idx):
+        Es = energies[idx]
+        Is = spectra[idx]
+        # Fit the k edge for this spectrum
+        try:
+            popt, pcov = curve_fit(f=predict_edge, xdata=Es, ydata=Is, p0=p0)
+        except RuntimeError:
+            out[idx] = np.nan
+        else:
+            popt = KEdgeParams(*popt)
+            out[idx] = popt.E0 + popt.gb
+    # Start threaded processing
+    spectrum_iters = iter_indices(spectra, leftover_dims=1, desc="Fitting spectra")
+    foreach(fit_spectrum, spectrum_iters, threads=1)
+    return out
+
+def fit_whitelines(spectra, energies, edge):
+
+    """Calculates the whiteline position of the absorption edge data
+    contained in `spectra`.
+
+    The "whiteline" for an absorption K-edge is the energy at which
+    the specimin has its highest absorbance. This function will return
+    an array with the same shape as spectra with the last axis
+    missing, where each entry gives the center of a Gaussian peak fit
+    to the whiteline for each spectrum.
+
+    Arguments
+    ---------
+    - data : The X-ray absorbance data. Should be similar to a pandas
+      Series. Assumes that the index is energy. This can be a Series
+      of numpy arrays, which allows calculation of image frames, etc.
+
+    - energies : 1D array of X-ray energies in electron-volts.
+
+    - edge : An XAS Edge object that describes the absorbance edge in
+      question.
+    """
+    # # Prepare data for manipulation
+    # orig_shape = absorbances.shape[1:]
+    # ndim = absorbances.ndim
+    # # Convert to an array of spectra by moving the 1st axes (energy)
+    # # to be on bottom
+    # for dim in range(0, ndim-1):
+    #     absorbances = absorbances.swapaxes(dim, dim+1)
+    # # Flatten into a 1-D array of spectra
+    # num_spectra = int(np.prod(orig_shape))
+    # spectrum_length = absorbances.shape[-1]
+    # absorbances = absorbances.reshape((num_spectra, spectrum_length))
+    # # Calculate whitelines and goodnesses(?)
+    # # whitelines = np.zeros_like(absorbances)
+    # whitelines = np.zeros(shape=(num_spectra,))
+    # goodnesses = np.zeros_like(whitelines)
+    # # Prepare multiprocessing functions
+    # def result_callback(payload):
+    #     # Unpack and save results to arrays.
+    #     idx = payload['idx']
+    #     whitelines[idx] = payload['center']
+    #     goodnesses[idx] = payload['goodness']
+    # Convert energies to be same shape as spectra
+    for i in range(0, spectra.ndim-energies.ndim):
+        energies = np.expand_dims(energies, axis=1)
+    spectra, energies = np.broadcast_arrays(spectra, energies)
+    # Empty array to hold the results
+    out = np.empty(shape=spectra.shape[:-1], dtype=energies.dtype)
+    # Define the fitting function
+    def fit_spectrum(idx):
+        Is = spectra[idx]
+        Es = energies[idx]
+        # Fit the pre-edge
+        # Fit the post-edge
+        # Choose points for doing the fitting
+        print(Is, Es)
+    iter_spectra = iter_indices(spectra, leftover_dims=1, desc="Fitting Gaussians")
+    foreach(fit_spectrum, iter_spectra, threads=1)
+    return out
+    #     # Calculate the whiteline position by fitting.
+    #     try:
+    #         peak, goodness = edge.fit(payload['spectrum'])
+    #     except exceptions.RefinementError as e:
+    #         # Fit failed so set as bad cell
+    #         center = edge.E_0
+    #         goodness = 0
+    #     else:
+    #         center = peak.center()
+    #     # Return calculated whiteline position as dictionary
+    #     result = {
+    #         'idx': payload['idx'],
+    #         'center': center,
+    #         'goodness': goodness
+    #     }
+    #     return result
+    # # Prepare multiprocessing queue
+    # queue = smp.Queue(worker=worker,
+    #                   totalsize=len(absorbances),
+    #                   result_callback=result_callback,
+    #                   description="Calculating whiteline")
+    # # Fill queue with tasks
+    # for idx, spectrum in enumerate(absorbances):
+    #     spectrum = pd.Series(spectrum, index=energies)
+    #     payload = {
+    #         'idx': idx,
+    #         'spectrum': spectrum
+    #     }
+    #     queue.put(payload)
+    # # Wait for workers to finish
+    # queue.join()
+    # # Convert results back to their original shape
+    # whitelines = np.array(whitelines).reshape(orig_shape)
+    # goodnesses = np.array(goodnesses).reshape(orig_shape)
+    # return whitelines, goodnesses
+
+
 def direct_whitelines(spectra, energies, edge):
     """Takes an array of X-ray absorbance spectra and calculates the
     positions of maximum intensities over the near-edge region.
@@ -300,13 +493,6 @@ def direct_whitelines(spectra, energies, edge):
     """
     # Cut down to only those values on the edge
     edge_mask = (energies > edge.edge_range[0]) & (energies < edge.edge_range[1])
-    # spectra = spectra[...,edge_mask]
-    # energies = energies[edge_mask]
-    # # Calculate the whiteline positions
-    # whiteline_indices = np.argmax(spectra, axis=-1)
-    # map_energy = np.vectorize(lambda idx: energies[idx],
-    #                           otypes=[np.float])
-    # whitelines = map_energy(whiteline_indices)
     # Convert energies to be same shape as spectra
     mask_shape = (spectra.shape[0],
                   *[1 for i in range(0, spectra.ndim-edge_mask.ndim)],
@@ -323,7 +509,7 @@ def direct_whitelines(spectra, energies, edge):
         whiteline_idx = (*idx[:energies.ndim-1], np.argmax(subspectra[idx]))
         whiteline = energies[whiteline_idx]
         out[idx] = whiteline
-    indices = iter_indices(spectra, desc="Direct whiteline", leftover_dims=1)
+    indices = iter_indices(spectra, desc="Finding maxima", leftover_dims=1)
     foreach(get_whiteline, indices)
     # Return results
     return out

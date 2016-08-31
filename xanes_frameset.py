@@ -87,116 +87,116 @@ def merge_framesets(framesets, group="merged"):
                        groupname=dest)
     return fs
 
-def calculate_gaussian_whiteline(data, edge):
+# def calculate_gaussian_whiteline(data, edge):
 
-    """Calculates the whiteline position of the absorption edge data
-    contained in `data`.
+#     """Calculates the whiteline position of the absorption edge data
+#     contained in `data`.
 
-    The "whiteline" for an absorption K-edge is the energy at which
-    the specimin has its highest absorbance. This function will return
-    an 2 arrays with the same shape as each entry in the data
-    series. 1st array gives the energy of the highest absorbance and
-    2nd array contains goodness of fits.
+#     The "whiteline" for an absorption K-edge is the energy at which
+#     the specimin has its highest absorbance. This function will return
+#     an 2 arrays with the same shape as each entry in the data
+#     series. 1st array gives the energy of the highest absorbance and
+#     2nd array contains goodness of fits.
 
-    Arguments
-    ---------
-    data - The X-ray absorbance data. Should be similar to a pandas
-    Series. Assumes that the index is energy. This can be a Series of
-    numpy arrays, which allows calculation of image frames, etc.
+#     Arguments
+#     ---------
+#     data - The X-ray absorbance data. Should be similar to a pandas
+#     Series. Assumes that the index is energy. This can be a Series of
+#     numpy arrays, which allows calculation of image frames, etc.
 
-    edge - An instantiated edge object that can be used for fitting.
+#     edge - An instantiated edge object that can be used for fitting.
 
-    """
-    # Prepare data for manipulation
-    energies = data.index.astype(np.float64)
-    absorbances = np.array(list(data.values))
-    absorbances = absorbances.astype(np.float64)
-    orig_shape = absorbances.shape[1:]
-    ndim = absorbances.ndim
-    # Convert to an array of spectra by moving the 1st axes (energy)
-    # to be on bottom
-    for dim in range(0, ndim-1):
-        absorbances = absorbances.swapaxes(dim, dim+1)
-    # Flatten into a 1-D array of spectra
-    num_spectra = int(np.prod(orig_shape))
-    spectrum_length = absorbances.shape[-1]
-    absorbances = absorbances.reshape((num_spectra, spectrum_length))
-    # Calculate whitelines and goodnesses(?)
-    # whitelines = np.zeros_like(absorbances)
-    whitelines = np.zeros(shape=(num_spectra,))
-    goodnesses = np.zeros_like(whitelines)
-    # Prepare multiprocessing functions
-    def result_callback(payload):
-        # Unpack and save results to arrays.
-        idx = payload['idx']
-        whitelines[idx] = payload['center']
-        goodnesses[idx] = payload['goodness']
-    def worker(payload):
-        # Calculate the whiteline position by fitting.
-        try:
-            peak, goodness = edge.fit(payload['spectrum'])
-        except exceptions.RefinementError as e:
-            # Fit failed so set as bad cell
-            center = edge.E_0
-            goodness = 0
-        else:
-            center = peak.center()
-        # Return calculated whiteline position as dictionary
-        result = {
-            'idx': payload['idx'],
-            'center': center,
-            'goodness': goodness
-        }
-        return result
-    # Prepare multiprocessing queue
-    queue = smp.Queue(worker=worker,
-                      totalsize=len(absorbances),
-                      result_callback=result_callback,
-                      description="Calculating whiteline")
-    # Fill queue with tasks
-    for idx, spectrum in enumerate(absorbances):
-        spectrum = pd.Series(spectrum, index=energies)
-        payload = {
-            'idx': idx,
-            'spectrum': spectrum
-        }
-        queue.put(payload)
-    # Wait for workers to finish
-    queue.join()
-    # Convert results back to their original shape
-    whitelines = np.array(whitelines).reshape(orig_shape)
-    goodnesses = np.array(goodnesses).reshape(orig_shape)
-    return whitelines, goodnesses
+#     """
+#     # Prepare data for manipulation
+#     energies = data.index.astype(np.float64)
+#     absorbances = np.array(list(data.values))
+#     absorbances = absorbances.astype(np.float64)
+#     orig_shape = absorbances.shape[1:]
+#     ndim = absorbances.ndim
+#     # Convert to an array of spectra by moving the 1st axes (energy)
+#     # to be on bottom
+#     for dim in range(0, ndim-1):
+#         absorbances = absorbances.swapaxes(dim, dim+1)
+#     # Flatten into a 1-D array of spectra
+#     num_spectra = int(np.prod(orig_shape))
+#     spectrum_length = absorbances.shape[-1]
+#     absorbances = absorbances.reshape((num_spectra, spectrum_length))
+#     # Calculate whitelines and goodnesses(?)
+#     # whitelines = np.zeros_like(absorbances)
+#     whitelines = np.zeros(shape=(num_spectra,))
+#     goodnesses = np.zeros_like(whitelines)
+#     # Prepare multiprocessing functions
+#     def result_callback(payload):
+#         # Unpack and save results to arrays.
+#         idx = payload['idx']
+#         whitelines[idx] = payload['center']
+#         goodnesses[idx] = payload['goodness']
+#     def worker(payload):
+#         # Calculate the whiteline position by fitting.
+#         try:
+#             peak, goodness = edge.fit(payload['spectrum'])
+#         except exceptions.RefinementError as e:
+#             # Fit failed so set as bad cell
+#             center = edge.E_0
+#             goodness = 0
+#         else:
+#             center = peak.center()
+#         # Return calculated whiteline position as dictionary
+#         result = {
+#             'idx': payload['idx'],
+#             'center': center,
+#             'goodness': goodness
+#         }
+#         return result
+#     # Prepare multiprocessing queue
+#     queue = smp.Queue(worker=worker,
+#                       totalsize=len(absorbances),
+#                       result_callback=result_callback,
+#                       description="Calculating whiteline")
+#     # Fill queue with tasks
+#     for idx, spectrum in enumerate(absorbances):
+#         spectrum = pd.Series(spectrum, index=energies)
+#         payload = {
+#             'idx': idx,
+#             'spectrum': spectrum
+#         }
+#         queue.put(payload)
+#     # Wait for workers to finish
+#     queue.join()
+#     # Convert results back to their original shape
+#     whitelines = np.array(whitelines).reshape(orig_shape)
+#     goodnesses = np.array(goodnesses).reshape(orig_shape)
+#     return whitelines, goodnesses
 
-def calculate_direct_whiteline(data, *args, **kwargs):
-    """Calculates the whiteline position of the absorption edge data
-    contained in `data`. This method uses the energy of maximum
-    absorbance and is a faster alternative to `calculate_whiteline`.
-    The "whiteline" for an absorption K-edge is the energy at which
-    the specimin has its highest absorbance. This function will return
-    an 2 arrays with the same shape as each entry in the data
-    series. 1st array gives the energy of the highest absorbance and
-    2nd array contains a mock array of goodness of fits (all values
-    are 1).
+# def calculate_direct_whiteline(data, *args, **kwargs):
+#     """Calculates the whiteline position of the absorption edge data
+#     contained in `data`. This method uses the energy of maximum
+#     absorbance and is a faster alternative to `calculate_whiteline`.
+#     The "whiteline" for an absorption K-edge is the energy at which
+#     the specimin has its highest absorbance. This function will return
+#     an 2 arrays with the same shape as each entry in the data
+#     series. 1st array gives the energy of the highest absorbance and
+#     2nd array contains a mock array of goodness of fits (all values
+#     are 1).
 
-    Arguments
-    ---------
-    data - The X-ray absorbance data. Should be similar to a pandas
-    Series. Assumes that the index is energy. This can be a Series of
-    numpy arrays, which allows calculation of image frames, etc.
+#     Arguments
+#     ---------
+#     data - The X-ray absorbance data. Should be similar to a pandas
+#     Series. Assumes that the index is energy. This can be a Series of
+#     numpy arrays, which allows calculation of image frames, etc.
 
-    """
-    # First disassemble the data series
-    energies = data.index
-    imagestack = np.array(list(data.values))
-    # Now calculate the indices of the whiteline
-    whiteline_indices = np.argmax(imagestack, axis=0)
-    # Convert indices to energy
-    map_energy = np.vectorize(lambda idx: energies[idx],
-                              otypes=[np.float])
-    whiteline_energies = map_energy(whiteline_indices)
-    goodness = np.ones_like(whiteline_energies)
-    return (whiteline_energies, goodness)
+#     """
+#     # First disassemble the data series
+#     energies = data.index
+#     imagestack = np.array(list(data.values))
+#     # Now calculate the indices of the whiteline
+#     whiteline_indices = np.argmax(imagestack, axis=0)
+#     # Convert indices to energy
+#     map_energy = np.vectorize(lambda idx: energies[idx],
+#                               otypes=[np.float])
+#     whiteline_energies = map_energy(whiteline_indices)
+#     goodness = np.ones_like(whiteline_energies)
+#     return (whiteline_energies, goodness)
 
 
 def _transform(data, scale=None, rotation=None, translation=None):
@@ -1548,16 +1548,33 @@ class XanesFrameset():
             mask = np.logical_not(mask)
         return mask
 
-    def calculate_whitelines(self):
-        """Calculate and save a map of the whiteline position of each pixel."""
+    def calculate_whitelines(self, method="direct"):
+        """Calculate and save a map of the whiteline position of each pixel.
+
+        Arguments
+        ---------
+        - method : What type of algorithm to use. Options are "direct"
+          (fast) and "fit" (accurate).
+        """
         with self.store() as store:
-            energies = store.energies.value
             # Convert numpy axes to be in (pixel, energy) form
             frames = store.absorbances
             spectra = np.moveaxis(frames, 1, -1)
+            energies = np.broadcast_to(store.energies.value, spectra.shape)
             # Calculate whiteline positions
-            whitelines = xm.direct_whitelines(spectra=spectra,
-                                              energies=energies, edge=self.edge)
+            if method == "fit":
+                guess = xm.KEdgeParams(1/5, -0.4, 8333,
+                                       1,
+                                       -0.0008, 0,
+                                       1, 14, 1)
+                whitelines = xm.fit_kedge(spectra=spectra,
+                                          energies=energies, p0=guess)
+            elif method == "direct":
+                whitelines = xm.direct_whitelines(spectra=spectra,
+                                                  energies=energies,
+                                                  edge=self.edge)
+            else:
+                raise ValueError("Unknown method '{}'".format(method))
         # Save results to disk
         with self.store(mode='r+') as store:
             store.whiteline_map = whitelines

@@ -32,7 +32,6 @@ from peakfitting import Peak
 import plots
 
 import pyximport; pyximport.install()
-from xanes_math import normalize_Kedge
 
 
 class Edge():
@@ -86,14 +85,14 @@ class KEdge(Edge):
         ax.axvline(x=self.edge_range[0], linestyle='-', color="0.55", alpha=0.4)
         ax.axvline(x=self.edge_range[1], linestyle='-', color="0.55", alpha=0.4)
 
-    def normalize(self, spectra, energies):
-        """Takes a set of spectra and energies and passes them on to the
-        computation module for normalizing by the `normalize_Kedge`
-        function."""
-        ret = normalize_Kedge(spectra=spectra, energies=energies,
-                              pre_edge=self.pre_edge,
-                              post_edge=self.post_edge, E_0=self.E_0)
-        return ret
+    # def normalize(self, spectra, energies):
+    #     """Takes a set of spectra and energies and passes them on to the
+    #     computation module for normalizing by the `normalize_Kedge`
+    #     function."""
+    #     ret = normalize_Kedge(spectra=spectra, energies=energies,
+    #                           pre_edge=self.pre_edge,
+    #                           post_edge=self.post_edge, E_0=self.E_0)
+    #     return ret
 
     def all_energies(self):
         energies = []
@@ -133,59 +132,59 @@ class KEdge(Edge):
             X = X.swapaxes(0, 1)
         return X
 
-    def fit(self, data: Series):
-        """Regression fitting. First the pre-edge is linearlized and the
-        extended (post) edge normalized using a polynomial. Pending: a
-        step function is fit to the edge itself and any gaussian peaks
-        are then added as necessary. This method is taken mostly from
-        the Athena manual chapter 4.
+    # def fit(self, data: Series):
+    #     """Regression fitting. First the pre-edge is linearlized and the
+    #     extended (post) edge normalized using a polynomial. Pending: a
+    #     step function is fit to the edge itself and any gaussian peaks
+    #     are then added as necessary. This method is taken mostly from
+    #     the Athena manual chapter 4.
 
-        Arguments
-        ---------
-        data - The X-ray absorbance data. Should be similar to a pandas
-          Series. Assumes that the index is energy. This can be a Series of
-          numpy arrays, which allows calculation of image frames, etc.
-          Returns a tuple of (peak, goodness) where peak is a fitted peak
-          object and goodness is a measure of the goodness of fit.
+    #     Arguments
+    #     ---------
+    #     data - The X-ray absorbance data. Should be similar to a pandas
+    #       Series. Assumes that the index is energy. This can be a Series of
+    #       numpy arrays, which allows calculation of image frames, etc.
+    #       Returns a tuple of (peak, goodness) where peak is a fitted peak
+    #       object and goodness is a measure of the goodness of fit.
 
-        """
-        warnings.warn(UserWarning("KEdge.fit()  not implemented"))
-        return data
-        # Determine linear background region in pre-edge
-        pre_edge = data.ix[self.pre_edge[0]:self.pre_edge[1]]
-        self._pre_edge_fit = linear_model.LinearRegression()
-        try:
-            self._pre_edge_fit.fit(
-                X=np.array(pre_edge.index).reshape(-1, 1),
-                y=pre_edge.values
-            )
-        except ValueError:
-            raise exceptions.RefinementError
-        # Correct the post edge region with polynomial fit
-        self._post_edge_fit = linear_model.LinearRegression()
-        post_edge = data.ix[self.post_edge[0]:self.post_edge[1]]
-        if len(post_edge) > 0:
-            x = np.array(post_edge.index)
-            self._post_edge_fit.fit(
-                X=self._post_edge_xs(x),
-                y=post_edge.values
-            )
+    #     """
+    #     warnings.warn(UserWarning("KEdge.fit()  not implemented"))
+    #     return data
+    #     # Determine linear background region in pre-edge
+    #     pre_edge = data.ix[self.pre_edge[0]:self.pre_edge[1]]
+    #     self._pre_edge_fit = linear_model.LinearRegression()
+    #     try:
+    #         self._pre_edge_fit.fit(
+    #             X=np.array(pre_edge.index).reshape(-1, 1),
+    #             y=pre_edge.values
+    #         )
+    #     except ValueError:
+    #         raise exceptions.RefinementError
+    #     # Correct the post edge region with polynomial fit
+    #     self._post_edge_fit = linear_model.LinearRegression()
+    #     post_edge = data.ix[self.post_edge[0]:self.post_edge[1]]
+    #     if len(post_edge) > 0:
+    #         x = np.array(post_edge.index)
+    #         self._post_edge_fit.fit(
+    #             X=self._post_edge_xs(x),
+    #             y=post_edge.values
+    #         )
 
-        # Fit the whiteline peak to those values above E_0 in the map range
-        normalized = self.normalize(spectrum=data)
-        subset = normalized[self.map_range[0]:self.map_range[1]]
-        subset = subset[subset > 1]
-        # Correct for background
-        vertical_offset = 1
-        normed_subset = subset - vertical_offset
-        # Perform fitting
-        peak = Peak(method="gaussian")
-        peak.vertical_offset = vertical_offset
-        peak.fit(x=normed_subset.index, y=normed_subset.values)
-        # Save results
-        self.whiteline_peak = peak
-        goodness = peak.goodness(subset)
-        return (peak, goodness)
+    #     # Fit the whiteline peak to those values above E_0 in the map range
+    #     normalized = self.normalize(spectrum=data)
+    #     subset = normalized[self.map_range[0]:self.map_range[1]]
+    #     subset = subset[subset > 1]
+    #     # Correct for background
+    #     vertical_offset = 1
+    #     normed_subset = subset - vertical_offset
+    #     # Perform fitting
+    #     peak = Peak(method="gaussian")
+    #     peak.vertical_offset = vertical_offset
+    #     peak.fit(x=normed_subset.index, y=normed_subset.values)
+    #     # Save results
+    #     self.whiteline_peak = peak
+    #     goodness = peak.goodness(subset)
+    #     return (peak, goodness)
 
     # def calculate_direct_whiteline(self, imagestack, energies, *args, **kwargs):
     #     """Calculates the whiteline position of the absorption edge data
@@ -327,7 +326,7 @@ class NCANickelKEdge(KEdge):
         (8400, 8440, 8),
         (8440, 8640, 50),
     ]
-    pre_edge = (8250, 8290)
+    pre_edge = (8249, 8281)
     post_edge = (8440, 8640)
     map_range = (8341, 8358)
     edge_range = (8341, 8358)
