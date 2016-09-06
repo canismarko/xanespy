@@ -1548,36 +1548,98 @@ class XanesFrameset():
             mask = np.logical_not(mask)
         return mask
 
-    def calculate_whitelines(self, method="direct"):
-        """Calculate and save a map of the whiteline position of each pixel.
+    def fit_spectra(self, edge_mask=True):
+        """Fit a series of curves to the spectrum at each pixel.
 
         Arguments
         ---------
-        - method : What type of algorithm to use. Options are "direct"
-          (fast) and "fit" (accurate).
+        - edge_mask : If true, only pixels passing the edge_mask will
+          be fit and the remaning pixels will be set to a default
+          value. This can help reduce computing time.
         """
         with self.store() as store:
-            # Convert numpy axes to be in (pixel, energy) form
             frames = store.absorbances
-            spectra = np.moveaxis(frames, 1, -1)
-            energies = np.broadcast_to(store.energies.value, spectra.shape)
-            # Calculate whiteline positions
-            if method == "fit":
-                guess = xm.KEdgeParams(1/5, -0.4, 8333,
-                                       1,
-                                       -0.0008, 0,
-                                       1, 14, 1)
-                whitelines = xm.fit_kedge(spectra=spectra,
-                                          energies=energies, p0=guess)
-            elif method == "direct":
-                whitelines = xm.direct_whitelines(spectra=spectra,
-                                                  energies=energies,
-                                                  edge=self.edge)
+            energies = store.energies.value
+            # Get a mask to select only some pixels
+            if edge_mask:
+                # Active material pixels only
+                mask = self.edge_mask()
             else:
-                raise ValueError("Unknown method '{}'".format(method))
+                # All pixels
+                mask = np.zeros_like(self.edge_mask())
+            frames_mask = np.broadcast_to(mask, frames.shape)
+            # Convert numpy axes to be in (pixel, energy) form
+            frames_mask = np.moveaxis(frames_mask, 1, -1)
+            spectra = np.moveaxis(frames, 1, -1)
+            map_shape = (*spectra.shape[:-1], len(xm.kedge_params))
+            fit_maps = np.empty(map_shape) # To hold output
+            spectra = spectra[~frames_mask].reshape((-1, energies.shape[-1]))
+            # Do a preliminary fitting to get good parameters
+            guess = xm.KEdgeParams(1/5, -0.4, 8333,
+                                   1,
+                                   -0.0008, 0,
+                                   1, 14, 1)
+            I = spectra.mean(axis=0)[np.newaxis,...]
+            E = energies.mean(axis=0)[np.newaxis,...]
+            p0 = xm.fit_kedge(spectra=I, energies=E, p0=guess)
+            # Perform full fitting for individual pixels
+        all_params = xm.fit_kedge(spectra=spectra,
+                                  energies=energies, p0=p0[0])
+        # Set actual calculate values
+        map_mask = np.broadcast_to(mask, fit_maps.shape[:-1])
+        # Set default values
+        fit_maps[map_mask] = np.nan
+        fit_maps[~map_mask] = all_params
+        # Calculate whiteline position
+        E0 = fit_maps[...,xm.kedge_params.index('E0')]
+        gaus_center = fit_maps[...,xm.kedge_params.index('gb')]
+        wl_maps = E0 - gaus_center
         # Save results to disk
         with self.store(mode='r+') as store:
-            store.whiteline_map = whitelines
+            store.fit_parameters = fit_maps
+            store.whiteline_map = wl_maps
+
+
+    def calculate_whitelines(self, edge_mask=False):
+        """Calculate and save a map of the whiteline position of each pixel by
+        calculating the energy of simple maximum absorbance.
+
+        Arguments
+        ---------
+        - edge_mask : If true, only pixels passing the edge_mask will
+          be fit and the remaning pixels will be set to a default
+          value. This can help reduce computing time.
+
+        """
+        with self.store() as store:
+            frames = store.absorbances
+            energies = store.energies.value
+            # Get a mask to select only some pixels
+            if edge_mask:
+                # Active material pixels only
+                mask = self.edge_mask()
+            else:
+                # All pixels
+                mask = np.zeros_like(self.edge_mask())
+            frames_mask = np.broadcast_to(mask, frames.shape)
+            # Convert numpy axes to be in (pixel, energy) form
+            frames_mask = np.moveaxis(frames_mask, 1, -1)
+            spectra = np.moveaxis(frames, 1, -1)
+            map_shape = spectra.shape[:-1]
+            whiteline_maps = np.empty(map_shape) # To hold output
+            spectra = spectra[~frames_mask].reshape((-1, energies.shape[-1]))
+            # Calculate whiteline positions
+            whitelines = xm.direct_whitelines(spectra=spectra,
+                                              energies=energies,
+                                              edge=self.edge)
+        # Set actual calculate values
+        map_mask = np.broadcast_to(mask, whiteline_maps.shape)
+        # Set default values
+        whiteline_maps[map_mask] = np.nan #np.mean(whitelines)
+        whiteline_maps[~map_mask] = whitelines
+        # Save results to disk
+        with self.store(mode='r+') as store:
+            store.whiteline_map = whiteline_maps
 
     def calculate_maps(self):
         """Generate a set of maps based on pixel-wise Xanes spectra: whiteline

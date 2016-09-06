@@ -28,6 +28,8 @@ from skimage.measure import regionprops
 import exceptions
 from utilities import prog
 
+import xanes_math as xm
+
 
 class TXMStore():
     """Wrapper around HDF5 file that stores TXM data. It has a series of
@@ -320,6 +322,19 @@ class TXMStore():
         # S100 is the 100-character ACSII string type for numpy
         val = np.array(val, dtype="S100")
         self.replace_dataset('filenames', val, dtype="S100", context='metadata')
+
+    @property
+    def fit_parameters(self):
+        return self.get_map('fit_parameters')
+
+    @fit_parameters.setter
+    def fit_parameters(self, val):
+        attrs = {
+            'parameters': str(xm.kedge_params),
+        }
+        return self.replace_dataset('fit_parameters', val,
+                                    attrs=attrs, context="metadata",
+                                    dtype=np.float64)
 
     @property
     def whiteline_map(self):

@@ -25,7 +25,7 @@ functions will operate on large arrays of data.
 import warnings
 import sys
 import threading
-import multiprocessing
+import multiprocessing as mp
 from itertools import count, product
 from collections import namedtuple
 
@@ -36,79 +36,9 @@ from skimage import transform, feature, filters, morphology, exposure, measure
 from sklearn import linear_model, svm, utils
 import matplotlib.pyplot as plt
 
-from utilities import prog
+from utilities import prog, foreach, parallel_map
 
 # Helpers for parallelizable code
-
-
-CPU_COUNT = multiprocessing.cpu_count()
-
-def foreach(f,l,threads=CPU_COUNT,return_=False):
-    """
-    Apply f to each element of l, in parallel
-    """
-
-    if threads>1:
-        iteratorlock = threading.Lock()
-        exceptions = []
-        if return_:
-            n = 0
-            d = {}
-            i = zip(count(),l.__iter__())
-        else:
-            i = l.__iter__()
-
-
-        def runall():
-            while True:
-                iteratorlock.acquire()
-                try:
-                    try:
-                        if exceptions:
-                            return
-                        v = next(i)
-                    finally:
-                        iteratorlock.release()
-                except StopIteration:
-                    return
-                try:
-                    if return_:
-                        n,x = v
-                        d[n] = f(x)
-                    else:
-                        f(v)
-                except:
-                    e = sys.exc_info()
-                    iteratorlock.acquire()
-                    try:
-                        exceptions.append(e)
-                    finally:
-                        iteratorlock.release()
-        threadlist = [threading.Thread(target=runall) for j in range(threads)]
-        for t in threadlist:
-            t.start()
-        for t in threadlist:
-            t.join()
-        if exceptions:
-            a, b, c = exceptions[0]
-            exception = a(b)
-            exception.with_traceback(c)
-            raise exception
-        if return_:
-            r = list(d.items())
-            r.sort()
-            return [v for (n,v) in r]
-    else:
-        if return_:
-            return [f(v) for v in l]
-        else:
-            for v in l:
-                f(v)
-            return
-
-def parallel_map(f,l,threads=CPU_COUNT):
-    return foreach(f,l,threads=threads,return_=True)
-
 
 def iter_indices(data, leftover_dims=1, desc=None):
     """Accept an array of frames, indices, etc. and generate slices for
@@ -129,7 +59,6 @@ def iter_indices(data, leftover_dims=1, desc=None):
 
 
 def apply_references(intensities, references, out=None):
-
     """Apply a reference correction to convert intensity values to
     optical depth (-ln(I/I0)) values. Arrays `intensities`, `references` and `out`
     must all have the same shape where the last two dimensions are
@@ -331,7 +260,27 @@ def predict_edge(energies, *params):
     return p.scale * curve - p.voffset
 
 
-def fit_kedge(spectra, energies, p0, out=None):
+class _fit_spectrum():
+    def __init__(self, p0):
+        self.p0 = p0
+
+    def __call__(self, Is, Es):
+        # Fit the k edge for this spectrum
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            try:
+                popt, pcov = curve_fit(f=predict_edge, xdata=Es, ydata=Is, p0=self.p0)
+                # popt = np.random.random(len(self.p0)) # Fast result for testing
+            except RuntimeError:
+                # Failed fitting, so set everything to not-a-number
+                popt = np.empty((len(self.p0),))
+                popt[:] = np.nan
+        return popt
+
+
+
+
+def fit_kedge(spectra, energies, p0):
     """Use least squares to fit a set of curves to the data. Currently
     this is a line for the baseline absorbance decreasing at higher
     energies, plus a sigmoid for the edge and a gaussian for the
@@ -358,122 +307,25 @@ def fit_kedge(spectra, energies, p0, out=None):
     will be created.
 
     """
+    energies = np.broadcast_to(energies, spectra.shape)
     # Empty array to hold the results if none are given
-    if out is None:
-        result_shape = (*spectra.shape[:-1], len(kedge_params))
-        out = np.empty(shape=result_shape)
+    # if out is None:
+    result_shape = (*spectra.shape[:-1], len(kedge_params))
+    #     out = np.empty(shape=result_shape)
     # Define the workhorse function to do the actual fitting
-    def fit_spectrum(idx):
-        Es = energies[idx]
-        Is = spectra[idx]
-        # Fit the k edge for this spectrum
-        try:
-            popt, pcov = curve_fit(f=predict_edge, xdata=Es, ydata=Is, p0=p0)
-        except RuntimeError:
-            out[idx] = np.nan
-        else:
-            popt = KEdgeParams(*popt)
-            out[idx] = popt.E0 + popt.gb
     # Start threaded processing
-    spectrum_iters = iter_indices(spectra, leftover_dims=1, desc="Fitting spectra")
-    foreach(fit_spectrum, spectrum_iters, threads=1)
-    return out
-
-def fit_whitelines(spectra, energies, edge):
-
-    """Calculates the whiteline position of the absorption edge data
-    contained in `spectra`.
-
-    The "whiteline" for an absorption K-edge is the energy at which
-    the specimin has its highest absorbance. This function will return
-    an array with the same shape as spectra with the last axis
-    missing, where each entry gives the center of a Gaussian peak fit
-    to the whiteline for each spectrum.
-
-    Arguments
-    ---------
-    - data : The X-ray absorbance data. Should be similar to a pandas
-      Series. Assumes that the index is energy. This can be a Series
-      of numpy arrays, which allows calculation of image frames, etc.
-
-    - energies : 1D array of X-ray energies in electron-volts.
-
-    - edge : An XAS Edge object that describes the absorbance edge in
-      question.
-    """
-    # # Prepare data for manipulation
-    # orig_shape = absorbances.shape[1:]
-    # ndim = absorbances.ndim
-    # # Convert to an array of spectra by moving the 1st axes (energy)
-    # # to be on bottom
-    # for dim in range(0, ndim-1):
-    #     absorbances = absorbances.swapaxes(dim, dim+1)
-    # # Flatten into a 1-D array of spectra
-    # num_spectra = int(np.prod(orig_shape))
-    # spectrum_length = absorbances.shape[-1]
-    # absorbances = absorbances.reshape((num_spectra, spectrum_length))
-    # # Calculate whitelines and goodnesses(?)
-    # # whitelines = np.zeros_like(absorbances)
-    # whitelines = np.zeros(shape=(num_spectra,))
-    # goodnesses = np.zeros_like(whitelines)
-    # # Prepare multiprocessing functions
-    # def result_callback(payload):
-    #     # Unpack and save results to arrays.
-    #     idx = payload['idx']
-    #     whitelines[idx] = payload['center']
-    #     goodnesses[idx] = payload['goodness']
-    # Convert energies to be same shape as spectra
-    for i in range(0, spectra.ndim-energies.ndim):
-        energies = np.expand_dims(energies, axis=1)
-    spectra, energies = np.broadcast_arrays(spectra, energies)
-    # Empty array to hold the results
-    out = np.empty(shape=spectra.shape[:-1], dtype=energies.dtype)
-    # Define the fitting function
-    def fit_spectrum(idx):
-        Is = spectra[idx]
-        Es = energies[idx]
-        # Fit the pre-edge
-        # Fit the post-edge
-        # Choose points for doing the fitting
-        print(Is, Es)
-    iter_spectra = iter_indices(spectra, leftover_dims=1, desc="Fitting Gaussians")
-    foreach(fit_spectrum, iter_spectra, threads=1)
-    return out
-    #     # Calculate the whiteline position by fitting.
-    #     try:
-    #         peak, goodness = edge.fit(payload['spectrum'])
-    #     except exceptions.RefinementError as e:
-    #         # Fit failed so set as bad cell
-    #         center = edge.E_0
-    #         goodness = 0
-    #     else:
-    #         center = peak.center()
-    #     # Return calculated whiteline position as dictionary
-    #     result = {
-    #         'idx': payload['idx'],
-    #         'center': center,
-    #         'goodness': goodness
-    #     }
-    #     return result
-    # # Prepare multiprocessing queue
-    # queue = smp.Queue(worker=worker,
-    #                   totalsize=len(absorbances),
-    #                   result_callback=result_callback,
-    #                   description="Calculating whiteline")
-    # # Fill queue with tasks
-    # for idx, spectrum in enumerate(absorbances):
-    #     spectrum = pd.Series(spectrum, index=energies)
-    #     payload = {
-    #         'idx': idx,
-    #         'spectrum': spectrum
-    #     }
-    #     queue.put(payload)
-    # # Wait for workers to finish
-    # queue.join()
-    # # Convert results back to their original shape
-    # whitelines = np.array(whitelines).reshape(orig_shape)
-    # goodnesses = np.array(goodnesses).reshape(orig_shape)
-    # return whitelines, goodnesses
+    # spectrum_iters = iter_indices(spectra, leftover_dims=1, desc="Fitting spectra")
+    spectra_iter = prog(list(zip(spectra, energies)))
+    f = _fit_spectrum(p0=p0)
+    with mp.Pool() as pool:
+        chunksize = 223 # Prime number just for kicks
+        result = pool.starmap(f, spectra_iter, chunksize=chunksize)
+        # result.wait()
+        pool.close()
+        pool.join()
+        result = np.array(result).reshape(result_shape)
+    # foreach(fit_spectrum, spectrum_iters, threads=1)
+    return result
 
 
 def direct_whitelines(spectra, energies, edge):
@@ -486,18 +338,19 @@ def direct_whitelines(spectra, energies, edge):
     - spectra : 2D numpy array of absorbance spectra where the last
       dimension is energy.
 
-    - energies : 1D array of X-ray energies in electron-volts.
+    - energies : Array of X-ray energies in electron-volts. Must be
+      broadcastable to the shape of spectra.
 
     - edge : An XAS Edge object that describes the absorbance edge in
       question.
+
     """
+    # Broadcast energies to be same shape as spectra
     # Cut down to only those values on the edge
     edge_mask = (energies > edge.edge_range[0]) & (energies < edge.edge_range[1])
+    edge_mask = np.broadcast_to(edge_mask, spectra.shape)
     # Convert energies to be same shape as spectra
-    mask_shape = (spectra.shape[0],
-                  *[1 for i in range(0, spectra.ndim-edge_mask.ndim)],
-                  spectra.shape[-1])
-    edge_mask = np.broadcast_to(edge_mask.reshape(mask_shape), spectra.shape)
+    Es = np.broadcast_to(energies, spectra.shape)
     # Set values outside the mapping range to be negative infinity
     subspectra = np.copy(spectra)
     subspectra[...,~edge_mask] = -np.inf
@@ -507,7 +360,7 @@ def direct_whitelines(spectra, energies, edge):
     # Iterate over spectra and perform calculation
     def get_whiteline(idx):
         whiteline_idx = (*idx[:energies.ndim-1], np.argmax(subspectra[idx]))
-        whiteline = energies[whiteline_idx]
+        whiteline = Es[whiteline_idx]
         out[idx] = whiteline
     indices = iter_indices(spectra, desc="Finding maxima", leftover_dims=1)
     foreach(get_whiteline, indices)
