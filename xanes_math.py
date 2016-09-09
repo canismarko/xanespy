@@ -236,6 +236,8 @@ KEdgeParams = namedtuple('KEdgeParams', kedge_params)
 def predict_edge(energies, *params):
     """Defines the curve function that gets fit to the data for an absorbance K-edge.
 
+    Returns a numpy array with predicted absorbance values.
+
     Arguments
     ---------
     - energies : Array with energy values to be predicted.

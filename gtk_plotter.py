@@ -33,6 +33,7 @@ except (TypeError, ImportError):
 
 import exceptions
 import plots
+import xanes_math as xm
 
 
 # class FramesetPlotter():
@@ -282,6 +283,7 @@ class GtkFramesetPlotter():
     normalize_xanes = True
     normalize_map_xanes = True
     active_representation = "absorbances"
+    _fit_lines = None
 
     def __init__(self, frameset):
         self.frameset = frameset
@@ -319,9 +321,10 @@ class GtkFramesetPlotter():
             # Plot the overall map
             extent = self.frameset.extent(representation=self.active_representation)
             edge = self.frameset.edge()
+            norm = Normalize(*edge.map_range)
             artist = plots.plot_txm_map(data, edge=edge,
-                                        ax=self.map_ax, norm=None,
-                                        extent=extent)
+                                        ax=self.map_ax, norm=norm,
+                                        extent=extent, alpha=map_alpha)
             artists.append(artist)
         # Force redraw
         self.map_canvas.draw()
@@ -340,8 +343,10 @@ class GtkFramesetPlotter():
         edge = self.frameset.edge()
         energies = edge.energies_in_range(edge.map_range)
         # Plot histogram
+        norm = Normalize(*edge.map_range)
         plots.plot_txm_histogram(data=data, ax=self.map_hist_ax,
-                                 cmap=self.map_cmap, bins=energies)
+                                 cmap=self.map_cmap, bins=energies,
+                                 norm=norm)
         self.map_hist_ax.figure.canvas.draw()
 
     def draw_crosshairs(self, active_xy=None, color="black"):
@@ -384,8 +389,21 @@ class GtkFramesetPlotter():
 
     def plot_map_spectra(self, active_pixel=None):
         """Plot the XANES spectra on the axes in the map window."""
+        if self._fit_lines:
+            [l.remove() for l in self._fit_lines]
+            self._fit_lines = None
         self._plot_spectrum(ax=self.map_xanes_ax, active_pixel=active_pixel)
         self._plot_spectrum(ax=self.map_edge_ax, active_pixel=active_pixel)
+        # Project predicted curve onto the spectrum
+        if active_pixel:
+            with self.frameset.store() as store:
+                p_idx = (self.active_timestep, *active_pixel)
+                params = store.fit_parameters[p_idx]
+                E_range = (np.min(store.energies), np.max(store.energies))
+            x = np.linspace(E_range[0], E_range[1], num=2000)
+            fit = xm.predict_edge(x, *params)
+            self._fit_lines = self.map_xanes_ax.plot(x, fit)
+            self._fit_lines += self.map_edge_ax.plot(x, fit)
         # Zoom in on the edge axis
         map_range = self.frameset.edge.map_range
         self.map_edge_ax.set_xlim(map_range[0]-5, map_range[1]+5)
