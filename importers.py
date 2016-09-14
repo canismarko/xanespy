@@ -247,7 +247,7 @@ def magnification_correction(frames, pixel_sizes):
     changes and so the image is zoomed-out at higher energies. This
     method applies a correction to each frame to make the
     magnification similar to that of the first frame. Some beamlines
-    correct for this automatically during acquisition: APS 8-BM-B
+    correct for this automatically during acquisition: APS 8-BM-B, 32-ID-C.
 
     Returns a 2-tuple of (scale, translation) arrays. Each array has
     the same length as `frames`.
@@ -432,7 +432,11 @@ def decode_aps_params(filename):
     regex = re.compile(
         '(?P<pos>[a-zA-Z0-9_]+)_xanes(?P<sam>[a-zA-Z0-9_]+)_(?P<E_int>[0-9]+)_(?P<E_dec>[0-9])eV.xrm'
     )
-    match = regex.search(filename).groupdict()
+    match = regex.search(filename)
+    if not match:
+        msg = "{filename} does not match {regex}"
+        raise RuntimeError(msg.format(regex=regex, filename=filename))
+    match = match.groupdict()
     energy = float("{}.{}".format(match['E_int'], match['E_dec']))
     result = {
         'timestep_name': match['sam'],
@@ -442,18 +446,21 @@ def decode_aps_params(filename):
     }
     return result
 
-def import_aps_8BM_frameset(directory, hdf_filename=None, quiet=False):
+def import_aps_8BM_frameset(directory, hdf_filename, quiet=False):
     return import_frameset(directory=directory, flavor="aps",
                            hdf_filename=hdf_filename, quiet=quiet)
 
 # @profile
-def import_frameset(directory, flavor, hdf_filename=None, quiet=False):
+def import_frameset(directory, flavor, hdf_filename, quiet=False):
     """Import all files in the given directory collected at APS beamline
     8-BM-B and process into framesets. Images are assumed to
     full-field transmission X-ray micrographs. This beamline does not
     produce the flux to warrant averaging.
     """
     prog.quiet = quiet
+    # Check that file does not exist
+    if os.path.exists(hdf_filename):
+        raise OSError("File {} exists".format(hdf_filename))
     # files = [os.path.join(dp, f) for dp, dn, os.listdir(directory)
     files = [os.path.join(dp, f) for dp, dn, filenames in os.walk(directory) for f in filenames]
     # Process filename metadata into the dataframe
@@ -505,10 +512,12 @@ def import_frameset(directory, flavor, hdf_filename=None, quiet=False):
             # Update progress bar
             curr_file += len(E_files)
             set_progbar(curr_file, total=total_files, init_time=init_time)
-        # import pdb; pdb.set_trace()
         # Save to disk
         ref_ds[ts_idx] = np.array(Is)
-    # Import the actual sample frames
+        # try:
+        #     ref_ds[ts_idx] = np.array(Is)
+        # except TypeError:
+        #     import pdb; pdb.set_trace()
     pos_groups = enumerate(sample_files.groupby('position_name'))
     for pos_idx, (pos_name, pos_df) in pos_groups:
         # Create HDF5 datasets to hold the data

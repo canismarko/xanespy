@@ -473,24 +473,24 @@ class GtkTxmViewer():
             GLib.timeout_add(self.animation_delay, self.next_frame, None)
 
     def first_frame(self, widget):
-        self.current_idx = 0
+        self.current_idx = (0,)
         self.update_window()
 
     def last_frame(self, widget):
-        self.current_idx = len(self.energies) - 1
+        self.current_idx = (len(self.energies) - 1,)
         self.update_window()
 
     def previous_frame(self, widget=None):
         """Go to the next frame in the sequence (or wrap around if at the
         end).
         """
-        self.current_idx = (self.current_idx - 1) % len(self.energies)
+        self.current_idx = ((self.current_idx - 1) % len(self.energies),)
         self.update_window()
 
     def max_frame(self, widget=None):
         """Find the frame with the highest intensity and active it"""
         spectrum = self.frameset.spectrum()
-        self.current_idx = spectrum.values.argmax()
+        self.current_idx = (spectrum.values.argmax(),)
         self.update_window()
 
     def next_frame(self, widget=None):

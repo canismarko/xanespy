@@ -1613,39 +1613,31 @@ class XanesFrameset():
         """
         with self.store() as store:
             frames = store.absorbances
-            energies = store.energies.value
-            # Get a mask to select only some pixels
-            if edge_mask:
-                # Active material pixels only
-                mask = self.edge_mask()
-            else:
-                # All pixels
-                mask = np.zeros_like(self.edge_mask())
-            frames_mask = np.broadcast_to(mask, frames.shape)
+            # Insert two axes into energies for image row/cols
+            energies = store.energies.value[:,np.newaxis,np.newaxis,:]
             # Convert numpy axes to be in (pixel, energy) form
-            frames_mask = np.moveaxis(frames_mask, 1, -1)
             spectra = np.moveaxis(frames, 1, -1)
-            map_shape = spectra.shape[:-1]
-            whiteline_maps = np.empty(map_shape) # To hold output
-            spectra = spectra[~frames_mask].reshape((-1, energies.shape[-1]))
             # Calculate whiteline positions
             whitelines = xm.direct_whitelines(spectra=spectra,
                                               energies=energies,
                                               edge=self.edge)
-        # Set actual calculate values
-        map_mask = np.broadcast_to(mask, whiteline_maps.shape)
-        # Set default values
-        whiteline_maps[map_mask] = np.nan #np.mean(whitelines)
-        whiteline_maps[~map_mask] = whitelines
         # Save results to disk
         with self.store(mode='r+') as store:
-            store.whiteline_map = whiteline_maps
+            store.whiteline_map = whitelines
 
     def calculate_maps(self):
         """Generate a set of maps based on pixel-wise Xanes spectra: whiteline
-        position, particle labels."""
-        # Calculate particle_labels
+        position, particle labels.
+
+        Arguments
+        ---------
+
+        -fit_spectra : If truthy, the whiteline will be found by
+         fitting curves, instead of the default of taking the direct
+         maximum.
+        """
         self.calculate_whitelines()
+        # Calculate particle_labels
         self.label_particles()
 
     def masked_map(self, goodness_filter=True):
@@ -1722,6 +1714,12 @@ class XanesFrameset():
         ax.set_ylabel(unit)
         ax.set_xlabel(unit)
         return artist
+
+    @property
+    def num_timesteps(self):
+        with self.store() as store:
+            val = store.absorbances.shape[0]
+        return val
 
     def plot_map(self, ax=None, map_name="whiteline_map", timeidx=0):
         """Prepare data and plot a map of whiteline positions."""
