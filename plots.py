@@ -214,6 +214,8 @@ def plot_txm_histogram(data, ax=None, norm=None, bins=100, cmap='plasma'):
         ax = new_axes()
     # Flatten the data so it can be nicely plotted
     data = np.round(data.flatten(), decimals=0)
+    # Remove any Not-a-number values
+    data = data[~np.isnan(data)]
     # Set normalizer
     if norm is None:
         norm = Normalize()
@@ -227,6 +229,7 @@ def plot_txm_histogram(data, ax=None, norm=None, bins=100, cmap='plasma'):
     #     2 * energies[-1] - energies[-2]
     # ]
     # clipped_map =  np.clip(masked_map, edge.map_range[0], edge.map_range[1])
+    # Plot the histogram
     n, bins, patches = ax.hist(data, bins=bins)
     # Set colors on histogram
     for patch in patches:
@@ -237,6 +240,7 @@ def plot_txm_histogram(data, ax=None, norm=None, bins=100, cmap='plasma'):
     # Set axes decorations
     ax.set_xlabel("Whiteline position /eV")
     ax.set_ylabel("Pixels")
+    print(norm.vmin, norm.vmax)
     ax.set_xlim(norm.vmin, norm.vmax)
     # ax.xaxis.set_ticks(energies)
     ax.xaxis.get_major_formatter().set_useOffset(False)

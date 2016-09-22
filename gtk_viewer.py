@@ -367,8 +367,12 @@ class GtkTxmViewer():
         if self.active_pixel is None:
             s = "None"
         else:
-            s = "(V:{v}, H:{h})".format(h=self.active_pixel.horizontal,
-                                        v=self.active_pixel.vertical)
+            with self.frameset.store() as store:
+                idx = (self.plotter.active_timestep, *self.active_pixel)
+                value = store.whiteline_map[idx]
+            s = "(V:{v}, H:{h}) = {val}".format(h=self.active_pixel.horizontal,
+                                                v=self.active_pixel.vertical,
+                                                val=value)
         label = self.builder.get_object("ActivePixelLabel")
         label.set_text(s)
 

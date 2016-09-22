@@ -1327,7 +1327,7 @@ class XanesFrameset():
         raise (UserWarning('use spectrum()'))
         return self.spectrum(*args, **kwargs)
 
-    @functools.lru_cache()
+    # @functools.lru_cache()
     def spectrum(self, pixel=None, edge_jump_filter=False,
                        representation="modulus", index=0):
         """Collapse the dataset down to a two-dimensional spectrum. Returns a
@@ -1378,12 +1378,13 @@ class XanesFrameset():
         # Retrieve data
         with self.store() as store:
             energies = store.energies.value[index]
-            frames = store.absorbances[index]
             if pixel is not None:
                 pixel = Pixel(*pixel)
                 # Get a spectrum for a single pixel
-                spectrum = frames[..., pixel.vertical, pixel.horizontal]
+                spectrum_idx = (index, ..., pixel.vertical, pixel.horizontal)
+                spectrum = store.absorbances[spectrum_idx]
             else:
+                frames = store.absorbances[index]
                 if edge_jump_filter:
                     # Filter out background pixels using edge mask
                     mask = self.edge_mask()
@@ -1593,7 +1594,7 @@ class XanesFrameset():
         # Calculate whiteline position
         E0 = fit_maps[...,xm.kedge_params.index('E0')]
         gaus_center = fit_maps[...,xm.kedge_params.index('gb')]
-        wl_maps = E0 - gaus_center
+        wl_maps = E0 + gaus_center
         # Save results to disk
         with self.store(mode='r+') as store:
             store.fit_parameters = fit_maps
