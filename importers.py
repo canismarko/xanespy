@@ -44,6 +44,9 @@ format_classes = {
 }
 
 
+CURRENT_VERSION = "0.3" # Let's file loaders deal with changes to storage
+
+
 def _average_frames(*frames):
     """Accept several frames and return the first frame with new image
     data. Assumes metadata from first frame in list."""
@@ -102,7 +105,7 @@ def read_metadata(filenames, flavor):
     return df.sort_values(by=['starttime'])
 
 
-def import_ptychography_frameset(directory: str,
+def import_ptychography_frameset(directory: str, quiet=False,
                                  hdf_filename=None, hdf_groupname=None):
     """Import a set of images as a new frameset for generating
     ptychography chemical maps based on data collected at ALS beamline
@@ -114,6 +117,8 @@ def import_ptychography_frameset(directory: str,
     - directory : Directory where to look for results. It should
     contain .cxi files that are the output of the ptychography reconstruction."
 
+    - quiet : If truthy, progress bars will not be shown.
+
     - hdf_filename : HDF File used to store computed results. If
       omitted or None, the `directory` basename is used
 
@@ -121,26 +126,25 @@ def import_ptychography_frameset(directory: str,
     dataset. If omitted or None, the `directory` basename is
     used. Raises an exception if the group already exists in the HDF file.
     """
-    CURRENT_VERSION = "0.2" # Let's file loaders deal with changes to storage
     # Prepare some filesystem information
     # tiff_dir = os.path.join(directory, "tiffs")
     # modulus_dir = os.path.join(tiff_dir, "modulus")
     # stxm_dir = os.path.join(tiff_dir, "modulus")
     # Prepare the HDF5 file and metadata
-    hdf_group = prepare_hdf_group(filename=hdf_filename,
-                                   groupname=hdf_groupname,
-                                   dirname=directory)
-    hdf_group.attrs["scimap_version"] = CURRENT_VERSION
-    hdf_group.attrs["technique"] = "ptychography STXM"
-    hdf_group.attrs["beamline"] = "ALS 5.3.2.1"
-    hdf_group.attrs["original_directory"] = os.path.abspath(directory)
+    h5file = h5py.File(hdf_filename)
+    sam_name = directory.split('/')[-1]
+    sam_group = h5file.create_group(sam_name)
+    sam_group.attrs["xanespy_version"] = CURRENT_VERSION
+    sam_group.attrs["technique"] = "ptychography STXM"
+    sam_group.attrs["beamline"] = "ALS 5.3.2.1"
+    sam_group.attrs["original_directory"] = os.path.abspath(directory)
     # Prepare groups for data
-    imported = hdf_group.create_group("imported")
-    hdf_group.attrs["active_group"] = "imported"
-    imported_group = imported.name
-    hdf_group["imported"].attrs["level"] = 0
-    hdf_group["imported"].attrs["parent"] = ""
-    hdf_group["imported"].attrs["default_representation"] = "modulus"
+    imported = sam_group.create_group('imported')
+    # sam_group.attrs["active_group"] = "imported"
+    # imported_group = imported.name
+    # hdf_group["imported"].attrs["level"] = 0
+    # hdf_group["imported"].attrs["parent"] = ""
+    # hdf_group["imported"].attrs["default_representation"] = "modulus"
     file_re = re.compile("projection_modulus_(?P<energy>\d+\.\d+)\.tif")
     # Check that the directory exists
     if not os.path.exists(directory):
@@ -157,63 +161,42 @@ def import_ptychography_frameset(directory: str,
         msg = "{} contained no cxi files to import."
         raise exceptions.DataNotFoundError(msg)
     # Import any cxi files that were found
+    intensities = []
+    energies = []
+    timestamps = []
+    filenames = []
+    stxm_frames = []
     for filename in cxifiles:
+        filenames.append(filename)
         with h5py.File(filename, mode='r') as f:
             # Extract energy in Joules and convert to eV
             energy = f['/entry_1/instrument_1/source_1/energy'].value
             energy = energy / physical_constants['electron volt'][0]
-            # All dataset names will be the energy with two decimal places
-            energy_set = imported.create_group(energy_key.format(energy))
-            energy_set.attrs['energy'] = energy
-            energy_set.attrs['approximate_energy'] = round(energy, 2)
-            energy_set.attrs['pixel_size_value'] = 4.17
-            energy_set.attrs['pixel_size_unit'] = "nm"
-            # Save dataset
+            energies.append(energy)
+            # Import complex reconstructed image
             data = f['/entry_1/image_1/data'].value
-            energy_set.create_dataset('image_data',
-                                      data=data,
-                                      chunks=True,
-                                      compression="gzip")
+            intensities.append(data)
             # Import STXM interpretation
-            data = f['entry_1/instrument_1/detector_1/STXM'].value
-            energy_set.create_dataset('stxm',
-                                      data=data,
-                                      chunks=True,
-                                      compression="gzip")
-    for filename in []:#os.listdir(modulus_dir):
-        # (assumes each image type has the same set of energies)
-        # Extract energy from filename
-        match = file_re.match(filename)
-        if match is None:
-            msg = "Could not read energy from filename {}".format(filename)
-            raise exceptions.FilenameParseError(msg)
-        energy_str = match.groupdict()['energy']
-        # All dataset names will be the energy with two decimal places
-        energy_set = imported.create_group(energy_key.format(float(energy_str)))
-        energy_set.attrs['energy'] = float(energy_str)
-        energy_set.attrs['approximate_energy'] = round(float(energy_str), 2)
-        energy_set.attrs['pixel_size_value'] = 4.17
-        energy_set.attrs['pixel_size_unit'] = "nm"
-        def add_files(name, template="projection_{name}_{energy}.tif"):
-            # Import modulus (total value)
-            filename = template.format(name=name, energy=energy_str)
-            filepath = os.path.join(tiff_dir, name, filename)
-            data = Image.open(filepath)
-            energy_set.create_dataset(name,
-                                      data=data,
-                                      chunks=True,
-                                      compression="gzip")
-        representations = ['modulus', 'phase', 'complex', 'intensity']
-        [add_files(name) for name in representations]
-        add_files("stxm", template="stxm_{energy}.tif")
-    # Create the frameset object
-    hdf_filename = hdf_group.file.filename
-    hdf_groupname = hdf_group.name
-    hdf_group.file.close()
-    frameset = XanesFrameset(filename=hdf_filename,
-                             groupname=hdf_groupname,
-                             edge=None)
-    frameset.latest_group = imported_group
+            stxm = f['entry_1/instrument_1/detector_1/STXM'].value
+            stxm_frames.append(stxm)
+    # Save image data to the HDF file
+    intensities = np.array(intensities)
+    imported.create_dataset('intensities', data=intensities, dtype=np.complex64)
+    stxm_frames = np.array(stxm_frames)
+    imported.create_dataset('stxm', data=stxm_frames)
+    # Save X-ray energies to the HDF File
+    energies = np.array(energies, dtype=np.float32)
+    imported.create_dataset('energies', data=energies)
+    # Save pixel size information
+    px_sizes = np.empty(shape=intensities.shape[0:-2])
+    px_sizes[:] = 4.17
+    px_grp = imported.create_dataset('pixel_sizes', data=px_sizes)
+    px_grp.attrs['unit'] = 'nm'
+    # Save original filename metadata
+    filenames = np.array(filenames, dtype="S100")
+    imported.create_dataset('filenames', data=filenames, dtype="S100")
+    # Clean up any open files, etc
+    h5file.close()
 
 
 _SsrlResponse = namedtuple("_SsrlResponse", ("data", "starttime", "endtime"))
@@ -305,125 +288,13 @@ def import_ssrl_frameset(directory, hdf_filename=None, quiet=False):
     6-2c and process into framesets. Images are assumed to full-field
     transmission X-ray micrographs and repetitions will be averaged.
     """
-    return import_frameset(directory, hdf_filename=hdf_filename,
+    imp_group = import_frameset(directory, hdf_filename=hdf_filename,
                            quiet=quiet, flavor='ssrl')
-    # # Everything else below here is deprecated
-    # prog.quiet = quiet
-    # # Prepare list of dataframes to be imported
-    # samples = {}
-    # reference_files = {}
-    # start_time = time()
-    # total_files = 0 # Counter for progress meter
-    # curr_file = 0
-    # # Prepare a dictionary of samples, each sample is a dictionary of
-    # # energies, which contains a list of filenames to be imported
-    # for filename in os.listdir(directory):
-    #     # Make sure it's a file
-    #     fullpath = os.path.join(directory, filename)
-    #     if os.path.isfile(fullpath):
-    #         # Queue the file for import if the extension is known
-    #         name, extension = os.path.splitext(filename)
-    #         if extension in format_classes.keys():
-    #             metadata = decode_ssrl_params(filename)
-    #             framesetname = "{name}_rep{rep}"
-    #             framesetname = framesetname.format(name=metadata['sample_name'],
-    #                                                rep=str(metadata['repetition']))
-    #             if metadata['position_name']:
-    #                 framesetname += "_" + metadata['position_name']
-    #             if metadata['is_background']:
-    #                 root = reference_files
-    #             else:
-    #                 root = samples
-    #             energies = root.get(framesetname, {})
-    #             replicates = energies.get(metadata['energy'], [])
-    #             # Update the stored tree
-    #             root[framesetname] = energies
-    #             replicates.append(fullpath)
-    #             energies[metadata['energy']] = replicates
-    #             total_files += 1
-    # # Check that in the ssrl flavor, each sample has a reference set
-    # if not samples.keys() == reference_files.keys():
-    #     msg = "SSRL data should have 1-to-1 sample to reference: {} and {}"
-    #     raise exceptions.DataFormatError(msg.format(list(samples.keys()),
-    #                                                 list(reference_files.keys())))
-    # # Go through each sample and import
-    # for sample_name, sample in samples.items():
-    #     # Empty arrays for holding results of importing
-    #     intensities, references, absorbances = [], [], []
-    #     energies, positions, filenames = [], [], []
-    #     starttimes, endtimes = [], []
-    #     pixel_sizes = []
-    #     # Average data for each energy
-    #     for energy in sample:
-    #         averaged_I = _average_ssrl_files(sample[energy])
-    #         intensities.append(averaged_I.data)
-    #         starttimes.append(averaged_I.starttime.isoformat())
-    #         endtimes.append(averaged_I.endtime.isoformat())
-    #         file1 = sample[energy][0]
-    #         name, extension = os.path.splitext(file1)
-    #         Importer = format_classes[extension]
-    #         with Importer(file1, flavor='ssrl') as first_file:
-    #             pixel_sizes.append(first_file.um_per_pixel())
-    #             energies.append(first_file.energy())
-    #             positions.append(first_file.sample_position())
-    #             filenames.append(file1)
-    #         # Increment counter
-    #         curr_file += len(sample[energy])
-    #         # Display progress meter
-    #         if not prog.quiet:
-    #             status = tqdm.format_meter(n=curr_file,
-    #                                        total=total_files,
-    #                                        elapsed=time() - start_time,
-    #                                        prefix="Importing frames: ")
-    #             print("\r", status, end='')
-    #         # Average reference frames
-    #         averaged_ref = _average_ssrl_files(reference_files[sample_name][energy])
-    #         references.append(averaged_ref.data)
-    #         # Apply reference correction to get absorbance data
-    #         abs_data = np.log(averaged_ref.data / averaged_I.data)
-    #         absorbances.append(abs_data)
-    #         # Increment counter
-    #         curr_file += len(reference_files[sample_name][energy])
-    #         # Display progress meter
-    #         if not prog.quiet:
-    #             status = tqdm.format_meter(n=curr_file,
-    #                                        total=total_files,
-    #                                        elapsed=time() - start_time,
-    #                                        prefix="Importing frames: ")
-    #             print("\r", status, end='')
-    #     # Convert data to numpy arrays
-    #     absorbances = np.array(absorbances)
-    #     pixel_sizes = np.array(pixel_sizes)
-    #     # Correct magnification changes due to zone-plate movement
-    #     scales, translations = magnification_correction(frames=absorbances,
-    #                                                     pixel_sizes=pixel_sizes)
-    #     transform_images(absorbances, translations=translations,
-    #                      scales=scales, out=absorbances)
-    #     pixel_sizes[:] = np.min(pixel_sizes)
-    #     # Save data to HDF5 file
-    #     store = prepare_txm_store(filename=hdf_filename,
-    #                               parent_name=sample_name,
-    #                               dirname=directory)
-    #     def save_data(name, data):
-    #         # Sort by energy
-    #         data = [d for (E, d) in sorted(zip(energies, data), key=lambda x: x[0])]
-    #         # Save as new HDF5 dataset
-    #         setattr(store, name, data)
-    #     save_data('intensities', data=intensities)
-    #     save_data('references', data=references)
-    #     save_data('absorbances', data=absorbances)
-    #     save_data('pixel_sizes', data=pixel_sizes)
-    #     store.data_group()['pixel_sizes'].attrs['unit'] = 'µm'
-    #     save_data('energies', data=energies)
-    #     save_data('timestamps', data=zip(starttimes, endtimes))
-    #     save_data('filenames', data=filenames)
-    #     save_data('original_positions', data=positions)
-    #     store.data_group()['original_positions'].attrs['order'] = "(energy, (x, y, z))"
-    #     # Convert to relative positions
-    #     save_data('relative_positions', data=np.zeros_like(positions))
-    #     store.data_group()['relative_positions'].attrs['order'] = "(energy, (x, y, z))"
-    #     # All done, clean up
-    #     store.close()
+    # Set some beamline specific metadata
+    imp_group.parent.attrs['technique'] = 'Full-field TXM'
+    imp_group.parent.attrs['beamline'] = 'SSRL 6-2c'
+    # Cleanup and exit
+    return imp_group
 
 
 def decode_aps_params(filename):
@@ -447,8 +318,14 @@ def decode_aps_params(filename):
     return result
 
 def import_aps_8BM_frameset(directory, hdf_filename, quiet=False):
-    return import_frameset(directory=directory, flavor="aps",
-                           hdf_filename=hdf_filename, quiet=quiet)
+    imp_group = import_frameset(directory=directory, flavor="aps",
+                          hdf_filename=hdf_filename, quiet=quiet)
+    # Set some beamline specific metadata
+    imp_group.parent.attrs['technique'] = 'Full-field TXM'
+    imp_group.parent.attrs['beamline'] = 'APS 8-BM-B'
+    # Cleanup and exit
+    imp_group.file.close()
+    return imp_group
 
 # @profile
 def import_frameset(directory, flavor, hdf_filename, quiet=False):
@@ -670,9 +547,11 @@ def import_frameset(directory, flavor, hdf_filename, quiet=False):
                              scales=scales, out=abs_ds)
         # Remove dead or hot pixels
         median_filter(abs_ds, size=1, output=abs_ds)
-            # sigma = 9
-            # absorbances = remove_outliers(data=absorbances, sigma=sigma)
-            # Save absorbances to disk
+        # Set some metadata
+        h5group.parent.attrs['xanespy_version'] = CURRENT_VERSION
+        h5group.parent.attrs['original_directory'] = directory
+        # Clean-up and return data
+        return h5group
     # Print a summary of data saved to disk
     # if not quiet:
     #     print() # To put in a newline
