@@ -29,7 +29,6 @@ import os
 import pandas as pd
 from matplotlib import pyplot
 from matplotlib.colors import Normalize
-from scipy import linalg
 import h5py
 import numpy as np
 from skimage import morphology, filters, transform, color, measure
@@ -637,6 +636,8 @@ class XanesFrameset():
             # Apply the transformations
             for frames_name in names:
                 with self.store() as store:
+                    if not store.has_dataset(frames_name):
+                        continue
                     # Prepare an array to hold results
                     out = np.zeros_like(store.get_frames(frames_name))
                     # Apply transformation
@@ -1329,7 +1330,7 @@ class XanesFrameset():
 
     # @functools.lru_cache()
     def spectrum(self, pixel=None, edge_jump_filter=False,
-                       representation="modulus", index=0):
+                       representation="absorbances", index=0):
         """Collapse the dataset down to a two-dimensional spectrum. Returns a
         pandas series containing the resulting spectrum.
 
@@ -1346,9 +1347,13 @@ class XanesFrameset():
             is logically not-ted and calculated with a more
             conservative threshold.
 
+        representation: What kind of data to use for creating the
+        spectrum. This will be passed to TXMStore.get_map()
+
         index: Which step in the frameset to use. When used to index
             store().absorbances, this should return a 3D array like
             (energy, rows, columns).
+
         """
         # energies = []
         # intensities = []
@@ -1382,9 +1387,9 @@ class XanesFrameset():
                 pixel = Pixel(*pixel)
                 # Get a spectrum for a single pixel
                 spectrum_idx = (index, ..., pixel.vertical, pixel.horizontal)
-                spectrum = store.absorbances[spectrum_idx]
+                spectrum = store.get_map(representation)[spectrum_idx]
             else:
-                frames = store.absorbances[index]
+                frames = store.get_map(representation)[index]
                 if edge_jump_filter:
                     # Filter out background pixels using edge mask
                     mask = self.edge_mask()
@@ -1940,7 +1945,7 @@ class PtychoFrameset(XanesFrameset):
             reps.remove('image_data')
         return reps
 
-    def apply_internal_reference(self, mask=None, plot_background=True, ax=None):
+    def apply_internal_reference(self, plot_background=True, ax=None):
         """Use a portion of each frame for internal reference correction. The
         result is the complex refraction for each pixel: the real
         component describes the phase shift, and the imaginary
@@ -1949,9 +1954,6 @@ class PtychoFrameset(XanesFrameset):
         Arguments
         ---------
 
-        mask : An array the same size as each frame that contains a
-          mask to be provided to numpy's ma module.
-
         plot_background : If truthy, the values of I_0 are plotted as
           a function of energy.
 
@@ -1959,14 +1961,29 @@ class PtychoFrameset(XanesFrameset):
           truthy.
 
         """
-        self.fork_group("reference_corrected")
-        # Convert the supplied mask to grayscale
-        if mask is not None:
-            graymask = color.rgb2gray(mask)
         # Array for holding background correction for plotting
         if plot_background:
             Es = []
             I_0s = []
+        with self.store() as store:
+            Is = store.intensities
+            refraction = xm.apply_internal_reference(Is)
+            # assert False, "Need to move this to calculation and use threading for each frame"
+            Es = store.energies.value
+        # Save complex image as refractive index (real part is phase change)
+        with self.store('r+') as store:
+            store.absorbances = refraction        # Plot background for evaluation
+        # if plot_background:
+        #     if ax is None:
+        #         ax = plots.new_axes()
+        #     print(Es.shape, I_0.squeeze().dtype)
+        #     ax.plot(Es, np.abs(I_0.squeeze()))
+        #     ax.set_title("Background Intensity used for Reference Correction")
+        #     ax.set_xlabel("Energy (eV)")
+        #     ax.set_ylabel("$I_0$")
+        return
+
+
         # Step through each frame and apply reference correction
         for frame in prog(self, "Reference correction"):
             img = frame.get_data("modulus")

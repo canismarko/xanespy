@@ -42,6 +42,24 @@ def remove_extra_spines(ax):
     return ax
 
 
+def set_axes_color(ax, color):
+    """Set the axes, tick marks, etc of `ax` to mpl color `color`. Also,
+    "doegreen" has special significance as the color associated with the
+    US department of energy."""
+    if color == "doegreen":
+        color = (33/255, 99/255, 50/255)
+    # Set the spine colors
+    ax.spines['bottom'].set_color(color)
+    ax.spines['top'].set_color(color)
+    ax.spines['right'].set_color(color)
+    ax.spines['left'].set_color(color)
+    # Change ticks colors
+    ax.tick_params(axis='x', colors=color)
+    ax.tick_params(axis='y', colors=color)
+    # Change label color
+    ax.yaxis.label.set_color(color)
+    ax.xaxis.label.set_color(color)
+
 def set_outside_ticks(ax):
     """Convert all the axes so that the ticks are on the outside and don't
     obscure data."""
@@ -164,17 +182,39 @@ def plot_xanes_spectrum(spectrum, energies, norm=Normalize(),
     norm.autoscale_None(spectrum)
     # Color code the markers by energy
     colors = cm.get_cmap(cmap)(norm(energies))
-    ax.plot(energies, spectrum, linestyle=linestyle)
+    is_complex = np.iscomplexobj(spectrum)
+    if is_complex:
+        # Convert complex values to two lines
+        ax2 = ax.twinx()
+        ys = spectrum.values
+        ax.plot(energies, np.real(ys), linestyle=linestyle)
+        ax2.plot(energies, np.imag(ys), linestyle=linestyle)
+    else:
+        # Just plot the real numbers
+        ys = np.real(spectrum.values)
+        ax.plot(energies, ys, linestyle=linestyle)
+    # save limits, since they get messed up by scatter plot
     xlim = ax.get_xlim()
     ylim = ax.get_ylim()
+    # Draw scatter plot of data points
+    if is_complex:
+        ax.scatter(energies, np.real(ys), c="green", s=25, alpha=0.5)
+        ax.set_ylabel("Real", color="green")
+        for t1 in ax.get_yticklabels():
+            t1.set_color('green')
+        scatter = ax2.scatter(energies, np.imag(ys), c="red", s=25, alpha=0.5)
+        ax2.set_ylabel("Imag", color="red")
+        for t1 in ax2.get_yticklabels():
+            t1.set_color('red')
+    else:
+        scatter = ax.scatter(energies, ys, c=colors, s=25)
+        ax.set_ylabel('Absorbance')
     if show_fit:
         # Plot the predicted values from edge fitting
         edge.plot(ax=ax)
-    scatter = ax.scatter(energies, spectrum, c=colors, s=25)
     ax.set_xlim(*xlim)
     ax.set_ylim(*ylim)
     ax.set_xlabel('Energy /eV')
-    ax.set_ylabel('Absorbance')
     # Plot the edges of the map range
     if norm is not None:
         vlineargs = {'linestyle': '--', 'alpha': 0.7,

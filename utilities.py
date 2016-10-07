@@ -135,16 +135,19 @@ def pixel_to_xy(pixel, extent, shape):
 
 def component(data, name):
     """If complex, turn to given component, otherwise return original data."""
-    if np.any(data.imag):
+    if np.iscomplexobj(data):
         # Sort out complex components
         if name == "modulus":
             data = np.abs(data)
         elif name == "phase":
             data = np.angle(data)
         elif name == "real":
-            data = data.real
+            data = np.real(data)
         elif name == "imag":
-            data = data.imag
+            data = np.imag(data)
+    else:
+        # Just return the real part
+        data = np.real(data)
     return data
 
 

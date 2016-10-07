@@ -193,24 +193,23 @@ class GtkTxmViewer():
                 ts_combo.append(str(idx), "{idx} - {ts}".format(idx=idx, ts=ts))
         ts_combo.set_active(self.plotter.active_timestep)
         # Put the non-glade things in the window
+        with self.frameset.store() as store:
+            print(store.has_dataset('absorbances'))
+            if store.has_dataset('absorbances'):
+                self.plotter.active_representation = 'absorbances'
+            else:
+                self.plotter.active_representation = 'intensities'
         self.plotter.plot_map_spectra()
         # self.plotter.plot_xanes_spectra()
-        self.rep_combo = self.builder.get_object('ActiveRepresentationCombo')
-        self.rep_list = Gtk.ListStore(str, str)
-        reps = self.frameset.representations()
-        for rep in reps:
+        self.comp_combo = self.builder.get_object('ActiveComponentCombo')
+        self.comp_list = Gtk.ListStore(str, str)
+        components = ["modulus", "phase", "real", "imag"]
+        for comp in components:
             uppercase = " ".join(
-                [word.capitalize() for word in rep.split('_')]
+                [word.capitalize() for word in comp.split('_')]
             )
-            rep_iter = self.rep_list.append([uppercase, rep])
-            # Save active group for later initialization
-            # if rep == self.frameset.default_representation:
-            #     active_rep = rep_iter
-        if self.frameset.is_background():
-            self.active_group = bg_iter
-        self.rep_combo.set_model(self.rep_list)
-        # if active_rep:
-        #     self.rep_combo.set_active_iter(active_rep)
+            comp_iter = self.comp_list.append([uppercase, comp])
+        self.comp_combo.set_model(self.comp_list)
         # Set event handlers
         both_windows = [self.window, self.map_window]
         handlers = {
@@ -234,7 +233,7 @@ class GtkTxmViewer():
                                                windows=both_windows),
             'change-active-group': WatchCursor(self.change_active_group,
                                                windows=[self.window]),
-            'change-representation': WatchCursor(self.change_representation,
+            'change-component': WatchCursor(self.change_component,
                                                windows=[self.window]),
             'launch-map-window': WatchCursor(self.launch_map_window,
                                              windows=[self.window]),
@@ -442,11 +441,11 @@ class GtkTxmViewer():
         self.refresh_artists()
         self.update_window()
 
-    def change_representation(self, widget, object=None):
-        """Update to a new representation of this frameset."""
+    def change_component(self, widget, object=None):
+        """Update to a new real/imag component of this frameset."""
         # Load new group
-        new_rep = self.rep_list[widget.get_active_iter()][1]
-        self.plotter.active_representation = new_rep
+        new_comp = self.comp_list[widget.get_active_iter()][1]
+        self.plotter.active_component = new_comp
         # Update UI elements
         self.refresh_artists()
         self.update_window()
@@ -529,7 +528,8 @@ class GtkTxmViewer():
             with self.frameset.store() as store:
                 energy = store.energies[self.current_idx]
                 pos = position(*store.original_positions[self.current_idx])
-                imshape = shape(*store.absorbances[self.current_idx].shape)
+                frms = store.get_frames(self.plotter.active_representation)
+                imshape = shape(*frms[self.current_idx].shape)
             # Set labels on the sidepanel
             energy_label = self.builder.get_object('EnergyLabel')
             energy_label.set_text("{E:.2f}".format(E=energy))

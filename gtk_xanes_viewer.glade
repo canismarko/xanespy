@@ -322,14 +322,14 @@
                   </packing>
                 </child>
                 <child>
-                  <object class="GtkComboBoxText" id="ActiveRepresentationCombo">
+                  <object class="GtkComboBoxText" id="ActiveComponentCombo">
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
                     <property name="active">0</property>
                     <items>
-                      <item id="&lt;Enter ID&gt;" translatable="yes">Absorbance Frames</item>
+                      <item id="&lt;Enter ID&gt;" translatable="yes">Modulus</item>
                     </items>
-                    <signal name="changed" handler="change-representation" swapped="no"/>
+                    <signal name="changed" handler="change-component" swapped="no"/>
                   </object>
                   <packing>
                     <property name="expand">False</property>

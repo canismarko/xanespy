@@ -130,16 +130,22 @@ def import_ptychography_frameset(directory: str, quiet=False,
     # tiff_dir = os.path.join(directory, "tiffs")
     # modulus_dir = os.path.join(tiff_dir, "modulus")
     # stxm_dir = os.path.join(tiff_dir, "modulus")
-    # Prepare the HDF5 file and metadata
+
+    # Prepare the HDF5 file and sample group
     h5file = h5py.File(hdf_filename)
-    sam_name = directory.split('/')[-1]
-    sam_group = h5file.create_group(sam_name)
+    path, sam_name = os.path.split(os.path.abspath(directory))
+    try:
+        sam_group = h5file.create_group(sam_name)
+    except ValueError:
+        raise exceptions.DatasetExistsError(sam_name)
+    # Set some metadata
     sam_group.attrs["xanespy_version"] = CURRENT_VERSION
     sam_group.attrs["technique"] = "ptychography STXM"
     sam_group.attrs["beamline"] = "ALS 5.3.2.1"
     sam_group.attrs["original_directory"] = os.path.abspath(directory)
     # Prepare groups for data
     imported = sam_group.create_group('imported')
+    sam_group.attrs['latest_data_name'] = 'imported'
     # sam_group.attrs["active_group"] = "imported"
     # imported_group = imported.name
     # hdf_group["imported"].attrs["level"] = 0
@@ -180,21 +186,28 @@ def import_ptychography_frameset(directory: str, quiet=False,
             stxm = f['entry_1/instrument_1/detector_1/STXM'].value
             stxm_frames.append(stxm)
     # Save image data to the HDF file
-    intensities = np.array(intensities)
+    intensities = np.array([intensities])
     imported.create_dataset('intensities', data=intensities, dtype=np.complex64)
-    stxm_frames = np.array(stxm_frames)
+    stxm_frames = np.array([stxm_frames])
     imported.create_dataset('stxm', data=stxm_frames)
     # Save X-ray energies to the HDF File
-    energies = np.array(energies, dtype=np.float32)
+    energies = np.array([energies], dtype=np.float32)
     imported.create_dataset('energies', data=energies)
     # Save pixel size information
     px_sizes = np.empty(shape=intensities.shape[0:-2])
     px_sizes[:] = 4.17
     px_grp = imported.create_dataset('pixel_sizes', data=px_sizes)
     px_grp.attrs['unit'] = 'nm'
-    # Save original filename metadata
+    # Save metadata
+    imported.create_dataset('timestep_names',
+                            data=np.array([sam_name], dtype="S50"))
     filenames = np.array(filenames, dtype="S100")
-    imported.create_dataset('filenames', data=filenames, dtype="S100")
+    imported.create_dataset('filenames', data=[filenames], dtype="S100")
+    imported.create_dataset('relative_positions',
+                            data=[np.zeros(shape=(*filenames.shape, 3), dtype=np.float32)])
+    nan_pos = np.empty(shape=(1, *filenames.shape, 3), dtype=np.float32)
+    nan_pos.fill(np.nan)
+    imported.create_dataset('original_positions', data=nan_pos)
     # Clean up any open files, etc
     h5file.close()
 
@@ -390,6 +403,8 @@ def import_frameset(directory, flavor, hdf_filename, quiet=False):
             curr_file += len(E_files)
             set_progbar(curr_file, total=total_files, init_time=init_time)
         # Save to disk
+        if ref_ds[ts_idx].shape != np.array(Is).shape:
+            import pdb; pdb.set_trace()
         ref_ds[ts_idx] = np.array(Is)
         # try:
         #     ref_ds[ts_idx] = np.array(Is)

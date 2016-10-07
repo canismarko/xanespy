@@ -231,6 +231,11 @@ class TXMStore():
             raise exceptions.GroupKeyError(msg)
         return data
 
+    def has_dataset(self, name):
+        """Return a boolean indicated whether this dataset exists in the HDF
+        file."""
+        return (name in self.data_group().keys())
+
     @property
     def timestep_names(self):
         return self.data_group()['timestep_names']
@@ -249,15 +254,17 @@ class TXMStore():
 
     @property
     def relative_positions(self):
+        """(x, y, z) position values for each frame."""
         return self.data_group()['relative_positions']
 
     @relative_positions.setter
     def relative_positions(self, val):
         self.replace_dataset('relative_positions', val, context='metadata')
+        self.data_group()['relative_positions'].attrs['order'] = "(x, y, z)"
 
     @property
     def original_positions(self):
-        return self.data_group()['original_positions']
+        return self.get_map('original_positions')
 
     @original_positions.setter
     def original_positions(self, val):

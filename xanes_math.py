@@ -29,14 +29,14 @@ import multiprocessing as mp
 from itertools import count, product
 from collections import namedtuple
 
-from scipy import ndimage
+from scipy import ndimage, linalg
 from scipy.optimize import curve_fit
 import numpy as np
 from skimage import transform, feature, filters, morphology, exposure, measure
 from sklearn import linear_model, svm, utils
 import matplotlib.pyplot as plt
 
-from utilities import prog, foreach, parallel_map
+from utilities import prog, foreach, parallel_map, component
 
 # Helpers for parallelizable code
 
@@ -57,6 +57,42 @@ def iter_indices(data, leftover_dims=1, desc=None):
     indices = product(*ranges)
     return prog(indices, desc=desc, total=length)
 
+
+def apply_internal_reference(intensities, out=None):
+    """Apply a reference correction to complex data to convert intensities
+    into refractive index. I_0 is determined by separating the pixels
+    into background and foreground using Otsu's method.
+
+    Arrays `intensities` and `out` must all have the same shape where
+    the last two dimensions are image rows and column.
+    """
+    if out is None:
+        out = np.empty_like(intensities)
+    def apply_ref(idx):
+        # Calculate background intensity using thresholding
+        frame = intensities[idx]
+        direct_img = component(frame, "modulus")
+        threshold = filters.threshold_yen(direct_img)
+        graymask = direct_img > threshold
+        background = component(frame, "modulus")[graymask]
+        I_0 = np.median(background) # Median of each image
+        # Calculate absorbance based on background
+        absorbance = np.log(I_0 / np.abs(frame))
+        # Calculate relative phase shift
+        phase = np.angle(frame)
+        phase - np.median((phase * graymask)[graymask > 0])
+        # The phase data has a gradient in the background, so remove it
+        x,y = np.meshgrid(np.arange(phase.shape[-1]),np.arange(phase.shape[-2]))
+        A = np.column_stack([y.flatten(), x.flatten(), np.ones_like(x.flatten())])
+        p, residuals, rank, s = linalg.lstsq(A, phase.flatten())
+        bg = p[0] * y + p[1] * x + p[2]
+        phase = phase - bg
+        j = complex(0, 1)
+        out[idx] = phase + j*absorbance
+    # Call the actual function for each frame
+    iter_frames = iter_indices(intensities, leftover_dims=2, desc="Apply reference")
+    foreach(apply_ref, iter_frames)
+    return out
 
 def apply_references(intensities, references, out=None):
     """Apply a reference correction to convert intensity values to
@@ -377,12 +413,11 @@ def transform_images(data, translations=None, rotations=None,
     written to `out` if given, otherwise returned as a new array.
 
     Returns: A new array similar dimensions to `data` but with
-      transformations applied and converted to float32 datatype.
+      transformations applied and converted to float datatype.
     """
-    dt = data.dtype
     # Create a new array if one is not given
     if out is None:
-        out = np.zeros_like(data, dtype=dt)
+        out = np.zeros_like(data, dtype=np.float)
     # Define a function to pass into threads
     def apply_transform(idx):
         # Get transformation parameters if given
@@ -396,17 +431,27 @@ def transform_images(data, translations=None, rotations=None,
             rotation=rot,
         )
         # (Temporarily rescale intensities so the warp function is happy)
-        indata = data[idx].astype('float32')
-        realrange = (np.min(indata), np.max(indata))
-        indata = exposure.rescale_intensity(indata,
-                                            in_range=realrange,
-                                            out_range=(0, 1))
-        outdata = transform.warp(indata, transformation,
-                                  order=3, mode=mode)
-        outdata = exposure.rescale_intensity(outdata,
-                                             in_range=(0, 1),
-                                             out_range=realrange)
-        out[idx] = outdata.astype(dt)
+        def do_transform(a, transformation):
+            """Helper function, takes one array and transforms it."""
+            realrange = (np.min(a), np.max(a))
+            indata = exposure.rescale_intensity(a,
+                                                in_range=realrange,
+                                                out_range=(0, 1))
+            outdata = transform.warp(indata, transformation,
+                                     order=3, mode=mode)
+            outdata = exposure.rescale_intensity(outdata,
+                                                 in_range=(0, 1),
+                                                 out_range=realrange)
+            return outdata
+        frame = data[idx]
+        if np.iscomplexobj(frame):
+            # Special handling for complex numbers
+            j = complex(0, 1)
+            out[idx] = (do_transform(np.real(frame), transformation) +
+                        j * do_transform(np.imag(frame), transformation))
+        else:
+            # Only real numbers here
+            out[idx] = do_transform(frame, transformation)
     # Loop through the images and apply each transformation
     indices = iter_indices(data, desc='Applying', leftover_dims=2)
     foreach(apply_transform, indices)
