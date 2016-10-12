@@ -23,6 +23,8 @@ functions will operate on large arrays of data.
 """
 
 import warnings
+import logging
+from time import time
 import sys
 import threading
 import multiprocessing as mp
@@ -38,8 +40,11 @@ import matplotlib.pyplot as plt
 
 from utilities import prog, foreach, parallel_map, component
 
-# Helpers for parallelizable code
 
+logger = logging.getLogger(__name__)
+
+
+# Helpers for parallelizable code
 def iter_indices(data, leftover_dims=1, desc=None):
     """Accept an array of frames, indices, etc. and generate slices for
     each frame. Assumes the last two dimensions of `data` are rows and
@@ -66,16 +71,21 @@ def apply_internal_reference(intensities, out=None):
     Arrays `intensities` and `out` must all have the same shape where
     the last two dimensions are image rows and column.
     """
+    logstart = time()
+    logger.debug("Starting internal reference correction")
     if out is None:
         out = np.empty_like(intensities)
+
     def apply_ref(idx):
         # Calculate background intensity using thresholding
+        logger.debug("Applying reference for frame %s", idx)
         frame = intensities[idx]
         direct_img = component(frame, "modulus")
         threshold = filters.threshold_yen(direct_img)
         graymask = direct_img > threshold
         background = component(frame, "modulus")[graymask]
         I_0 = np.median(background) # Median of each image
+        logger.debug("I0 for frame %s = %f", idx, I_0)
         # Calculate absorbance based on background
         absorbance = np.log(I_0 / np.abs(frame))
         # Calculate relative phase shift
@@ -89,9 +99,12 @@ def apply_internal_reference(intensities, out=None):
         phase = phase - bg
         j = complex(0, 1)
         out[idx] = phase + j*absorbance
+        logger.debug("Applied internal reference for frame %s", idx)
     # Call the actual function for each frame
     iter_frames = iter_indices(intensities, leftover_dims=2, desc="Apply reference")
     foreach(apply_ref, iter_frames)
+    logger.info("Internal reference applied in %f seconds",
+                (time() - logstart))
     return out
 
 def apply_references(intensities, references, out=None):

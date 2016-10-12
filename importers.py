@@ -23,6 +23,7 @@ import re
 from time import time
 from collections import namedtuple
 import warnings
+import logging
 
 import pandas as pd
 from tqdm import tqdm
@@ -45,6 +46,8 @@ format_classes = {
 
 
 CURRENT_VERSION = "0.3" # Let's file loaders deal with changes to storage
+
+logger = logging.getLogger(__name__)
 
 
 def _average_frames(*frames):
@@ -126,18 +129,17 @@ def import_ptychography_frameset(directory: str, quiet=False,
     dataset. If omitted or None, the `directory` basename is
     used. Raises an exception if the group already exists in the HDF file.
     """
-    # Prepare some filesystem information
-    # tiff_dir = os.path.join(directory, "tiffs")
-    # modulus_dir = os.path.join(tiff_dir, "modulus")
-    # stxm_dir = os.path.join(tiff_dir, "modulus")
-
+    # Prepare logging info
+    logstart = time()
     # Prepare the HDF5 file and sample group
+    logger.info("Importing ptychography directory %s", directory)
     h5file = h5py.File(hdf_filename)
     path, sam_name = os.path.split(os.path.abspath(directory))
     try:
         sam_group = h5file.create_group(sam_name)
     except ValueError:
         raise exceptions.DatasetExistsError(sam_name)
+    logger.info("Created HDF group %s", sam_group.name)
     # Set some metadata
     sam_group.attrs["xanespy_version"] = CURRENT_VERSION
     sam_group.attrs["technique"] = "ptychography STXM"
@@ -172,6 +174,7 @@ def import_ptychography_frameset(directory: str, quiet=False,
     timestamps = []
     filenames = []
     stxm_frames = []
+    logger.info("Importing %d .cxi files", len(cxifiles))
     for filename in cxifiles:
         filenames.append(filename)
         with h5py.File(filename, mode='r') as f:
@@ -187,17 +190,24 @@ def import_ptychography_frameset(directory: str, quiet=False,
             stxm_frames.append(stxm)
     # Save image data to the HDF file
     intensities = np.array([intensities])
-    imported.create_dataset('intensities', data=intensities, dtype=np.complex64)
+    intensity_ds = imported.create_dataset('intensities',
+                                           data=intensities,
+                                           dtype=np.complex64)
+    logger.info("Saving intensity data: %s", intensity_ds.name)
     stxm_frames = np.array([stxm_frames])
     imported.create_dataset('stxm', data=stxm_frames)
     # Save X-ray energies to the HDF File
     energies = np.array([energies], dtype=np.float32)
     imported.create_dataset('energies', data=energies)
+    logger.debug("Found energies %s", energies)
     # Save pixel size information
     px_sizes = np.empty(shape=intensities.shape[0:-2])
+    px_size = 4.17
     px_sizes[:] = 4.17
     px_grp = imported.create_dataset('pixel_sizes', data=px_sizes)
-    px_grp.attrs['unit'] = 'nm'
+    px_unit = 'nm'
+    px_grp.attrs['unit'] = px_unit
+    logger.info("Using pixel size of %f %s", px_size, px_unit)
     # Save metadata
     imported.create_dataset('timestep_names',
                             data=np.array([sam_name], dtype="S50"))
@@ -210,9 +220,11 @@ def import_ptychography_frameset(directory: str, quiet=False,
     imported.create_dataset('original_positions', data=nan_pos)
     # Clean up any open files, etc
     h5file.close()
+    logger.info("Importing finished in %f seconds", time() - logstart)
 
 
 _SsrlResponse = namedtuple("_SsrlResponse", ("data", "starttime", "endtime"))
+
 
 def _average_ssrl_files(files):
     starttimes = []

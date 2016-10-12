@@ -25,6 +25,8 @@ row, column)."""
 import functools
 from typing import Callable
 import os
+from time import time
+import logging
 
 import pandas as pd
 from matplotlib import pyplot
@@ -44,8 +46,8 @@ import xanes_math as xm
 
 predefined.define_units()
 
-# So all modules can use the same HDF indices
-# energy_key = "{:.2f}_eV"
+
+log = logging.getLogger(__name__)
 
 
 def build_series(frames):
@@ -53,6 +55,7 @@ def build_series(frames):
     images = [frame.image_data for frame in frames]
     series = pd.Series(images, index=energies)
     return series
+
 
 def merge_framesets(framesets, group="merged"):
     """Combine two set of frame data into one. No energy should be
@@ -625,6 +628,7 @@ class XanesFrameset():
                           self._rotations is None and
                           self._scales is None)
         if not_actionable:
+            log.debug("No translations to apply, skipping.")
             # Nothing to apply, so no-op
             with self.store() as store:
                 out = store.get_frames('absorbances').value
@@ -656,13 +660,17 @@ class XanesFrameset():
                     rupper = int(np.floor(new_rows + rlower))
                     clower = int(np.ceil(-np.min(tx)))
                     cupper = int(np.floor(clower + new_cols))
-                    out = out[...,rlower:rupper,clower:cupper]
+                    log.debug("Cropping to [%d:%d,%d:%d]",
+                              rlower, rupper, clower, cupper)
+                    out = out[..., rlower:rupper, clower:cupper]
                 # Save result and clear saved transformations if appropriate
                 if commit:
+                    log.debug("Committing applied transformations")
                     with self.store('r+') as store:
                         store.set_frames(frames_name, out)
         # Clear the staged transformations
         if commit:
+            log.debug("Clearing staged transformations")
             self._translations = None
             self._scales = None
             self._rotations = None
@@ -714,7 +722,8 @@ class XanesFrameset():
         at the end so this error is only introduced once. Using the
         `commit=False` argument allows for multiple different types of
         registration to be performed in sequence, since uncommitted
-        translations will be applied before the next round of registration.
+        translations will be applied before the next round of
+        registration.
 
         Arguments
         ---------
@@ -751,7 +760,11 @@ class XanesFrameset():
 
         plot_results : If truthy (default), plot the root-mean-square of the
           translation distance for each pass.
+
         """
+        logstart = time()
+        log.info("Aligning frames with %s algorithm over %d passes",
+                    method, passes)
         pass_distances = []
         # Check for valid attributes
         valid_filters = ["median", None]
@@ -762,7 +775,8 @@ class XanesFrameset():
         # Sanity check on `method` argument
         valid_methods = ['cross_correlation', 'template_match']
         if method not in valid_methods:
-            msg = "Unknown method {}. Choices are {}".format(method, valid_methods)
+            msg = "Unknown method {}. Choices are {}"
+            msg = msg.format(method, valid_methods)
             raise ValueError(msg)
         # Guess best reference frame to use
         if reference_frame is "max":
@@ -781,8 +795,9 @@ class XanesFrameset():
                 ref_image = frames[reference_frame]
                 # Check that the argument results in 2D image_data
                 if len(ref_image.shape) != 2:
-                    msg = "refrence_frame ({}) does not match shape of frameset {}."
-                    msg += "Please provide a {}-tuple."
+                    msg = "refrence_frame ({}) does not match"
+                    msg += " shape of frameset {}."
+                    msg += " Please provide a {}-tuple."
                     msg = msg.format(reference_frame,
                                      frames.shape,
                                      len(frames.shape) - 2)
@@ -795,11 +810,13 @@ class XanesFrameset():
             # Calculate translations for each frame
             if method == "cross_correlation":
                 translations = xm.register_correlations(frames=frames,
-                                                     reference=ref_image)
+                                                        reference=ref_image)
             elif method == "template_match":
-                translations = xm.register_template(frame=frames, template=template)
+                translations = xm.register_template(frame=frames,
+                                                    template=template)
             # Add the root-mean-square to the list of distances translated
             rms = np.sqrt((translations**2).sum(axis=-1).mean())
+            log.info("RMS of translations for pass %d = %f", pass_, rms)
             pass_distances.append(rms)
             # Save translations for deferred calculation
             self.stage_transformations(translations=translations)
@@ -812,178 +829,8 @@ class XanesFrameset():
             ax.set_ylabel("RMS Translation")
         # Apply result of calculations to disk (if requested)
         if commit:
+            log.info("Committing final translations to disk")
             self.apply_transformations(crop=True, commit=True)
-        # with self.store(mode='r+') as store:
-        #     transform_images(data=frames, translations=translations,
-        #                      out=store.absorbances, mode='wrap')
-        # reference_match = feature.match_template(component(reference_image, "imag"),
-        #                                                  component(reference_target, "imag"),
-        #                                                  pad_input=True)
-        #         reference_center = np.unravel_index(reference_match.argmax(),
-        #                                             reference_match.shape)
-        #         reference_center = Pixel(vertical=reference_center[0],
-        #                                  horizontal=reference_center[1])
-        #     # Multiprocessing setup
-        #     def worker(payload):
-        #         key = payload['key']
-        #         data = payload['data']
-        #         # Temporarily rescale the data to be between -1 and 1
-        #         scaled_data = data
-        #         if blur == "median":
-        #             blurred_data = filters.median(scaled_data, morphology.disk(20))
-        #         elif blur is None:
-        #             blurred_data = np.copy(scaled_data)
-        #         labels = payload.get('labels', None)
-        #         if current_method == "cross_correlation":
-        #             # Determine what the new translation should be
-        #             results = feature.register_translation(reference_image,
-        #                                                    blurred_data,
-        #                                                    upsample_factor=upsampling)
-        #             shift, error, diffphase = results
-        #             shift = xycoord(-shift[1], -shift[0])
-        #         elif current_method == "template_match":
-        #             # Determine what the new translation should be
-        #             match = feature.match_template(component(scaled_data, "imag"),
-        #                                            component(reference_target, "imag"),
-        #                                            pad_input=True)
-        #             center = np.unravel_index(match.argmax(), match.shape)
-        #             center = Pixel(vertical=center[0], horizontal=center[1])
-        #             # Determine the net translation necessary to align to reference frame
-        #             shift = xycoord(
-        #                 x=center.horizontal - reference_center.horizontal,
-        #                 y=center.vertical - reference_center.vertical,
-        #             )
-        #         # Apply net transformation with bicubic interpolation
-        #         # transformation = transform.SimilarityTransform(translation=shift)
-        #         # new_data = transform.warp(data, transformation,
-        #         #                           order=3, mode="wrap", preserve_range=True)
-        #         new_data = _transform(data, translation=shift)
-        #         # # Reset intensities of original values
-        #         # new_data = exposure.rescale_intensity(new_data,
-        #         #                                       in_range=out_range,
-        #         #                                       out_range=in_range)
-        #         result = {
-        #             'key': key,
-        #             'energy': payload['energy'],
-        #             'data': new_data,
-        #             'shift': shift,
-        #         }
-        #         # Transform labels
-        #         if labels:
-        #             original_dtype = labels.dtype
-        #             labels = labels.astype(np.float64)
-        #             new_labels = transform.warp(labels, transformation, order=0, mode="constant", preserve_range=True)
-        #             new_labels = new_labels.astype(original_dtype)
-        #             result['labels'] = new_labels
-        #         return result
-
-        #     # Save coordinates for determining cropping later on
-        #     limits = {
-        #         'left': 0,
-        #         'right': 0,
-        #         'top': 0,
-        #         'bottom': 0,
-        #     }
-
-        #     def process_result(payload):
-        #         key = payload['key']
-        #         shift = payload.pop('shift')
-        #         # Check if these shifts set new cropping limits
-        #         if shift.y > limits['bottom']:
-        #             limits['bottom'] = shift.y
-        #         elif shift.y < limits['top']:
-        #             limits['top'] = shift.y
-        #         if shift.x > limits['right']:
-        #             limits['right'] = shift.x
-        #         elif shift.x < limits['left']:
-        #             limits['left'] = shift.x
-        #         # Save shift for final transformation
-        #         past_shifts = shifts.get(key, [])
-        #         past_shifts.append(shift)
-        #         shifts[key] = past_shifts
-        #         return payload
-
-        #     # Launch the multiprocessing queue
-        #     description = "Aligning pass {curr}/{total}"
-        #     description = description.format(curr=current_pass+1,
-        #                                      total=passes,
-        #                                      frame=reference_frame)
-        #     process_with_smp(frameset=self,
-        #                      worker=worker,
-        #                      process_result=process_result,
-        #                      description=description)
-        #     # Update new positions
-        #     for frame in self:
-        #         frame.sample_position = position(0, 0, frame.sample_position.z)
-        #     # Crop frames and save for later
-        #     if crop:
-        #         bottom = math.ceil(abs(limits['top']))
-        #         top = math.floor(original_shape.rows - abs(limits['bottom']))
-        #         left = math.ceil(abs(limits['left']))
-        #         right = math.floor(original_shape.columns - abs(limits['right']))
-        #         for frame in prog(self, "Cropping frames"):
-        #             frame.crop(bottom=bottom, left=left, top=top, right=right)
-        #         # Save cropping dimensions for final crop after last pass
-        #         all_crops.append(
-        #             Crop(top=top, left=left, bottom=bottom, right=right)
-        #         )
-        #     # Increment counter to keep track of current position
-        #     current_pass += 1
-
-        # # Perform a final, complete translation and cropping if necessary
-        # if passes > 1:
-        #     # Revert back to original frameset
-        #     self.switch_group(os.path.basename(original_group))
-        #     self.fork_group(new_name)
-        #     if self.active_labels_groupname:
-        #         self.fork_labels(new_name + "_labels")
-        #     # Multiprocessing setup
-        #     def worker(payload):
-        #         key = payload['key']
-        #         data = payload['data']
-        #         # Temporarily rescale the data to be between -1 and 1
-        #         labels = payload.get('labels', None)
-        #         # Compute the net translation needed for this frame
-        #         curr_shifts = shifts[key]
-        #         shift = xycoord(
-        #             sum([n[0] for n in curr_shifts]),
-        #             sum([n[1] for n in curr_shifts])
-        #         )
-        #         new_data = _transform(data, translation=shift)
-        #         result = {
-        #             'key': key,
-        #             'energy': payload['energy'],
-        #             'data': new_data,
-        #             'shift': shift,
-        #         }
-        #         # Transform labels
-        #         if labels:
-        #             original_dtype = labels.dtype
-        #             labels = labels.astype(np.float64)
-        #             new_labels = transform.warp(labels,
-        #                                         transformation,
-        #                                         order=0,
-        #                                         mode="constant", preserve_range=True)
-        #             new_labels = new_labels.astype(original_dtype)
-        #             result['labels'] = new_labels
-        #         return result
-        #     process_with_smp(frameset=self,
-        #                      worker=worker,
-        #                      description="Final alignment")
-        #     # Calculate smallest cropping size
-        #     if crop:
-        #         top, bottom, left, right = (0, 0, 0, 0)
-        #         for crop in all_crops:
-        #             bottom += crop.bottom
-        #             left += crop.left
-        #         last_crop = all_crops[-1]
-        #         right = left + last_crop.right - last_crop.left
-        #         top = bottom + last_crop.top - last_crop.bottom
-        #         crop = Crop(top=top, left=left, bottom=bottom, right=right)
-        #         # Crop frames down to size
-        #         for frame in prog(self, "Final crop"):
-        #             frame.crop(left=crop.left, bottom=crop.bottom,
-        #                        right=crop.right, top=crop.top)
 
     # def align_to_particle(self, loc, new_name, reference_frame=None):
     #     """Use template matching algorithm to line up the frames. Similar to
@@ -1889,26 +1736,6 @@ class XanesFrameset():
 
     @functools.lru_cache()
     def image_normalizer(self, representation):
-        # Find global limits
-        # global_min = 99999999999
-        # global_max = 0
-        # for frame in self:
-        #     data = frame.get_data(name=representation)
-        #     # Remove outliers temporarily
-        #     sigma = 9
-        #     median = np.median(data)
-        #     sdev = np.std(data)
-        #     d = np.abs(data - median)
-        #     s = d / sdev if sdev else 0.
-        #     data[s >= sigma] = median
-        #     # Check if this frame has the minimum intensity
-        #     local_min = np.min(data)
-        #     if local_min < global_min:
-        #         global_min = local_min
-        #     # Check if this has the maximum intensity
-        #     local_max = np.max(data)
-        #     if local_max > global_max:
-        #         global_max = local_max
         with self.store() as store:
             global_min = np.min(store.absorbances)
             global_max = np.max(store.absorbances)
@@ -1932,8 +1759,6 @@ class PtychoFrameset(XanesFrameset):
     values. This class does *not* include any code responsible for the
     collection and reconstruction of such data, only for the analysis
     in the context of X-ray absorption near edge spectroscopy."""
-
-    FrameClass = PtychoFrame
 
     def representations(self):
         """Retrieve a list of valid representations for these data, such as
@@ -1968,11 +1793,11 @@ class PtychoFrameset(XanesFrameset):
         with self.store() as store:
             Is = store.intensities
             refraction = xm.apply_internal_reference(Is)
-            # assert False, "Need to move this to calculation and use threading for each frame"
             Es = store.energies.value
         # Save complex image as refractive index (real part is phase change)
         with self.store('r+') as store:
-            store.absorbances = refraction        # Plot background for evaluation
+            store.absorbances = refraction
+        # Plot background for evaluation
         # if plot_background:
         #     if ax is None:
         #         ax = plots.new_axes()

@@ -39,16 +39,6 @@ class Edge():
     ranges. All energies are assumed to be in units of
     electron-volts. This class is intended to be extended into K-edge,
     L-edge, etc.
-    """
-    pass
-
-
-class LEdge(Edge):
-    pass
-
-
-class KEdge(Edge):
-    """An X-ray absorption K-edge corresponding to a 2p→3d transition.
 
     Attributes
     ---------
@@ -71,7 +61,6 @@ class KEdge(Edge):
     map_range: 2-tuple (start, stop) - Energy range used for
       normalizing maps. If not supplied, will be determine from pre-
       and post-edge arguments.
-
     """
     regions = []
     E_0 = None
@@ -80,20 +69,6 @@ class KEdge(Edge):
     map_range = None
     post_edge_order = 2
     pre_edge_fit = None
-
-    def annotate_spectrum(self, ax):
-        ax.axvline(x=self.edge_range[0], linestyle='-', color="0.55", alpha=0.4)
-        ax.axvline(x=self.edge_range[1], linestyle='-', color="0.55", alpha=0.4)
-
-    # def normalize(self, spectra, energies):
-    #     """Takes a set of spectra and energies and passes them on to the
-    #     computation module for normalizing by the `normalize_Kedge`
-    #     function."""
-    #     ret = normalize_Kedge(spectra=spectra, energies=energies,
-    #                           pre_edge=self.pre_edge,
-    #                           post_edge=self.post_edge, E_0=self.E_0)
-    #     return ret
-
     def all_energies(self):
         energies = []
         for region in self.regions:
@@ -131,6 +106,30 @@ class KEdge(Edge):
             # Multiple values for x
             X = X.swapaxes(0, 1)
         return X
+
+
+class LEdge(Edge):
+    """An X-ray absorption K-edge corresponding to a 2s or 2p transition."""
+    pass
+
+
+class KEdge(Edge):
+    """An X-ray absorption K-edge corresponding to a 1s transition."""
+
+    def annotate_spectrum(self, ax):
+        ax.axvline(x=self.edge_range[0], linestyle='-', color="0.55",
+                   alpha=0.4)
+        ax.axvline(x=self.edge_range[1], linestyle='-', color="0.55",
+                   alpha=0.4)
+
+    # def normalize(self, spectra, energies):
+    #     """Takes a set of spectra and energies and passes them on to the
+    #     computation module for normalizing by the `normalize_Kedge`
+    #     function."""
+    #     ret = normalize_Kedge(spectra=spectra, energies=energies,
+    #                           pre_edge=self.pre_edge,
+    #                           post_edge=self.post_edge, E_0=self.E_0)
+    #     return ret
 
     # def fit(self, data: Series):
     #     """Regression fitting. First the pre-edge is linearlized and the
@@ -255,7 +254,21 @@ class KEdge(Edge):
     #     # if self.whiteline_peak is not None:
     #     #     self.whiteline_peak.plot_fit(ax=ax)
 
-class NCANickelLEdge(KEdge):
+
+class NCACobaltLEdge(LEdge):
+    E_0 = 793.2
+    regions = [
+        (770, 775, 1),
+        (775, 785, 0.5),
+        (785, 790, 1),
+    ]
+    pre_edge = (770, 775)
+    post_edge = (785, 790)
+    map_range = (0, 1)
+    _peak1 = 780.5
+
+
+class NCANickelLEdge(LEdge):
     E_0 = 853
     regions = [
         (844, 848, 1),
