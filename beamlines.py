@@ -45,7 +45,7 @@ class Zoneplate():
     ---------
     - start : The first zoneplate position-energy pair.
 
-    - step : Adjustment in z-position for every positive change of 1 eV
+    - z_step : Adjustment in z-position for every positive change of 1 eV
       of beam energy.
 
     - end : The second zoneplate position-energy pair.

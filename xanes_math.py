@@ -25,23 +25,19 @@ functions will operate on large arrays of data.
 import warnings
 import logging
 from time import time
-import sys
-import threading
 import multiprocessing as mp
-from itertools import count, product
+from itertools import product
 from collections import namedtuple
 
 from scipy import ndimage, linalg
 from scipy.optimize import curve_fit
 import numpy as np
 from skimage import transform, feature, filters, morphology, exposure, measure
-from sklearn import linear_model, svm, utils
-import matplotlib.pyplot as plt
 
-from utilities import prog, foreach, parallel_map, component
+from utilities import prog, foreach, component
 
 
-logger = logging.getLogger(__name__)
+log = logging.getLogger(__name__)
 
 
 # Helpers for parallelizable code
@@ -72,20 +68,20 @@ def apply_internal_reference(intensities, out=None):
     the last two dimensions are image rows and column.
     """
     logstart = time()
-    logger.debug("Starting internal reference correction")
+    log.debug("Starting internal reference correction")
     if out is None:
         out = np.empty_like(intensities)
 
     def apply_ref(idx):
         # Calculate background intensity using thresholding
-        logger.debug("Applying reference for frame %s", idx)
+        log.debug("Applying reference for frame %s", idx)
         frame = intensities[idx]
         direct_img = component(frame, "modulus")
         threshold = filters.threshold_yen(direct_img)
         graymask = direct_img > threshold
         background = component(frame, "modulus")[graymask]
         I_0 = np.median(background) # Median of each image
-        logger.debug("I0 for frame %s = %f", idx, I_0)
+        log.debug("I0 for frame %s = %f", idx, I_0)
         # Calculate absorbance based on background
         absorbance = np.log(I_0 / np.abs(frame))
         # Calculate relative phase shift
@@ -99,11 +95,11 @@ def apply_internal_reference(intensities, out=None):
         phase = phase - bg
         j = complex(0, 1)
         out[idx] = phase + j*absorbance
-        logger.debug("Applied internal reference for frame %s", idx)
+        log.debug("Applied internal reference for frame %s", idx)
     # Call the actual function for each frame
     iter_frames = iter_indices(intensities, leftover_dims=2, desc="Apply reference")
     foreach(apply_ref, iter_frames)
-    logger.info("Internal reference applied in %f seconds",
+    log.info("Internal reference applied in %f seconds",
                 (time() - logstart))
     return out
 
@@ -409,14 +405,16 @@ def direct_whitelines(spectra, energies, edge):
     outshape = spectra.shape[:-1]
     out = np.empty(shape=outshape, dtype=energies.dtype)
     # Iterate over spectra and perform calculation
-    def get_whiteline(idx):
-        whiteline_idx = (*idx[:energies.ndim-1], np.argmax(subspectra[idx]))
-        whiteline = Es[whiteline_idx]
-        out[idx] = whiteline
+
+    def get_whiteline(frame_idx):
+        whiteline_idx = np.argmax(subspectra[frame_idx])
+        whiteline = Es[frame_idx][whiteline_idx]
+        out[frame_idx] = whiteline
     indices = iter_indices(spectra, desc="Finding maxima", leftover_dims=1)
     foreach(get_whiteline, indices)
     # Return results
     return out
+
 
 def transform_images(data, translations=None, rotations=None,
                      scales=None, out=None, mode='constant'):
@@ -443,13 +441,16 @@ def transform_images(data, translations=None, rotations=None,
             translation=translation,
             rotation=rot,
         )
-        # (Temporarily rescale intensities so the warp function is happy)
+
         def do_transform(a, transformation):
             """Helper function, takes one array and transforms it."""
             realrange = (np.min(a), np.max(a))
             indata = exposure.rescale_intensity(a,
                                                 in_range=realrange,
                                                 out_range=(0, 1))
+            # Convert to float so the warp function is happy
+            if not np.iscomplexobj(indata):
+                indata = indata.astype(np.float64)
             outdata = transform.warp(indata, transformation,
                                      order=3, mode=mode)
             outdata = exposure.rescale_intensity(outdata,

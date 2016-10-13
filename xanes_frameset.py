@@ -1512,13 +1512,14 @@ class XanesFrameset():
         """Determine physical dimensions for axes values.
 
         Returns: If idx was given, a single tuple of (left, right,
-        bottom, up).
+        bottom, up), otherwise return an array of extents for each frame.
 
         Arguments
         ---------
 
         -idx : Index for a given frame. This allows for faster
-         calculation if only a single frame is required.
+         calculation if only a single frame is required. By default,
+         returns the first frame.
 
         """
         with self.store() as store:
@@ -1530,24 +1531,24 @@ class XanesFrameset():
                 center = store.relative_positions[idx]
             else:
                 # Include all frames
-                imshape = np.array(frames.shape)[-2:] # ((rows, cols))
+                imshape = np.array(frames.shape)[-2:]  # ((rows, cols))
                 pixel_size = store.pixel_sizes.value
                 center = store.relative_positions.value
         width = imshape[-1] * pixel_size
         height = imshape[-2] * pixel_size
         # Calculate boundaries from image shapes
         if idx is not None:
-            left = (center[-1] - width)/ 2
+            left = (center[-1] - width) / 2
             right = (center[-1] + width) / 2
             bottom = (center[-2] - height) / 2
             top = (center[-2] + height) / 2
             ret = Extent(left=left, right=right,
                          bottom=bottom, top=top)
         else:
-            left = (center[:,-1] - width)/ 2
-            right = (center[:,-1] + width) / 2
-            bottom = (center[:,-2] - height) / 2
-            top = (center[:,-2] + height) / 2
+            left = (center[:, -1] - width) / 2
+            right = (center[:, -1] + width) / 2
+            bottom = (center[:, -2] - height) / 2
+            top = (center[:, -2] + height) / 2
             ret = np.array((left, right, bottom, top)).T
         return ret
 
