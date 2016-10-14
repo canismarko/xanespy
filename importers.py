@@ -28,15 +28,11 @@ import logging
 import pandas as pd
 from tqdm import tqdm
 import numpy as np
-from PIL import Image
 from scipy.constants import physical_constants
 from scipy.ndimage.filters import median_filter
 
 from xradia import XRMFile
-from xanes_frameset import XanesFrameset
-from frame import remove_outliers
-from txmstore import TXMStore, prepare_txm_store
-from utilities import prog, prepare_hdf_group, parallel_map, foreach
+from utilities import prog
 import exceptions
 from xanes_math import transform_images, apply_references
 
@@ -48,7 +44,7 @@ format_classes = {
 
 CURRENT_VERSION = "0.3" # Let's file loaders deal with changes to storage
 
-logger = logging.getLogger(__name__)
+log = logging.getLogger(__name__)
 
 
 def _average_frames(*frames):
@@ -110,8 +106,9 @@ def read_metadata(filenames, flavor):
     return df.sort_values(by=['starttime'])
 
 
-def import_ptychography_frameset(directory: str, quiet=False,
-                                 hdf_filename=None, hdf_groupname=None):
+def import_nanosurveyor_frameset(directory: str, quiet=False,
+                                 hdf_filename=None, hdf_groupname=None,
+                                 energy_range=None):
     """Import a set of images as a new frameset for generating
     ptychography chemical maps based on data collected at ALS beamline
     5.3.2.1
@@ -128,27 +125,33 @@ def import_ptychography_frameset(directory: str, quiet=False,
       omitted or None, the `directory` basename is used
 
     - hdf_groupname : String to use for the hdf group of this
-    dataset. If omitted or None, the `directory` basename is
-    used. Raises an exception if the group already exists in the HDF file.
+      dataset. If omitted or None, the `directory` basename is
+      used. Raises an exception if the group already exists in the HDF
+      file.
+
+    - energy_range : A 2-tuple with the (min, max) energy to be
+      imported. This is useful if only a subset of the available data
+      is usable. Values are assumed to be in electron-volts.
     """
     # Prepare logging info
     logstart = time()
     # Prepare the HDF5 file and sample group
-    logger.info("Importing ptychography directory %s", directory)
+    log.info("Importing ptychography directory %s", directory)
     h5file = h5py.File(hdf_filename)
+    # Get a default groupname if none is given
     path, sam_name = os.path.split(os.path.abspath(directory))
-    try:
-        sam_group = h5file.create_group(sam_name)
-    except ValueError:
-        raise exceptions.DatasetExistsError(sam_name)
-    logger.info("Created HDF group %s", sam_group.name)
+    if hdf_groupname is None:
+        hdf_groupname = sam_name
+    # Create the group if necessary
+    sam_group = h5file.require_group(hdf_groupname)
+    log.info("Created HDF group %s", sam_group.name)
     # Set some metadata
     sam_group.attrs["xanespy_version"] = CURRENT_VERSION
     sam_group.attrs["technique"] = "ptychography STXM"
     sam_group.attrs["beamline"] = "ALS 5.3.2.1"
     sam_group.attrs["original_directory"] = os.path.abspath(directory)
     # Prepare groups for data
-    imported = sam_group.create_group('imported')
+    imported = sam_group.require_group('imported')
     sam_group.attrs['latest_data_name'] = 'imported'
     # Check that the directory exists
     if not os.path.exists(directory):
@@ -167,16 +170,24 @@ def import_ptychography_frameset(directory: str, quiet=False,
     # Import any cxi files that were found
     intensities = []
     energies = []
-    timestamps = []
     filenames = []
     stxm_frames = []
-    logger.info("Importing %d .cxi files", len(cxifiles))
+    pixel_sizes = []
+    log.info("Importing %d .cxi files", len(cxifiles))
     for filename in cxifiles:
-        filenames.append(filename)
+        filenames.append(os.path.relpath(filename))
         with h5py.File(filename, mode='r') as f:
             # Extract energy in Joules and convert to eV
             energy = f['/entry_1/instrument_1/source_1/energy'].value
             energy = energy / physical_constants['electron volt'][0]
+            # Skip this energy if it's outside the desired range
+            is_in_range = (energy_range is None or
+                           min(energy_range) <= energy <= max(energy_range))
+            if not is_in_range:
+                log.info('Skipping %s (%f eV is outside of range)',
+                         filename, energy)
+                continue
+            log.debug("Importing %s -> %f eV", filename, energy)
             energies.append(energy)
             # Import complex reconstructed image
             data = f['/entry_1/image_1/data'].value
@@ -184,39 +195,73 @@ def import_ptychography_frameset(directory: str, quiet=False,
             # Import STXM interpretation
             stxm = f['entry_1/instrument_1/detector_1/STXM'].value
             stxm_frames.append(stxm)
-    # Save image data to the HDF file
-    intensities = np.array([intensities])
-    intensity_ds = imported.create_dataset('intensities',
-                                           data=intensities,
-                                           dtype=np.complex64)
-    logger.info("Saving intensity data: %s", intensity_ds.name)
-    stxm_frames = np.array([stxm_frames])
-    imported.create_dataset('stxm', data=stxm_frames)
-    # Save X-ray energies to the HDF File
-    energies = np.array([energies], dtype=np.float32)
-    imported.create_dataset('energies', data=energies)
-    logger.debug("Found energies %s", energies)
+            # Save pixel size
+            px_size = float(f['/entry_1/process_1/Param/pixnm'].value)
+            log.debug("Scan %s has pixel size %f", filename, px_size)
+            pixel_sizes.append(px_size)
+
+    # Helper function to save image data to the HDF file
+    def replace_ds(name, parent, *args, **kwargs):
+        if name in parent.keys():
+            # Delete previous dataset
+            del parent[name]
+        else:
+            log.info("Creating new dataset %s from %s", name, directory)
+        # Save new combined dataset
+        new_ds = parent.create_dataset(name, *args, **kwargs)
+        return new_ds
+    # Load previous datasets
+    if 'intensities' in imported.keys():
+        log.info("Appending data from %s", directory)
+        # Check for redundant energies
+        old_energies = imported['energies'][0]
+        overlap = np.in1d(energies, old_energies)
+        if np.any(overlap):
+            msg = "Imported redundant energies from {directory}: {energies}"
+            msg.format(directory=directory, energies=energies[overlap])
+            warnings.warn(RuntimeWarning(msg))
+            log.warning(msg)
+        # Combine new data with previously imported data
+        intensities = np.concatenate([intensities, imported['intensities'][0]])
+        stxm = np.concatenate([stxm, imported['stxm'][0]])
+        energies = np.concatenate([energies, old_energies])
+        pixel_sizes = np.concatenate([pixel_sizes, imported['pixel_sizes'][0]])
+        filenames = np.concatenate([filenames, imported['filenames'][0]])
+        del imported['relative_positions']
+        del imported['original_positions']
+    else:
+        log.info("Creating datasets from %s")
+        imported.create_dataset('timestep_names',
+                                data=np.array([sam_name], dtype="S50"))
+    # Sort all the datasets by energy
+    sort_idx = np.argsort(energies)
+    energies = np.array(energies)[sort_idx]
+    intensities = np.array(intensities)[sort_idx]
+    stxm = np.array(stxm)[sort_idx]
+    pixel_sizes = np.array(pixel_sizes)[sort_idx]
+    filenames = np.array(filenames)[sort_idx]
+    # Save updated data to HDF file
+    replace_ds('intensities', parent=imported, data=[intensities],
+               dtype=np.complex64)
+    replace_ds('stxm', parent=imported, data=[stxm],
+               dtype=np.float32)
+    replace_ds('energies', parent=imported, data=[energies], dtype=np.float32)
+    log.debug("Found energies %s", energies)
     # Save pixel size information
-    px_sizes = np.empty(shape=intensities.shape[0:-2])
-    px_size = 4.17
-    px_sizes[:] = 4.17
-    px_grp = imported.create_dataset('pixel_sizes', data=px_sizes)
+    px_grp = replace_ds('pixel_sizes', parent=imported, data=[pixel_sizes])
     px_unit = 'nm'
     px_grp.attrs['unit'] = px_unit
-    logger.info("Using pixel size of %f %s", px_size, px_unit)
     # Save metadata
-    imported.create_dataset('timestep_names',
-                            data=np.array([sam_name], dtype="S50"))
     filenames = np.array(filenames, dtype="S100")
-    imported.create_dataset('filenames', data=[filenames], dtype="S100")
-    imported.create_dataset('relative_positions',
-                            data=[np.zeros(shape=(*filenames.shape, 3), dtype=np.float32)])
+    replace_ds('filenames', parent=imported, data=[filenames], dtype="S100")
+    zero_positions = [np.zeros(shape=(*filenames.shape, 3), dtype=np.float32)]
+    imported.create_dataset('relative_positions', data=zero_positions)
     nan_pos = np.empty(shape=(1, *filenames.shape, 3), dtype=np.float32)
     nan_pos.fill(np.nan)
     imported.create_dataset('original_positions', data=nan_pos)
     # Clean up any open files, etc
     h5file.close()
-    logger.info("Importing finished in %f seconds", time() - logstart)
+    log.info("Importing finished in %f seconds", time() - logstart)
 
 
 _SsrlResponse = namedtuple("_SsrlResponse", ("data", "starttime", "endtime"))

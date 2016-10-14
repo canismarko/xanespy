@@ -28,14 +28,19 @@ class DataNotFoundError(FileNotFoundError):
     """Expected a directory containing data but found none."""
     pass
 
+
 class FrameFileNotFound(IOError):
     """Expected to load a TXM frame file but it doesn't exist."""
     pass
 
+
 class GroupKeyError(KeyError):
-    """Tried to load an HDF group but the group doesn't exist or is
-    ambiguous."""
+    """Tried to load or create an HDF group but failed. Examples include:
+    the group doesn't exist, is ambiguous or already exists when being
+    created.
+    """
     pass
+
 
 class DataFormatError(RuntimeError):
     """The raw data are arranged in a way that the importers or TXM classes do
@@ -43,14 +48,17 @@ class DataFormatError(RuntimeError):
     """
     pass
 
+
 class HDFScopeError(ValueError):
     """Tried to pass an HDF scope that is not recognized."""
     pass
+
 
 class FileExistsError(IOError):
     """Tried to import a TXM frameset but the corresponding HDF file
     already exists."""
     pass
+
 
 class CreateGroupError(ValueError):
     """Tried to import a TXM frameset into a group but the corresponding
@@ -58,18 +66,22 @@ class CreateGroupError(ValueError):
     """
     pass
 
+
 class FilenameParseError(ValueError):
     """The parameters in the filename do not match the naming scheme
     associated with this flavor."""
     pass
+
 
 class DatasetExistsError(RuntimeError):
     """Trying to save a new dataset but one already exists with the given
     path."""
     pass
 
+
 class NoParticleError(Exception):
     pass
+
 
 class RefinementError(RuntimeError):
     pass

@@ -33,12 +33,11 @@ from matplotlib import pyplot
 from matplotlib.colors import Normalize
 import h5py
 import numpy as np
-from skimage import morphology, filters, transform, color, measure
+from skimage import morphology, filters, transform,  measure
 from sklearn import linear_model
 from units import unit, predefined
 
 from utilities import prog, xycoord, Pixel, Extent, pixel_to_xy
-from frame import TXMFrame, PtychoFrame
 from txmstore import TXMStore
 import plots
 import exceptions
@@ -57,12 +56,12 @@ def build_series(frames):
     return series
 
 
-def merge_framesets(framesets, group="merged"):
+def merge_framesets(framesets, new_group="merged"):
     """Combine two set of frame data into one. No energy should be
     duplicated. A new HDF group will be greated.
     """
     ref_fs = framesets[0]
-    dest = "/" + group
+    dest = "/" + new_group
     with ref_fs.hdf_file(mode="a") as f:
         # Copy first group as a template
         try:
@@ -89,117 +88,6 @@ def merge_framesets(framesets, group="merged"):
                        groupname=dest)
     return fs
 
-# def calculate_gaussian_whiteline(data, edge):
-
-#     """Calculates the whiteline position of the absorption edge data
-#     contained in `data`.
-
-#     The "whiteline" for an absorption K-edge is the energy at which
-#     the specimin has its highest absorbance. This function will return
-#     an 2 arrays with the same shape as each entry in the data
-#     series. 1st array gives the energy of the highest absorbance and
-#     2nd array contains goodness of fits.
-
-#     Arguments
-#     ---------
-#     data - The X-ray absorbance data. Should be similar to a pandas
-#     Series. Assumes that the index is energy. This can be a Series of
-#     numpy arrays, which allows calculation of image frames, etc.
-
-#     edge - An instantiated edge object that can be used for fitting.
-
-#     """
-#     # Prepare data for manipulation
-#     energies = data.index.astype(np.float64)
-#     absorbances = np.array(list(data.values))
-#     absorbances = absorbances.astype(np.float64)
-#     orig_shape = absorbances.shape[1:]
-#     ndim = absorbances.ndim
-#     # Convert to an array of spectra by moving the 1st axes (energy)
-#     # to be on bottom
-#     for dim in range(0, ndim-1):
-#         absorbances = absorbances.swapaxes(dim, dim+1)
-#     # Flatten into a 1-D array of spectra
-#     num_spectra = int(np.prod(orig_shape))
-#     spectrum_length = absorbances.shape[-1]
-#     absorbances = absorbances.reshape((num_spectra, spectrum_length))
-#     # Calculate whitelines and goodnesses(?)
-#     # whitelines = np.zeros_like(absorbances)
-#     whitelines = np.zeros(shape=(num_spectra,))
-#     goodnesses = np.zeros_like(whitelines)
-#     # Prepare multiprocessing functions
-#     def result_callback(payload):
-#         # Unpack and save results to arrays.
-#         idx = payload['idx']
-#         whitelines[idx] = payload['center']
-#         goodnesses[idx] = payload['goodness']
-#     def worker(payload):
-#         # Calculate the whiteline position by fitting.
-#         try:
-#             peak, goodness = edge.fit(payload['spectrum'])
-#         except exceptions.RefinementError as e:
-#             # Fit failed so set as bad cell
-#             center = edge.E_0
-#             goodness = 0
-#         else:
-#             center = peak.center()
-#         # Return calculated whiteline position as dictionary
-#         result = {
-#             'idx': payload['idx'],
-#             'center': center,
-#             'goodness': goodness
-#         }
-#         return result
-#     # Prepare multiprocessing queue
-#     queue = smp.Queue(worker=worker,
-#                       totalsize=len(absorbances),
-#                       result_callback=result_callback,
-#                       description="Calculating whiteline")
-#     # Fill queue with tasks
-#     for idx, spectrum in enumerate(absorbances):
-#         spectrum = pd.Series(spectrum, index=energies)
-#         payload = {
-#             'idx': idx,
-#             'spectrum': spectrum
-#         }
-#         queue.put(payload)
-#     # Wait for workers to finish
-#     queue.join()
-#     # Convert results back to their original shape
-#     whitelines = np.array(whitelines).reshape(orig_shape)
-#     goodnesses = np.array(goodnesses).reshape(orig_shape)
-#     return whitelines, goodnesses
-
-# def calculate_direct_whiteline(data, *args, **kwargs):
-#     """Calculates the whiteline position of the absorption edge data
-#     contained in `data`. This method uses the energy of maximum
-#     absorbance and is a faster alternative to `calculate_whiteline`.
-#     The "whiteline" for an absorption K-edge is the energy at which
-#     the specimin has its highest absorbance. This function will return
-#     an 2 arrays with the same shape as each entry in the data
-#     series. 1st array gives the energy of the highest absorbance and
-#     2nd array contains a mock array of goodness of fits (all values
-#     are 1).
-
-#     Arguments
-#     ---------
-#     data - The X-ray absorbance data. Should be similar to a pandas
-#     Series. Assumes that the index is energy. This can be a Series of
-#     numpy arrays, which allows calculation of image frames, etc.
-
-#     """
-#     # First disassemble the data series
-#     energies = data.index
-#     imagestack = np.array(list(data.values))
-#     # Now calculate the indices of the whiteline
-#     whiteline_indices = np.argmax(imagestack, axis=0)
-#     # Convert indices to energy
-#     map_energy = np.vectorize(lambda idx: energies[idx],
-#                               otypes=[np.float])
-#     whiteline_energies = map_energy(whiteline_indices)
-#     goodness = np.ones_like(whiteline_energies)
-#     return (whiteline_energies, goodness)
-
 
 def _transform(data, scale=None, rotation=None, translation=None):
     """Apply a similarity transformation to the given (optionally complex)
@@ -221,8 +109,11 @@ def _transform(data, scale=None, rotation=None, translation=None):
     # Apply transformation to imaginary component
     if np.any(data.imag):
         j = complex(0, 1)
-        new_data = np.add(new_data, j * transform.warp(data.imag, **warp_kwargs))
+        new_data = np.add(
+            new_data,
+            j * transform.warp(data.imag, **warp_kwargs))
     return new_data
+
 
 class XanesFrameset():
     """A collection of TXM frames at different energies moving across an
@@ -235,10 +126,12 @@ class XanesFrameset():
     - filename : path to the HDF file that holds these data.
 
     - groupname : Top level HDF group corresponding to this
-    frameset. This argument is only required if there is more than one
-    top-level group.
+      frameset. This argument is only required if there is more than
+      one top-level group.
+
+    - edge : An Edge object describing the meterial's X-ray energy
+      response characteristics.
     """
-    FrameClass = TXMFrame
     active_group = ''
     cmap = 'plasma'
     data_name = None
@@ -247,7 +140,7 @@ class XanesFrameset():
     _rotations = None
     _scales = None
 
-    def __init__(self, filename, edge, groupname):
+    def __init__(self, filename, groupname, edge):
         self.hdf_filename = filename
         self.edge = edge
         self.parent_name = groupname
@@ -1040,23 +933,12 @@ class XanesFrameset():
             for stepdata in data:
                 particles = self.particle_regions(intensity_image=stepdata)
                 imgs = [p.intensity_image for p in particles]
-                vals = [np.mean(im[im>0]) for im in imgs]
+                vals = [np.mean(im[im > 0]) for im in imgs]
                 steps.append(vals)
         # Convert from (steps, particles) to (particles, steps)
         steps = np.array(steps)
         steps = np.transpose(steps)
         return steps
-
-    def rebin(self, new_shape=None, factor=None):
-
-        """Resample all images into new shape. Arguments `shape` and `factor`
-        passed to txm.frame.TXMFrame.rebin().
-        """
-        self.fork_group('rebinned')
-        if self.active_labels_groupname:
-            self.fork_labels('rebinned_labels')
-        for frame in prog(self, "Rebinning"):
-            frame.rebin(new_shape=new_shape, factor=factor)
 
     def normalize(self, plot_fit=False, new_name='normalized'):
         """Correct for background material not absorbing at this edge. Uses
@@ -1077,6 +959,7 @@ class XanesFrameset():
         regression.fit(x, spectrum.values)
         goodness_of_fit = regression.score(x, spectrum.values)
         # Subtract regression line from each frame
+
         def remove_offset(payload):
             offset = regression.predict(payload['energy'])
             original_data = payload['data']
