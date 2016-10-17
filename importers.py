@@ -108,7 +108,7 @@ def read_metadata(filenames, flavor):
 
 def import_nanosurveyor_frameset(directory: str, quiet=False,
                                  hdf_filename=None, hdf_groupname=None,
-                                 energy_range=None):
+                                 energy_range=None, exclude_re=None, append=False):
     """Import a set of images as a new frameset for generating
     ptychography chemical maps based on data collected at ALS beamline
     5.3.2.1
@@ -132,9 +132,19 @@ def import_nanosurveyor_frameset(directory: str, quiet=False,
     - energy_range : A 2-tuple with the (min, max) energy to be
       imported. This is useful if only a subset of the available data
       is usable. Values are assumed to be in electron-volts.
+
+    - exclude_re : Any filenames matching this regular expression will
+    not be imported. A string or compiled re object can be given.
+
+    - append : If True, any existing dataset will be added to, rather
+      than replaced (default False)
+
     """
     # Prepare logging info
     logstart = time()
+    # Check if exclude_re is a string or regex object.
+    if exclude_re is not None and not hasattr(exclude_re, 'search'):
+        exclude_re = re.compile(exclude_re)
     # Prepare the HDF5 file and sample group
     log.info("Importing ptychography directory %s", directory)
     h5file = h5py.File(hdf_filename)
@@ -143,6 +153,11 @@ def import_nanosurveyor_frameset(directory: str, quiet=False,
     if hdf_groupname is None:
         hdf_groupname = sam_name
     # Create the group if necessary
+    if hdf_groupname in h5file.keys() and not append:
+        msg = 'Overwriting existing group "{}"'.format(hdf_groupname)
+        warnings.warn(RuntimeWarning(msg))
+        log.warning(msg)
+        del h5file[hdf_groupname]
     sam_group = h5file.require_group(hdf_groupname)
     log.info("Created HDF group %s", sam_group.name)
     # Set some metadata
@@ -175,7 +190,13 @@ def import_nanosurveyor_frameset(directory: str, quiet=False,
     pixel_sizes = []
     log.info("Importing %d .cxi files", len(cxifiles))
     for filename in cxifiles:
-        filenames.append(os.path.relpath(filename))
+        # Skip this energy is its exclude by the regular expression
+        if exclude_re is not None and exclude_re.search(filename):
+            msg = 'Skipping {filename} (matches exclude_re: "{re}")'
+            msg = msg.format(filename=filename, re=exclude_re.pattern)
+            log.info(msg)
+            continue
+        # Open the hdf5 file and get the data
         with h5py.File(filename, mode='r') as f:
             # Extract energy in Joules and convert to eV
             energy = f['/entry_1/instrument_1/source_1/energy'].value
@@ -188,6 +209,7 @@ def import_nanosurveyor_frameset(directory: str, quiet=False,
                          filename, energy)
                 continue
             log.debug("Importing %s -> %f eV", filename, energy)
+            filenames.append(os.path.relpath(filename))
             energies.append(energy)
             # Import complex reconstructed image
             data = f['/entry_1/image_1/data'].value
@@ -215,35 +237,36 @@ def import_nanosurveyor_frameset(directory: str, quiet=False,
         log.info("Appending data from %s", directory)
         # Check for redundant energies
         old_energies = imported['energies'][0]
-        overlap = np.in1d(energies, old_energies)
+        energies = np.array(energies)
+        overlap = np.in1d(energies.astype(old_energies.dtype), old_energies)
         if np.any(overlap):
             msg = "Imported redundant energies from {directory}: {energies}"
-            msg.format(directory=directory, energies=energies[overlap])
+            msg = msg.format(directory=directory, energies=energies[overlap])
             warnings.warn(RuntimeWarning(msg))
             log.warning(msg)
         # Combine new data with previously imported data
         intensities = np.concatenate([intensities, imported['intensities'][0]])
-        stxm = np.concatenate([stxm, imported['stxm'][0]])
+        stxm_frames = np.concatenate([stxm_frames, imported['stxm'][0]])
         energies = np.concatenate([energies, old_energies])
         pixel_sizes = np.concatenate([pixel_sizes, imported['pixel_sizes'][0]])
         filenames = np.concatenate([filenames, imported['filenames'][0]])
         del imported['relative_positions']
         del imported['original_positions']
     else:
-        log.info("Creating datasets from %s")
+        log.info("Creating datasets from %s", directory)
         imported.create_dataset('timestep_names',
                                 data=np.array([sam_name], dtype="S50"))
     # Sort all the datasets by energy
     sort_idx = np.argsort(energies)
     energies = np.array(energies)[sort_idx]
     intensities = np.array(intensities)[sort_idx]
-    stxm = np.array(stxm)[sort_idx]
+    stxm_frames = np.array(stxm_frames)[sort_idx]
     pixel_sizes = np.array(pixel_sizes)[sort_idx]
     filenames = np.array(filenames)[sort_idx]
     # Save updated data to HDF file
     replace_ds('intensities', parent=imported, data=[intensities],
                dtype=np.complex64)
-    replace_ds('stxm', parent=imported, data=[stxm],
+    replace_ds('stxm', parent=imported, data=[stxm_frames],
                dtype=np.float32)
     replace_ds('energies', parent=imported, data=[energies], dtype=np.float32)
     log.debug("Found energies %s", energies)

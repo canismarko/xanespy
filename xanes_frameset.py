@@ -37,7 +37,7 @@ from skimage import morphology, filters, transform,  measure
 from sklearn import linear_model
 from units import unit, predefined
 
-from utilities import prog, xycoord, Pixel, Extent, pixel_to_xy
+from utilities import prog, xycoord, Pixel, Extent, pixel_to_xy, get_component
 from txmstore import TXMStore
 import plots
 import exceptions
@@ -134,7 +134,7 @@ class XanesFrameset():
     """
     active_group = ''
     cmap = 'plasma'
-    data_name = None
+    _data_name = None
     # Places to store staged image transformations
     _translations = None
     _rotations = None
@@ -151,6 +151,16 @@ class XanesFrameset():
     def __repr__(self):
         s = "<{cls} '{filename}'>"
         return s.format(cls=self.__class__.__name__, filename=self.hdf_filename)
+
+    @property
+    def data_name(self):
+        return self._data_name
+
+    @data_name.setter
+    def data_name(self, val):
+        self._data_name = val
+        with self.store() as store:
+            store.data_name = val
 
     def _frame_keys(self):
         """Return a list of valid hdf5 keys in the group that correspond to
@@ -605,7 +615,7 @@ class XanesFrameset():
                      template=None,
                      passes=1,
                      commit=True,
-                     representation="modulus",
+                     component="modulus",
                      plot_results=True):
         """Use cross correlation algorithm to line up the frames. All frames
         will have their sample position set to (0, 0) since we don't
@@ -648,7 +658,7 @@ class XanesFrameset():
           `self.apply_translations(crop=True)` after all passes have
           finished.
 
-        representation : What component of the data to use: 'modulus',
+        component : What component of the data to use: 'modulus',
           'phase', 'imag' or 'real'.
 
         plot_results : If truthy (default), plot the root-mean-square of the
@@ -657,13 +667,13 @@ class XanesFrameset():
         """
         logstart = time()
         log.info("Aligning frames with %s algorithm over %d passes",
-                    method, passes)
+                 method, passes)
         pass_distances = []
         # Check for valid attributes
         valid_filters = ["median", None]
         if blur not in valid_filters:
-            msg = "Invalid blur filter {}. Choices are {}".format(blur,
-                                                                  valid_filters)
+            msg = "Invalid blur filter {}. Choices are {}"
+            msg = msg.format(blur, valid_filters)
             raise AttributeError(msg) from None
         # Sanity check on `method` argument
         valid_methods = ['cross_correlation', 'template_match']
@@ -673,12 +683,13 @@ class XanesFrameset():
             raise ValueError(msg)
         # Guess best reference frame to use
         if reference_frame is "max":
-            spectrum = self.xanes_spectrum(representation=representation)
+            spectrum = self.xanes_spectrum(representation=component)
             reference_frame = np.argmax(spectrum.values)
         # Keep track of how many passes and where we started
         for pass_ in range(0, passes):
             # Get data from store
             frames = self.apply_transformations(crop=True, commit=False)
+            frames = get_component(frames, component)
             # Calculate axes to use for proper reference image
             if reference_frame == 'mean':
                 ref_image = np.mean(frames, axis=(0, 1))
@@ -699,14 +710,15 @@ class XanesFrameset():
             if blur == "median":
                 ref_image = filters.median(ref_image,
                                            morphology.disk(20))
-            # original_shape = shape(*reference_image.shape)
             # Calculate translations for each frame
             if method == "cross_correlation":
                 translations = xm.register_correlations(frames=frames,
                                                         reference=ref_image)
             elif method == "template_match":
-                translations = xm.register_template(frame=frames,
-                                                    template=template)
+                template_ = get_component(template, component)
+                translations = xm.register_template(frames=frames,
+                                                    reference=ref_image,
+                                                    template=template_)
             # Add the root-mean-square to the list of distances translated
             rms = np.sqrt((translations**2).sum(axis=-1).mean())
             log.info("RMS of translations for pass %d = %f", pass_, rms)

@@ -34,7 +34,7 @@ except (TypeError, ImportError):
 import exceptions
 import plots
 import xanes_math as xm
-from utilities import component
+from utilities import get_component
 
 
 # class FramesetPlotter():
@@ -509,7 +509,7 @@ class GtkFramesetPlotter():
             self.norm = Normalize(np.min(frames),
                                   np.max(frames))
             # Convert complex data to real
-            frames = component(frames, self.active_component)
+            frames = get_component(frames, self.active_component)
             # Plot each image
             for img in frames[self.active_timestep]:
                 artist = self.image_ax.imshow(img, origin='lower',
@@ -521,7 +521,7 @@ class GtkFramesetPlotter():
         # Prepare XANES highlighting artists
         xanes_artists = []
         for energy in spectrum.index:
-            y = component(spectrum[energy], self.active_component)
+            y = get_component(spectrum[energy], self.active_component)
             artists = self.xanes_ax.plot([energy], [y],
                                          'ro', animated=True)
             artists += self.edge_ax.plot([energy], [y],

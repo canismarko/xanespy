@@ -34,7 +34,7 @@ from scipy.optimize import curve_fit
 import numpy as np
 from skimage import transform, feature, filters, morphology, exposure, measure
 
-from utilities import prog, foreach, component
+from utilities import prog, foreach, get_component
 
 
 log = logging.getLogger(__name__)
@@ -76,11 +76,11 @@ def apply_internal_reference(intensities, out=None):
         # Calculate background intensity using thresholding
         log.debug("Applying reference for frame %s", idx)
         frame = intensities[idx]
-        direct_img = component(frame, "modulus")
+        direct_img = get_component(frame, "modulus")
         threshold = filters.threshold_yen(direct_img)
         graymask = direct_img > threshold
-        background = component(frame, "modulus")[graymask]
-        I_0 = np.median(background) # Median of each image
+        background = get_component(frame, "modulus")[graymask]
+        I_0 = np.median(background)  # Median of each image
         log.debug("I0 for frame %s = %f", idx, I_0)
         # Calculate absorbance based on background
         absorbance = np.log(I_0 / np.abs(frame))
@@ -504,4 +504,21 @@ def register_template(frames, reference, template):
     Returns: Array with same dimensions as 0th axis of `frames`
     containing (x, y) translations for each frame.
     """
-    return None
+    t_shape = (*frames.shape[:-2], 2)
+    translations = np.empty(shape=t_shape, dtype=np.float)
+    ref_match = feature.match_template(reference, template)
+    ref_center = np.unravel_index(np.argmax(ref_match), ref_match.shape)
+    ref_center = np.array(ref_center)
+
+    def get_translation(idx):
+        frm = frames[idx]
+        match = feature.match_template(frm, template)
+        center = np.unravel_index(np.argmax(match), match.shape)
+        shift = ref_center - np.array(center)
+        # Convert (row, col) to (x, y)
+        translations[idx] = (shift[1], shift[0])
+    indices = iter_indices(frames, desc='Registering', leftover_dims=2)
+    foreach(get_translation, indices)
+    # Negative in order to properly register with transform_images method
+    translations = -translations
+    return translations

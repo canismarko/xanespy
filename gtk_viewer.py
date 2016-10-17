@@ -327,8 +327,10 @@ class GtkTxmViewer():
             # Convert xy position to pixel values
             xy = xycoord(x=round(event.xdata, 1), y=round(event.ydata, 1))
             with self.frameset.store() as store:
-                frame_shape = store.absorbances.shape[-2:]
-            extent = self.frameset.extent(representation=self.plotter.active_representation)
+                ds = store.get_frames(self.plotter.active_representation)
+                frame_shape = ds.shape[-2:]
+            representation = self.plotter.active_representation
+            extent = self.frameset.extent(representation=representation)
             pixel = xy_to_pixel(xy, extent=extent,
                                 shape=frame_shape)
             # Write the coordinates to the text labels
@@ -340,7 +342,8 @@ class GtkTxmViewer():
             col = np.clip(pixel.horizontal, 0, frame_shape[1]-1)
             with self.frameset.store() as store:
                 px_idx = (*self.current_idx, row, col)
-                value = store.absorbances[px_idx]
+                frames = store.get_frames(self.plotter.active_representation)
+                value = frames[px_idx]
                 # value = frame.image_data[row][col]
             I_label.set_text(str(round(value, 4)))
         else:

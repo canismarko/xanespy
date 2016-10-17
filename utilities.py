@@ -133,7 +133,7 @@ def pixel_to_xy(pixel, extent, shape):
     return xycoord(x=x, y=y)
 
 
-def component(data, name):
+def get_component(data, name):
     """If complex, turn to given component, otherwise return original data."""
     if np.iscomplexobj(data):
         # Sort out complex components

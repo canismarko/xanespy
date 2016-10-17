@@ -53,6 +53,7 @@ class TXMStore():
 
     """
     VERSION = 1
+
     def __init__(self, hdf_filename: str,
                  parent_name: str, data_name: str,
                  mode='r'):
