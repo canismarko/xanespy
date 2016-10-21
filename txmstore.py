@@ -312,6 +312,40 @@ class TXMStore():
         self.replace_dataset('energies', val, context='metadata')
 
     @property
+    def signals(self):
+        """Get the previously extracted signals using any one of a variety of
+        decomposition methods, saved as `signal_method`.
+        """
+        return self.data_group()['extracted_signals']
+
+    @signals.setter
+    def signals(self, val):
+        self.replace_dataset('extracted_signals', val, context="metadata")
+
+    @property
+    def signal_method(self):
+        """String describing how the previously extracted signals were
+        calculated.
+        """
+        return self.data_group()['extracted_signals'].attrs['method']
+
+    @signal_method.setter
+    def signal_method(self, val):
+        self.data_group()['extracted_signals'].attrs['method'] = val
+
+    @property
+    def signal_weights(self):
+        """Get the pixel weights of the previously extracted signals using any
+        one of a variety of decomposition methods, saved as
+        `signal_method`.
+        """
+        return self.data_group()['extracted_signal_weights']
+
+    @signal_weights.setter
+    def signal_weights(self, val):
+        self.replace_dataset('extracted_signal_weights', val, context="map")
+
+    @property
     def timestamps(self):
         return self.data_group()['timestamps']
 
@@ -351,6 +385,14 @@ class TXMStore():
     @whiteline_map.setter
     def whiteline_map(self, val):
         self.replace_dataset('whiteline_map', val, context='map')
+
+    @property
+    def cluster_map(self):
+        return self.get_map('cluster_map')
+
+    @cluster_map.setter
+    def cluster_map(self, val):
+        self.replace_dataset('cluster_map', val, context='map')
 
     @property
     def particle_labels(self):

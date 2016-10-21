@@ -20,13 +20,17 @@
 """Class definitions for working with a whole stack of X-ray
 microscopy frames. Each frame is a micrograph at a different energy. A
 frameset then is a three-dimenional dataset with of dimenions (energy,
-row, column)."""
+row, column).
+
+"""
+
 
 import functools
 from typing import Callable
 import os
 from time import time
 import logging
+from collections import namedtuple
 
 import pandas as pd
 from matplotlib import pyplot
@@ -34,7 +38,7 @@ from matplotlib.colors import Normalize
 import h5py
 import numpy as np
 from skimage import morphology, filters, transform,  measure
-from sklearn import linear_model
+from sklearn import linear_model, cluster
 from units import unit, predefined
 
 from utilities import prog, xycoord, Pixel, Extent, pixel_to_xy, get_component
@@ -191,7 +195,8 @@ class XanesFrameset():
         if not os.path.exists(directory):
             os.mkdir(directory)
         for frame in self:
-            pyplot.imsave(os.path.join(directory, str(frame.energy) + ".tif"), frame.image_data)
+            path = os.path.join(directory, str(frame.energy) + ".tif")
+            pyplot.imsave(path, frame.image_data)
 
     def clear_caches(self):
         """Clear cached function values so they will be recomputed with fresh
@@ -579,8 +584,8 @@ class XanesFrameset():
             self._rotations = None
         return out
 
-    def stage_transformations(self, translations=None, rotations=None, scales=None):
-
+    def stage_transformations(self, translations=None, rotations=None,
+                              scales=None):
         """Allows for deferred transformation of the frame data. Since each
         transformation introduces interpolation error, the best
         results occur when the translations are saved up and then
@@ -737,183 +742,6 @@ class XanesFrameset():
             log.info("Committing final translations to disk")
             self.apply_transformations(crop=True, commit=True)
 
-    # def align_to_particle(self, loc, new_name, reference_frame=None):
-    #     """Use template matching algorithm to line up the frames. Similar to
-    #     `align_frames` but matches only to the particle closest to the
-    #     argument `loc`.
-    #     """
-    #     # Autoguess best reference frame
-    #     if reference_frame is None:
-    #         spectrum = self.xanes_spectrum()
-    #         reference_frame = np.argmax(spectrum.values)
-    #     # Create new data groups to hold shifted image data
-    #     self.fork_group(new_name)
-    #     self.fork_labels(new_name + "_labels")
-    #     # Determine which particle to use
-    #     particle = self[reference_frame].activate_closest_particle(loc=loc)
-    #     particle_img = np.copy(particle.image())
-    #     # Set all values outside the particle itself to 0
-    #     particle_img[np.logical_not(particle.mask())] = 0
-    #     reference_key = self[reference_frame].key()
-    #     reference_img = self[reference_frame].image_data.value
-    #     reference_match = feature.match_template(reference_img, particle_img, pad_input=True)
-    #     reference_center = np.unravel_index(reference_match.argmax(),
-    #                                         reference_match.shape)
-    #     reference_center = Pixel(vertical=reference_center[0],
-    #                              horizontal=reference_center[1])
-
-    #     # Multiprocessing setup
-    #     def worker(payload):
-    #         key = payload['key']
-    #         energy = payload['energy']
-    #         data = payload['data']
-    #         labels = payload['labels']
-    #         # Determine where the reference particle is in this frame's image
-    #         match = feature.match_template(data, particle_img, pad_input=True)
-    #         center = np.unravel_index(match.argmax(), match.shape)
-    #         center = Pixel(vertical=center[0], horizontal=center[1])
-    #         # Determine the net translation necessary to align to reference frame
-    #         shift = [
-    #             center.horizontal - reference_center.horizontal,
-    #             center.vertical - reference_center.vertical,
-    #         ]
-    #         if key == reference_key:
-    #             # Sanity check to ensure that reference frame does not shift
-    #             assert shift == [0, 0], "Reference frame is shifted by " + shift
-    #             ret = {
-    #                 'key': key,
-    #                 'energy': energy,
-    #                 'data': data,
-    #                 'labels': labels,
-    #             }
-    #         else:
-    #             # Apply the translation with bicubic interpolation
-    #             transformation = transform.SimilarityTransform(translation=shift)
-    #             new_data = transform.warp(data, transformation,
-    #                                       order=3, mode="wrap", preserve_range=True)
-    #             # Transform labels
-    #             original_dtype = labels.dtype
-    #             labels = labels.astype(np.float64)
-    #             new_labels = transform.warp(labels, transformation, order=0, mode="constant", preserve_range=True)
-    #             new_labels = new_labels.astype(original_dtype)
-    #             ret = {
-    #                 'key': key,
-    #                 'energy': energy,
-    #                 'data': new_data,
-    #                 'labels': new_labels
-    #             }
-    #         return ret
-
-    #     def process_result(payload):
-    #         frame = self[payload['key']]
-    #         frame.activate_closest_particle(loc=loc)
-    #         return payload
-
-    #     # Launch the multiprocessing queue
-    #     description = "Aligning to frame [{}]".format(reference_frame)
-    #     process_with_smp(frameset=self,
-    #                      worker=worker,
-    #                      process_result=process_result,
-    #                      description=description)
-
-    #     # Update new positions
-    #     for frame in self:
-    #         frame.sample_position = position(0, 0, frame.sample_position.z)
-    #     return reference_match
-
-    # def crop_to_particle(self, loc=None, new_name='cropped_particle'):
-    #     """Reduce the image size to just show the particle in
-    #     question. Requires that particles be already labeled using the
-    #     `label_particles()` method. Can either find the right particle
-    #     using the `loc` argument, or using each frame's
-    #     `active_particle_idx` attribute, allowing for more
-    #     fine-grained control.  particles based on location.
-
-    #     Arguments
-    #     ---------
-    #     - loc : 2-tuple of relative (x, y) position indicated the
-    #       point to search from. If omitted or None, each frame's
-    #       `active_particle_idx` attribute will be used.
-    #     - new_name : Name to give the new group.
-    #     """
-    #     # Create a copy of the data group
-    #     self.fork_group(new_name)
-    #     # Activate particle if necessary
-    #     if loc is not None:
-    #         for frame in prog(self, 'Identifying closest particle'):
-    #             frame.activate_closest_particle(loc=loc)
-    #     # Make sure an active particle is assigned to all frames
-    #     for frame in self:
-    #         if frame.active_particle_idx is None:
-    #             msg = "Frame {idx} has no particle assigned. Try {cls}.label_particles()"
-    #             raise exceptions.NoParticleError(msg.format(idx=frame, cls=frame))
-    #     # Determine largest bounding box based on all energies
-    #     boxes = [frame.particles()[frame.active_particle_idx].bbox()
-    #              for frame in self]
-    #     left = min([box.left for box in boxes])
-    #     bottom = min([box.bottom for box in boxes])
-    #     top = max([box.top for box in boxes])
-    #     right = max([box.right for box in boxes])
-
-    #     # Make sure the expanded box is square
-    #     def expand_dims(lower, upper, target):
-    #         center = (lower + upper) / 2
-    #         new_lower = center - target / 2
-    #         new_upper = center + target / 2
-    #         return (new_lower, new_upper)
-    #     vertical = top - bottom
-    #     horizontal = right - left
-    #     if horizontal > vertical:
-    #         bottom, top = expand_dims(bottom, top, target=horizontal)
-    #     elif vertical > horizontal:
-    #         left, right = expand_dims(left, right, target=vertical)
-    #     # Sanity checks to make sure the new window is square
-    #     vertical = top - bottom
-    #     horizontal = right - left
-    #     assert abs(horizontal) == abs(vertical), "{}h ≠ {}v".format(horizontal, vertical)
-    #     assert bottom < top
-    #     assert left < right
-    #     # Roll each image to have the particle top left
-    #     for frame in prog(self, 'Cropping frames'):
-    #         frame.crop(top=top, left=left, bottom=bottom, right=right)
-    #         # Determine new main particle index
-    #         new_idx = np.argmax([p.convex_area() for p in frame.particles()])
-    #         frame.active_particle_idx = new_idx
-    #         # Set the new relative position for this frames position in the image
-    #         frame.relative_position = position(*loc, z=frame.sample_position.z)
-
-    # def align_frame_positions(self):
-    #     """Correct for inaccurate motion in the sample motors."""
-    #     self.fork_group('aligned_frames')
-    #     self.fork_labels('aligned_labels')
-    #     # Determine average positions
-    #     total_x = 0
-    #     total_y = 0
-    #     n = 0
-    #     for frame in prog(self, 'Computing true center'):
-    #         n += 1
-    #         total_x += frame.sample_position.x
-    #         total_y += frame.sample_position.y
-    #     global_x = total_x / n
-    #     global_y = total_y / n
-    #     for frame in prog(self, 'Aligning frames'):
-    #         um_per_pixel_x = 40 / frame.image_data.shape[1]
-    #         um_per_pixel_y = 40 / frame.image_data.shape[0]
-    #         offset_x = int(round(
-    #             (global_x - frame.sample_position.x) / um_per_pixel_x
-    #         ))
-    #         offset_y = int(round(
-    #             (global_y - frame.sample_position.y) / um_per_pixel_y
-    #         ))
-    #         frame.shift_data(x_offset=offset_x, y_offset=offset_y)
-    #         # Store updated position info
-    #         new_position = (
-    #             frame.sample_position.x + offset_x * um_per_pixel_x,
-    #             frame.sample_position.y + offset_y * um_per_pixel_y,
-    #             frame.sample_position.z
-    #         )
-    #         frame.sample_position = new_position
-
     def label_particles(self, min_distance=20):
         """Use watershed segmentation to identify particles.
 
@@ -1053,24 +881,55 @@ class XanesFrameset():
                                      (-1, *store.absorbances.shape[-2:]))
             data = np.mean(absorbances, axis=0)
             ax_unit = store.pixel_unit
-        artist = ax.imshow(data, extent=self.extent(representation='absorbances'), origin="lower",
-                           cmap='gray')
+        artist = ax.imshow(data,
+                           extent=self.extent(representation='absorbances'),
+                           origin="lower", cmap='gray')
         ax.set_xlabel(ax_unit)
         ax.set_ylabel(ax_unit)
         return artist
 
-    def median_image(self):
-        """Determine an overall image by taking the median intensity of each
-        pixel across all frames."""
-        frames = np.array([f.image_data for f in self])
-        median_frame = np.median(frames, axis=0)
-        return median_frame
+    def mean_frame(self):
+        """Return the mean absorbance with the same shape as an individual
+        frame."""
+        with self.store() as store:
+            As = store.absorbances
+            As = np.reshape(As, (-1, *self.frame_shape()))
+            mean_A = np.mean(As, axis=0)
+        return mean_A
 
     def xanes_spectrum(self, *args, **kwargs):
         raise (UserWarning('use spectrum()'))
         return self.spectrum(*args, **kwargs)
 
-    # @functools.lru_cache()
+    def frame_shape(self):
+        """Return the shape of the individual energy frames."""
+        with self.store() as store:
+            if store.has_dataset('absorbances'):
+                imshape = store.absorbances.shape[-2:]
+            else:
+                imshape = store.intensities.shape[-2:]
+        return imshape
+
+    def spectra(self, edge_filter=False):
+        """Return a two-dimensional array of spectra for all the pixels in
+        shape of (pixel, energy).
+
+        Arguments
+        ---------
+        edge_jump_filter (bool or str): [NOT YET IMPLEMENTED] If
+            truthy, only pixels that pass the edge jump filter are
+            used to calculate the spectrum. If "inverse" is given,
+            then the edge jump filter is logically not-ted and
+            calculated with a more conservative threshold.
+        """
+        with self.store() as store:
+            As = store.absorbances
+            # Mangle axes to be in (pixel, energy) order
+            img_shape = As.shape[-2:]
+            spectra = np.reshape(As, (-1, np.prod(img_shape)))
+            spectra = np.moveaxis(spectra, 0, -1)
+        return spectra
+
     def spectrum(self, pixel=None, edge_jump_filter=False,
                        representation="absorbances", index=0):
         """Collapse the dataset down to a two-dimensional spectrum. Returns a
@@ -1097,31 +956,6 @@ class XanesFrameset():
             (energy, rows, columns).
 
         """
-        # energies = []
-        # intensities = []
-        # # Calculate masks if necessary
-        # if edge_jump_filter == "inverse":
-        #     mask = ~self.edge_jump_mask(sensitivity=0.4)
-        # elif edge_jump_filter:
-        #     mask = self.edge_jump_mask()
-        # # Determine the contribution from each energy frame
-        # for frame in self:
-        #     data = frame.get_data(name=representation)
-        #     # Determine which subset of pixels to use
-        #     if pixel is not None:
-        #          # Specific pixel is requested
-        #         intensity = data[pixel.vertical][pixel.horizontal]
-        #     elif edge_jump_filter:
-        #         masked_data = np.ma.array(data, mask=mask)
-        #         # Average absorbances for datasets
-        #         intensity = np.sum(masked_data) / np.sum(masked_data.mask)
-        #     else:
-        #         masked_data = data
-        #         # Sum absorbances for datasets
-        #         intensity = np.sum(data) / np.prod(data.shape)
-        #     # Add to cumulative arrays
-        #     intensities.append(intensity)
-        #     energies.append(frame.energy)
         # Retrieve data
         with self.store() as store:
             energies = store.energies.value[index]
@@ -1177,16 +1011,6 @@ class XanesFrameset():
         edge = self.edge()
         if ax is None:
             ax = plots.new_axes()
-        # if normalize or show_fit:
-        #     # Prepare an edge for fitting
-        #     edge.post_edge_order = 1
-        #     try:
-        #         edge.fit(spectrum)
-        #     except (exceptions.RefinementError,
-        #             validation.NotFittedError,):
-        #         # Fit failed, so we can't normalize
-        #         normalize = False
-        #         show_fit = False
         if normalize:
             # Adjust the limits of the spectrum to be between 0 and 1
             normalized = edge.normalize(spectrum.values, spectrum.index)
@@ -1206,8 +1030,6 @@ class XanesFrameset():
             ax.set_title(title)
         # Plot lines at edge of normalization range or indicate peak positions
         edge.annotate_spectrum(ax=scatter.axes)
-        # ax.axvline(x=norm_range[0], linestyle='-', color="0.55", alpha=0.4)
-        # ax.axvline(x=norm_range[1], linestyle='-', color="0.55", alpha=0.4)
         return scatter
 
     def plot_xanes_edge(self, *args, **kwargs):
@@ -1242,7 +1064,6 @@ class XanesFrameset():
                               edge=self.edge)
         return ej
 
-
     @functools.lru_cache()
     def edge_mask(self, sensitivity: float=1, min_size=0):
         """Calculate a mask for what is likely active material at this
@@ -1257,21 +1078,15 @@ class XanesFrameset():
           removed. Passing zero (default) will result in no effect.
         """
         with self.store() as store:
-            mask = xm.edge_mask(frames=store.absorbances.value,
-                                energies=store.energies.value, edge=self.edge(),
-                                sensitivity=sensitivity, min_size=min_size)
+            As = store.absorbances.value
+            # Check for complex values and convert to absorbances only
+            if np.iscomplexobj(As):
+                As = np.imag(As)
+            mask = self.edge().mask(frames=As,
+                                    energies=store.energies.value,
+                                    sensitivity=sensitivity,
+                                    min_size=min_size)
         return mask
-
-    def goodness_filter(self):
-        """Calculate an image based on the goodness of fit. `calculate_map`
-        will be called if not already calculated."""
-        raise DeprecationWarning()
-        if not self.map_goodness_name:
-            map_data, goodness = self.calculate_map()
-        else:
-            with self.hdf_file() as f:
-                goodness = f[self.map_goodness_name].value
-        return goodness
 
     def goodness_mask(self, sensitivity: float=0.5):
         """Calculate an image based on the goodness of fit. `calculate_map`
@@ -1320,15 +1135,15 @@ class XanesFrameset():
             frames_mask = np.moveaxis(frames_mask, 1, -1)
             spectra = np.moveaxis(frames, 1, -1)
             map_shape = (*spectra.shape[:-1], len(xm.kedge_params))
-            fit_maps = np.empty(map_shape) # To hold output
+            fit_maps = np.empty(map_shape)  # To hold output
             spectra = spectra[~frames_mask].reshape((-1, energies.shape[-1]))
             # Do a preliminary fitting to get good parameters
             guess = xm.KEdgeParams(1/5, -0.4, 8333,
                                    1,
                                    -0.0008, 0,
                                    1, 14, 1)
-            I = spectra.mean(axis=0)[np.newaxis,...]
-            E = energies.mean(axis=0)[np.newaxis,...]
+            I = spectra.mean(axis=0)[np.newaxis, ...]
+            E = energies.mean(axis=0)[np.newaxis, ...]
             p0 = xm.fit_kedge(spectra=I, energies=E, p0=guess)
             # Perform full fitting for individual pixels
         all_params = xm.fit_kedge(spectra=spectra,
@@ -1339,14 +1154,13 @@ class XanesFrameset():
         fit_maps[map_mask] = np.nan
         fit_maps[~map_mask] = all_params
         # Calculate whiteline position
-        E0 = fit_maps[...,xm.kedge_params.index('E0')]
-        gaus_center = fit_maps[...,xm.kedge_params.index('gb')]
+        E0 = fit_maps[..., xm.kedge_params.index('E0')]
+        gaus_center = fit_maps[..., xm.kedge_params.index('gb')]
         wl_maps = E0 + gaus_center
         # Save results to disk
         with self.store(mode='r+') as store:
             store.fit_parameters = fit_maps
             store.whiteline_map = wl_maps
-
 
     def calculate_whitelines(self, edge_mask=False):
         """Calculate and save a map of the whiteline position of each pixel by
@@ -1362,7 +1176,7 @@ class XanesFrameset():
         with self.store() as store:
             frames = store.absorbances
             # Insert two axes into energies for image row/cols
-            energies = store.energies.value[:,np.newaxis,np.newaxis,:]
+            energies = store.energies.value[:, np.newaxis, np.newaxis, :]
             # Convert numpy axes to be in (pixel, energy) form
             spectra = np.moveaxis(frames, 1, -1)
             # Calculate whiteline positions
@@ -1387,6 +1201,92 @@ class XanesFrameset():
         self.calculate_whitelines()
         # Calculate particle_labels
         self.label_particles()
+
+    def plot_signals(self, cmap="viridis"):
+        """Plot the signals from the previously extracted data. Requires that
+        self.store().signals and self.store().signal_weights be
+        set.
+
+        """
+        with self.store() as store:
+            signals = store.signals.value
+            weights = store.signal_weights.value
+            energies = store.energies[0]
+        figsize = (10, 3*signals.shape[0])
+        fig, ax_list = pyplot.subplots(signals.shape[0], 2, figsize=figsize)
+        if signals.shape[0] == 1:
+            ax_list = [ax_list]
+        # Get min and max values for the plots
+        Range = namedtuple('Range', ('min', 'max'))
+        imrange = Range(min=np.min(weights), max=np.max(weights))
+        specrange = Range(min=np.min(signals), max=np.max(signals))
+        # Plot each signal and weight
+        for idx, signal in enumerate(signals):
+            ax1, ax2 = ax_list[idx]
+            plots.remove_extra_spines(ax2)
+            ax1.imshow(weights[0, ..., idx], cmap=cmap,
+                       vmin=imrange.min, vmax=imrange.max)
+            ax1.set_title("Signal {idx} Weights".format(idx=idx))
+            ax2.plot(energies, signal, marker='o', linestyle=":")
+            ax2.set_ylim(*specrange)
+            ax2.set_title("Signal Component {idx}".format(idx=idx))
+
+    def calculate_clusters(self, n_components=2, method="nmf",
+                           edge_mask=True):
+        """Extract signals and assign each pixel to a group, then save the
+        resulting "k_means cluster" map.
+
+        Arguments
+        ---------
+
+        - n_components : The number of signals and number of clusters
+          into which the data will be separated.
+
+        - method : The technique to use for extracting
+          signals. Currently only "nmf" is supported.
+
+        - edge_mask : If truthy (default), only those pixels passing
+          the edge filter will be considered.
+        """
+        frame_shape = self.frame_shape()
+        # Retrieve the absorbances and convert to spectra
+        with self.store() as store:
+            As = store.absorbances
+            # Collapse to (frame, pixel) shape
+            n_timesteps = As.shape[0]
+            assert n_timesteps == 1  # We can't currently handle timesteps
+            num_spectra = np.prod(frame_shape)
+            As = np.reshape(As, (-1, num_spectra))
+            spectra = np.moveaxis(As, 0, 1)
+        # Get the edge mask so only active material is included
+        if edge_mask:
+            mask = ~self.edge_mask()
+        else:
+            mask = np.ones(frame_shape, dtype=np.bool)
+        # Separate the data into signals
+        signals, weights = xm.extract_signals_nmf(
+            spectra=spectra[mask.flatten()], n_components=n_components)
+        # Reshape weights into frame dimensions
+        weight_shape = (n_timesteps, *frame_shape, n_components)
+        weight_frames = np.zeros(shape=weight_shape)
+        weight_frames[:, mask, :] = weights
+        # Save the calculated signals and weights
+        method_names = {
+            "nmf": "Non-Negative Matrix Factorization",
+        }
+        with self.store(mode="r+") as store:
+            store.signals = signals
+            store.signal_method = method_names[method]
+            store.signal_weights = weight_frames
+        # Perform k-means clustering
+        k_results = cluster.k_means(weights, n_clusters=n_components)
+        centroid, labels, intertia = k_results
+        label_frame = np.zeros(shape=frame_shape)
+        label_frame[mask] = labels
+        label_frame = label_frame.reshape(1, *frame_shape)
+        # Save the resuliting k-means cluster map
+        with self.store(mode="r+") as store:
+            store.cluster_map = label_frame
 
     def masked_map(self, goodness_filter=True):
         """Generate a map based on pixel-wise Xanes spectra and apply an
@@ -1421,7 +1321,7 @@ class XanesFrameset():
             frames = store.get_frames(representation)
             if idx is not None:
                 # Filter to only the requested frame
-                imshape = np.array(frames[idx].shape)[-2:] # (rows, cols)
+                imshape = self.frame_shape()
                 pixel_size = store.pixel_sizes[idx]
                 center = store.relative_positions[idx]
             else:

@@ -19,19 +19,9 @@
 
 """Descriptions of X-ray energy absorption edge."""
 
-import math
-import warnings
-
 import numpy as np
-from pandas import Series
-from sklearn import linear_model, svm, utils
-from matplotlib.colors import Normalize
 
-import exceptions
-from peakfitting import Peak
-import plots
-
-import pyximport; pyximport.install()
+from xanes_math import k_edge_mask, l_edge_mask
 
 
 class Edge():
@@ -69,6 +59,7 @@ class Edge():
     map_range = None
     post_edge_order = 2
     pre_edge_fit = None
+
     def all_energies(self):
         energies = []
         for region in self.regions:
@@ -109,8 +100,20 @@ class Edge():
 
 
 class LEdge(Edge):
-    """An X-ray absorption K-edge corresponding to a 2s or 2p transition."""
-    pass
+    """An X-ray absorption K-edge corresponding to a 2s or 2p
+    transition."""
+
+    def annotate_spectrum(self, ax):
+        ax.axvline(x=np.max(self.pre_edge), linestyle='-', color="0.55",
+                   alpha=0.4)
+        ax.axvline(x=np.min(self.post_edge), linestyle='-', color="0.55",
+                   alpha=0.4)
+        return ax
+
+    def mask(self, *args, **kwargs):
+        """Return a numpy array mask for material that's active at this
+        edge. Calculations are done in `xanes_math.l_edge_mask()."""
+        return l_edge_mask(*args, edge=self, **kwargs)
 
 
 class KEdge(Edge):
@@ -121,6 +124,12 @@ class KEdge(Edge):
                    alpha=0.4)
         ax.axvline(x=self.edge_range[1], linestyle='-', color="0.55",
                    alpha=0.4)
+        return ax
+
+    def mask(self, *args, **kwargs):
+        """Return a numpy array mask for material that's active at this
+        edge. Calculations are done in `xanes_math.l_edge_mask()."""
+        return k_edge_mask(*args, edge=self, **kwargs)
 
     # def normalize(self, spectra, energies):
     #     """Takes a set of spectra and energies and passes them on to the

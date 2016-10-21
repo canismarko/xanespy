@@ -33,6 +33,7 @@ from scipy import ndimage, linalg
 from scipy.optimize import curve_fit
 import numpy as np
 from skimage import transform, feature, filters, morphology, exposure, measure
+from sklearn import decomposition
 
 from utilities import prog, foreach, get_component
 
@@ -97,17 +98,51 @@ def apply_internal_reference(intensities, out=None):
         out[idx] = phase + j*absorbance
         log.debug("Applied internal reference for frame %s", idx)
     # Call the actual function for each frame
-    iter_frames = iter_indices(intensities, leftover_dims=2, desc="Apply reference")
+    iter_frames = iter_indices(intensities, leftover_dims=2,
+                               desc="Apply reference")
     foreach(apply_ref, iter_frames)
     log.info("Internal reference applied in %f seconds",
-                (time() - logstart))
+             (time() - logstart))
     return out
 
+
+def extract_signals_nmf(spectra, n_components, nmf_kwargs=None, mask=None):
+    """Extract the signal components present in the given spectra using
+    non-negative matrix factorization. Input data can be negative, but
+    it will be shifted up, processed, then shifted down again.
+
+    Arguments
+    ---------
+    - spectra : A numpy array of observations where the last axis is energy.
+
+    - n_components : How many components to extract from the data.
+
+    - nmf_kwargs : Dictionary of keyword arguments to be passed to
+      the constructor of the estimator.
+
+    Returns
+    -------
+    2-tuple of arrays (components, weights)
+
+    """
+    if nmf_kwargs is None:
+        _nmf_kwargs = {}
+    # Make sure all the values are non-negative
+    _spectra = np.abs(spectra)
+    # Perform NMF fitting
+    nmf = decomposition.NMF(n_components=n_components, **_nmf_kwargs)
+    weights = nmf.fit_transform(_spectra)
+    # Extract results and calculate weights
+    signals = nmf.components_
+    return signals, weights
+
+
 def apply_references(intensities, references, out=None):
-    """Apply a reference correction to convert intensity values to
-    optical depth (-ln(I/I0)) values. Arrays `intensities`, `references` and `out`
-    must all have the same shape where the last two dimensions are
-    image rows and columns.
+
+    """Apply a reference correction to convert intensity values to optical
+    depth (-ln(I/I0)) values. Arrays `intensities`, `references` and
+    `out` must all have the same shape where the last two dimensions
+    are image rows and columns.
     """
     # Create an empty array to hold the results
     if out is None:
@@ -126,58 +161,86 @@ def apply_references(intensities, references, out=None):
     return out
 
 
-# def normalize_Kedge(spectra, energies, E_0, pre_edge, post_edge,
-#                     post_edge_order=2, out=None):
-#     """Normalize the K-edge XANES spectrum so that the pre-edge is linear
-#     and the EXAFS region projects to an absorbance of 1 and the edge
-#     energy (E_0). Algorithm is taken mostly from the Atena 4 manual.
+def l_edge_mask(frames: np.ndarray, energies: np.ndarray, edge,
+                sensitivity: float=1, frame_dims=2, min_size=0):
+    """Calculate a mask for what is likely active material at this
+    edge. This is done by comparing each spectrum to the overall
+    spectrum using the dot product. A normalization is first applied
+    to mitigate differences in total intensity.
 
-#     Returns: Normalized spectra as a numpy array of the same shape as
-#     input spectra.
+    Arguments
+    ---------
+    - frames : Array with images at different energies.
 
-#     Arguments
-#     ---------
+    - energies : X-ray energies corresponding to images in
+      `frames`. Must have the same shape along the first dimenion as
+      `frames`.
 
-#     - spectra : Numpy array where the last dimension represents
-#       energy, which should be the same length as `energies` argument.
+    - edge : An Edge object that contains a description of the
+      elemental edge being studied.
 
-#     - energies : 1-D numpy array with all the energies in electron-volts.
+    - sensitivity : A multiplier for the otsu value to determine
+      the actual threshold.
 
-#     - E_0 : Energy of the actual edge in electron-volts.
+    - frame_dims : The number of dimensions that each frame has. Eg, 2
+      means each frame is a two-dimensional image.
 
-#     - pre_edge : 2-tuple with range of energies that represent the
-#       pre-edge region.
+    - min_size : Objects below this size (in pixels) will be
+      removed. Passing zero (default) will result in no effect.
 
-#     - post_edge : 2-tuple with range of energies that represent the
-#       post-edge region.
+    Returns
+    -------
+    - A boolean mask with the same shape as the last two dimensions of
+    `frames` where True pixels are likely to be background material.
+    """
+    # Take the mean over all timesteps
+    As = frames
+    if frames.ndim > 3:
+        E_dim = frame_dims + 1
+        As = np.mean(frames.reshape(-1, *frames.shape[-E_dim:]), axis=0)
+        Es = np.mean(energies.reshape(-1, frames.shape[-E_dim]), axis=0)
+    # Convert absorbances into spectra -> (spectrum, energy) shape
+    frame_shape = frames.shape[-frame_dims:]
+    spectra = As.reshape(-1, np.prod(frame_shape))
+    spectra = np.moveaxis(spectra, 0, 1)
+    assert spectra.ndim == 2
+    # Compute normalized global average spectrum
+    spectrum = np.mean(spectra, axis=0)
+    global_min = np.min(spectrum)
+    global_max = np.max(spectrum)
+    spectrum = (spectrum - global_min) / (global_max - global_min)
+    # Compute some statistical values for normalization
+    minima = np.min(spectra, axis=1)
+    maxima = np.max(spectra, axis=1)
+    # Compute the spectrum baseline
+    pre_edge_mask = np.logical_and(
+        np.min(edge.pre_edge) <= Es,
+        Es <= np.max(edge.pre_edge),
+    )
+    post_edge_mask = np.logical_and(
+        np.min(edge.post_edge) <= Es,
+        Es <= np.max(edge.post_edge),
+    )
+    baseline_idx = np.logical_or(pre_edge_mask, post_edge_mask)
+    baseline = np.mean(spectrum[baseline_idx])
+    # Normalize all the pixel spectra based on the baselines and maxima
+    pixels = np.moveaxis(spectra, 0, 1)
+    pixels = (pixels - baseline) / (maxima - minima)
+    # Compute the overlap between the global and pixel spectra
+    overlap = np.dot(spectrum, pixels)
+    # Threshold the pixel overlap to find foreground vs background
+    threshold = filters.threshold_otsu(overlap)
+    mask = overlap > threshold
+    # Recreate the original image shape as a boolean array
+    mask = np.reshape(mask, frame_shape)
+    # Remove left-over background fuzz
+    if min_size > 0:
+        mask = morphology.opening(mask, selem=morphology.disk(min_size))
+    mask = np.logical_not(mask)
+    return mask
 
-#     - post_edge_order : The order of polynomial to use for fitting the
-#       post-edge region. Ex: 2 (default) means a quadratic function is
-#       used.
 
-#     - out : Numpy array to hold the results. If not given, a new array
-#       similar to `spectra` will be created.
-
-#     """
-#     if out is None:
-#         out = np.empty_like(spectra)
-#     # Expand the dimensions of the arrays to be consistent
-#     ## TODO
-#     # Define the workhorse function
-#     def fit_spectrum(idx):
-#         Es = energies[idx]
-#         Is = spectra[idx]
-#         plt.plot(Es, Is)
-
-#         ## TODO
-#     # Guess initial parameters
-#     # Launch the threaded processing
-#     iter_spectra = iter_indices(spectra, leftover_dims=1, desc="Fitting K-Edge")
-#     foreach(fit_spectrum, iter_spectra)
-#     return out
-
-
-def edge_mask(frames: np.ndarray, energies: np.ndarray, edge,
+def k_edge_mask(frames: np.ndarray, energies: np.ndarray, edge,
               sensitivity: float=1, min_size=0):
     """Calculate a mask for what is likely active material at this
     edge. This is done by comparing the edge-jump to the standard
@@ -192,20 +255,23 @@ def edge_mask(frames: np.ndarray, energies: np.ndarray, edge,
       `frames`. Must have the same shape along the first dimenion as
       `frames`.
 
+    - edge : An Edge object that contains a description of the
+      elemental edge being studied.
+
     - sensitivity : A multiplier for the otsu value to determine
       the actual threshold.
 
     - min_size : Objects below this size (in pixels) will be
-      removed. Passing zero (default) will result in no effect. The
-      value "auto" will cause the function to estimate a size at
-      1/100th the average image size.
+      removed. Passing zero (default) will result in no effect.
+
+    Returns
+    -------
+    - A boolean mask with the same shape as the last two dimensions of
+    `frames` where True pixels are likely to be background material.
 
     """
-    if min_size == "auto":
-        # Guess the best min_size from image shape
-        min_size = (frames.shape[-1] + frames.shape[-2]) / 200
-    # dividing the edge jump by the standard deviation provides sharp constrast
-    ej = edge_jump(frames=frames, energies=energies, edge=edge)
+    # Dividing the edge jump by the standard deviation provides sharp constrast
+    ej = k_edge_jump(frames=frames, energies=energies, edge=edge)
     stdev = np.std(frames, axis=tuple(range(0, len(frames.shape)-2)))
     edge_ratio = ej / stdev
     # Thresholding  to separate background from foreground
@@ -221,7 +287,7 @@ def edge_mask(frames: np.ndarray, energies: np.ndarray, edge,
     return mask
 
 
-def edge_jump(frames: np.ndarray, energies: np.ndarray, edge):
+def k_edge_jump(frames: np.ndarray, energies: np.ndarray, edge):
     # Check that dimensions match
     if not frames.shape[0] == energies.shape[0]:
         msg = "First dimenions of frames and energies do not match ({} vs {})"
@@ -277,6 +343,7 @@ kedge_params = (
     'ga', 'gb', 'gc', # Gaussian height, center and width
 )
 KEdgeParams = namedtuple('KEdgeParams', kedge_params)
+
 
 def predict_edge(energies, *params):
     """Defines the curve function that gets fit to the data for an absorbance K-edge.
@@ -428,8 +495,10 @@ def transform_images(data, translations=None, rotations=None,
     """
     # Create a new array if one is not given
     if out is None:
-        out = np.zeros_like(data, dtype=np.float)
+        out_type = np.complex if np.iscomplexobj(data) else np.float
+        out = np.zeros_like(data, dtype=out_type)
     # Define a function to pass into threads
+
     def apply_transform(idx):
         # Get transformation parameters if given
         scale = scales[idx] if scales is not None else None

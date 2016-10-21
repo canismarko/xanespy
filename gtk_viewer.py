@@ -194,7 +194,6 @@ class GtkTxmViewer():
         ts_combo.set_active(self.plotter.active_timestep)
         # Put the non-glade things in the window
         with self.frameset.store() as store:
-            print(store.has_dataset('absorbances'))
             if store.has_dataset('absorbances'):
                 self.plotter.active_representation = 'absorbances'
             else:
