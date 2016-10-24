@@ -19,14 +19,10 @@
 
 """Tools for accessing TXM data stored in an HDF5 file."""
 
-import warnings
-
 import h5py
 import numpy as np
-from skimage.measure import regionprops
 
 import exceptions
-from utilities import prog
 
 import xanes_math as xm
 
@@ -127,12 +123,6 @@ class TXMStore():
             del parent[new_name]
         # Copy the old one with symlinks
         new_group = parent.copy(self.data_group(), new_name, shallow=True)
-        # target_group = parent[new_name]
-            #         old_gruop = parent_group[self.data_group]
-            #         for key in old_group.keys():
-            #             target_group[key] = old_group[key]
-            #     # Save the new reference to the active group
-            #     self.parent_group().attrs['latest_data_group'] = target_group.name
         self.latest_data_name = new_name
         self.data_name = new_name
         return new_group
@@ -145,21 +135,6 @@ class TXMStore():
     @latest_data_name.setter
     def latest_data_name(self, val):
         self.parent_group().attrs['latest_data_name'] = val
-
-    # @latest_data_name.setter
-    # def latest_data_name(self, val):
-    #     parent_group = self.parent_group()
-    #     if val in parent_group.keys():
-    #         # Group already exists, so just save the new reference
-    #         target_group = parent_group[val]
-    #     else:
-    #         # Group does not exist, so copy the old one with symlinks
-    #         target_group = parent_group.create_group(val)
-    #         old_group = parent_group[self.data_group]
-    #         for key in old_group.keys():
-    #             target_group[key] = old_group[key]
-    #     # Save the new reference to the active group
-    #     self.parent_group().attrs['latest_data_group'] = target_group.name
 
     def parent_group(self):
         """Retrieve the top-level HDF5 group object for this file and
@@ -343,7 +318,16 @@ class TXMStore():
 
     @signal_weights.setter
     def signal_weights(self, val):
-        self.replace_dataset('extracted_signal_weights', val, context="map")
+        self.replace_dataset('extracted_signal_weights', val,
+                             context="frameset")
+
+    @property
+    def signal_map(self):
+        return self.get_map('signal_map')
+
+    @signal_map.setter
+    def signal_map(self, val):
+        self.replace_dataset('signal_map', val, context='map')
 
     @property
     def timestamps(self):

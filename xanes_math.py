@@ -36,6 +36,7 @@ from skimage import transform, feature, filters, morphology, exposure, measure
 from sklearn import decomposition
 
 from utilities import prog, foreach, get_component
+import exceptions
 
 
 log = logging.getLogger(__name__)
@@ -127,13 +128,20 @@ def extract_signals_nmf(spectra, n_components, nmf_kwargs=None, mask=None):
     """
     if nmf_kwargs is None:
         _nmf_kwargs = {}
+    max_iter = _nmf_kwargs.pop('max_iter', 200)
     # Make sure all the values are non-negative
     _spectra = np.abs(spectra)
     # Perform NMF fitting
-    nmf = decomposition.NMF(n_components=n_components, **_nmf_kwargs)
+    nmf = decomposition.NMF(n_components=n_components,
+                            max_iter=max_iter,
+                            **_nmf_kwargs)
     weights = nmf.fit_transform(_spectra)
     # Extract results and calculate weights
     signals = nmf.components_
+    # Log the results
+    log.info("NMF of %d samples in %d of %d iterations.", len(spectra),
+             nmf.n_iter_+1, max_iter)
+    log.info("NMF reconstruction error = %f", nmf.reconstruction_err_)
     return signals, weights
 
 
@@ -297,8 +305,14 @@ def k_edge_jump(frames: np.ndarray, energies: np.ndarray, edge):
     # Prepare masks for the post-edge and the pre-edge
     pre_edge_mask = np.logical_and(np.greater_equal(energies, pre_edge[0]),
                                    np.less_equal(energies, pre_edge[1]))
+    if not np.any(pre_edge_mask):
+        msg = "Could not find pre-edge {} in {}".format(pre_edge, energies)
+        raise exceptions.XanesMathError(msg)
     post_edge_mask = np.logical_and(np.greater_equal(energies, post_edge[0]),
-                                   np.less_equal(energies, post_edge[1]))
+                                    np.less_equal(energies, post_edge[1]))
+    if not np.any(post_edge_mask):
+        msg = "Could not find post-edge {} in {}".format(post_edge, energies)
+        raise exceptions.XanesMathError(msg)
     # Compare the post-edges and pre-edges
     mean_pre = np.mean(frames[pre_edge_mask, ...], axis=0)
     mean_post = np.mean(frames[post_edge_mask, ...], axis=0)

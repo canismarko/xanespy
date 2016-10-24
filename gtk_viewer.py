@@ -296,7 +296,8 @@ class GtkTxmViewer():
             # Convert xy position to pixel values
             xy = xycoord(x=event.xdata, y=event.ydata)
             with self.frameset.store() as store:
-                map_shape = store.whiteline_map[self.plotter.active_timestep].shape
+                map_ = store.get_map(self.plotter.active_map)
+                map_shape = map_[self.plotter.active_timestep].shape
             extent = self.frameset.extent(
                 representation=self.plotter.active_representation)
             self.active_pixel = xy_to_pixel(xy,
@@ -370,7 +371,7 @@ class GtkTxmViewer():
         else:
             with self.frameset.store() as store:
                 idx = (self.plotter.active_timestep, *self.active_pixel)
-                value = store.whiteline_map[idx]
+                value = store.get_map(self.plotter.active_map)[idx]
             s = "(V:{v}, H:{h}) = {val}".format(h=self.active_pixel.horizontal,
                                                 v=self.active_pixel.vertical,
                                                 val=value)
@@ -392,7 +393,8 @@ class GtkTxmViewer():
                 vertical = vertical - 1
             self.active_pixel = Pixel(horizontal=horizontal, vertical=vertical)
             with self.frameset.store() as store:
-                map_shape = store.whiteline_map.shape
+                map_ = store.get_map(self.plotter.active_map)
+                map_shape = map_[self.plotter.active_timestep].shape
             extent = self.frameset.extent(
                 representation=self.plotter.active_representation)
             self.active_xy = pixel_to_xy(self.active_pixel,
@@ -437,7 +439,7 @@ class GtkTxmViewer():
                 self.plotter.active_representation = paths[2]
                 self.map_window.close()
             elif context == 'map':
-                print("TODO: Decide how to show the proper map")
+                self.plotter.active_map = paths[2]
                 self.launch_map_window()
         # Update UI elements
         self.refresh_artists()

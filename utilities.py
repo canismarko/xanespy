@@ -126,9 +126,9 @@ def pixel_to_xy(pixel, extent, shape):
     # ratio_y = (xy.y-extent.bottom)/(extent.top-extent.bottom)
     # # (1 - ratio) for y because images are top indexed
     # pixel_v = int(round((1 - ratio_y) * shape[0]))
-    ratio_h = (pixel.horizontal / shape[1])
+    ratio_h = ((pixel.horizontal-0.5) / shape[1])
     x = extent.left + ratio_h * (extent.right - extent.left)
-    ratio_v = (pixel.vertical / shape[0])
+    ratio_v = ((pixel.vertical-0.5) / shape[0])
     y = extent.bottom + ratio_v * (extent.top - extent.bottom)
     return xycoord(x=x, y=y)
 

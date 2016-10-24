@@ -33,7 +33,7 @@ import logging
 from collections import namedtuple
 
 import pandas as pd
-from matplotlib import pyplot
+from matplotlib import pyplot, cm
 from matplotlib.colors import Normalize
 import h5py
 import numpy as np
@@ -873,7 +873,7 @@ class XanesFrameset():
             hs.append(centroid.horizontal)
         return pd.DataFrame({'vertical': vs, 'horizontal': hs}, index=energies)
 
-    def plot_mean_image(self, ax=None):
+    def plot_mean_image(self, ax=None, component="modulus"):
         if ax is None:
             ax = plots.new_image_axes()
         with self.store() as store:
@@ -881,6 +881,7 @@ class XanesFrameset():
                                      (-1, *store.absorbances.shape[-2:]))
             data = np.mean(absorbances, axis=0)
             ax_unit = store.pixel_unit
+        data = get_component(data, component)
         artist = ax.imshow(data,
                            extent=self.extent(representation='absorbances'),
                            origin="lower", cmap='gray')
@@ -1210,31 +1211,86 @@ class XanesFrameset():
         """
         with self.store() as store:
             signals = store.signals.value
+            n_signals = signals.shape[0]
             weights = store.signal_weights.value
             energies = store.energies[0]
+            px_unit = store.pixel_unit
         figsize = (10, 3*signals.shape[0])
-        fig, ax_list = pyplot.subplots(signals.shape[0], 2, figsize=figsize)
-        if signals.shape[0] == 1:
-            ax_list = [ax_list]
+        fig, ax_list = pyplot.subplots(signals.shape[0], 2,
+                                       figsize=figsize, squeeze=False)
         # Get min and max values for the plots
         Range = namedtuple('Range', ('min', 'max'))
         imrange = Range(min=np.min(weights), max=np.max(weights))
-        specrange = Range(min=np.min(signals), max=np.max(signals))
+        norm = Normalize(imrange.min, imrange.max)
+        # specrange = Range(min=np.min(signals), max=np.max(signals))
+        # Get predicted complex-valued spectra
+        w_inv = np.linalg.pinv(weights.reshape((-1, n_signals)))
+        predicted_signals = np.dot(w_inv, self.spectra())
         # Plot each signal and weight
+        extent = self.extent(representation="absorbances")
         for idx, signal in enumerate(signals):
             ax1, ax2 = ax_list[idx]
             plots.remove_extra_spines(ax2)
-            ax1.imshow(weights[0, ..., idx], cmap=cmap,
-                       vmin=imrange.min, vmax=imrange.max)
+            plots.plot_txm_map(data=weights[0, ..., idx], ax=ax1,
+                               norm=norm, edge=self.edge(),
+                               extent=extent)
+            ax1.set_xlabel(px_unit)
+            ax1.set_ylabel(px_unit)
             ax1.set_title("Signal {idx} Weights".format(idx=idx))
-            ax2.plot(energies, signal, marker='o', linestyle=":")
-            ax2.set_ylim(*specrange)
+            # Add a colorbar to the image axes
+            mappable = cm.ScalarMappable(norm=norm, cmap=self.cmap)
+            mappable.set_array(weights[0, ..., idx])
+            pyplot.colorbar(mappable=mappable, ax=ax1)
+            # Plot the extracted signal and predicted complex signal
+            ax2.plot(energies, signal, marker='x', linestyle="None")
+            cmplx_signal = predicted_signals[idx]
+            cmplx_kwargs = {
+                'linestyle': '--',
+                'marker': "None",
+            }
+            ax2.plot(energies, np.real(cmplx_signal), **cmplx_kwargs)
+            ax2.plot(energies, np.imag(cmplx_signal), **cmplx_kwargs)
+            ax2.plot(energies, np.abs(cmplx_signal), **cmplx_kwargs)
+            ax2.legend(["Obs Mod", "Real", "Imag", "Abs"], fontsize=8)
+            # ax2.set_ylim(*specrange)
             ax2.set_title("Signal Component {idx}".format(idx=idx))
 
-    def calculate_clusters(self, n_components=2, method="nmf",
-                           edge_mask=True):
+    def plot_signal_map(self, ax=None, signals_idx=None):
+        """Plot the map of signal strength for signals extracted from
+        self.calculate_signals().
+
+        Arguments
+        ---------
+        - ax : A matplotlib Axes object. If "None" (default) a new
+          axes object is created.
+
+        - signals_idx : Indices of which signals to plot. This will be
+        passed as a numpy array index. Special value None (default)
+        means first three signals will be plotted.
+
+        """
+        # Plot the composite signal map data
+        with self.store() as store:
+            composite = store.signal_map[0]
+            total_signals = store.signals.shape[0]
+            px_unit = store.pixel_unit
+        # Determine how many signals to plot
+        if signals_idx is None:
+            n_signals = min(total_signals, 3)
+            signals_idx = slice(0, n_signals, 1)
+        composite = composite[..., signals_idx]
+        # Do the plotting
+        extent = self.extent(representation="absorbances")
+        artist = plots.plot_composite_map(composite, extent=extent, ax=ax)
+        ax = artist.axes
+        ax.set_xlabel(px_unit)
+        ax.set_ylabel(px_unit)
+        ax.set_title("Composite of signals {}".format(signals_idx))
+
+    def calculate_signals(self, n_components=2, method="nmf",
+                          edge_mask=True):
         """Extract signals and assign each pixel to a group, then save the
-        resulting "k_means cluster" map.
+        resulting RGB cluster map.
 
         Arguments
         ---------
@@ -1248,6 +1304,8 @@ class XanesFrameset():
         - edge_mask : If truthy (default), only those pixels passing
           the edge filter will be considered.
         """
+        msg = "Performing {} signal extraction with {} components"
+        log.info(msg.format(method, n_components))
         frame_shape = self.frame_shape()
         # Retrieve the absorbances and convert to spectra
         with self.store() as store:
@@ -1259,10 +1317,20 @@ class XanesFrameset():
             As = np.reshape(As, (-1, num_spectra))
             spectra = np.moveaxis(As, 0, 1)
         # Get the edge mask so only active material is included
+        dummy_mask = np.ones(frame_shape, dtype=np.bool)
         if edge_mask:
-            mask = ~self.edge_mask()
+            try:
+                mask = ~self.edge_mask()
+            except exceptions.XanesMathError as e:
+                log.error(e)
+                log.warning("Failed to calculate mask, using all pixels.")
+                mask = dummy_mask
+            else:
+                log.debug("Using edge mask for signal extraction")
         else:
-            mask = np.ones(frame_shape, dtype=np.bool)
+            log.debug("No edge mask for signal extraction")
+            mask = dummy_mask
+
         # Separate the data into signals
         signals, weights = xm.extract_signals_nmf(
             spectra=spectra[mask.flatten()], n_components=n_components)
@@ -1278,7 +1346,18 @@ class XanesFrameset():
             store.signals = signals
             store.signal_method = method_names[method]
             store.signal_weights = weight_frames
-        # Perform k-means clustering
+
+        # ## Construct a composite RGB signal map
+        # Calculate a mean frame to normalize the weights
+        mean = np.imag(self.mean_frame())
+        mean = np.reshape(mean, (*mean.shape, 1))
+        mean = np.repeat(mean, n_components, axis=-1)
+        composite = weight_frames / np.max(weight_frames)
+        # composite = weight_frames / mean
+        # Make sure the composite has three color components (RGB)
+        with self.store(mode="r+") as store:
+            store.signal_map = composite
+        # ## Perform k-means clustering
         k_results = cluster.k_means(weights, n_clusters=n_components)
         centroid, labels, intertia = k_results
         label_frame = np.zeros(shape=frame_shape)
@@ -1381,8 +1460,56 @@ class XanesFrameset():
                                edge=self.edge(),
                                extent=self.extent(representation='absorbances'))
 
+    def plot_map_pixel_spectra(self, pixels, map_ax=None,
+                               spectra_ax=None,
+                               map_name="whiteline_map", timeidx=0,
+                               step_size=0):
+        """Plot the frameset's map and highlight some pixels on it then plot
+        those pixel's spectra on another set of axes.
+
+        Arguments
+        ---------
+
+        - pixels : An iterable of 2-tuples indicating which (row,
+          column) pixels to highlight.
+
+        - map_ax : A matplotlib axes object to put the map onto. If
+          None, a new 2-wide subplot will be created for both map_ax
+          and spectra_ax.
+
+        - spectra_ax : A matplotlib axes to be used for plotting
+          spectra. Will only be used if `map_ax` is not None.
+
+        - map_name : Name of the map to use for plotting. It will be
+          passed to the TXM store object and retrieved from the hdf5
+          file. If falsy, no map will be plotted.
+
+        - timeidx : Index of which timestep to use.
+
+        """
+        # Create some axes if necessary
+        if map_ax is None:
+            fig, ax = pyplot.subplots(1, 2)
+            map_ax, spectra_ax = ax
+        # Get the necessary data
+        with self.store() as store:
+            energies = store.energies[timeidx]
+            spectra = store.absorbances[timeidx]
+            # Put energy as the last axis
+            spectra = np.moveaxis(spectra, 0, -1)
+        if map_name:
+            self.plot_map(ax=map_ax, map_name=map_name, timeidx=timeidx)
+        plots.plot_pixel_spectra(pixels=pixels,
+                                 extent=self.extent('absorbances'),
+                                 spectra=spectra,
+                                 energies=energies,
+                                 map_ax=map_ax,
+                                 spectra_ax=spectra_ax,
+                                 step_size=step_size)
+
     def plot_goodness(self, plotter=None, ax=None, norm_range=None,
                       *args, **kwargs):
+
         """Use a default frameset plotter to draw a map of the goodness of fit
         as determined by the Edge object."""
         if plotter is None:
@@ -1394,7 +1521,8 @@ class XanesFrameset():
                        goodness_filter=False,
                        active_pixel=None,
                        *args, **kwargs):
-        """Use a default frameset plotter to draw a map of the chemical data."""
+        """Use a default frameset plotter to draw a map of the chemical
+        data."""
         with self.store() as store:
             data = store.whiteline_map.value
         # Get bins for the energy steps
@@ -1419,53 +1547,6 @@ class XanesFrameset():
         pl.create_axes()
         pl.connect_animation()
         pl.save_movie(filename=filename, *args, **kwargs)
-
-    # def whiteline_map(self, method="direct"):
-    #     """Calculate a map where each pixel is the energy of the whiteline.
-
-    #     Arguments
-    #     ---------
-    #     method: A string declaring which method to use
-    #       - "gaussian": fit the whiteline with a gaussian peak (accurate)
-    #       - "direct": Find the energy with maximum absorbance (fast)
-    #     """
-    #     imagestack = build_series(self)
-    #     # Call the appropriate calculation function
-    #     if method == "gaussian":
-    #         whiteline, goodness = calculate_gaussian_whiteline(
-    #             imagestack, edge=self.edge()
-    #         )
-    #     elif method == "direct":
-    #         if not prog.quiet:
-    #             print("Calculating whiteline map...", end="")
-    #         whiteline, goodness = calculate_direct_whiteline(
-    #             imagestack, edge=self.edge()
-    #         )
-    #         if not prog.quiet:
-    #             print("done")
-    #     else:
-    #         # Unknown value for method
-    #         msg = 'Unknown method "{}".'.format(method)
-    #         raise ValueError(msg)
-    #     self.map_method = "whiteline_" + method
-    #     return whiteline, goodness
-
-    # def whiteline_energy(self):
-    #     """Calculate the energy corresponding to the whiteline (maximum
-    #     absorbance) for the whole frame. This first applies an
-    #     edge-jump filter.
-    #     """
-    #     spectrum = self.xanes_spectrum(edge_jump_filter=True)
-    #     whiteline = calculate_whiteline(spectrum, edge=self.edge())
-    #     return whiteline
-
-    # def fit_whiteline(self, width=4):
-    #     """Calculate the energy corresponding to the whiteline (maximum
-    #     absorbance) for the whole frame using gaussian peak fitting.
-    #     """
-    #     spectrum = self.xanes_spectrum(edge_jump_filter=True)
-    #     peak, goodness = fit_whiteline(spectrum, width=width)
-    #     return peak
 
     def hdf_file(self, mode='r'):
         """Return an open h5py.File object for this (any maybe other) frameset.

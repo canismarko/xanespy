@@ -24,9 +24,11 @@ import os
 sys.path.append(os.path.dirname(__file__))
 
 import exceptions
-from importers import import_ssrl_frameset, import_aps_8BM_frameset, import_nanosurveyor_frameset
+from importers import (import_ssrl_frameset, import_aps_8BM_frameset,
+                       import_nanosurveyor_frameset)
 from xanes_frameset import XanesFrameset, PtychoFrameset
 from edges import k_edges, l_edges
-from plots import dual_axes, new_axes, new_image_axes, plot_txm_map, set_axes_color
+from plots import (dual_axes, new_axes, new_image_axes, plot_txm_map,
+                   set_axes_color, plot_pixel_spectra)
 import plots
 import xanes_math as xanes_math

@@ -317,16 +317,21 @@ class GtkFramesetPlotter():
             map_alpha = 1
         if show_map:
             with self.frameset.store() as store:
-                data = store.whiteline_map[self.active_timestep]
+                data = store.get_map(self.active_map)[self.active_timestep]
             if self.apply_edge_jump:
                 data = np.ma.array(data, mask=self.frameset.edge_mask())
             # Plot the overall map
-            extent = self.frameset.extent(representation=self.active_representation)
+            representation = self.active_representation
+            extent = self.frameset.extent(representation=representation)
             edge = self.frameset.edge()
             norm = Normalize(*edge.map_range)
-            artist = plots.plot_txm_map(data, edge=edge,
-                                        ax=self.map_ax, norm=norm,
-                                        extent=extent, alpha=map_alpha)
+            if data.ndim == 2:
+                artist = plots.plot_txm_map(data, edge=edge,
+                                            ax=self.map_ax, norm=norm,
+                                            extent=extent, alpha=map_alpha)
+            elif data.ndim == 3:
+                artist = plots.plot_composite_map(data, ax=self.map_ax,
+                                                  extent=extent, alpha=map_alpha)
             artists.append(artist)
         # Force redraw
         self.map_canvas.draw()
@@ -336,7 +341,7 @@ class GtkFramesetPlotter():
         self.map_hist_ax.clear()
         # Get data
         with self.frameset.store() as store:
-            data = store.whiteline_map[self.active_timestep]
+            data = store.get_map(self.active_map)[self.active_timestep]
         if self.apply_edge_jump:
             mask = self.frameset.edge_mask()
             # data = np.ma.array(data, mask=mask)
@@ -344,10 +349,16 @@ class GtkFramesetPlotter():
         # Get bins at each energy step
         edge = self.frameset.edge()
         energies = edge.energies_in_range(edge.map_range)
+        if energies:
+            bins = energies
+            norm = Normalize(*edge.map_range)
+        else:
+            # Cannot use energies as bins so just use equal spacing
+            bins = int(np.prod(data.shape) / 100)
+            norm = None
         # Plot histogram
-        norm = Normalize(*edge.map_range)
         plots.plot_txm_histogram(data=data, ax=self.map_hist_ax,
-                                 cmap=self.map_cmap, bins=energies,
+                                 cmap=self.map_cmap, bins=bins,
                                  norm=norm)
         self.map_hist_ax.figure.canvas.draw()
 
@@ -370,43 +381,53 @@ class GtkFramesetPlotter():
     def draw_map_xanes(self, active_pixel=None):
         raise UserWarning("Just call draw_xanes_spectra")
 
-    def _plot_spectrum(self, ax, active_pixel=None, zoom=True):
+    def _plot_spectrum(self, ax, ax2=None, active_pixel=None, zoom=True):
         """Get the data and plot on the given ax"""
-        show_fit = False
         # Decide whether to apply edge jump filter
         if self.active_pixel:
             edge_jump = False
         else:
             edge_jump = self.apply_edge_jump
+        representation = self.active_representation
         spectrum = self.frameset.spectrum(edge_jump_filter=edge_jump,
                                           pixel=active_pixel,
-                                          representation=self.active_representation,
+                                          representation=representation,
                                           index=self.active_timestep)
         norm = Normalize(*self.frameset.edge.map_range)
-        # Plot the full XANES spectrum
+        # Clear any old plotted spectra (including secondary y axis)
         ax.clear()
+        if ax2 is not None:
+            ax2.clear()
+        # Plot the full XANES spectrum
         plots.plot_xanes_spectrum(spectrum=spectrum,
                                   energies=spectrum.index,
                                   norm=norm,
-                                  ax=ax)
+                                  ax=ax, ax2=ax2)
 
     def plot_map_spectra(self, active_pixel=None):
         """Plot the XANES spectra on the axes in the map window."""
         if self._fit_lines:
             [l.remove() for l in self._fit_lines]
             self._fit_lines = None
-        self._plot_spectrum(ax=self.map_xanes_ax, active_pixel=active_pixel)
-        self._plot_spectrum(ax=self.map_edge_ax, active_pixel=active_pixel)
+        self._plot_spectrum(ax=self.map_xanes_ax,
+                            ax2=self.map_xanes_ax2,
+                            active_pixel=active_pixel)
+        self._plot_spectrum(ax=self.map_edge_ax,
+                            active_pixel=active_pixel)
         # Project predicted curve onto the spectrum
         if active_pixel:
             with self.frameset.store() as store:
-                p_idx = (self.active_timestep, *active_pixel)
-                params = store.fit_parameters[p_idx]
-                E_range = (np.min(store.energies), np.max(store.energies))
-            x = np.linspace(E_range[0], E_range[1], num=2000)
-            fit = xm.predict_edge(x, *params)
-            self._fit_lines = self.map_xanes_ax.plot(x, fit)
-            self._fit_lines += self.map_edge_ax.plot(x, fit)
+                try:
+                    p_idx = (self.active_timestep, *active_pixel)
+                    params = store.fit_parameters[p_idx]
+                except exceptions.GroupKeyError:
+                    pass
+                else:
+                    E_range = (np.min(store.energies), np.max(store.energies))
+                    x = np.linspace(E_range[0], E_range[1], num=2000)
+                    fit = xm.predict_edge(x, *params)
+                    self._fit_lines = self.map_xanes_ax.plot(x, fit)
+                    self._fit_lines += self.map_edge_ax.plot(x, fit)
         # Zoom in on the edge axis
         map_range = self.frameset.edge.map_range
         self.map_edge_ax.set_xlim(map_range[0]-5, map_range[1]+5)
@@ -466,15 +487,18 @@ class GtkFramesetPlotter():
         map_spec = gridspec.new_subplotspec((0, 0), rowspan=2)
         self.map_ax = self.map_figure.add_subplot(map_spec)
         plots.set_outside_ticks(self.map_ax)
-        # Add colorbar
         # Add a colorbar to the plot
         edge = self.frameset.edge()
         Es = edge.energies_in_range(edge.map_range)
         norm = Normalize(*edge.map_range)
-        cbar_artist = plots.draw_colorbar(ax=self.map_ax, cmap=self.map_cmap,
-                                          norm=norm, energies=Es)
+        plots.draw_colorbar(ax=self.map_ax, cmap=self.map_cmap,
+                            norm=norm, energies=Es)
         xanes_spec = gridspec.new_subplotspec((0, 1), colspan=2)
         self.map_xanes_ax = self.map_figure.add_subplot(xanes_spec)
+        if np.iscomplexobj(self.frameset.spectrum().values):
+            self.map_xanes_ax2 = self.map_xanes_ax.twinx()
+        else:
+            self.map_xanes_ax2 = None
         self.map_hist_ax = self.map_figure.add_subplot(2, 4, 7)
         self.map_edge_ax = self.map_figure.add_subplot(2, 4, 8)
 
@@ -498,9 +522,11 @@ class GtkFramesetPlotter():
         # Get image artists
         self.image_ax.clear()
         # Prepare appropriate xanes spectrum
-        spectrum = self.frameset.spectrum(edge_jump_filter=self.apply_edge_jump,
-                                          representation=self.active_representation,
-                                          pixel=self.active_pixel)
+        representation = self.active_representation
+        spectrum = self.frameset.spectrum(
+            edge_jump_filter=self.apply_edge_jump,
+            representation=representation,
+            pixel=self.active_pixel)
         # Prepare individual frame artists
         frame_artists = []
         with self.frameset.store() as store:

@@ -24,6 +24,8 @@ from matplotlib import pyplot, cm
 from matplotlib.colors import Normalize
 from matplotlib.ticker import ScalarFormatter
 
+from utilities import pixel_to_xy, Extent, Pixel
+
 
 class ElectronVoltFormatter(ScalarFormatter):
     """Matplotlib formatter for showing energies as electon-volts."""
@@ -151,9 +153,99 @@ def draw_colorbar(ax, cmap, norm, energies):
     return cbar
 
 
+def plot_pixel_spectra(pixels, extent, spectra, energies, map_ax,
+                       spectra_ax=None, step_size=0):
+    """Highlight certain pixels in an already-plotted map and plot their
+    spectra. The map should already have been plotted.
+
+    Arguments
+    ---------
+
+    - pixels : List of 2-tuples with (row, column) positions of pixels
+      to highlight and plot.
+
+    - extent : Matplotlib extent specification for converting (y, x)
+      positions to (row, column) positions.
+
+    - spectra : Numpy array with spectra that will be plotted. Entries
+      in `pixels` will use this array to get spectra. Shape is assumed
+      to be (row, column, energy).
+
+    - energies : Numpy array with energies to use as the x-axis for
+      plotting spectra.
+
+    - map_ax : The matplotlib Axes that will be used for highlighting
+      pixels.
+
+    - spectra_ax : A matplotlib Axes on which to plot the spectra. If
+      None (default) a new axes will be created.
+
+    - step_size : An offset to add to each spectrum so they are not
+      directly on top of each other.
+    """
+    # Prepare some metadata
+    map_shape = spectra.shape[0:2]
+    extent = Extent(*extent)
+    # Prepare axes if necessary (and remove spines for arbitrary units)
+    if spectra_ax is None:
+        spectra_ax = new_axes()
+    remove_extra_spines(spectra_ax)
+    # Remove ticks on the y axes
+    tick_params = {
+        'axis': 'y',
+        'which': 'both',
+        'left': 'off',
+        'right': 'off',
+        'labelright': 'off',
+        'labelleft': 'off',
+    }
+    # Prepare a secondary y axes if necessary for complex data
+    if np.iscomplexobj(spectra):
+        spectra_ax2 = spectra_ax.twinx()
+        remove_extra_spines(spectra_ax2)
+        spectra_ax2.tick_params(**tick_params)
+    spectra_ax.tick_params(**tick_params)
+    # Do the plotting and annotating for each pixel
+    min_val = 0
+    max_val = 0
+    for idx, px in enumerate(pixels):
+        # Put an annotation on the map
+        px = Pixel(*px)
+        xy = pixel_to_xy(px, extent, shape=map_shape)
+        map_ax.annotate(str(idx), xy, color="white")
+        # Plot the spectrum on the spectrum axes
+        spectrum = spectra[px]
+        spectrum += step_size * idx
+        plot_xanes_spectrum(spectrum, energies,
+                            ax=spectra_ax, ax2=spectra_ax2)
+        # Put labels on the axes to indicate which specturm is which
+        spectra_ax.text(
+            x=np.max(energies) + 2,
+            y=np.mean((np.real(spectrum), np.imag(spectrum))),
+            s=idx,
+        )
+        # Save values for proper scaling of axes
+        min_val = complex(
+            min(np.real(min_val), np.real(spectrum).min()),
+            min(np.imag(min_val), np.imag(spectrum).min())
+        )
+        max_val = complex(
+            max(np.real(max_val), np.real(spectrum).max()),
+            max(np.imag(max_val), np.imag(spectrum).max())
+        )
+    # Set axes limits based on min and max values
+    min_val -= min_val * 0.1
+    max_val += max_val * 0.1
+    spectra_ax.set_ylim(bottom=np.real(min_val), top=np.real(max_val))
+    if spectra_ax2 is not None:
+        spectra_ax2.set_ylim(bottom=np.imag(min_val), top=np.imag(max_val))
+    spectra_ax.set_xlim(right=np.max(energies)+4)
+
+
 def plot_xanes_spectrum(spectrum, energies, norm=Normalize(),
-                        show_fit=False, ax=None, linestyle=':',
-                        cmap="plasma"):
+                        show_fit=False, ax=None, ax2=None,
+                        linestyle=':', cmap="plasma"):
+
     """Plot a XANES spectrum on an axes. Applies some color formatting if
     `edge` is a valid XANES Edge object.
 
@@ -172,6 +264,9 @@ def plot_xanes_spectrum(spectrum, energies, norm=Normalize(),
     - ax : Matplotlib Axes on which to plot. If not given, a new axes
       will be generated.
 
+    - ax2 : A second y-axes for plotting the imaginary component if
+      the data are complex.
+
     - linestyle : Passed on to matplotlib.
 
     - cmap : Colormap, passed on to matplotlib
@@ -179,20 +274,25 @@ def plot_xanes_spectrum(spectrum, energies, norm=Normalize(),
     """
     if ax is None:
         ax = new_axes()
-    norm.autoscale_None(spectrum)
+    norm.autoscale_None(np.real(spectrum))
+    # Retrieve `values` in case it's a pandas series
+    spectrum = getattr(spectrum, 'values', spectrum)
     # Color code the markers by energy
     colors = cm.get_cmap(cmap)(norm(energies))
     is_complex = np.iscomplexobj(spectrum)
     if is_complex:
+        # Remove secondary axes and re-add them
+        if ax2 is None:
+            ax2 = ax.twinx()
         # Convert complex values to two lines
-        ax2 = ax.twinx()
-        ys = spectrum.values
-        ax.plot(energies, np.real(ys), linestyle=linestyle)
-        ax2.plot(energies, np.imag(ys), linestyle=linestyle)
+        ys = spectrum
+        artist = ax.plot(energies, np.real(ys), linestyle=linestyle, color="green")
+        artist.extend(ax2.plot(energies, np.imag(ys),
+                               linestyle=linestyle, color="red"))
     else:
         # Just plot the real numbers
-        ys = np.real(spectrum.values)
-        ax.plot(energies, ys, linestyle=linestyle)
+        ys = np.real(spectrum)
+        artist = ax.plot(energies, ys, linestyle=linestyle)
     # save limits, since they get messed up by scatter plot
     xlim = ax.get_xlim()
     ylim = ax.get_ylim()
@@ -202,16 +302,13 @@ def plot_xanes_spectrum(spectrum, energies, norm=Normalize(),
         ax.set_ylabel("Real", color="green")
         for t1 in ax.get_yticklabels():
             t1.set_color('green')
-        scatter = ax2.scatter(energies, np.imag(ys), c="red", s=25, alpha=0.5)
+        ax2.scatter(energies, np.imag(ys), c="red", s=25, alpha=0.5)
         ax2.set_ylabel("Imag", color="red")
         for t1 in ax2.get_yticklabels():
             t1.set_color('red')
     else:
-        scatter = ax.scatter(energies, ys, c=colors, s=25)
+        ax.scatter(energies, ys, c=colors, s=25)
         ax.set_ylabel('Absorbance')
-    if show_fit:
-        # Plot the predicted values from edge fitting
-        edge.plot(ax=ax)
     ax.set_xlim(*xlim)
     ax.set_ylim(*ylim)
     ax.set_xlabel('Energy /eV')
@@ -221,7 +318,19 @@ def plot_xanes_spectrum(spectrum, energies, norm=Normalize(),
                      'color': "lightgrey", 'zorder': 0}
         ax.axvline(norm.vmin, **vlineargs)
         ax.axvline(norm.vmax, **vlineargs)
-    return scatter
+    return artist
+
+
+def plot_composite_map(data, ax=None, origin="lower", *args, **kwargs):
+    """Plot an RGB composite map on the given axes."""
+    while data.shape[-1] < 3:
+        data = np.concatenate((data, np.zeros_like(data)),
+                              axis=-1)
+    data = data[..., 0:3]
+    if ax is None:
+        ax = new_image_axes()
+    artist = ax.imshow(data, origin=origin, *args, **kwargs)
+    return artist
 
 
 def plot_txm_map(data, edge, norm=None, ax=None, cmap='plasma',
@@ -241,7 +350,6 @@ def plot_txm_map(data, edge, norm=None, ax=None, cmap='plasma',
                        origin=origin,
                        norm=norm,
                        *args, **kwargs)
-    # Add the colorbar
     # Add annotations and formatting stuff
     return artist
 
@@ -260,15 +368,6 @@ def plot_txm_histogram(data, ax=None, norm=None, bins=100, cmap='plasma'):
     if norm is None:
         norm = Normalize()
         norm.autoscale_None(data)
-    # Add a bin for any above and below the range
-    # edge = self.frameset.edge()
-    # energies = self.frameset.edge().energies_in_range(norm_range=norm_range)
-    # energies = [
-    #     2 * energies[0] - energies[1],
-    #     *energies,
-    #     2 * energies[-1] - energies[-2]
-    # ]
-    # clipped_map =  np.clip(masked_map, edge.map_range[0], edge.map_range[1])
     # Plot the histogram
     n, bins, patches = ax.hist(data, bins=bins)
     # Set colors on histogram
@@ -280,7 +379,6 @@ def plot_txm_histogram(data, ax=None, norm=None, bins=100, cmap='plasma'):
     # Set axes decorations
     ax.set_xlabel("Whiteline position /eV")
     ax.set_ylabel("Pixels")
-    print(norm.vmin, norm.vmax)
     ax.set_xlim(norm.vmin, norm.vmax)
     # ax.xaxis.set_ticks(energies)
     ax.xaxis.get_major_formatter().set_useOffset(False)

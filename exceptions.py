@@ -85,3 +85,7 @@ class NoParticleError(Exception):
 
 class RefinementError(RuntimeError):
     pass
+
+
+class XanesMathError(RuntimeError):
+    pass
