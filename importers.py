@@ -437,7 +437,9 @@ def import_frameset(directory, flavor, hdf_filename, quiet=False):
     sample_files = metadata[metadata['is_background'] == False]
     # Prepare counters and functions for progress bar
     curr_file = 0
-    total_files = len(metadata)
+    # import pdb; pdb.set_trace()
+    total_files = sample_files.count()['is_background']
+    print(total_files.__class__)
     init_time = time()
 
     def set_progbar(val, total, init_time):
