@@ -928,16 +928,11 @@ class XanesFrameset():
             energies = np.moveaxis(energies, 1, -1)
             energies = energies[~frames_mask].reshape(spectra.shape)
             # Do a preliminary fitting to get good parameters
-            guess = xm.KEdgeParams(1/5, -0.4, 8333,
-                                   1,
-                                   -0.0008, 0,
-                                   1, 14, 1)
-            I = spectra.mean(axis=0)[np.newaxis, ...]
-            E = energies.mean(axis=0)[np.newaxis, ...]
-            # import pdb; pdb.set_trace()
+            I = np.median(spectra, axis=0)[np.newaxis, ...]
+            E = np.median(energies, axis=0)[np.newaxis, ...]
+            guess = xm.guess_kedge(I[0], E[0], edge=self.edge)
             p0 = xm.fit_kedge(spectra=I, energies=E, p0=guess)
         # Perform full fitting for individual pixels
-        return (I, E, p0)
         all_params = xm.fit_kedge(spectra=spectra,
                                   energies=energies, p0=p0[0])
         # Set actual calculate values

@@ -29,7 +29,7 @@ import multiprocessing as mp
 from itertools import product
 from collections import namedtuple
 
-from scipy import ndimage, linalg
+from scipy import ndimage, linalg, stats
 from scipy.optimize import curve_fit
 import numpy as np
 from skimage import transform, feature, filters, morphology, exposure, measure
@@ -295,6 +295,8 @@ def k_edge_mask(frames: np.ndarray, energies: np.ndarray, edge,
 
 
 def k_edge_jump(frames: np.ndarray, energies: np.ndarray, edge):
+    """Determine what the difference is between the post_edge and the
+    pre_edge."""
     # Check that dimensions match
     if not frames.shape[0] == energies.shape[0]:
         msg = "First dimenions of frames and energies do not match ({} vs {})"
@@ -384,7 +386,7 @@ def predict_edge(energies, *params):
     # Background
     bg = x * p.pre_m + p.pre_b
     curve = sig + gaus + bg
-    return p.scale * curve - p.voffset
+    return p.scale * curve + p.voffset
 
 
 class _fit_spectrum():
@@ -405,6 +407,42 @@ class _fit_spectrum():
         return popt
 
 
+def guess_kedge(spectrum, energies, edge):
+    """Guess initial starting parameters for a k-edge curve. This will
+    give a rough estimate, appropriate for giving to the fit_kedge
+    function as the starting parameters, p0.
+
+    Arguments
+    ---------
+
+    - spectrum : An array containing absorbance data that represents a
+      K-edge spectrum. Only 1-dimensional data are currently accepted.
+    
+    - energies : An array containing X-ray energies corresponding to
+      the points in `spectrum`. Must have the same shape as `spectrum`.
+
+    - edge : An X-ray Edge object, will be used for estimating the
+      actual edge energy itself.
+
+    Returns: A named tuple with the estimated parameters (see
+      .KEdgeParams for definition)
+
+    """
+    assert spectrum.shape == energies.shape
+    # Guess the overall scale and offset parameters
+    scale = k_edge_jump(frames=spectrum, energies=energies, edge=edge)
+    voffset = np.min(spectrum)
+    # Estimate the edge position
+    E0 = edge.E_0
+    # Estimate the whiteline Gaussian parameters
+    ga = 5 * (np.max(spectrum) - scale - voffset)
+    gb = energies[np.argmax(spectrum)] - E0
+    gc = 4 # Arbitrary choice, should improve this in the future
+    # Construct the parameters tuple
+    params = KEdgeParams(scale=scale, voffset=voffset, E0=E0,
+                         sigw=0.5, pre_m=0, pre_b=0,
+                         ga=ga, gb=gb, gc=4)
+    return params
 
 
 def fit_kedge(spectra, energies, p0):
