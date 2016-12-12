@@ -33,7 +33,7 @@ import logging
 from collections import namedtuple
 
 import pandas as pd
-from matplotlib import pyplot, cm
+from matplotlib import pyplot, cm, pyplot as plt
 from matplotlib.colors import Normalize
 import h5py
 import numpy as np
@@ -41,7 +41,8 @@ from skimage import morphology, filters, transform,  measure
 from sklearn import linear_model, cluster
 from units import unit, predefined
 
-from utilities import prog, xycoord, Pixel, Extent, pixel_to_xy, get_component
+from utilities import (prog, xycoord, Pixel, Extent, pixel_to_xy,
+                       get_component, broadcast_reverse)
 from txmstore import TXMStore
 import plots
 import exceptions
@@ -289,227 +290,6 @@ class XanesFrameset():
             store.fork_data_group(new_name=new_name)
         self.data_name = new_name
 
-    # def fork_group(self, name):
-    #     """Create a new copy of the current active group inside the HDF parent
-    #     with name: `name`. If trying to create a node that already
-    #     exists, this will only work if the parent groups are the same,
-    #     otherwise we risk breaking the tree. For performance reasons,
-    #     datasets are copied as links and will be not stored separately
-    #     until set_image_data is called.
-    #     """
-    #     with self.hdf_file(mode='a') as f:
-    #         parent_group = f[self.frameset_group]
-    #         old_group = f[self.active_group]
-    #         if name in parent_group:
-    #             # Existing groups require some validation first
-    #             old_parent = parent_group[name].attrs['parent']
-    #             if old_parent != self.active_group:
-    #                 # Trying to replace an existing group from a different path
-    #                 # This can cause an orphaned tree branch
-    #                 msg = 'Cannot fork group "{target}".'
-    #                 msg += ' Choose a new name or switch to group "{parent}" first.'
-    #                 msg = msg.format(
-    #                     target=name,
-    #                     parent=os.path.basename(old_parent)
-    #                 )
-    #                 raise exceptions.GroupKeyError(msg)
-    #             else:
-    #                 del parent_group[name]
-    #         # Create a new group to hold the datasets
-    #         parent_group.copy(source=old_group, dest=name, shallow=True)
-    #         dest = parent_group[name]
-    #         new_path = parent_group[name].name
-    #         parent_group[name].attrs['parent'] = old_group.name
-    #         # Copy links for actual datasets
-    #         for E_key in old_group.keys():
-    #             # Set a dirty bit for later copy-on-write
-    #             dest[E_key].attrs['_copy_on_write'] = True
-    #             # Copy sym links for datasets
-    #             for src_ds in old_group[E_key]:
-    #                 try:
-    #                     old_path = old_group[E_key][src_ds].name
-    #                 except TypeError:
-    #                     pass
-    #                 else:
-    #                     dest[E_key][str(src_ds)] = h5py.SoftLink(old_path)
-    #                     dest[E_key].attrs["_copy_on_write"] = True
-    #     self.latest_group = new_path
-    #     self.switch_group(name)
-
-    # def fork_labels(self, name):
-    #     # Create a new group
-    #     if name in self.hdf_group().keys():
-    #         del self.hdf_group()[name]
-    #     self.hdf_group().copy(self.active_labels_groupname, name)
-    #     labels_group = self.hdf_group()[name]
-    #     # Update label paths for frame datasets
-    #     for frame in self:
-    #         key = frame.image_data.name.split('/')[-1]
-    #         new_label_name = labels_group[key].name
-    #         frame.particle_labels_path = new_label_name
-    #     self.latest_labels = name
-    #     self.active_labels_groupname = name
-    #     return labels_group
-
-    # def apply_references(self, bg_groupname):
-    #     """Apply reference corrections for this frameset. Converts raw
-    #     intensity frames to absorbance frames."""
-    #     self.background_groupname = bg_groupname
-    #     self.fork_group('absorbance_frames')
-    #     bg_group = self.hdf_file()[bg_groupname]
-    #     for frame in prog(self, "Reference correction"):
-    #         key = frame.image_data.name.split('/')[-1]
-    #         bg_dataset = bg_group[key]
-    #         new_data = apply_reference(frame.image_data.value,
-    #                                    reference_data=bg_dataset.value)
-    #         # Resize the dataset if necessary
-    #         if new_data.shape != frame.image_data.shape:
-    #             frame.image_data.resize(new_data.shape)
-    #         frame.image_data.write_direct(new_data)
-
-    # def correct_magnification(self):
-    #     """Correct for changes in magnification at different energies.
-
-    #     As the X-ray energy increases, the focal length of the zone
-    #     plate changes and so the image is zoomed-out at higher
-    #     energies. This method applies a correction to each frame to
-    #     make the magnification similar to that of the first
-    #     frame. Some beamlines correct for this automatically during
-    #     acquisition: APS 8-BM-B
-    #     """
-    #     raise NotImplementedError("Mag correction done during import")
-
-    # def apply_translation(self, shift_func, new_name,
-    #                       description="Applying translation"):
-    #     """Apply a translation to every frame using
-    #     multiprocessing. `shift_func` should be a function that
-    #     accepts a dictionary and returns an offset tuple (x, y) of
-    #     corrections to be applied to the frame and the labels. The
-    #     dictionary will contain the key, energy, data and labels for a
-    #     frame. All frames have their sample position set set to (0, 0)
-    #     since we don't know which one is the real position.
-    #     """
-    #     raise NotImplementedError()
-    #     # Create new data groups to hold shifted image data
-    #     self.fork_group(new_name)
-    #     self.fork_labels(new_name + "_labels")
-    #     # Multiprocessing setup
-
-    #     def worker(payload):
-    #         # key, data, labels = payload
-    #         key = payload['key']
-    #         data = payload['data']
-    #         labels = payload['labels']
-    #         # Apply net transformation with bicubic interpolation
-    #         shift = shift_func(payload)
-    #         transformation = transform.SimilarityTransform(translation=shift)
-    #         new_data = transform.warp(data, transformation,
-    #                                   order=3, mode="wrap", preserve_range=True)
-    #         # Transform labels
-    #         original_dtype = labels.dtype
-    #         labels = labels.astype(np.float64)
-    #         new_labels = transform.warp(labels, transformation,
-    #                                     order=0, mode="constant", preserve_range=True)
-    #         new_labels = new_labels.astype(original_dtype)
-    #         ret = {
-    #             'key': key,
-    #             'energy': payload['energy'],
-    #             'data': new_data,
-    #             'labels': new_labels
-    #         }
-    #         return ret
-
-        # # Launch multiprocessing queue
-        # process_with_smp(frameset=self,
-        #                  worker=worker,
-        #                  description=description)
-        # # Update new positions
-        # for frame in self:
-        #     frame.sample_position = position(0, 0, frame.sample_position.z)
-
-    # def correct_drift(self, new_name="aligned_frames", method="ransac",
-    #                   loc=xycoord(x=20, y=20), reference_frame=0,
-    #                   plot_fit=False):
-    #     """Apply a linear correction for a misalignment of zoneplate in APS
-    #     8BM-B beamline as of Nov 2015. Deprecated in favor of
-    #     align_frames method.
-
-    #     Arguments
-    #     ---
-
-    #     method (default: "ransac"): Which type of regression to use:
-    #         "ransac", "linear"
-
-    #     loc (default 20, 20): Which particle to use to track drift
-
-    #     reference_frame: index of the frame that stands still
-
-    #     plot_fit (default False): If truthy, plot the resulting fit
-    #         line of frame drift.
-
-    #     """
-    #     # Create new data groups to hold shifted image data
-    #     # self.fork_group(new_name)
-    #     # self.fork_labels(new_name + "_labels")
-    #     # Regression values determined from cell 1 charge on 2015-11-11
-    #     slope_v = 0.34693115
-    #     slope_h = -0.28493559
-    #     # slope_v = 0.32418403
-    #     # slope_h = -0.25658992
-    #     E_0 = self[reference_frame].energy
-    #     # Prepare particle positions for regression
-    #     centroids = self.particle_centroid_spectrum(loc=loc)
-    #     x = np.array(centroids.index).reshape(-1, 1)
-    #     # Perform linear regression (RANSAC ignores outliers)
-    #     if method == "ransac":
-    #         regression_v = linear_model.RANSACRegressor(linear_model.LinearRegression())
-    #         regression_h = linear_model.RANSACRegressor(linear_model.LinearRegression())
-    #     elif method == "linear":
-    #         regression_v = linear_model.LinearRegression()
-    #         regression_h = linear_model.LinearRegression()
-    #     regression_v.fit(x, centroids.vertical)
-    #     regression_h.fit(x, centroids.horizontal)
-    #     if method == "ransac":
-    #         inliers_v = np.count_nonzero(regression_v.inlier_mask_)
-    #         regression_v = regression_v.estimator_
-    #         inliers_h = np.count_nonzero(regression_h.inlier_mask_)
-    #         regression_h = regression_h.estimator_
-    #     slope_v = regression_v.coef_[0]
-    #     slope_h = regression_h.coef_[0]
-    #     # icpt_v = regression_v.intercept_
-    #     # icpt_h = regression_h.intercept_
-    #     error_v = regression_v.score(x, centroids.vertical)
-    #     error_h = regression_h.score(x, centroids.horizontal)
-
-    #     # Plot results of regression
-    #     if plot_fit:
-    #         pyplot.plot(x, centroids.vertical, marker="o", linestyle="None")
-    #         pyplot.plot(x, centroids.horizontal, marker="o", linestyle="None")
-    #         pyplot.plot(x, regression_v.predict(x))
-    #         pyplot.plot(x, regression_h.predict(x))
-    #         pyplot.legend(["Vertical", "Horizontal"])
-
-    #     # Display status
-    #     if method == "ransac":
-    #         description = "Correcting drift (R²: {}v, {}h, #inliers: {}v, {}h)".format(
-    #             round(error_v, 3), round(error_h, 3),
-    #             inliers_v, inliers_h
-    #         )
-    #     else:
-    #         description = "Correcting drift (R²: {}v, {}h)".format(
-    #             round(error_v, 3), round(error_h, 3)
-    #         )
-
-    #     # Move frames
-    #     def shift_func(payload):
-    #         delta_E = payload['energy'] - E_0
-    #         correction = xycoord(x=(slope_h * delta_E), y=(slope_v * delta_E))
-    #         return correction
-    #     self.apply_translation(shift_func, new_name=new_name, description=description)
-    #     # Set active particles
-    #     for frame in self:
-    #         frame.activate_closest_particle(loc=loc)
-
     def apply_transformations(self, crop=True, commit=True):
         """Take any transformations staged with `self.stage_transformations()`
         and apply them. If commit is truthy, the staged
@@ -692,6 +472,7 @@ class XanesFrameset():
             reference_frame = np.argmax(spectrum.values)
         # Keep track of how many passes and where we started
         for pass_ in range(0, passes):
+            log.debug("Starting alignment pass %d of %d", pass_, passes)
             # Get data from store
             frames = self.apply_transformations(crop=True, commit=False)
             frames = get_component(frames, component)
@@ -730,6 +511,7 @@ class XanesFrameset():
             pass_distances.append(rms)
             # Save translations for deferred calculation
             self.stage_transformations(translations=translations)
+            log.debug("Finished alignment pass %d of %d", pass_, passes)
         # Plot the results if requested
         if plot_results:
             x = range(0, passes)
@@ -741,6 +523,7 @@ class XanesFrameset():
         if commit:
             log.info("Committing final translations to disk")
             self.apply_transformations(crop=True, commit=True)
+        log.info("Aligned %d passes in %d seconds", passes, time() - logstart)
 
     def label_particles(self, min_distance=20):
         """Use watershed segmentation to identify particles.
@@ -1121,6 +904,7 @@ class XanesFrameset():
           be fit and the remaning pixels will be set to a default
           value. This can help reduce computing time.
         """
+        logstart = time()
         with self.store() as store:
             frames = store.absorbances
             energies = store.energies.value
@@ -1137,7 +921,12 @@ class XanesFrameset():
             spectra = np.moveaxis(frames, 1, -1)
             map_shape = (*spectra.shape[:-1], len(xm.kedge_params))
             fit_maps = np.empty(map_shape)  # To hold output
-            spectra = spectra[~frames_mask].reshape((-1, energies.shape[-1]))
+            # Make sure spectra and energies have the same shape
+            # import pdb; pdb.set_trace()
+            energies = broadcast_reverse(energies, frames.shape)
+            spectra = spectra[~frames_mask].reshape((-1, spectra.shape[-1]))
+            energies = np.moveaxis(energies, 1, -1)
+            energies = energies[~frames_mask].reshape(spectra.shape)
             # Do a preliminary fitting to get good parameters
             guess = xm.KEdgeParams(1/5, -0.4, 8333,
                                    1,
@@ -1145,8 +934,10 @@ class XanesFrameset():
                                    1, 14, 1)
             I = spectra.mean(axis=0)[np.newaxis, ...]
             E = energies.mean(axis=0)[np.newaxis, ...]
+            # import pdb; pdb.set_trace()
             p0 = xm.fit_kedge(spectra=I, energies=E, p0=guess)
-            # Perform full fitting for individual pixels
+        # Perform full fitting for individual pixels
+        return (I, E, p0)
         all_params = xm.fit_kedge(spectra=spectra,
                                   energies=energies, p0=p0[0])
         # Set actual calculate values
@@ -1162,6 +953,8 @@ class XanesFrameset():
         with self.store(mode='r+') as store:
             store.fit_parameters = fit_maps
             store.whiteline_map = wl_maps
+        log.info('fit %d spectra in %d seconds',
+                 spectra.shape[0], time() - logstart)
 
     def calculate_whitelines(self, edge_mask=False):
         """Calculate and save a map of the whiteline position of each pixel by

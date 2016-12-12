@@ -55,10 +55,9 @@ def iter_indices(data, leftover_dims=1, desc=None):
     - desc : String to put in the progress bar.
     """
     fs_shape = np.asarray(data.shape[:-leftover_dims])
-    length = np.product(fs_shape)
     ranges = [range(0, s) for s in fs_shape]
     indices = product(*ranges)
-    return prog(indices, desc=desc, total=length)
+    return indices
 
 
 def apply_internal_reference(intensities, out=None):
@@ -249,7 +248,7 @@ def l_edge_mask(frames: np.ndarray, energies: np.ndarray, edge,
 
 
 def k_edge_mask(frames: np.ndarray, energies: np.ndarray, edge,
-              sensitivity: float=1, min_size=0):
+                sensitivity: float=1, min_size=0):
     """Calculate a mask for what is likely active material at this
     edge. This is done by comparing the edge-jump to the standard
     deviation. Foreground material will be identified when the
@@ -331,7 +330,7 @@ def particle_labels(frames: np.ndarray, energies: np.ndarray, edge,
       energy. These will be merged and used for segmentation.
     """
     # Get edge-jump mask
-    mask = ~edge_mask(frames, energies=energies, edge=edge, min_size="auto")
+    mask = ~edge.mask(frames, energies=energies, min_size=0)
     # Create "edge-distance" image
     distances = ndimage.distance_transform_edt(mask)
     in_range = (distances.min(), distances.max())
@@ -435,7 +434,8 @@ def fit_kedge(spectra, energies, p0):
     will be created.
 
     """
-    energies = np.broadcast_to(energies, spectra.shape)
+    assert energies.shape == spectra.shape
+    # energies = np.broadcast_to(energies, spectra.shape)
     # Empty array to hold the results if none are given
     # if out is None:
     result_shape = (*spectra.shape[:-1], len(kedge_params))
@@ -443,7 +443,7 @@ def fit_kedge(spectra, energies, p0):
     # Define the workhorse function to do the actual fitting
     # Start threaded processing
     # spectrum_iters = iter_indices(spectra, leftover_dims=1, desc="Fitting spectra")
-    spectra_iter = prog(list(zip(spectra, energies)))
+    spectra_iter = list(zip(spectra, energies))
     f = _fit_spectrum(p0=p0)
     with mp.Pool() as pool:
         chunksize = 223 # Prime number just for kicks
@@ -571,6 +571,7 @@ def register_correlations(frames, reference, upsample_factor=10):
                                                frm,
                                                upsample_factor=upsample_factor)
         shift, error, diffphase = results
+        log.debug("Translation for frame %s = %s", str(idx), str(shift)) 
         # Convert (row, col) to (x, y)
         translations[idx] = (shift[1], shift[0])
     indices = iter_indices(frames, desc='Registering', leftover_dims=2)

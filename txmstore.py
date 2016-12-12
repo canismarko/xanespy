@@ -21,10 +21,14 @@
 
 import h5py
 import numpy as np
+import logging
 
 import exceptions
 
 import xanes_math as xm
+
+
+log = logging.getLogger(__name__)
 
 
 class TXMStore():
@@ -116,7 +120,9 @@ class TXMStore():
         # Check that the current and target groups are not the same
         if new_name == self.data_name:
             msg = "Refusing to fork myself to myself"
+            log.debug("Refusing to fork group %s to itself", new_name)
             raise exceptions.CreateGroupError(msg)
+        log.info('Forking data group "%s" to "%s"', self.data_name, new_name)
         # Delete the old group and overwrite it
         parent = self.parent_group()
         if new_name in parent.keys():

@@ -26,6 +26,7 @@ from collections import namedtuple
 import multiprocessing
 import threading
 import sys
+import logging
 
 from tqdm import tqdm
 import numpy as np
@@ -126,11 +127,33 @@ def pixel_to_xy(pixel, extent, shape):
     # ratio_y = (xy.y-extent.bottom)/(extent.top-extent.bottom)
     # # (1 - ratio) for y because images are top indexed
     # pixel_v = int(round((1 - ratio_y) * shape[0]))
-    ratio_h = ((pixel.horizontal-0.5) / shape[1])
+    ratio_h = ((pixel.horizontal+0.5) / shape[1])
     x = extent.left + ratio_h * (extent.right - extent.left)
-    ratio_v = ((pixel.vertical-0.5) / shape[0])
+    ratio_v = ((pixel.vertical+0.5) / shape[0])
     y = extent.bottom + ratio_v * (extent.top - extent.bottom)
     return xycoord(x=x, y=y)
+
+
+def broadcast_reverse(array, shape, *args, **kwargs):
+    """Take the array and extends it as much as possible to match
+    `shape`. Similar to numpy's broadcast_to function, but starts with
+    the most significant axis. For example, if `array` has shape (7,
+    29), it can be broadcast to (7, 29, 1024, 1024).
+
+    """
+    def reverse_axes(array):
+        ndims = array.ndim
+        for n in range(int(ndims/2)):
+            array = np.swapaxes(array, n, ndims - 1 - n)
+        return array
+    # Convert the array to its reverse representation
+    rev_array = reverse_axes(array)
+    rev_shape = shape[::-1]
+    # Broadcast the array
+    new_array = np.broadcast_to(rev_array, rev_shape, *args, **kwargs)
+    # Convert the array back to its original representation
+    new_array = reverse_axes(new_array)
+    return new_array
 
 
 def get_component(data, name):
@@ -151,33 +174,14 @@ def get_component(data, name):
     return data
 
 
-class Prog:
+def prog(iterable, leave=False, *args, **kwargs):
     """A progress bar for displaying how many iterations have been
-    completed. This is mostly just a wrapper around the tqdm
-    library. Additionally it makes use of the borg pattern, so setting
-    Prog.quiet to True once silences all progress bars. This is useful
-    for unit testing.
+    completed. This is mostly just a wrapper around the tqdm library.
     """
-    __global_state = {
-        'quiet': False
-    }
-
-    def __init__(self):
-        self.__dict__ = self.__global_state
-
-    def __call__(self, iterable, desc=None, *args, **kwargs):
-        """Progress meter. Wraps around tqdm with some custom defaults."""
-        if self.quiet:
-            # Just return the iterable with no progress meter
-            ret = iterable
-        else:
-            kwargs['file'] = kwargs.get('file', sys.stdout)
-            kwargs['leave'] = kwargs.get('leave', True)
-            ret = tqdm(iterable, desc=desc, *args, **kwargs)
-        return ret
-
-
-prog = Prog()
+    raise NotImplementedError()
+    # Create the tqdm instance
+    ret = tqdm(iterable, *args, **kwargs)
+    return ret
 
 
 def prepare_hdf_group(*args, **kwargs):

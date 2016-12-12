@@ -72,10 +72,13 @@ def import_txm_framesets(*args, **kwargs):
 def read_metadata(filenames, flavor):
     """Take a list of filenames and return a pandas dataframe with all the
     metadata."""
+    log.info("Importing metadata with flavor %s", flavor)
+    logstart = time()
     columns = ('timestep_name', 'position_name', 'is_background',
                'energy', 'shape', 'starttime')
     df = pd.DataFrame(columns=columns)
-    for filename in prog(filenames, 'Preparing metadata'):
+    for idx, filename in enumerate(filenames):
+        log.debug("Reading metadata for {}".format(filename))
         ext = os.path.splitext(filename)[-1]
         if ext not in format_classes.keys():
             continue # Skip non-TXM files
@@ -100,9 +103,14 @@ def read_metadata(filenames, flavor):
             df = df[df.timestep_name != name]
             bad_samples.append(name)
     # Warn the user about dropped frames
-    if bad_samples and not prog.quiet:
+    if bad_samples:
         msg = "Dropping incomplete framesets {}".format(bad_samples)
         warnings.warn(UserWarning(msg))
+        log.warning(msg)
+    # Log summary of files read results
+    msg = "Read metadata for %d files in %f sec"
+    log.info(msg, len(df), time() - logstart)
+    # Return file metadata in order of collection time
     return df.sort_values(by=['starttime'])
 
 
@@ -339,13 +347,13 @@ def magnification_correction(frames, pixel_sizes):
     return (scales, translations)
 
 
-def import_ssrl_frameset(directory, hdf_filename=None, quiet=False):
+def import_ssrl_frameset(directory, hdf_filename=None):
     """Import all files in the given directory collected at SSRL beamline
     6-2c and process into framesets. Images are assumed to full-field
     transmission X-ray micrographs and repetitions will be averaged.
     """
     imp_group = import_frameset(directory, hdf_filename=hdf_filename,
-                                quiet=quiet, flavor='ssrl')
+                                flavor='ssrl')
     # Set some beamline specific metadata
     imp_group.parent.attrs['technique'] = 'Full-field TXM'
     imp_group.parent.attrs['beamline'] = 'SSRL 6-2c'
@@ -410,7 +418,7 @@ def decode_aps_params(filename):
 
 def import_aps_8BM_frameset(directory, hdf_filename, quiet=False):
     imp_group = import_frameset(directory=directory, flavor="aps",
-                          hdf_filename=hdf_filename, quiet=quiet)
+                          hdf_filename=hdf_filename)
     # Set some beamline specific metadata
     imp_group.parent.attrs['technique'] = 'Full-field TXM'
     imp_group.parent.attrs['beamline'] = 'APS 8-BM-B'
@@ -419,13 +427,12 @@ def import_aps_8BM_frameset(directory, hdf_filename, quiet=False):
     return imp_group
 
 
-def import_frameset(directory, flavor, hdf_filename, quiet=False):
+def import_frameset(directory, flavor, hdf_filename):
     """Import all files in the given directory collected at APS beamline
     8-BM-B and process into framesets. Images are assumed to
     full-field transmission X-ray micrographs. This beamline does not
     produce the flux to warrant averaging.
     """
-    prog.quiet = quiet
     # Check that file does not exist
     if os.path.exists(hdf_filename):
         raise OSError("File {} exists".format(hdf_filename))
@@ -435,22 +442,7 @@ def import_frameset(directory, flavor, hdf_filename, quiet=False):
     metadata = read_metadata(files, flavor=flavor)
     reference_files = metadata[metadata['is_background'] == True]
     sample_files = metadata[metadata['is_background'] == False]
-    # Prepare counters and functions for progress bar
-    curr_file = 0
-    # import pdb; pdb.set_trace()
     total_files = sample_files.count()['is_background']
-    print(total_files.__class__)
-    init_time = time()
-
-    def set_progbar(val, total, init_time):
-        if not prog.quiet:
-            # Update the progress bar
-            status = tqdm.format_meter(n=val,
-                                       total=total,
-                                       elapsed=time() - init_time,
-                                       unit='fm',
-                                       prefix="Importing frames: ")
-            print("\r", status, end='')  # Avoid new line every time
     # Import each sample-position combination
     h5file = h5py.File(hdf_filename)
     # Get some shape information for all the datasets
@@ -480,13 +472,11 @@ def import_frameset(directory, flavor, hdf_filename, quiet=False):
             image = median_filter(np.mean(images, axis=0), footprint=kernel)
             Is.append(image)
             [f.close() for f in E_files]
-            # Update progress bar
-            curr_file += len(E_files)
-            set_progbar(curr_file, total=total_files, init_time=init_time)
         # Save to disk
         ref_ds[ts_idx] = np.array(Is)
     pos_groups = enumerate(sample_files.groupby('position_name'))
     for pos_idx, (pos_name, pos_df) in pos_groups:
+        logstart = time()
         # Create HDF5 datasets to hold the data
         Importer = format_classes[os.path.splitext(pos_df.index[0])[-1]]
         with Importer(pos_df.index[0], flavor=flavor) as f:
@@ -571,9 +561,6 @@ def import_frameset(directory, flavor, hdf_filename, quiet=False):
                 # ...pixel size data.
                 px_sizes = np.array([f.um_per_pixel() for f in E_files])
                 px_ds[ts_idx, E_idx] = np.mean(px_sizes)
-                # Increment progress bars
-                curr_file += len(E_files)
-                set_progbar(curr_file, total=total_files, init_time=init_time)
                 # Close all the files
                 for f in E_files:
                     f.close()
@@ -582,7 +569,6 @@ def import_frameset(directory, flavor, hdf_filename, quiet=False):
             h5group['references'] = ref_ds
         # Convert to absorbance values
         apply_references(int_ds, ref_ds, out=abs_ds)
-        print("")  # To avoid over-writing the status bar
         # Correct magnification from different energy focusing
         if flavor == 'ssrl':
             # Correct magnification changes due to zone-plate movement
@@ -595,5 +581,7 @@ def import_frameset(directory, flavor, hdf_filename, quiet=False):
         # Set some metadata
         h5group.parent.attrs['xanespy_version'] = CURRENT_VERSION
         h5group.parent.attrs['original_directory'] = directory
-        # Clean-up and return data
-        return h5group
+        # Write logging output
+        log.info("Imported %s (%d files) in %f sec",
+                 pos_name, len(pos_df), time() - logstart)
+    return imp_group
