@@ -77,7 +77,7 @@ def read_metadata(filenames, flavor):
     columns = ('timestep_name', 'position_name', 'is_background',
                'energy', 'shape', 'starttime')
     df = pd.DataFrame(columns=columns)
-    for idx, filename in enumerate(filenames):
+    for filename in prog(filenames, desc="Reading"):
         log.debug("Reading metadata for {}".format(filename))
         ext = os.path.splitext(filename)[-1]
         if ext not in format_classes.keys():
@@ -94,22 +94,23 @@ def read_metadata(filenames, flavor):
             metadata['starttime'] = f.starttime().timestamp()
         df.loc[filename] = metadata
     # Remove any incomplete framesets
-    timestep_names, timesteps = zip(*df.groupby('timestep_name'))
-    lengths = np.array([len(df_.groupby('energy')) for df_ in timesteps])
-    max_length = max(lengths)
-    bad_samples = []
-    for name, length in zip(timestep_names, lengths):
-        if length < max_length:
-            df = df[df.timestep_name != name]
-            bad_samples.append(name)
-    # Warn the user about dropped frames
-    if bad_samples:
-        msg = "Dropping incomplete framesets {}".format(bad_samples)
-        warnings.warn(UserWarning(msg))
-        log.warning(msg)
-    # Log summary of files read results
-    msg = "Read metadata for %d files in %f sec"
-    log.info(msg, len(df), time() - logstart)
+    if len(df) > 0:
+        timestep_names, timesteps = zip(*df.groupby('timestep_name'))
+        lengths = np.array([len(df_.groupby('energy')) for df_ in timesteps])
+        max_length = max(lengths)
+        bad_samples = []
+        for name, length in zip(timestep_names, lengths):
+            if length < max_length:
+                df = df[df.timestep_name != name]
+                bad_samples.append(name)
+        # Warn the user about dropped frames
+        if bad_samples:
+            msg = "Dropping incomplete framesets {}".format(bad_samples)
+            warnings.warn(UserWarning(msg))
+            log.warning(msg)
+        # Log summary of files read results
+        msg = "Read metadata for %d files in %f sec"
+        log.info(msg, len(df), time() - logstart)
     # Return file metadata in order of collection time
     return df.sort_values(by=['starttime'])
 
@@ -436,13 +437,19 @@ def import_frameset(directory, flavor, hdf_filename):
     # Check that file does not exist
     if os.path.exists(hdf_filename):
         raise OSError("File {} exists".format(hdf_filename))
+    # Get list of all possible files in the directory tree
     files = [os.path.join(dp, f) for dp, dn, filenames in
              os.walk(directory) for f in filenames]
-    # Process filename metadata into the dataframe
+    # Process filename metadata into separate dataframes
     metadata = read_metadata(files, flavor=flavor)
     reference_files = metadata[metadata['is_background'] == True]
     sample_files = metadata[metadata['is_background'] == False]
     total_files = sample_files.count()['is_background']
+    # Make sure there are at least some sample data files to import
+    if len(sample_files) == 0:
+        msg = 'No data files found in directory "{}"'
+        msg = msg.format(os.path.abspath(directory))
+        raise exceptions.DataNotFoundError(msg)
     # Import each sample-position combination
     h5file = h5py.File(hdf_filename)
     # Get some shape information for all the datasets
@@ -461,17 +468,25 @@ def import_frameset(directory, flavor, hdf_filename):
                                        maxshape=ds_shape,
                                        chunks=chunk_shape,
                                        dtype=np.uint16)
+    progbar = prog(desc="Importing", total=len(metadata), unit="files")
     ref_ds.attrs['context'] = 'frameset'
+    median_kernel = np.array([[0, 1, 0], [1, 1, 1], [0, 1, 0]])
     for ts_idx, (ts_name, ts_df) in enumerate(ref_groups):
         Is = []
         for E_idx, (E_name, E_df) in enumerate(ts_df.groupby('energy')):
             Importer = format_classes[os.path.splitext(E_df.index[0])[-1]]
-            E_files = [Importer(f, flavor=flavor) for f in E_df.index]
-            images = np.array([f.image_data() for f in E_files])
-            kernel = np.array([[0, 1, 0], [1, 1, 1], [0, 1, 0]])
-            image = median_filter(np.mean(images, axis=0), footprint=kernel)
-            Is.append(image)
-            [f.close() for f in E_files]
+            # E_files = [Importer(f, flavor=flavor) for f in E_df.index]
+            # images = np.array([f.image_data() for f in E_files])
+            # kernel = np.array([[0, 1, 0], [1, 1, 1], [0, 1, 0]])
+            # image = median_filter(np.mean(images, axis=0), footprint=kernel)
+            images = []
+            for f in E_df.index:
+                with Importer(f, flavor=flavor) as E_file:
+                    images.append(E_file.image_data())
+                progbar.update(1)
+            # Take the average of all the files and apply median filter
+            images = np.mean(np.array(images), axis=0)
+            Is.append(median_filter(images, footprint=median_kernel))
         # Save to disk
         ref_ds[ts_idx] = np.array(Is)
     pos_groups = enumerate(sample_files.groupby('position_name'))
@@ -536,37 +551,43 @@ def import_frameset(directory, flavor, hdf_filename):
             # Import the data from each energy frame...
             E_groups = ts_df.sort_values('energy').groupby('energy')
             for E_idx, (energy, group) in enumerate(E_groups):
+                energies = []
+                images = []
+                pos = []
+                starts = []
+                ends = []
+                px_sizes = []
                 Importer = format_classes[os.path.splitext(group.index[0])[-1]]
-                E_files = [Importer(f, flavor=flavor) for f in group.index]
+                for f in group.index:
+                    with Importer(f, flavor=flavor) as E_file:
+                        energies.append(E_file.energy())
+                        images.append(E_file.image_data())
+                        pos.append(E_file.sample_position())
+                        starts.append(E_file.starttime())
+                        ends.append(E_file.endtime())
+                        px_sizes.append(E_file.um_per_pixel())
+                        progbar.update(1)
                 # ...x-ray energies...
-                energies = np.array([f.energy() for f in E_files])
-                E_ds[ts_idx, E_idx] = np.mean(energies)
+                E_ds[ts_idx, E_idx] = np.mean(np.array(energies))
                 # ...intensity data...
-                images = np.array([f.image_data() for f in E_files])
-                kernel = np.array([[0, 1, 0], [1, 1, 1], [0, 1, 0]])
-                image = median_filter(np.mean(images, axis=0),
-                                      footprint=kernel)
+                #   (Combine and store the image arrays with a median filter)
+                images = np.mean(np.array(images), axis=0)
+                image = median_filter(images, footprint=median_kernel)
                 int_ds[ts_idx, E_idx] = image
                 # ...position data...
-                pos = np.array([f.sample_position() for f in E_files])
-                orig_pos_ds[ts_idx, E_idx] = np.mean(pos, axis=0)
+                orig_pos_ds[ts_idx, E_idx] = np.mean(np.array(pos), axis=0)
                 # ...filenames...
-                filename_ds[ts_idx, E_idx] = np.array([E_files[0].filename],
+                filename_ds[ts_idx, E_idx] = np.array([group.index[0]],
                                                       dtype="S")
                 # ...timestamp data...
-                starts = [f.starttime() for f in E_files]
-                ends = [f.endtime() for f in E_files]
                 timestamp_ds[ts_idx, E_idx] = np.array([min(starts), max(ends)],
                                                        dtype='S32')
                 # ...pixel size data.
-                px_sizes = np.array([f.um_per_pixel() for f in E_files])
-                px_ds[ts_idx, E_idx] = np.mean(px_sizes)
-                # Close all the files
-                for f in E_files:
-                    f.close()
+                px_ds[ts_idx, E_idx] = np.mean(np.array(px_sizes))
         # Create a references dataset if one doesn't exist yet
         if 'references' not in h5group.keys():
             h5group['references'] = ref_ds
+        progbar.close()
         # Convert to absorbance values
         apply_references(int_ds, ref_ds, out=abs_ds)
         # Correct magnification from different energy focusing
@@ -577,7 +598,11 @@ def import_frameset(directory, flavor, hdf_filename):
             transform_images(abs_ds, translations=translations,
                              scales=scales, out=abs_ds)
         # Remove dead or hot pixels
+        progbar = prog(desc="Median filter", total=1)
+        progbar.update(0)
         median_filter(abs_ds, size=1, output=abs_ds)
+        progbar.update(1)
+        progbar.close()
         # Set some metadata
         h5group.parent.attrs['xanespy_version'] = CURRENT_VERSION
         h5group.parent.attrs['original_directory'] = directory

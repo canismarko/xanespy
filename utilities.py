@@ -28,7 +28,7 @@ import threading
 import sys
 import logging
 
-from tqdm import tqdm
+from tqdm import tqdm, tqdm_notebook
 import numpy as np
 import h5py
 
@@ -41,11 +41,10 @@ Extent = namedtuple('extent', ('left', 'right', 'bottom', 'top'))
 
 CPU_COUNT = multiprocessing.cpu_count()
 
-def foreach(f,l,threads=CPU_COUNT,return_=False):
+def foreach(f, l, threads=CPU_COUNT, return_=False):
     """
     Apply f to each element of l, in parallel
     """
-
     if threads>1:
         iteratorlock = threading.Lock()
         exceptions = []
@@ -174,14 +173,35 @@ def get_component(data, name):
     return data
 
 
-def prog(iterable, leave=False, *args, **kwargs):
-    """A progress bar for displaying how many iterations have been
-    completed. This is mostly just a wrapper around the tqdm library.
+def is_kernel():
+    """Detect whether or not we're running inside an IPython kernel. NB:
+    This does not distinguish between eg IPython notebook and IPython
+    QtConsole.
     """
-    raise NotImplementedError()
-    # Create the tqdm instance
-    ret = tqdm(iterable, *args, **kwargs)
-    return ret
+    if 'IPython' not in sys.modules:
+        # IPython hasn't been imported, definitely not
+        return False
+    from IPython import get_ipython
+    # check for `kernel` attribute on the IPython instance
+    return getattr(get_ipython(), 'kernel', None) is not None
+
+
+def  prog(*args, leave=False, dynamic_ncols=True, **kwargs):
+    """A progress bar for displaying how many iterations have been
+    completed. This is mostly just a wrapper around the tqdm
+    library. *args and **kwargs are passed directly to either
+    tqdm.tqdm or tqdm.tqdm_notebook.
+    """
+    if is_kernel():
+        # Use the IPython widgets version of tqdm
+        wrapper = tqdm_notebook
+    else:
+        # Use the text-version of tqdm
+        wrapper = tqdm
+    # Create and return the progress bar iterable
+    prog_iter = wrapper(*args, leave=leave,
+                        dynamic_ncols=dynamic_ncols, **kwargs)
+    return prog_iter
 
 
 def prepare_hdf_group(*args, **kwargs):

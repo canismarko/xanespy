@@ -497,26 +497,31 @@ class XanesFrameset():
                 ref_image = filters.median(ref_image,
                                            morphology.disk(20))
             # Calculate translations for each frame
+            desc = "Registering pass {}".format(pass_)
             if method == "cross_correlation":
                 translations = xm.register_correlations(frames=frames,
-                                                        reference=ref_image)
+                                                        reference=ref_image,
+                                                        desc=desc)
             elif method == "template_match":
                 template_ = get_component(template, component)
                 translations = xm.register_template(frames=frames,
                                                     reference=ref_image,
-                                                    template=template_)
+                                                    template=template_,
+                                                    desc=desc)
             # Add the root-mean-square to the list of distances translated
             rms = np.sqrt((translations**2).sum(axis=-1).mean())
             log.info("RMS of translations for pass %d = %f", pass_, rms)
-            pass_distances.append(rms)
+            pass_distances.append(np.sqrt((translations**2).sum(-1)).flatten())
             # Save translations for deferred calculation
             self.stage_transformations(translations=translations)
             log.debug("Finished alignment pass %d of %d", pass_, passes)
         # Plot the results if requested
+        pass_distances = np.array(pass_distances)
         if plot_results:
             x = range(0, passes)
             ax = plots.new_axes()
-            ax.plot(x, pass_distances, marker='o', linestyle=":")
+            # ax.plot(x, pass_distances, marker='o', linestyle=":")
+            ax.boxplot(pass_distances.swapaxes(0, 1))
             ax.set_xlabel('Pass')
             ax.set_ylabel("RMS Translation")
         # Apply result of calculations to disk (if requested)

@@ -57,7 +57,7 @@ def iter_indices(data, leftover_dims=1, desc=None):
     fs_shape = np.asarray(data.shape[:-leftover_dims])
     ranges = [range(0, s) for s in fs_shape]
     indices = product(*ranges)
-    return indices
+    return prog(indices, desc=desc, total=np.product(fs_shape))
 
 
 def apply_internal_reference(intensities, out=None):
@@ -164,7 +164,8 @@ def apply_references(intensities, references, out=None):
     def calc(idx):
         out_idx = np.unravel_index(idx, out_shape)
         out[out_idx] = -np.log(np.divide(Is[idx], refs[idx]))
-    foreach(calc, range(0, Is.shape[0]), threads=1)
+    prog_iter = prog(range(0, Is.shape[0]), desc="Calc'ing OD")
+    foreach(calc, prog_iter)
     return out
 
 
@@ -389,24 +390,6 @@ def predict_edge(energies, *params):
     return p.scale * curve + p.voffset
 
 
-class _fit_spectrum():
-    def __init__(self, p0):
-        self.p0 = p0
-
-    def __call__(self, Is, Es):
-        # Fit the k edge for this spectrum
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore")
-            try:
-                popt, pcov = curve_fit(f=predict_edge, xdata=Es, ydata=Is, p0=self.p0)
-                # popt = np.random.random(len(self.p0)) # Fast result for testing
-            except RuntimeError:
-                # Failed fitting, so set everything to not-a-number
-                popt = np.empty((len(self.p0),))
-                popt[:] = np.nan
-        return popt
-
-
 def guess_kedge(spectrum, energies, edge):
     """Guess initial starting parameters for a k-edge curve. This will
     give a rough estimate, appropriate for giving to the fit_kedge
@@ -417,7 +400,7 @@ def guess_kedge(spectrum, energies, edge):
 
     - spectrum : An array containing absorbance data that represents a
       K-edge spectrum. Only 1-dimensional data are currently accepted.
-    
+
     - energies : An array containing X-ray energies corresponding to
       the points in `spectrum`. Must have the same shape as `spectrum`.
 
@@ -443,6 +426,24 @@ def guess_kedge(spectrum, energies, edge):
                          sigw=0.5, pre_m=0, pre_b=0,
                          ga=ga, gb=gb, gc=4)
     return params
+
+
+class _fit_spectrum():
+    def __init__(self, p0):
+        self.p0 = p0
+
+    def __call__(self, Is, Es):
+        # Fit the k edge for this spectrum
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            try:
+                popt, pcov = curve_fit(f=predict_edge, xdata=Es, ydata=Is, p0=self.p0)
+                # popt = np.random.random(len(self.p0)) # Fast result for testing
+            except RuntimeError:
+                # Failed fitting, so set everything to not-a-number
+                popt = np.empty((len(self.p0),))
+                popt[:] = np.nan
+        return popt
 
 
 def fit_kedge(spectra, energies, p0):
@@ -473,15 +474,13 @@ def fit_kedge(spectra, energies, p0):
 
     """
     assert energies.shape == spectra.shape
-    # energies = np.broadcast_to(energies, spectra.shape)
-    # Empty array to hold the results if none are given
-    # if out is None:
+    # Empty array to hold the results
     result_shape = (*spectra.shape[:-1], len(kedge_params))
-    #     out = np.empty(shape=result_shape)
-    # Define the workhorse function to do the actual fitting
     # Start threaded processing
-    # spectrum_iters = iter_indices(spectra, leftover_dims=1, desc="Fitting spectra")
     spectra_iter = list(zip(spectra, energies))
+    if spectra.shape[0] > 1:
+        spectra_iter = prog(spectra_iter,
+                            desc="Fitting spectra")
     f = _fit_spectrum(p0=p0)
     with mp.Pool() as pool:
         chunksize = 223 # Prime number just for kicks
@@ -588,14 +587,20 @@ def transform_images(data, translations=None, rotations=None,
             # Only real numbers here
             out[idx] = do_transform(frame, transformation)
     # Loop through the images and apply each transformation
-    indices = iter_indices(data, desc='Applying', leftover_dims=2)
+    indices = iter_indices(data, desc='Transforming', leftover_dims=2)
     foreach(apply_transform, indices)
     return out
 
 
-def register_correlations(frames, reference, upsample_factor=10):
+def register_correlations(frames, reference, upsample_factor=10,
+                          desc="registering"):
     """Calculate the relative translation between the reference image and
     each image in `frames` using a modified cross-correlation algorithm.
+
+    Arguments
+    ---------
+
+    - desc (str) : Description for putting in the progress bar.
 
     Returns: Array with same dimensions as 0th axis of `frames`
     containing (x, y) translations for each frame.
@@ -609,19 +614,24 @@ def register_correlations(frames, reference, upsample_factor=10):
                                                frm,
                                                upsample_factor=upsample_factor)
         shift, error, diffphase = results
-        log.debug("Translation for frame %s = %s", str(idx), str(shift)) 
+        log.debug("Translation for frame %s = %s", str(idx), str(shift))
         # Convert (row, col) to (x, y)
         translations[idx] = (shift[1], shift[0])
-    indices = iter_indices(frames, desc='Registering', leftover_dims=2)
+    indices = iter_indices(frames, desc=desc, leftover_dims=2)
     foreach(get_translation, indices)
     # Negative in order to properly register with transform_images method
     translations = -translations
     return translations
 
 
-def register_template(frames, reference, template):
+def register_template(frames, reference, template, desc="Registering"):
     """Calculate the relative translation between the reference image and
     each image in `frames` using a template matching algorithm.
+
+    Arguments
+    ---------
+
+    - desc (str) : Description to put in the progress bar.
 
     Returns: Array with same dimensions as 0th axis of `frames`
     containing (x, y) translations for each frame.
@@ -639,7 +649,7 @@ def register_template(frames, reference, template):
         shift = ref_center - np.array(center)
         # Convert (row, col) to (x, y)
         translations[idx] = (shift[1], shift[0])
-    indices = iter_indices(frames, desc='Registering', leftover_dims=2)
+    indices = iter_indices(frames, desc=desc, leftover_dims=2)
     foreach(get_translation, indices)
     # Negative in order to properly register with transform_images method
     translations = -translations
