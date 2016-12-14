@@ -547,6 +547,48 @@ class XanesFrameset():
                                            min_distance=min_distance)
             store.particle_labels = particles
 
+    # def boxplot(self, particle_idx=0, ax=None, map_name="whiteline_map"):
+    #     """Draw a box-whisker plot for the given particle in the given data map.
+
+    #     Arguments
+    #     ---------
+
+    #     - particle_idx : Selector for which particle to select from
+    #       the data source.
+
+    #     - ax : Matplot Axes instance on which to draw the plot.
+
+    #     - map_name : Data store name to use as the data source.
+
+    #     """
+    #     # Get the data for this particle
+    #     pixels = []
+    #     with self.store() as store:
+    #         data = store.get_map(map_name).value
+    #         for stepdata in data:
+    #             particles = self.particle_regions(intensity_image=stepdata)
+    #             particle = particles[particle_idx]
+    #             pixels.append(particle.intensity_image)
+    #     # Reshape the array to be in (timstep, pixel) order
+    #     pixels = np.array(pixels)
+    #     old_shape = pixels.shape
+    #     # ax.imshow(pixels[6], cmap="viridis")
+    #     pixels = pixels.reshape((pixels.shape[0],-1))
+    #     # Create a new set of axes if necessary
+    #     if ax is None:
+    #         ax = plots.new_axes()
+    #     # Do the plotting
+    #     ax.boxplot(pixels)
+    #             # imgs = [p.intensity_image for p in particles]
+    #             # vals = [np.median(im[im > 0]) for im in imgs]
+    #             # steps.append(vals)
+    #     # Convert from (steps, particles) to (particles, steps)
+    #     # steps = np.array(steps)
+    #     # steps = np.transpose(steps)
+    #     # print(steps.shape)
+    #     return ax
+        
+
     def particle_series(self, map_name="whiteline_map"):
         """Generate an array of values from map_name averaged across each
         particle.
@@ -561,7 +603,7 @@ class XanesFrameset():
             for stepdata in data:
                 particles = self.particle_regions(intensity_image=stepdata)
                 imgs = [p.intensity_image for p in particles]
-                vals = [np.mean(im[im > 0]) for im in imgs]
+                vals = [np.median(im[im > 0]) for im in imgs]
                 steps.append(vals)
         # Convert from (steps, particles) to (particles, steps)
         steps = np.array(steps)
@@ -1242,14 +1284,19 @@ class XanesFrameset():
             val = store.absorbances.shape[0]
         return val
 
-    def plot_map(self, ax=None, map_name="whiteline_map", timeidx=0):
+    def plot_map(self, ax=None, map_name="whiteline_map", timeidx=0, vmin=None, vmax=None):
         """Prepare data and plot a map of whiteline positions."""
         # Do the plotting
         with self.store() as store:
+            # Add bounds for the colormap if given
+            vmin = self.edge.map_range[0] if vmin is None else vmin
+            vmax = self.edge.map_range[1] if vmax is None else vmax
+            norm = Normalize(vmin=vmin, vmax=vmax)
+            # Do the actual plotting
             data = store.get_map(name=map_name)[timeidx]
             plots.plot_txm_map(data=data,
                                ax=ax,
-                               norm=None,
+                               norm=norm,
                                edge=self.edge(),
                                extent=self.extent(representation='absorbances'))
 
@@ -1310,19 +1357,27 @@ class XanesFrameset():
         plotter.draw_goodness(norm_range=norm_range, *args, **kwargs)
         return plotter
 
-    def plot_histogram(self, plotter=None, ax=None, norm_range=None,
-                       goodness_filter=False,
-                       active_pixel=None,
-                       *args, **kwargs):
+    def plot_histogram(self, plotter=None, timeidx=None, ax=None,
+                       vmin=None, vmax=None, goodness_filter=False,
+                       active_pixel=None, bins="energies", *args, **kwargs):
         """Use a default frameset plotter to draw a map of the chemical
         data."""
         with self.store() as store:
-            data = store.whiteline_map.value
+            if timeidx is None:
+                data = store.whiteline_map.value
+            else:
+                data = store.whiteline_map[timeidx]
+        # Add bounds for the colormap `if given
+        vmin = self.edge.map_range[0] if vmin is None else vmin
+        vmax = self.edge.map_range[1] if vmax is None else vmax
+        norm = Normalize(vmin=vmin, vmax=vmax)
         # Get bins for the energy steps
         edge = self.edge()
-        energies = edge.energies_in_range(edge.map_range)
+        if str(bins) == "energies":
+            bins = edge.energies_in_range(edge.map_range)
         artists = plots.plot_txm_histogram(data=data, ax=ax,
-                                           cmap=self.cmap, bins=energies)
+                                           norm=norm,
+                                           cmap=self.cmap, bins=bins)
         return artists
 
     def movie_plotter(self):

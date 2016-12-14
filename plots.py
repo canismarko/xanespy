@@ -338,7 +338,7 @@ def plot_txm_map(data, edge, norm=None, ax=None, cmap='plasma',
     # Get a default normalizer
     if norm is None:
         norm = Normalize()
-        norm.autoscale_None(data)
+    norm.autoscale_None(data[~np.isnan(data)])
     # Create axes if necessary
     if ax is None:
         ax = new_image_axes()
@@ -361,7 +361,8 @@ def plot_txm_histogram(data, ax=None, norm=None, bins=100, cmap='plasma'):
     if ax is None:
         ax = new_axes()
     # Flatten the data so it can be nicely plotted
-    data = np.round(data.flatten(), decimals=0)
+    # data = np.round(data.flatten(), decimals=0)
+    data = data.flatten()
     # Remove any Not-a-number values
     data = data[~np.isnan(data)]
     # Set normalizer
