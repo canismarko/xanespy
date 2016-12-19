@@ -122,9 +122,9 @@ def dual_axes(fig=None, orientation='horizontal'):
     return (ax1, ax2)
 
 
-def draw_colorbar(ax, cmap, norm, energies):
+def draw_colorbar(ax, cmap, norm, energies, orientation="vertical", *args, **kwargs):
     """Draw a colorbar on the side of a mapping axes to show to range of
-    colors used. Returns an artist for the newly plotter colorbar.
+    colors used. Returns an artist for the newly added colorbar.
 
     Arguments
     ---------
@@ -146,10 +146,14 @@ def draw_colorbar(ax, cmap, norm, energies):
     cbar = pyplot.colorbar(mappable,
                            ax=ax,
                            ticks=energies,
-                           spacing="proportional")
+                           spacing="proportional",
+                           orientation=orientation,
+                           *args, **kwargs)
     # Annotate the colorbar
-    cbar.ax.xaxis.get_major_formatter().set_useOffset(False)
     cbar.ax.set_title('eV')
+    # Make sure the ticks don't use scientific notation
+    cbar.formatter.set_useOffset(False)
+    cbar.update_ticks()
     return cbar
 
 
@@ -354,9 +358,26 @@ def plot_txm_map(data, edge, norm=None, ax=None, cmap='plasma',
     return artist
 
 
-def plot_txm_histogram(data, ax=None, norm=None, bins=100, cmap='plasma'):
+def plot_txm_histogram(data, ax=None, norm=None, bins=100, cmap='plasma', add_cbar=True):
     """Take an array of data values and show a histogram with some
     color-coding related to normalization value.
+
+    Returns: The matplotlib axes object used for plotting.
+
+    Arguments
+    ---------
+    - ax : Matplotlib axes to receive the plot. If None, a new axes
+      will created.
+
+    - norm : Matplotlib Normalize instance with the colormap range.
+
+    - bins : Bins to pass to the matplotlib hist() routine.
+
+    - cmap : Matplotlib colormap for coloring the bars.
+
+    - add_cbar : Boolean to decide whether to add a colorbar along the
+      bottom axis or not.
+
     """
     if ax is None:
         ax = new_axes()
@@ -383,6 +404,29 @@ def plot_txm_histogram(data, ax=None, norm=None, bins=100, cmap='plasma'):
     ax.set_xlim(norm.vmin, norm.vmax)
     # ax.xaxis.set_ticks(energies)
     ax.xaxis.get_major_formatter().set_useOffset(False)
+    # Draw a colorbar along the bottom axes
+    if add_cbar:
+        cbar = draw_colorbar(ax=ax, cmap=cmap, energies=None,
+                             norm=norm, pad=0, orientation="horizontal")
+        ax.tick_params(
+            axis='x',          # changes apply to the x-axis
+            which='both',      # both major and minor ticks are affected
+            bottom='off',      # ticks along the bottom edge are off
+            top='off',         # ticks along the top edge are off
+            labelbottom='off')
+        ax.spines['bottom'].set_visible(False)
+        ax.xaxis.labelpad += 35
+        cbar.ax.set_title("")
+        cbar.outline.set_visible(False)
+        gray = (0.1, 0.1, 0.1)
+        cbar.ax.axhline(cbar.ax.get_ylim()[1], linewidth=2, linestyle=":", color=gray)
+        cbar.ax.tick_params(
+            axis='x',
+            which='both',
+            bottom='on',
+            top='on',
+            labelbottom="on",
+        )
     return ax
 
 

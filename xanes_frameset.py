@@ -1217,6 +1217,20 @@ class XanesFrameset():
         masked_map = np.ma.array(map_data, mask=self.goodness_mask())
         return masked_map
 
+    def subtract_surroundings(self):
+        """Use the edge mask to separate "surroundings" from "sample", then
+        subtract the average surrounding absorbance from each
+        frame. This effective removes effects where the entire frame
+        is brighter from one energy to the next.
+        """
+        with self.store(mode='r+') as store:
+            mask = np.broadcast_to(self.edge_mask(), store.absorbances.shape)
+            bg = store.absorbances[mask].reshape((*store.absorbances.shape[0:2], -1))
+            bg = bg.mean(axis=-1)
+            bg = broadcast_reverse(bg, store.absorbances.shape)
+            # Save the resultant data to disk
+            store.absorbances = store.absorbances - bg
+
     def extent(self, representation, idx=(0, 0)):
         """Determine physical dimensions for axes values.
 
