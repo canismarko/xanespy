@@ -534,34 +534,47 @@ def direct_whitelines(spectra, energies, edge):
     return out
 
 
-def transform_images(data, translations=None, rotations=None,
-                     scales=None, out=None, mode='constant'):
+def transform_images(data, transformations, out=None, mode='median'):
     """Takes an array of images and applies each translation, rotation and
     scale. It is assumed that the first dimension of data is the same
     as the length of translations, rotations and scales. Data will be
     written to `out` if given, otherwise returned as a new array.
 
-    Returns: A new array similar dimensions to `data` but with
+    Returns: A new array with similar dimensions to `data` but with
       transformations applied and converted to float datatype.
+
+    Arguments
+    ---------
+
+    - data : Numeric array with frames to transform. Last two
+    - dimensions are assumed to be (row, columns).
+
+    - transformations : A numeric array shaped compatibally with
+      `data`. The last two dimensions are assumed to be 3x3 and each
+      3x3 encodes a transformation matrix for the corresponding frame
+      in `data`.
+
+    - out : A numeric array with same shape as `data` that will hold
+      the transformed data.
+
+    - mode : String with how to deal with edges. See scikit-image
+      documentation for options. Special value "median" (default),
+      takes the median pixel intensity of that frame and uses it as
+      the constant value.
     """
+    logstart = time()
     # Create a new array if one is not given
     if out is None:
         out_type = np.complex if np.iscomplexobj(data) else np.float
         out = np.zeros_like(data, dtype=out_type)
     # Define a function to pass into threads
-
     def apply_transform(idx):
         # Get transformation parameters if given
-        scale = scales[idx] if scales is not None else None
-        translation = translations[idx] if translations is not None else None
-        rot = rotations[idx] if rotations is not None else None
+        tmatrix = transformations[idx]
         # Prepare and execute the transformation
-        transformation = transform.SimilarityTransform(
-            scale=scale,
-            translation=translation,
-            rotation=rot,
+        transformation = transform.AffineTransform(
+            matrix=tmatrix,
         )
-
         def do_transform(a, transformation):
             """Helper function, takes one array and transforms it."""
             realrange = (np.min(a), np.max(a))
@@ -571,8 +584,22 @@ def transform_images(data, translations=None, rotations=None,
             # Convert to float so the warp function is happy
             if not np.iscomplexobj(indata):
                 indata = indata.astype(np.float64)
-            outdata = transform.warp(indata, transformation,
-                                     order=3, mode=mode)
+            # Log the anticipated transformation
+            msg = "Transforming {idx} by scl={scale}; trn={trans}; rot={rot:.2f} rad"
+            msg = msg.format(idx=idx, scale=transformation.scale,
+                             trans=transformation.translation,
+                             rot=transformation.rotation)
+            log.debug(msg)
+            # Perform the actual transformation
+            if mode == "median":
+                realmode = "constant"
+                cval = np.median(indata)
+            else:
+                realmode = mode
+                cval = 0.
+            outdata = transform.warp(indata, transformation, order=3,
+                                     mode=realmode, cval=cval)
+            # Return to the original intensity range
             outdata = exposure.rescale_intensity(outdata,
                                                  in_range=(0, 1),
                                                  out_range=realrange)
@@ -587,9 +614,74 @@ def transform_images(data, translations=None, rotations=None,
             # Only real numbers here
             out[idx] = do_transform(frame, transformation)
     # Loop through the images and apply each transformation
+    log.debug("Starting transformations")
     indices = iter_indices(data, desc='Transforming', leftover_dims=2)
     foreach(apply_transform, indices)
+    log.debug("Finished transformations in %d sec", time() - logstart)
     return out
+
+
+def transformation_matrices(translations=None, rotations=None, scales=None, center=(0, 0)):
+    """
+    Arguments
+    ---------
+    - translations : How much to move each axis (x, y[, z]).
+
+    - rotations : How much to rotate around the origin (0, 0)
+      pixel.
+
+    - center : Where to set the origin of rotation. Default is the
+      first pixel (0, 0).
+
+    - scales : How much to scale the image by in each dimension
+      (x, y[, z]).
+
+    All three arguments should have shapes that are compatible
+    with the frame data, though this is not strictly enforced for
+    now. Rotation will necessarily have one less degree of freedom
+    than translation/scale values.
+
+    Example Shapes:
+    | Frames                     | Translations | Rotations   | Scales      |
+    |----------------------------|--------------|-------------|-------------|
+    | (10, 48, 1024, 1024)       | (10, 48, 2)  | (10, 48, 1) | (10, 48, 2) |
+    | (10, 48, 1024, 1024, 1024) | (10, 48, 3)  | (10, 48, 2) | (10, 48, 3) |
+
+    """
+    spatial_dims = 2
+    assert spatial_dims == 2 # Only can handle 2D data for now
+    # Get the shape of the final matrix by inspecting the inputs' shapes
+    if translations is not None:
+        master = translations
+    elif rotations is not None:
+        master = rotations
+    elif scales is not None:
+        master = scales
+    else:
+        raise ValueError("No transformations specified.")
+    matrix_shape = (*master.shape[0:-1], spatial_dims+1, spatial_dims+1)
+    # Prepare dummy arrays if some are missing
+    if translations is None:
+        translations = np.zeros((*matrix_shape[0:-2], spatial_dims))
+    if rotations is None:
+        rotations = np.zeros((*matrix_shape[0:-2], spatial_dims - 1))
+    if scales is None:
+        scales = np.ones((*matrix_shape[0:-2], spatial_dims))
+    # Calculate values for transformation matrix
+    #   Values taken from skimage documentations for transform.AffineTransform
+    # import pdb; pdb.set_trace()
+    sx, sy = np.moveaxis(scales, -1, 0)
+    tx, ty = np.moveaxis(translations, -1, 0)
+    r, = np.moveaxis(rotations, -1, 0)
+    # Calculate new eigenvectors for this transformation
+    ihat = [ sx * np.cos(r), sx * np.sin(r), np.zeros_like(sx)]
+    jhat = [-sy * np.sin(r), sy * np.cos(r), np.zeros_like(sx)]
+    khat = [ tx,             ty,             np.ones_like(sx) ]
+    # Make the eigenvectors into column vectored matrix
+    new_transforms = np.array([ihat, jhat, khat]).swapaxes(0, 1)
+    # Move the transformations so they're in frame order
+    new_transforms = np.moveaxis(np.moveaxis(new_transforms, 0, -1), 0, -1)
+    return new_transforms
 
 
 def register_correlations(frames, reference, upsample_factor=10,

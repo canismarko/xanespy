@@ -34,7 +34,7 @@ from scipy.ndimage.filters import median_filter
 from xradia import XRMFile
 from utilities import prog
 import exceptions
-from xanes_math import transform_images, apply_references
+from xanes_math import transform_images, apply_references, transformation_matrices
 
 
 format_classes = {
@@ -331,7 +331,8 @@ def magnification_correction(frames, pixel_sizes):
     correct for this automatically during acquisition: APS 8-BM-B, 32-ID-C.
 
     Returns a 2-tuple of (scale, translation) arrays. Each array has
-    the same length as `frames`.
+    the same length as `frames` with an additional length-2 dimension
+    at the end for (x, y).
 
     Arguments
     ---------
@@ -339,13 +340,14 @@ def magnification_correction(frames, pixel_sizes):
 
     - pixel_sizes : Numpy array of pixel sizes corresponding to
     entries in `frames`.
+
     """
     scales = np.min(pixel_sizes) / pixel_sizes
     datashape = frames.shape[:-2]
     imshape = np.array(frames.shape[-2:])
     scales2D = scales.reshape(*datashape, 1).repeat(2, axis=-1)
     translations = (imshape-1) * (1-scales2D) / 2
-    return (scales, translations)
+    return (scales2D, translations)
 
 
 def import_ssrl_frameset(directory, hdf_filename=None):
@@ -595,8 +597,10 @@ def import_frameset(directory, flavor, hdf_filename):
             # Correct magnification changes due to zone-plate movement
             scales, translations = magnification_correction(frames=abs_ds,
                                                             pixel_sizes=px_ds)
-            transform_images(abs_ds, translations=translations,
-                             scales=scales, out=abs_ds)
+            tmatrices = transformation_matrices(scales=scales,
+                                                translations=translations)
+            transform_images(abs_ds, transformations=tmatrices,
+                             out=abs_ds)
         # Remove dead or hot pixels
         progbar = prog(desc="Median filter", total=1)
         progbar.update(0)

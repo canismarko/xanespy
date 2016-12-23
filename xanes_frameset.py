@@ -141,9 +141,7 @@ class XanesFrameset():
     cmap = 'plasma'
     _data_name = None
     # Places to store staged image transformations
-    _translations = None
-    _rotations = None
-    _scales = None
+    _transformations = None
 
     def __init__(self, filename, groupname, edge):
         self.hdf_filename = filename
@@ -281,11 +279,24 @@ class XanesFrameset():
         with self.store(mode='r+') as store:
             store.active_data_group = new_name
 
-    def fork_data_group(self, new_name):
+    def fork_data_group(self, new_name, src=None):
         """Turn on different active data for this frameset's store
         object. Similar to `switch_data_group` except that this method
         deletes the existing group and copies symlinks from the current one.
+
+        Arguments
+        ---------
+
+        - new_name : A string with the new name for the data group.
+
+        - src : String with the name of the data group to copy
+          from. If None (default), the current data group will be
+          used.
         """
+        # Change the currently active group if necessary
+        if src is not None:
+            self.data_name = src
+        # Fork the current group to the new one
         with self.store(mode='r+') as store:
             store.fork_data_group(new_name=new_name)
         self.data_name = new_name
@@ -312,12 +323,14 @@ class XanesFrameset():
           transformation too (eg. 'absorbances')
 
         """
-        not_actionable = (self._translations is None and
-                          self._rotations is None and
-                          self._scales is None)
+        # First, see if there's anything to do
+        if self._transformations is None:
+            not_actionable = True
+        else:
+            not_actionable = np.all(self._transformations == 0)
         if not_actionable:
-            log.debug("No translations to apply, skipping.")
             # Nothing to apply, so no-op
+            log.debug("No transformations to apply, skipping.")
             with self.store() as store:
                 out = store.get_frames('absorbances').value
         else:
@@ -334,64 +347,76 @@ class XanesFrameset():
                     out = np.zeros_like(store.get_frames(frames_name))
                     # Apply transformation
                     xm.transform_images(data=store.get_frames(frames_name),
-                                        translations=self._translations,
-                                        rotations=self._rotations,
-                                        scales=self._scales,
-                                        mode='wrap', out=out)
+                                        transformations=self._transformations,
+                                        out=out)
                 # Calculate and apply cropping bounds for the image stack
                 if crop:
-                    tx = self._translations[...,0]
-                    ty = self._translations[...,1]
+                    tx = self._transformations[..., 0, 2]
+                    ty = self._transformations[..., 1, 2]
                     new_rows = out.shape[-2] - (np.max(ty) - np.min(ty))
                     new_cols = out.shape[-1] - (np.max(tx) - np.min(tx))
                     rlower = int(np.ceil(-np.min(ty)))
                     rupper = int(np.floor(new_rows + rlower))
                     clower = int(np.ceil(-np.min(tx)))
                     cupper = int(np.floor(clower + new_cols))
-                    log.debug("Cropping to [%d:%d,%d:%d]",
-                              rlower, rupper, clower, cupper)
+                    log.debug('Cropping "%s" to [%d:%d,%d:%d]',
+                              frames_name, rlower, rupper, clower, cupper)
                     out = out[..., rlower:rupper, clower:cupper]
                 # Save result and clear saved transformations if appropriate
                 if commit:
-                    log.debug("Committing applied transformations")
+                    log.debug('Committing applied transformations for "%s"', frames_name)
                     with self.store('r+') as store:
                         store.set_frames(frames_name, out)
         # Clear the staged transformations
         if commit:
             log.debug("Clearing staged transformations")
-            self._translations = None
-            self._scales = None
-            self._rotations = None
+            self._transformations = None
         return out
 
-    def stage_transformations(self, translations=None, rotations=None,
+    def stage_transformations(self, translations=None, rotations=None, center=(0, 0),
                               scales=None):
         """Allows for deferred transformation of the frame data. Since each
         transformation introduces interpolation error, the best
         results occur when the translations are saved up and then
         applied all in one shot. Takes a combination of arrays of
-        translations (x, y), rotations and/or scales and saves them for later
-        application. This method should be used in conjunction
-        apply_transformations().
+        translations (x, y), rotations and/or scales and saves them
+        for later application. This method should be used in
+        conjunction apply_transformations().
+
+        Arguments
+        ---------
+        - translations : How much to move each axis (x, y[, z]).
+
+        - rotations : How much to rotate around the origin (0, 0)
+          pixel.
+
+        - center : Where to set the origin of rotation. Default is the
+          first pixel (0, 0).
+
+        - scales : How much to scale the image by in each dimension
+          (x, y[, z]).
+
+        All three arguments should have shapes that are compatible
+        with the frame data, though this is not strictly enforced for
+        now. Rotation will necessarily have one less degree of freedom
+        than translation/scale values.
+
+        Example Shapes:
+        | Frames                     | Translations | Rotations   | Scales      |
+        |----------------------------|--------------|-------------|-------------|
+        | (10, 48, 1024, 1024)       | (10, 48, 2)  | (10, 48, 1) | (10, 48, 2) |
+        | (10, 48, 1024, 1024, 1024) | (10, 48, 3)  | (10, 48, 2) | (10, 48, 3) |
         """
-        # Save translations for later
-        if translations is not None:
-            if self._translations is None:
-                self._translations = np.copy(translations)
-            else:
-                self._translations += translations
-        # Save scale factors for later
-        if scales is not None:
-            if self._scales is None:
-                self._scales = np.copy(scales)
-            else:
-                self._scales *= scales
-        # Save rotations for later
-        if rotations is not None:
-            if self._rotations is None:
-                self._rotations = np.copy(rotations)
-            else:
-                self._rotations += rotations
+        # Compute the new transformation matrics for the given transformations
+        new_transforms = xm.transformation_matrices(scales=scales,
+                                                    rotations=rotations,
+                                                    center=center,
+                                                    translations=translations)
+        # Combine with any previously saved transformations
+        if self._transformations is not None:
+            new_transforms =  self._transformations @ new_transforms
+        # Save transformation matrix for later
+        self._transformations = new_transforms
 
     def align_frames(self,
                      reference_frame="mean",
