@@ -1,0 +1,580 @@
+setbinning 1
+setexp 30
+moveto energy 8150.00
+moveto energy 8152.00
+moveto energy 8154.00
+moveto energy 8156.00
+moveto energy 8158.00
+moveto energy 8160.00
+moveto energy 8162.00
+moveto energy 8164.00
+moveto energy 8166.00
+moveto energy 8168.00
+moveto energy 8170.00
+moveto energy 8172.00
+moveto energy 8174.00
+moveto energy 8176.00
+moveto energy 8178.00
+moveto energy 8180.00
+moveto energy 8182.00
+moveto energy 8184.00
+moveto energy 8186.00
+moveto energy 8188.00
+moveto energy 8190.00
+moveto energy 8192.00
+moveto energy 8194.00
+moveto energy 8196.00
+moveto energy 8198.00
+moveto energy 8200.00
+moveto energy 8202.00
+moveto energy 8204.00
+moveto energy 8206.00
+moveto energy 8208.00
+moveto energy 8210.00
+moveto energy 8212.00
+moveto energy 8214.00
+moveto energy 8216.00
+moveto energy 8218.00
+moveto energy 8220.00
+moveto energy 8222.00
+moveto energy 8224.00
+moveto energy 8226.00
+moveto energy 8228.00
+moveto energy 8230.00
+moveto energy 8232.00
+moveto energy 8234.00
+moveto energy 8236.00
+moveto energy 8238.00
+moveto energy 8240.00
+moveto energy 8242.00
+moveto energy 8244.00
+moveto energy 8246.00
+moveto energy 8248.00
+moveto energy 8250.00
+moveto zpz 2797.81
+moveto detz 377.59
+moveto x 1653.00
+moveto y -1727.00
+moveto z 0.00
+collect test_sample_xanes0_8250_0eV.xrm
+moveto x 1706.20
+moveto y -1927.20
+moveto z 0.00
+collect test_reference_xanes0_8250_0eV.xrm
+moveto energy 8270.00
+moveto zpz 2897.14
+moveto detz 381.47
+moveto x 1706.20
+moveto y -1927.20
+moveto z 0.00
+collect test_reference_xanes0_8270_0eV.xrm
+moveto x 1653.00
+moveto y -1727.00
+moveto z 0.00
+collect test_sample_xanes0_8270_0eV.xrm
+moveto energy 8290.00
+moveto zpz 2996.47
+moveto detz 385.34
+moveto x 1653.00
+moveto y -1727.00
+moveto z 0.00
+collect test_sample_xanes0_8290_0eV.xrm
+moveto x 1706.20
+moveto y -1927.20
+moveto z 0.00
+collect test_reference_xanes0_8290_0eV.xrm
+moveto energy 8310.00
+moveto zpz 3095.80
+moveto detz 389.22
+moveto x 1706.20
+moveto y -1927.20
+moveto z 0.00
+collect test_reference_xanes0_8310_0eV.xrm
+moveto x 1653.00
+moveto y -1727.00
+moveto z 0.00
+collect test_sample_xanes0_8310_0eV.xrm
+moveto energy 8324.00
+moveto zpz 3165.33
+moveto detz 391.93
+moveto x 1653.00
+moveto y -1727.00
+moveto z 0.00
+collect test_sample_xanes0_8324_0eV.xrm
+moveto x 1706.20
+moveto y -1927.20
+moveto z 0.00
+collect test_reference_xanes0_8324_0eV.xrm
+moveto energy 8326.00
+moveto zpz 3175.26
+moveto detz 392.32
+moveto x 1706.20
+moveto y -1927.20
+moveto z 0.00
+collect test_reference_xanes0_8326_0eV.xrm
+moveto x 1653.00
+moveto y -1727.00
+moveto z 0.00
+collect test_sample_xanes0_8326_0eV.xrm
+moveto energy 8328.00
+moveto zpz 3185.20
+moveto detz 392.71
+moveto x 1653.00
+moveto y -1727.00
+moveto z 0.00
+collect test_sample_xanes0_8328_0eV.xrm
+moveto x 1706.20
+moveto y -1927.20
+moveto z 0.00
+collect test_reference_xanes0_8328_0eV.xrm
+moveto energy 8330.00
+moveto zpz 3195.13
+moveto detz 393.09
+moveto x 1706.20
+moveto y -1927.20
+moveto z 0.00
+collect test_reference_xanes0_8330_0eV.xrm
+moveto x 1653.00
+moveto y -1727.00
+moveto z 0.00
+collect test_sample_xanes0_8330_0eV.xrm
+moveto energy 8332.00
+moveto zpz 3205.06
+moveto detz 393.48
+moveto x 1653.00
+moveto y -1727.00
+moveto z 0.00
+collect test_sample_xanes0_8332_0eV.xrm
+moveto x 1706.20
+moveto y -1927.20
+moveto z 0.00
+collect test_reference_xanes0_8332_0eV.xrm
+moveto energy 8334.00
+moveto zpz 3215.00
+moveto detz 393.87
+moveto x 1706.20
+moveto y -1927.20
+moveto z 0.00
+collect test_reference_xanes0_8334_0eV.xrm
+moveto x 1653.00
+moveto y -1727.00
+moveto z 0.00
+collect test_sample_xanes0_8334_0eV.xrm
+moveto energy 8336.00
+moveto zpz 3224.93
+moveto detz 394.26
+moveto x 1653.00
+moveto y -1727.00
+moveto z 0.00
+collect test_sample_xanes0_8336_0eV.xrm
+moveto x 1706.20
+moveto y -1927.20
+moveto z 0.00
+collect test_reference_xanes0_8336_0eV.xrm
+moveto energy 8338.00
+moveto zpz 3234.86
+moveto detz 394.64
+moveto x 1706.20
+moveto y -1927.20
+moveto z 0.00
+collect test_reference_xanes0_8338_0eV.xrm
+moveto x 1653.00
+moveto y -1727.00
+moveto z 0.00
+collect test_sample_xanes0_8338_0eV.xrm
+moveto energy 8340.00
+moveto zpz 3244.79
+moveto detz 395.03
+moveto x 1653.00
+moveto y -1727.00
+moveto z 0.00
+collect test_sample_xanes0_8340_0eV.xrm
+moveto x 1706.20
+moveto y -1927.20
+moveto z 0.00
+collect test_reference_xanes0_8340_0eV.xrm
+moveto energy 8342.00
+moveto zpz 3254.73
+moveto detz 395.42
+moveto x 1706.20
+moveto y -1927.20
+moveto z 0.00
+collect test_reference_xanes0_8342_0eV.xrm
+moveto x 1653.00
+moveto y -1727.00
+moveto z 0.00
+collect test_sample_xanes0_8342_0eV.xrm
+moveto energy 8344.00
+moveto zpz 3264.66
+moveto detz 395.81
+moveto x 1653.00
+moveto y -1727.00
+moveto z 0.00
+collect test_sample_xanes0_8344_0eV.xrm
+moveto x 1706.20
+moveto y -1927.20
+moveto z 0.00
+collect test_reference_xanes0_8344_0eV.xrm
+moveto energy 8345.00
+moveto zpz 3269.63
+moveto detz 396.00
+moveto x 1706.20
+moveto y -1927.20
+moveto z 0.00
+collect test_reference_xanes0_8345_0eV.xrm
+moveto x 1653.00
+moveto y -1727.00
+moveto z 0.00
+collect test_sample_xanes0_8345_0eV.xrm
+moveto energy 8346.00
+moveto zpz 3274.59
+moveto detz 396.19
+moveto x 1653.00
+moveto y -1727.00
+moveto z 0.00
+collect test_sample_xanes0_8346_0eV.xrm
+moveto x 1706.20
+moveto y -1927.20
+moveto z 0.00
+collect test_reference_xanes0_8346_0eV.xrm
+moveto energy 8347.00
+moveto zpz 3279.56
+moveto detz 396.39
+moveto x 1706.20
+moveto y -1927.20
+moveto z 0.00
+collect test_reference_xanes0_8347_0eV.xrm
+moveto x 1653.00
+moveto y -1727.00
+moveto z 0.00
+collect test_sample_xanes0_8347_0eV.xrm
+moveto energy 8348.00
+moveto zpz 3284.53
+moveto detz 396.58
+moveto x 1653.00
+moveto y -1727.00
+moveto z 0.00
+collect test_sample_xanes0_8348_0eV.xrm
+moveto x 1706.20
+moveto y -1927.20
+moveto z 0.00
+collect test_reference_xanes0_8348_0eV.xrm
+moveto energy 8349.00
+moveto zpz 3289.49
+moveto detz 396.77
+moveto x 1706.20
+moveto y -1927.20
+moveto z 0.00
+collect test_reference_xanes0_8349_0eV.xrm
+moveto x 1653.00
+moveto y -1727.00
+moveto z 0.00
+collect test_sample_xanes0_8349_0eV.xrm
+moveto energy 8350.00
+moveto zpz 3294.46
+moveto detz 396.97
+moveto x 1653.00
+moveto y -1727.00
+moveto z 0.00
+collect test_sample_xanes0_8350_0eV.xrm
+moveto x 1706.20
+moveto y -1927.20
+moveto z 0.00
+collect test_reference_xanes0_8350_0eV.xrm
+moveto energy 8351.00
+moveto zpz 3299.43
+moveto detz 397.16
+moveto x 1706.20
+moveto y -1927.20
+moveto z 0.00
+collect test_reference_xanes0_8351_0eV.xrm
+moveto x 1653.00
+moveto y -1727.00
+moveto z 0.00
+collect test_sample_xanes0_8351_0eV.xrm
+moveto energy 8352.00
+moveto zpz 3304.39
+moveto detz 397.36
+moveto x 1653.00
+moveto y -1727.00
+moveto z 0.00
+collect test_sample_xanes0_8352_0eV.xrm
+moveto x 1706.20
+moveto y -1927.20
+moveto z 0.00
+collect test_reference_xanes0_8352_0eV.xrm
+moveto energy 8353.00
+moveto zpz 3309.36
+moveto detz 397.55
+moveto x 1706.20
+moveto y -1927.20
+moveto z 0.00
+collect test_reference_xanes0_8353_0eV.xrm
+moveto x 1653.00
+moveto y -1727.00
+moveto z 0.00
+collect test_sample_xanes0_8353_0eV.xrm
+moveto energy 8354.00
+moveto zpz 3314.32
+moveto detz 397.74
+moveto x 1653.00
+moveto y -1727.00
+moveto z 0.00
+collect test_sample_xanes0_8354_0eV.xrm
+moveto x 1706.20
+moveto y -1927.20
+moveto z 0.00
+collect test_reference_xanes0_8354_0eV.xrm
+moveto energy 8355.00
+moveto zpz 3319.29
+moveto detz 397.94
+moveto x 1706.20
+moveto y -1927.20
+moveto z 0.00
+collect test_reference_xanes0_8355_0eV.xrm
+moveto x 1653.00
+moveto y -1727.00
+moveto z 0.00
+collect test_sample_xanes0_8355_0eV.xrm
+moveto energy 8356.00
+moveto zpz 3324.26
+moveto detz 398.13
+moveto x 1653.00
+moveto y -1727.00
+moveto z 0.00
+collect test_sample_xanes0_8356_0eV.xrm
+moveto x 1706.20
+moveto y -1927.20
+moveto z 0.00
+collect test_reference_xanes0_8356_0eV.xrm
+moveto energy 8358.00
+moveto zpz 3334.19
+moveto detz 398.52
+moveto x 1706.20
+moveto y -1927.20
+moveto z 0.00
+collect test_reference_xanes0_8358_0eV.xrm
+moveto x 1653.00
+moveto y -1727.00
+moveto z 0.00
+collect test_sample_xanes0_8358_0eV.xrm
+moveto energy 8360.00
+moveto zpz 3344.12
+moveto detz 398.91
+moveto x 1653.00
+moveto y -1727.00
+moveto z 0.00
+collect test_sample_xanes0_8360_0eV.xrm
+moveto x 1706.20
+moveto y -1927.20
+moveto z 0.00
+collect test_reference_xanes0_8360_0eV.xrm
+moveto energy 8364.00
+moveto zpz 3363.99
+moveto detz 399.68
+moveto x 1706.20
+moveto y -1927.20
+moveto z 0.00
+collect test_reference_xanes0_8364_0eV.xrm
+moveto x 1653.00
+moveto y -1727.00
+moveto z 0.00
+collect test_sample_xanes0_8364_0eV.xrm
+moveto energy 8368.00
+moveto zpz 3383.85
+moveto detz 400.46
+moveto x 1653.00
+moveto y -1727.00
+moveto z 0.00
+collect test_sample_xanes0_8368_0eV.xrm
+moveto x 1706.20
+moveto y -1927.20
+moveto z 0.00
+collect test_reference_xanes0_8368_0eV.xrm
+moveto energy 8372.00
+moveto zpz 3403.72
+moveto detz 401.23
+moveto x 1706.20
+moveto y -1927.20
+moveto z 0.00
+collect test_reference_xanes0_8372_0eV.xrm
+moveto x 1653.00
+moveto y -1727.00
+moveto z 0.00
+collect test_sample_xanes0_8372_0eV.xrm
+moveto energy 8376.00
+moveto zpz 3423.59
+moveto detz 402.01
+moveto x 1653.00
+moveto y -1727.00
+moveto z 0.00
+collect test_sample_xanes0_8376_0eV.xrm
+moveto x 1706.20
+moveto y -1927.20
+moveto z 0.00
+collect test_reference_xanes0_8376_0eV.xrm
+moveto energy 8380.00
+moveto zpz 3443.45
+moveto detz 402.78
+moveto x 1706.20
+moveto y -1927.20
+moveto z 0.00
+collect test_reference_xanes0_8380_0eV.xrm
+moveto x 1653.00
+moveto y -1727.00
+moveto z 0.00
+collect test_sample_xanes0_8380_0eV.xrm
+moveto energy 8384.00
+moveto zpz 3463.32
+moveto detz 403.56
+moveto x 1653.00
+moveto y -1727.00
+moveto z 0.00
+collect test_sample_xanes0_8384_0eV.xrm
+moveto x 1706.20
+moveto y -1927.20
+moveto z 0.00
+collect test_reference_xanes0_8384_0eV.xrm
+moveto energy 8388.00
+moveto zpz 3483.18
+moveto detz 404.33
+moveto x 1706.20
+moveto y -1927.20
+moveto z 0.00
+collect test_reference_xanes0_8388_0eV.xrm
+moveto x 1653.00
+moveto y -1727.00
+moveto z 0.00
+collect test_sample_xanes0_8388_0eV.xrm
+moveto energy 8392.00
+moveto zpz 3503.05
+moveto detz 405.10
+moveto x 1653.00
+moveto y -1727.00
+moveto z 0.00
+collect test_sample_xanes0_8392_0eV.xrm
+moveto x 1706.20
+moveto y -1927.20
+moveto z 0.00
+collect test_reference_xanes0_8392_0eV.xrm
+moveto energy 8396.00
+moveto zpz 3522.92
+moveto detz 405.88
+moveto x 1706.20
+moveto y -1927.20
+moveto z 0.00
+collect test_reference_xanes0_8396_0eV.xrm
+moveto x 1653.00
+moveto y -1727.00
+moveto z 0.00
+collect test_sample_xanes0_8396_0eV.xrm
+moveto energy 8400.00
+moveto zpz 3542.78
+moveto detz 406.65
+moveto x 1653.00
+moveto y -1727.00
+moveto z 0.00
+collect test_sample_xanes0_8400_0eV.xrm
+moveto x 1706.20
+moveto y -1927.20
+moveto z 0.00
+collect test_reference_xanes0_8400_0eV.xrm
+moveto energy 8408.00
+moveto zpz 3582.51
+moveto detz 408.20
+moveto x 1706.20
+moveto y -1927.20
+moveto z 0.00
+collect test_reference_xanes0_8408_0eV.xrm
+moveto x 1653.00
+moveto y -1727.00
+moveto z 0.00
+collect test_sample_xanes0_8408_0eV.xrm
+moveto energy 8416.00
+moveto zpz 3622.24
+moveto detz 409.75
+moveto x 1653.00
+moveto y -1727.00
+moveto z 0.00
+collect test_sample_xanes0_8416_0eV.xrm
+moveto x 1706.20
+moveto y -1927.20
+moveto z 0.00
+collect test_reference_xanes0_8416_0eV.xrm
+moveto energy 8424.00
+moveto zpz 3661.98
+moveto detz 411.30
+moveto x 1706.20
+moveto y -1927.20
+moveto z 0.00
+collect test_reference_xanes0_8424_0eV.xrm
+moveto x 1653.00
+moveto y -1727.00
+moveto z 0.00
+collect test_sample_xanes0_8424_0eV.xrm
+moveto energy 8432.00
+moveto zpz 3701.71
+moveto detz 412.85
+moveto x 1653.00
+moveto y -1727.00
+moveto z 0.00
+collect test_sample_xanes0_8432_0eV.xrm
+moveto x 1706.20
+moveto y -1927.20
+moveto z 0.00
+collect test_reference_xanes0_8432_0eV.xrm
+moveto energy 8440.00
+moveto zpz 3741.44
+moveto detz 414.40
+moveto x 1706.20
+moveto y -1927.20
+moveto z 0.00
+collect test_reference_xanes0_8440_0eV.xrm
+moveto x 1653.00
+moveto y -1727.00
+moveto z 0.00
+collect test_sample_xanes0_8440_0eV.xrm
+moveto energy 8490.00
+moveto zpz 3989.76
+moveto detz 424.09
+moveto x 1653.00
+moveto y -1727.00
+moveto z 0.00
+collect test_sample_xanes0_8490_0eV.xrm
+moveto x 1706.20
+moveto y -1927.20
+moveto z 0.00
+collect test_reference_xanes0_8490_0eV.xrm
+moveto energy 8540.00
+moveto zpz 4238.08
+moveto detz 433.78
+moveto x 1706.20
+moveto y -1927.20
+moveto z 0.00
+collect test_reference_xanes0_8540_0eV.xrm
+moveto x 1653.00
+moveto y -1727.00
+moveto z 0.00
+collect test_sample_xanes0_8540_0eV.xrm
+moveto energy 8590.00
+moveto zpz 4486.41
+moveto detz 443.46
+moveto x 1653.00
+moveto y -1727.00
+moveto z 0.00
+collect test_sample_xanes0_8590_0eV.xrm
+moveto x 1706.20
+moveto y -1927.20
+moveto z 0.00
+collect test_reference_xanes0_8590_0eV.xrm
+moveto energy 8640.00
+moveto zpz 4734.73
+moveto detz 453.15
+moveto x 1706.20
+moveto y -1927.20
+moveto z 0.00
+collect test_reference_xanes0_8640_0eV.xrm
+moveto x 1653.00
+moveto y -1727.00
+moveto z 0.00
+collect test_sample_xanes0_8640_0eV.xrm

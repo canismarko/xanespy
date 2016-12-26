@@ -1,0 +1,1615 @@
+;; 2D XANES ;;
+setexp 0.50
+setbinning 2
+;;;; set the MONO and the ZP
+sete 8250.00
+moveto zpx -14.33
+moveto zpy -5.71
+moveto zpz -2046.33
+moveto x 8322.05
+moveto y 5217.20
+setexp 0.30
+setbinning 2
+collect rep01_000001_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08250.0_eV_001of010.xrm
+collect rep01_000002_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08250.0_eV_002of010.xrm
+collect rep01_000003_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08250.0_eV_003of010.xrm
+collect rep01_000004_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08250.0_eV_004of010.xrm
+collect rep01_000005_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08250.0_eV_005of010.xrm
+collect rep01_000006_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08250.0_eV_006of010.xrm
+collect rep01_000007_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08250.0_eV_007of010.xrm
+collect rep01_000008_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08250.0_eV_008of010.xrm
+collect rep01_000009_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08250.0_eV_009of010.xrm
+collect rep01_000010_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08250.0_eV_010of010.xrm
+setexp 0.50
+setbinning 2
+moveto t 6.97
+moveto z 3552.55
+moveto x -5178.10
+moveto y 5217.10
+collect rep01_20161456_NCA_Pg41-10_pristine_fov08_XANES_08250.0_eV_001of003.xrm
+collect rep01_20161456_NCA_Pg41-10_pristine_fov08_XANES_08250.0_eV_002of003.xrm
+collect rep01_20161456_NCA_Pg41-10_pristine_fov08_XANES_08250.0_eV_003of003.xrm
+;;;; set the MONO and the ZP
+sete 8265.00
+moveto zpx -13.87
+moveto zpy -5.59
+moveto zpz -1970.03
+collect rep01_20161456_NCA_Pg41-10_pristine_fov08_XANES_08265.0_eV_001of003.xrm
+collect rep01_20161456_NCA_Pg41-10_pristine_fov08_XANES_08265.0_eV_002of003.xrm
+collect rep01_20161456_NCA_Pg41-10_pristine_fov08_XANES_08265.0_eV_003of003.xrm
+moveto x 8322.05
+moveto y 5217.20
+setexp 0.30
+setbinning 2
+collect rep01_000011_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08265.0_eV_001of010.xrm
+collect rep01_000012_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08265.0_eV_002of010.xrm
+collect rep01_000013_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08265.0_eV_003of010.xrm
+collect rep01_000014_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08265.0_eV_004of010.xrm
+collect rep01_000015_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08265.0_eV_005of010.xrm
+collect rep01_000016_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08265.0_eV_006of010.xrm
+collect rep01_000017_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08265.0_eV_007of010.xrm
+collect rep01_000018_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08265.0_eV_008of010.xrm
+collect rep01_000019_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08265.0_eV_009of010.xrm
+collect rep01_000020_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08265.0_eV_010of010.xrm
+setexp 0.50
+setbinning 2
+;;;; set the MONO and the ZP
+sete 8280.00
+moveto zpx -13.40
+moveto zpy -5.48
+moveto zpz -1893.73
+moveto x 8322.05
+moveto y 5217.20
+setexp 0.30
+setbinning 2
+collect rep01_000021_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08280.0_eV_001of010.xrm
+collect rep01_000022_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08280.0_eV_002of010.xrm
+collect rep01_000023_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08280.0_eV_003of010.xrm
+collect rep01_000024_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08280.0_eV_004of010.xrm
+collect rep01_000025_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08280.0_eV_005of010.xrm
+collect rep01_000026_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08280.0_eV_006of010.xrm
+collect rep01_000027_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08280.0_eV_007of010.xrm
+collect rep01_000028_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08280.0_eV_008of010.xrm
+collect rep01_000029_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08280.0_eV_009of010.xrm
+collect rep01_000030_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08280.0_eV_010of010.xrm
+setexp 0.50
+setbinning 2
+moveto t 6.97
+moveto z 3552.55
+moveto x -5178.10
+moveto y 5217.10
+collect rep01_20161456_NCA_Pg41-10_pristine_fov08_XANES_08280.0_eV_001of003.xrm
+collect rep01_20161456_NCA_Pg41-10_pristine_fov08_XANES_08280.0_eV_002of003.xrm
+collect rep01_20161456_NCA_Pg41-10_pristine_fov08_XANES_08280.0_eV_003of003.xrm
+;;;; set the MONO and the ZP
+sete 8295.00
+moveto zpx -12.94
+moveto zpy -5.37
+moveto zpz -1817.44
+collect rep01_20161456_NCA_Pg41-10_pristine_fov08_XANES_08295.0_eV_001of003.xrm
+collect rep01_20161456_NCA_Pg41-10_pristine_fov08_XANES_08295.0_eV_002of003.xrm
+collect rep01_20161456_NCA_Pg41-10_pristine_fov08_XANES_08295.0_eV_003of003.xrm
+moveto x 8322.05
+moveto y 5217.20
+setexp 0.30
+setbinning 2
+collect rep01_000031_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08295.0_eV_001of010.xrm
+collect rep01_000032_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08295.0_eV_002of010.xrm
+collect rep01_000033_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08295.0_eV_003of010.xrm
+collect rep01_000034_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08295.0_eV_004of010.xrm
+collect rep01_000035_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08295.0_eV_005of010.xrm
+collect rep01_000036_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08295.0_eV_006of010.xrm
+collect rep01_000037_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08295.0_eV_007of010.xrm
+collect rep01_000038_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08295.0_eV_008of010.xrm
+collect rep01_000039_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08295.0_eV_009of010.xrm
+collect rep01_000040_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08295.0_eV_010of010.xrm
+setexp 0.50
+setbinning 2
+;;;; set the MONO and the ZP
+sete 8310.00
+moveto zpx -12.48
+moveto zpy -5.26
+moveto zpz -1741.14
+moveto x 8322.05
+moveto y 5217.20
+setexp 0.30
+setbinning 2
+collect rep01_000041_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08310.0_eV_001of010.xrm
+collect rep01_000042_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08310.0_eV_002of010.xrm
+collect rep01_000043_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08310.0_eV_003of010.xrm
+collect rep01_000044_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08310.0_eV_004of010.xrm
+collect rep01_000045_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08310.0_eV_005of010.xrm
+collect rep01_000046_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08310.0_eV_006of010.xrm
+collect rep01_000047_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08310.0_eV_007of010.xrm
+collect rep01_000048_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08310.0_eV_008of010.xrm
+collect rep01_000049_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08310.0_eV_009of010.xrm
+collect rep01_000050_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08310.0_eV_010of010.xrm
+setexp 0.50
+setbinning 2
+moveto t 6.97
+moveto z 3552.55
+moveto x -5178.10
+moveto y 5217.10
+collect rep01_20161456_NCA_Pg41-10_pristine_fov08_XANES_08310.0_eV_001of003.xrm
+collect rep01_20161456_NCA_Pg41-10_pristine_fov08_XANES_08310.0_eV_002of003.xrm
+collect rep01_20161456_NCA_Pg41-10_pristine_fov08_XANES_08310.0_eV_003of003.xrm
+;;;; set the MONO and the ZP
+sete 8324.00
+moveto zpx -12.05
+moveto zpy -5.15
+moveto zpz -1669.93
+collect rep01_20161456_NCA_Pg41-10_pristine_fov08_XANES_08324.0_eV_001of003.xrm
+collect rep01_20161456_NCA_Pg41-10_pristine_fov08_XANES_08324.0_eV_002of003.xrm
+collect rep01_20161456_NCA_Pg41-10_pristine_fov08_XANES_08324.0_eV_003of003.xrm
+moveto x 8322.05
+moveto y 5217.20
+setexp 0.30
+setbinning 2
+collect rep01_000051_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08324.0_eV_001of010.xrm
+collect rep01_000052_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08324.0_eV_002of010.xrm
+collect rep01_000053_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08324.0_eV_003of010.xrm
+collect rep01_000054_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08324.0_eV_004of010.xrm
+collect rep01_000055_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08324.0_eV_005of010.xrm
+collect rep01_000056_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08324.0_eV_006of010.xrm
+collect rep01_000057_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08324.0_eV_007of010.xrm
+collect rep01_000058_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08324.0_eV_008of010.xrm
+collect rep01_000059_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08324.0_eV_009of010.xrm
+collect rep01_000060_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08324.0_eV_010of010.xrm
+setexp 0.50
+setbinning 2
+;;;; set the MONO and the ZP
+sete 8325.00
+moveto zpx -12.01
+moveto zpy -5.14
+moveto zpz -1664.84
+moveto x 8322.05
+moveto y 5217.20
+setexp 0.30
+setbinning 2
+collect rep01_000061_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08325.0_eV_001of010.xrm
+collect rep01_000062_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08325.0_eV_002of010.xrm
+collect rep01_000063_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08325.0_eV_003of010.xrm
+collect rep01_000064_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08325.0_eV_004of010.xrm
+collect rep01_000065_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08325.0_eV_005of010.xrm
+collect rep01_000066_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08325.0_eV_006of010.xrm
+collect rep01_000067_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08325.0_eV_007of010.xrm
+collect rep01_000068_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08325.0_eV_008of010.xrm
+collect rep01_000069_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08325.0_eV_009of010.xrm
+collect rep01_000070_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08325.0_eV_010of010.xrm
+setexp 0.50
+setbinning 2
+moveto t 6.97
+moveto z 3552.55
+moveto x -5178.10
+moveto y 5217.10
+collect rep01_20161456_NCA_Pg41-10_pristine_fov08_XANES_08325.0_eV_001of003.xrm
+collect rep01_20161456_NCA_Pg41-10_pristine_fov08_XANES_08325.0_eV_002of003.xrm
+collect rep01_20161456_NCA_Pg41-10_pristine_fov08_XANES_08325.0_eV_003of003.xrm
+;;;; set the MONO and the ZP
+sete 8326.00
+moveto zpx -11.98
+moveto zpy -5.14
+moveto zpz -1659.76
+collect rep01_20161456_NCA_Pg41-10_pristine_fov08_XANES_08326.0_eV_001of003.xrm
+collect rep01_20161456_NCA_Pg41-10_pristine_fov08_XANES_08326.0_eV_002of003.xrm
+collect rep01_20161456_NCA_Pg41-10_pristine_fov08_XANES_08326.0_eV_003of003.xrm
+moveto x 8322.05
+moveto y 5217.20
+setexp 0.30
+setbinning 2
+collect rep01_000071_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08326.0_eV_001of010.xrm
+collect rep01_000072_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08326.0_eV_002of010.xrm
+collect rep01_000073_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08326.0_eV_003of010.xrm
+collect rep01_000074_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08326.0_eV_004of010.xrm
+collect rep01_000075_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08326.0_eV_005of010.xrm
+collect rep01_000076_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08326.0_eV_006of010.xrm
+collect rep01_000077_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08326.0_eV_007of010.xrm
+collect rep01_000078_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08326.0_eV_008of010.xrm
+collect rep01_000079_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08326.0_eV_009of010.xrm
+collect rep01_000080_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08326.0_eV_010of010.xrm
+setexp 0.50
+setbinning 2
+;;;; set the MONO and the ZP
+sete 8327.00
+moveto zpx -11.95
+moveto zpy -5.13
+moveto zpz -1654.67
+moveto x 8322.05
+moveto y 5217.20
+setexp 0.30
+setbinning 2
+collect rep01_000081_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08327.0_eV_001of010.xrm
+collect rep01_000082_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08327.0_eV_002of010.xrm
+collect rep01_000083_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08327.0_eV_003of010.xrm
+collect rep01_000084_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08327.0_eV_004of010.xrm
+collect rep01_000085_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08327.0_eV_005of010.xrm
+collect rep01_000086_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08327.0_eV_006of010.xrm
+collect rep01_000087_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08327.0_eV_007of010.xrm
+collect rep01_000088_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08327.0_eV_008of010.xrm
+collect rep01_000089_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08327.0_eV_009of010.xrm
+collect rep01_000090_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08327.0_eV_010of010.xrm
+setexp 0.50
+setbinning 2
+moveto t 6.97
+moveto z 3552.55
+moveto x -5178.10
+moveto y 5217.10
+collect rep01_20161456_NCA_Pg41-10_pristine_fov08_XANES_08327.0_eV_001of003.xrm
+collect rep01_20161456_NCA_Pg41-10_pristine_fov08_XANES_08327.0_eV_002of003.xrm
+collect rep01_20161456_NCA_Pg41-10_pristine_fov08_XANES_08327.0_eV_003of003.xrm
+;;;; set the MONO and the ZP
+sete 8328.00
+moveto zpx -11.92
+moveto zpy -5.12
+moveto zpz -1649.58
+collect rep01_20161456_NCA_Pg41-10_pristine_fov08_XANES_08328.0_eV_001of003.xrm
+collect rep01_20161456_NCA_Pg41-10_pristine_fov08_XANES_08328.0_eV_002of003.xrm
+collect rep01_20161456_NCA_Pg41-10_pristine_fov08_XANES_08328.0_eV_003of003.xrm
+moveto x 8322.05
+moveto y 5217.20
+setexp 0.30
+setbinning 2
+collect rep01_000091_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08328.0_eV_001of010.xrm
+collect rep01_000092_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08328.0_eV_002of010.xrm
+collect rep01_000093_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08328.0_eV_003of010.xrm
+collect rep01_000094_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08328.0_eV_004of010.xrm
+collect rep01_000095_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08328.0_eV_005of010.xrm
+collect rep01_000096_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08328.0_eV_006of010.xrm
+collect rep01_000097_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08328.0_eV_007of010.xrm
+collect rep01_000098_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08328.0_eV_008of010.xrm
+collect rep01_000099_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08328.0_eV_009of010.xrm
+collect rep01_000100_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08328.0_eV_010of010.xrm
+setexp 0.50
+setbinning 2
+;;;; set the MONO and the ZP
+sete 8329.00
+moveto zpx -11.89
+moveto zpy -5.11
+moveto zpz -1644.50
+moveto x 8322.05
+moveto y 5217.20
+setexp 0.30
+setbinning 2
+collect rep01_000101_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08329.0_eV_001of010.xrm
+collect rep01_000102_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08329.0_eV_002of010.xrm
+collect rep01_000103_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08329.0_eV_003of010.xrm
+collect rep01_000104_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08329.0_eV_004of010.xrm
+collect rep01_000105_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08329.0_eV_005of010.xrm
+collect rep01_000106_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08329.0_eV_006of010.xrm
+collect rep01_000107_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08329.0_eV_007of010.xrm
+collect rep01_000108_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08329.0_eV_008of010.xrm
+collect rep01_000109_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08329.0_eV_009of010.xrm
+collect rep01_000110_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08329.0_eV_010of010.xrm
+setexp 0.50
+setbinning 2
+moveto t 6.97
+moveto z 3552.55
+moveto x -5178.10
+moveto y 5217.10
+collect rep01_20161456_NCA_Pg41-10_pristine_fov08_XANES_08329.0_eV_001of003.xrm
+collect rep01_20161456_NCA_Pg41-10_pristine_fov08_XANES_08329.0_eV_002of003.xrm
+collect rep01_20161456_NCA_Pg41-10_pristine_fov08_XANES_08329.0_eV_003of003.xrm
+;;;; set the MONO and the ZP
+sete 8330.00
+moveto zpx -11.86
+moveto zpy -5.11
+moveto zpz -1639.41
+collect rep01_20161456_NCA_Pg41-10_pristine_fov08_XANES_08330.0_eV_001of003.xrm
+collect rep01_20161456_NCA_Pg41-10_pristine_fov08_XANES_08330.0_eV_002of003.xrm
+collect rep01_20161456_NCA_Pg41-10_pristine_fov08_XANES_08330.0_eV_003of003.xrm
+moveto x 8322.05
+moveto y 5217.20
+setexp 0.30
+setbinning 2
+collect rep01_000111_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08330.0_eV_001of010.xrm
+collect rep01_000112_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08330.0_eV_002of010.xrm
+collect rep01_000113_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08330.0_eV_003of010.xrm
+collect rep01_000114_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08330.0_eV_004of010.xrm
+collect rep01_000115_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08330.0_eV_005of010.xrm
+collect rep01_000116_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08330.0_eV_006of010.xrm
+collect rep01_000117_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08330.0_eV_007of010.xrm
+collect rep01_000118_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08330.0_eV_008of010.xrm
+collect rep01_000119_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08330.0_eV_009of010.xrm
+collect rep01_000120_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08330.0_eV_010of010.xrm
+setexp 0.50
+setbinning 2
+;;;; set the MONO and the ZP
+sete 8331.00
+moveto zpx -11.83
+moveto zpy -5.10
+moveto zpz -1634.33
+moveto x 8322.05
+moveto y 5217.20
+setexp 0.30
+setbinning 2
+collect rep01_000121_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08331.0_eV_001of010.xrm
+collect rep01_000122_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08331.0_eV_002of010.xrm
+collect rep01_000123_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08331.0_eV_003of010.xrm
+collect rep01_000124_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08331.0_eV_004of010.xrm
+collect rep01_000125_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08331.0_eV_005of010.xrm
+collect rep01_000126_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08331.0_eV_006of010.xrm
+collect rep01_000127_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08331.0_eV_007of010.xrm
+collect rep01_000128_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08331.0_eV_008of010.xrm
+collect rep01_000129_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08331.0_eV_009of010.xrm
+collect rep01_000130_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08331.0_eV_010of010.xrm
+setexp 0.50
+setbinning 2
+moveto t 6.97
+moveto z 3552.55
+moveto x -5178.10
+moveto y 5217.10
+collect rep01_20161456_NCA_Pg41-10_pristine_fov08_XANES_08331.0_eV_001of003.xrm
+collect rep01_20161456_NCA_Pg41-10_pristine_fov08_XANES_08331.0_eV_002of003.xrm
+collect rep01_20161456_NCA_Pg41-10_pristine_fov08_XANES_08331.0_eV_003of003.xrm
+;;;; set the MONO and the ZP
+sete 8332.00
+moveto zpx -11.80
+moveto zpy -5.09
+moveto zpz -1629.24
+collect rep01_20161456_NCA_Pg41-10_pristine_fov08_XANES_08332.0_eV_001of003.xrm
+collect rep01_20161456_NCA_Pg41-10_pristine_fov08_XANES_08332.0_eV_002of003.xrm
+collect rep01_20161456_NCA_Pg41-10_pristine_fov08_XANES_08332.0_eV_003of003.xrm
+moveto x 8322.05
+moveto y 5217.20
+setexp 0.30
+setbinning 2
+collect rep01_000131_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08332.0_eV_001of010.xrm
+collect rep01_000132_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08332.0_eV_002of010.xrm
+collect rep01_000133_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08332.0_eV_003of010.xrm
+collect rep01_000134_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08332.0_eV_004of010.xrm
+collect rep01_000135_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08332.0_eV_005of010.xrm
+collect rep01_000136_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08332.0_eV_006of010.xrm
+collect rep01_000137_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08332.0_eV_007of010.xrm
+collect rep01_000138_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08332.0_eV_008of010.xrm
+collect rep01_000139_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08332.0_eV_009of010.xrm
+collect rep01_000140_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08332.0_eV_010of010.xrm
+setexp 0.50
+setbinning 2
+;;;; set the MONO and the ZP
+sete 8333.00
+moveto zpx -11.77
+moveto zpy -5.08
+moveto zpz -1624.15
+moveto x 8322.05
+moveto y 5217.20
+setexp 0.30
+setbinning 2
+collect rep01_000141_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08333.0_eV_001of010.xrm
+collect rep01_000142_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08333.0_eV_002of010.xrm
+collect rep01_000143_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08333.0_eV_003of010.xrm
+collect rep01_000144_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08333.0_eV_004of010.xrm
+collect rep01_000145_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08333.0_eV_005of010.xrm
+collect rep01_000146_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08333.0_eV_006of010.xrm
+collect rep01_000147_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08333.0_eV_007of010.xrm
+collect rep01_000148_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08333.0_eV_008of010.xrm
+collect rep01_000149_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08333.0_eV_009of010.xrm
+collect rep01_000150_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08333.0_eV_010of010.xrm
+setexp 0.50
+setbinning 2
+moveto t 6.97
+moveto z 3552.55
+moveto x -5178.10
+moveto y 5217.10
+collect rep01_20161456_NCA_Pg41-10_pristine_fov08_XANES_08333.0_eV_001of003.xrm
+collect rep01_20161456_NCA_Pg41-10_pristine_fov08_XANES_08333.0_eV_002of003.xrm
+collect rep01_20161456_NCA_Pg41-10_pristine_fov08_XANES_08333.0_eV_003of003.xrm
+;;;; set the MONO and the ZP
+sete 8334.00
+moveto zpx -11.74
+moveto zpy -5.08
+moveto zpz -1619.07
+collect rep01_20161456_NCA_Pg41-10_pristine_fov08_XANES_08334.0_eV_001of003.xrm
+collect rep01_20161456_NCA_Pg41-10_pristine_fov08_XANES_08334.0_eV_002of003.xrm
+collect rep01_20161456_NCA_Pg41-10_pristine_fov08_XANES_08334.0_eV_003of003.xrm
+moveto x 8322.05
+moveto y 5217.20
+setexp 0.30
+setbinning 2
+collect rep01_000151_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08334.0_eV_001of010.xrm
+collect rep01_000152_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08334.0_eV_002of010.xrm
+collect rep01_000153_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08334.0_eV_003of010.xrm
+collect rep01_000154_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08334.0_eV_004of010.xrm
+collect rep01_000155_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08334.0_eV_005of010.xrm
+collect rep01_000156_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08334.0_eV_006of010.xrm
+collect rep01_000157_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08334.0_eV_007of010.xrm
+collect rep01_000158_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08334.0_eV_008of010.xrm
+collect rep01_000159_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08334.0_eV_009of010.xrm
+collect rep01_000160_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08334.0_eV_010of010.xrm
+setexp 0.50
+setbinning 2
+;;;; set the MONO and the ZP
+sete 8335.00
+moveto zpx -11.71
+moveto zpy -5.07
+moveto zpz -1613.98
+moveto x 8322.05
+moveto y 5217.20
+setexp 0.30
+setbinning 2
+collect rep01_000161_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08335.0_eV_001of010.xrm
+collect rep01_000162_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08335.0_eV_002of010.xrm
+collect rep01_000163_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08335.0_eV_003of010.xrm
+collect rep01_000164_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08335.0_eV_004of010.xrm
+collect rep01_000165_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08335.0_eV_005of010.xrm
+collect rep01_000166_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08335.0_eV_006of010.xrm
+collect rep01_000167_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08335.0_eV_007of010.xrm
+collect rep01_000168_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08335.0_eV_008of010.xrm
+collect rep01_000169_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08335.0_eV_009of010.xrm
+collect rep01_000170_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08335.0_eV_010of010.xrm
+setexp 0.50
+setbinning 2
+moveto t 6.97
+moveto z 3552.55
+moveto x -5178.10
+moveto y 5217.10
+collect rep01_20161456_NCA_Pg41-10_pristine_fov08_XANES_08335.0_eV_001of003.xrm
+collect rep01_20161456_NCA_Pg41-10_pristine_fov08_XANES_08335.0_eV_002of003.xrm
+collect rep01_20161456_NCA_Pg41-10_pristine_fov08_XANES_08335.0_eV_003of003.xrm
+;;;; set the MONO and the ZP
+sete 8336.00
+moveto zpx -11.67
+moveto zpy -5.06
+moveto zpz -1608.89
+collect rep01_20161456_NCA_Pg41-10_pristine_fov08_XANES_08336.0_eV_001of003.xrm
+collect rep01_20161456_NCA_Pg41-10_pristine_fov08_XANES_08336.0_eV_002of003.xrm
+collect rep01_20161456_NCA_Pg41-10_pristine_fov08_XANES_08336.0_eV_003of003.xrm
+moveto x 8322.05
+moveto y 5217.20
+setexp 0.30
+setbinning 2
+collect rep01_000171_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08336.0_eV_001of010.xrm
+collect rep01_000172_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08336.0_eV_002of010.xrm
+collect rep01_000173_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08336.0_eV_003of010.xrm
+collect rep01_000174_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08336.0_eV_004of010.xrm
+collect rep01_000175_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08336.0_eV_005of010.xrm
+collect rep01_000176_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08336.0_eV_006of010.xrm
+collect rep01_000177_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08336.0_eV_007of010.xrm
+collect rep01_000178_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08336.0_eV_008of010.xrm
+collect rep01_000179_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08336.0_eV_009of010.xrm
+collect rep01_000180_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08336.0_eV_010of010.xrm
+setexp 0.50
+setbinning 2
+;;;; set the MONO and the ZP
+sete 8337.00
+moveto zpx -11.64
+moveto zpy -5.05
+moveto zpz -1603.81
+moveto x 8322.05
+moveto y 5217.20
+setexp 0.30
+setbinning 2
+collect rep01_000181_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08337.0_eV_001of010.xrm
+collect rep01_000182_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08337.0_eV_002of010.xrm
+collect rep01_000183_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08337.0_eV_003of010.xrm
+collect rep01_000184_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08337.0_eV_004of010.xrm
+collect rep01_000185_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08337.0_eV_005of010.xrm
+collect rep01_000186_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08337.0_eV_006of010.xrm
+collect rep01_000187_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08337.0_eV_007of010.xrm
+collect rep01_000188_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08337.0_eV_008of010.xrm
+collect rep01_000189_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08337.0_eV_009of010.xrm
+collect rep01_000190_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08337.0_eV_010of010.xrm
+setexp 0.50
+setbinning 2
+moveto t 6.97
+moveto z 3552.55
+moveto x -5178.10
+moveto y 5217.10
+collect rep01_20161456_NCA_Pg41-10_pristine_fov08_XANES_08337.0_eV_001of003.xrm
+collect rep01_20161456_NCA_Pg41-10_pristine_fov08_XANES_08337.0_eV_002of003.xrm
+collect rep01_20161456_NCA_Pg41-10_pristine_fov08_XANES_08337.0_eV_003of003.xrm
+;;;; set the MONO and the ZP
+sete 8338.00
+moveto zpx -11.61
+moveto zpy -5.05
+moveto zpz -1598.72
+collect rep01_20161456_NCA_Pg41-10_pristine_fov08_XANES_08338.0_eV_001of003.xrm
+collect rep01_20161456_NCA_Pg41-10_pristine_fov08_XANES_08338.0_eV_002of003.xrm
+collect rep01_20161456_NCA_Pg41-10_pristine_fov08_XANES_08338.0_eV_003of003.xrm
+moveto x 8322.05
+moveto y 5217.20
+setexp 0.30
+setbinning 2
+collect rep01_000191_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08338.0_eV_001of010.xrm
+collect rep01_000192_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08338.0_eV_002of010.xrm
+collect rep01_000193_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08338.0_eV_003of010.xrm
+collect rep01_000194_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08338.0_eV_004of010.xrm
+collect rep01_000195_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08338.0_eV_005of010.xrm
+collect rep01_000196_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08338.0_eV_006of010.xrm
+collect rep01_000197_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08338.0_eV_007of010.xrm
+collect rep01_000198_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08338.0_eV_008of010.xrm
+collect rep01_000199_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08338.0_eV_009of010.xrm
+collect rep01_000200_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08338.0_eV_010of010.xrm
+setexp 0.50
+setbinning 2
+;;;; set the MONO and the ZP
+sete 8339.00
+moveto zpx -11.58
+moveto zpy -5.04
+moveto zpz -1593.63
+moveto x 8322.05
+moveto y 5217.20
+setexp 0.30
+setbinning 2
+collect rep01_000201_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08339.0_eV_001of010.xrm
+collect rep01_000202_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08339.0_eV_002of010.xrm
+collect rep01_000203_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08339.0_eV_003of010.xrm
+collect rep01_000204_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08339.0_eV_004of010.xrm
+collect rep01_000205_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08339.0_eV_005of010.xrm
+collect rep01_000206_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08339.0_eV_006of010.xrm
+collect rep01_000207_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08339.0_eV_007of010.xrm
+collect rep01_000208_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08339.0_eV_008of010.xrm
+collect rep01_000209_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08339.0_eV_009of010.xrm
+collect rep01_000210_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08339.0_eV_010of010.xrm
+setexp 0.50
+setbinning 2
+moveto t 6.97
+moveto z 3552.55
+moveto x -5178.10
+moveto y 5217.10
+collect rep01_20161456_NCA_Pg41-10_pristine_fov08_XANES_08339.0_eV_001of003.xrm
+collect rep01_20161456_NCA_Pg41-10_pristine_fov08_XANES_08339.0_eV_002of003.xrm
+collect rep01_20161456_NCA_Pg41-10_pristine_fov08_XANES_08339.0_eV_003of003.xrm
+;;;; set the MONO and the ZP
+sete 8340.00
+moveto zpx -11.55
+moveto zpy -5.03
+moveto zpz -1588.55
+collect rep01_20161456_NCA_Pg41-10_pristine_fov08_XANES_08340.0_eV_001of003.xrm
+collect rep01_20161456_NCA_Pg41-10_pristine_fov08_XANES_08340.0_eV_002of003.xrm
+collect rep01_20161456_NCA_Pg41-10_pristine_fov08_XANES_08340.0_eV_003of003.xrm
+moveto x 8322.05
+moveto y 5217.20
+setexp 0.30
+setbinning 2
+collect rep01_000211_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08340.0_eV_001of010.xrm
+collect rep01_000212_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08340.0_eV_002of010.xrm
+collect rep01_000213_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08340.0_eV_003of010.xrm
+collect rep01_000214_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08340.0_eV_004of010.xrm
+collect rep01_000215_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08340.0_eV_005of010.xrm
+collect rep01_000216_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08340.0_eV_006of010.xrm
+collect rep01_000217_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08340.0_eV_007of010.xrm
+collect rep01_000218_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08340.0_eV_008of010.xrm
+collect rep01_000219_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08340.0_eV_009of010.xrm
+collect rep01_000220_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08340.0_eV_010of010.xrm
+setexp 0.50
+setbinning 2
+;;;; set the MONO and the ZP
+sete 8341.00
+moveto zpx -11.52
+moveto zpy -5.02
+moveto zpz -1583.46
+moveto x 8322.05
+moveto y 5217.20
+setexp 0.30
+setbinning 2
+collect rep01_000221_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08341.0_eV_001of010.xrm
+collect rep01_000222_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08341.0_eV_002of010.xrm
+collect rep01_000223_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08341.0_eV_003of010.xrm
+collect rep01_000224_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08341.0_eV_004of010.xrm
+collect rep01_000225_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08341.0_eV_005of010.xrm
+collect rep01_000226_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08341.0_eV_006of010.xrm
+collect rep01_000227_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08341.0_eV_007of010.xrm
+collect rep01_000228_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08341.0_eV_008of010.xrm
+collect rep01_000229_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08341.0_eV_009of010.xrm
+collect rep01_000230_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08341.0_eV_010of010.xrm
+setexp 0.50
+setbinning 2
+moveto t 6.97
+moveto z 3552.55
+moveto x -5178.10
+moveto y 5217.10
+collect rep01_20161456_NCA_Pg41-10_pristine_fov08_XANES_08341.0_eV_001of003.xrm
+collect rep01_20161456_NCA_Pg41-10_pristine_fov08_XANES_08341.0_eV_002of003.xrm
+collect rep01_20161456_NCA_Pg41-10_pristine_fov08_XANES_08341.0_eV_003of003.xrm
+;;;; set the MONO and the ZP
+sete 8342.00
+moveto zpx -11.49
+moveto zpy -5.02
+moveto zpz -1578.37
+collect rep01_20161456_NCA_Pg41-10_pristine_fov08_XANES_08342.0_eV_001of003.xrm
+collect rep01_20161456_NCA_Pg41-10_pristine_fov08_XANES_08342.0_eV_002of003.xrm
+collect rep01_20161456_NCA_Pg41-10_pristine_fov08_XANES_08342.0_eV_003of003.xrm
+moveto x 8322.05
+moveto y 5217.20
+setexp 0.30
+setbinning 2
+collect rep01_000231_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08342.0_eV_001of010.xrm
+collect rep01_000232_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08342.0_eV_002of010.xrm
+collect rep01_000233_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08342.0_eV_003of010.xrm
+collect rep01_000234_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08342.0_eV_004of010.xrm
+collect rep01_000235_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08342.0_eV_005of010.xrm
+collect rep01_000236_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08342.0_eV_006of010.xrm
+collect rep01_000237_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08342.0_eV_007of010.xrm
+collect rep01_000238_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08342.0_eV_008of010.xrm
+collect rep01_000239_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08342.0_eV_009of010.xrm
+collect rep01_000240_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08342.0_eV_010of010.xrm
+setexp 0.50
+setbinning 2
+;;;; set the MONO and the ZP
+sete 8343.00
+moveto zpx -11.46
+moveto zpy -5.01
+moveto zpz -1573.29
+moveto x 8322.05
+moveto y 5217.20
+setexp 0.30
+setbinning 2
+collect rep01_000241_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08343.0_eV_001of010.xrm
+collect rep01_000242_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08343.0_eV_002of010.xrm
+collect rep01_000243_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08343.0_eV_003of010.xrm
+collect rep01_000244_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08343.0_eV_004of010.xrm
+collect rep01_000245_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08343.0_eV_005of010.xrm
+collect rep01_000246_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08343.0_eV_006of010.xrm
+collect rep01_000247_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08343.0_eV_007of010.xrm
+collect rep01_000248_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08343.0_eV_008of010.xrm
+collect rep01_000249_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08343.0_eV_009of010.xrm
+collect rep01_000250_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08343.0_eV_010of010.xrm
+setexp 0.50
+setbinning 2
+moveto t 6.97
+moveto z 3552.55
+moveto x -5178.10
+moveto y 5217.10
+collect rep01_20161456_NCA_Pg41-10_pristine_fov08_XANES_08343.0_eV_001of003.xrm
+collect rep01_20161456_NCA_Pg41-10_pristine_fov08_XANES_08343.0_eV_002of003.xrm
+collect rep01_20161456_NCA_Pg41-10_pristine_fov08_XANES_08343.0_eV_003of003.xrm
+;;;; set the MONO and the ZP
+sete 8344.00
+moveto zpx -11.43
+moveto zpy -5.00
+moveto zpz -1568.20
+collect rep01_20161456_NCA_Pg41-10_pristine_fov08_XANES_08344.0_eV_001of003.xrm
+collect rep01_20161456_NCA_Pg41-10_pristine_fov08_XANES_08344.0_eV_002of003.xrm
+collect rep01_20161456_NCA_Pg41-10_pristine_fov08_XANES_08344.0_eV_003of003.xrm
+moveto x 8322.05
+moveto y 5217.20
+setexp 0.30
+setbinning 2
+collect rep01_000251_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08344.0_eV_001of010.xrm
+collect rep01_000252_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08344.0_eV_002of010.xrm
+collect rep01_000253_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08344.0_eV_003of010.xrm
+collect rep01_000254_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08344.0_eV_004of010.xrm
+collect rep01_000255_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08344.0_eV_005of010.xrm
+collect rep01_000256_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08344.0_eV_006of010.xrm
+collect rep01_000257_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08344.0_eV_007of010.xrm
+collect rep01_000258_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08344.0_eV_008of010.xrm
+collect rep01_000259_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08344.0_eV_009of010.xrm
+collect rep01_000260_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08344.0_eV_010of010.xrm
+setexp 0.50
+setbinning 2
+;;;; set the MONO and the ZP
+sete 8345.00
+moveto zpx -11.40
+moveto zpy -4.99
+moveto zpz -1563.12
+moveto x 8322.05
+moveto y 5217.20
+setexp 0.30
+setbinning 2
+collect rep01_000261_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08345.0_eV_001of010.xrm
+collect rep01_000262_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08345.0_eV_002of010.xrm
+collect rep01_000263_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08345.0_eV_003of010.xrm
+collect rep01_000264_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08345.0_eV_004of010.xrm
+collect rep01_000265_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08345.0_eV_005of010.xrm
+collect rep01_000266_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08345.0_eV_006of010.xrm
+collect rep01_000267_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08345.0_eV_007of010.xrm
+collect rep01_000268_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08345.0_eV_008of010.xrm
+collect rep01_000269_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08345.0_eV_009of010.xrm
+collect rep01_000270_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08345.0_eV_010of010.xrm
+setexp 0.50
+setbinning 2
+moveto t 6.97
+moveto z 3552.55
+moveto x -5178.10
+moveto y 5217.10
+collect rep01_20161456_NCA_Pg41-10_pristine_fov08_XANES_08345.0_eV_001of003.xrm
+collect rep01_20161456_NCA_Pg41-10_pristine_fov08_XANES_08345.0_eV_002of003.xrm
+collect rep01_20161456_NCA_Pg41-10_pristine_fov08_XANES_08345.0_eV_003of003.xrm
+;;;; set the MONO and the ZP
+sete 8346.00
+moveto zpx -11.37
+moveto zpy -4.99
+moveto zpz -1558.03
+collect rep01_20161456_NCA_Pg41-10_pristine_fov08_XANES_08346.0_eV_001of003.xrm
+collect rep01_20161456_NCA_Pg41-10_pristine_fov08_XANES_08346.0_eV_002of003.xrm
+collect rep01_20161456_NCA_Pg41-10_pristine_fov08_XANES_08346.0_eV_003of003.xrm
+moveto x 8322.05
+moveto y 5217.20
+setexp 0.30
+setbinning 2
+collect rep01_000271_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08346.0_eV_001of010.xrm
+collect rep01_000272_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08346.0_eV_002of010.xrm
+collect rep01_000273_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08346.0_eV_003of010.xrm
+collect rep01_000274_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08346.0_eV_004of010.xrm
+collect rep01_000275_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08346.0_eV_005of010.xrm
+collect rep01_000276_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08346.0_eV_006of010.xrm
+collect rep01_000277_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08346.0_eV_007of010.xrm
+collect rep01_000278_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08346.0_eV_008of010.xrm
+collect rep01_000279_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08346.0_eV_009of010.xrm
+collect rep01_000280_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08346.0_eV_010of010.xrm
+setexp 0.50
+setbinning 2
+;;;; set the MONO and the ZP
+sete 8347.00
+moveto zpx -11.34
+moveto zpy -4.98
+moveto zpz -1552.94
+moveto x 8322.05
+moveto y 5217.20
+setexp 0.30
+setbinning 2
+collect rep01_000281_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08347.0_eV_001of010.xrm
+collect rep01_000282_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08347.0_eV_002of010.xrm
+collect rep01_000283_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08347.0_eV_003of010.xrm
+collect rep01_000284_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08347.0_eV_004of010.xrm
+collect rep01_000285_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08347.0_eV_005of010.xrm
+collect rep01_000286_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08347.0_eV_006of010.xrm
+collect rep01_000287_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08347.0_eV_007of010.xrm
+collect rep01_000288_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08347.0_eV_008of010.xrm
+collect rep01_000289_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08347.0_eV_009of010.xrm
+collect rep01_000290_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08347.0_eV_010of010.xrm
+setexp 0.50
+setbinning 2
+moveto t 6.97
+moveto z 3552.55
+moveto x -5178.10
+moveto y 5217.10
+collect rep01_20161456_NCA_Pg41-10_pristine_fov08_XANES_08347.0_eV_001of003.xrm
+collect rep01_20161456_NCA_Pg41-10_pristine_fov08_XANES_08347.0_eV_002of003.xrm
+collect rep01_20161456_NCA_Pg41-10_pristine_fov08_XANES_08347.0_eV_003of003.xrm
+;;;; set the MONO and the ZP
+sete 8348.00
+moveto zpx -11.30
+moveto zpy -4.97
+moveto zpz -1547.86
+collect rep01_20161456_NCA_Pg41-10_pristine_fov08_XANES_08348.0_eV_001of003.xrm
+collect rep01_20161456_NCA_Pg41-10_pristine_fov08_XANES_08348.0_eV_002of003.xrm
+collect rep01_20161456_NCA_Pg41-10_pristine_fov08_XANES_08348.0_eV_003of003.xrm
+moveto x 8322.05
+moveto y 5217.20
+setexp 0.30
+setbinning 2
+collect rep01_000291_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08348.0_eV_001of010.xrm
+collect rep01_000292_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08348.0_eV_002of010.xrm
+collect rep01_000293_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08348.0_eV_003of010.xrm
+collect rep01_000294_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08348.0_eV_004of010.xrm
+collect rep01_000295_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08348.0_eV_005of010.xrm
+collect rep01_000296_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08348.0_eV_006of010.xrm
+collect rep01_000297_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08348.0_eV_007of010.xrm
+collect rep01_000298_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08348.0_eV_008of010.xrm
+collect rep01_000299_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08348.0_eV_009of010.xrm
+collect rep01_000300_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08348.0_eV_010of010.xrm
+setexp 0.50
+setbinning 2
+;;;; set the MONO and the ZP
+sete 8349.00
+moveto zpx -11.27
+moveto zpy -4.96
+moveto zpz -1542.77
+moveto x 8322.05
+moveto y 5217.20
+setexp 0.30
+setbinning 2
+collect rep01_000301_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08349.0_eV_001of010.xrm
+collect rep01_000302_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08349.0_eV_002of010.xrm
+collect rep01_000303_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08349.0_eV_003of010.xrm
+collect rep01_000304_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08349.0_eV_004of010.xrm
+collect rep01_000305_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08349.0_eV_005of010.xrm
+collect rep01_000306_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08349.0_eV_006of010.xrm
+collect rep01_000307_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08349.0_eV_007of010.xrm
+collect rep01_000308_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08349.0_eV_008of010.xrm
+collect rep01_000309_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08349.0_eV_009of010.xrm
+collect rep01_000310_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08349.0_eV_010of010.xrm
+setexp 0.50
+setbinning 2
+moveto t 6.97
+moveto z 3552.55
+moveto x -5178.10
+moveto y 5217.10
+collect rep01_20161456_NCA_Pg41-10_pristine_fov08_XANES_08349.0_eV_001of003.xrm
+collect rep01_20161456_NCA_Pg41-10_pristine_fov08_XANES_08349.0_eV_002of003.xrm
+collect rep01_20161456_NCA_Pg41-10_pristine_fov08_XANES_08349.0_eV_003of003.xrm
+;;;; set the MONO and the ZP
+sete 8350.00
+moveto zpx -11.24
+moveto zpy -4.96
+moveto zpz -1537.68
+collect rep01_20161456_NCA_Pg41-10_pristine_fov08_XANES_08350.0_eV_001of003.xrm
+collect rep01_20161456_NCA_Pg41-10_pristine_fov08_XANES_08350.0_eV_002of003.xrm
+collect rep01_20161456_NCA_Pg41-10_pristine_fov08_XANES_08350.0_eV_003of003.xrm
+moveto x 8322.05
+moveto y 5217.20
+setexp 0.30
+setbinning 2
+collect rep01_000311_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08350.0_eV_001of010.xrm
+collect rep01_000312_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08350.0_eV_002of010.xrm
+collect rep01_000313_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08350.0_eV_003of010.xrm
+collect rep01_000314_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08350.0_eV_004of010.xrm
+collect rep01_000315_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08350.0_eV_005of010.xrm
+collect rep01_000316_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08350.0_eV_006of010.xrm
+collect rep01_000317_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08350.0_eV_007of010.xrm
+collect rep01_000318_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08350.0_eV_008of010.xrm
+collect rep01_000319_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08350.0_eV_009of010.xrm
+collect rep01_000320_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08350.0_eV_010of010.xrm
+setexp 0.50
+setbinning 2
+;;;; set the MONO and the ZP
+sete 8351.00
+moveto zpx -11.21
+moveto zpy -4.95
+moveto zpz -1532.60
+moveto x 8322.05
+moveto y 5217.20
+setexp 0.30
+setbinning 2
+collect rep01_000321_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08351.0_eV_001of010.xrm
+collect rep01_000322_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08351.0_eV_002of010.xrm
+collect rep01_000323_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08351.0_eV_003of010.xrm
+collect rep01_000324_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08351.0_eV_004of010.xrm
+collect rep01_000325_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08351.0_eV_005of010.xrm
+collect rep01_000326_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08351.0_eV_006of010.xrm
+collect rep01_000327_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08351.0_eV_007of010.xrm
+collect rep01_000328_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08351.0_eV_008of010.xrm
+collect rep01_000329_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08351.0_eV_009of010.xrm
+collect rep01_000330_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08351.0_eV_010of010.xrm
+setexp 0.50
+setbinning 2
+moveto t 6.97
+moveto z 3552.55
+moveto x -5178.10
+moveto y 5217.10
+collect rep01_20161456_NCA_Pg41-10_pristine_fov08_XANES_08351.0_eV_001of003.xrm
+collect rep01_20161456_NCA_Pg41-10_pristine_fov08_XANES_08351.0_eV_002of003.xrm
+collect rep01_20161456_NCA_Pg41-10_pristine_fov08_XANES_08351.0_eV_003of003.xrm
+;;;; set the MONO and the ZP
+sete 8352.00
+moveto zpx -11.18
+moveto zpy -4.94
+moveto zpz -1527.51
+collect rep01_20161456_NCA_Pg41-10_pristine_fov08_XANES_08352.0_eV_001of003.xrm
+collect rep01_20161456_NCA_Pg41-10_pristine_fov08_XANES_08352.0_eV_002of003.xrm
+collect rep01_20161456_NCA_Pg41-10_pristine_fov08_XANES_08352.0_eV_003of003.xrm
+moveto x 8322.05
+moveto y 5217.20
+setexp 0.30
+setbinning 2
+collect rep01_000331_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08352.0_eV_001of010.xrm
+collect rep01_000332_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08352.0_eV_002of010.xrm
+collect rep01_000333_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08352.0_eV_003of010.xrm
+collect rep01_000334_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08352.0_eV_004of010.xrm
+collect rep01_000335_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08352.0_eV_005of010.xrm
+collect rep01_000336_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08352.0_eV_006of010.xrm
+collect rep01_000337_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08352.0_eV_007of010.xrm
+collect rep01_000338_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08352.0_eV_008of010.xrm
+collect rep01_000339_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08352.0_eV_009of010.xrm
+collect rep01_000340_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08352.0_eV_010of010.xrm
+setexp 0.50
+setbinning 2
+;;;; set the MONO and the ZP
+sete 8353.00
+moveto zpx -11.15
+moveto zpy -4.93
+moveto zpz -1522.42
+moveto x 8322.05
+moveto y 5217.20
+setexp 0.30
+setbinning 2
+collect rep01_000341_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08353.0_eV_001of010.xrm
+collect rep01_000342_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08353.0_eV_002of010.xrm
+collect rep01_000343_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08353.0_eV_003of010.xrm
+collect rep01_000344_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08353.0_eV_004of010.xrm
+collect rep01_000345_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08353.0_eV_005of010.xrm
+collect rep01_000346_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08353.0_eV_006of010.xrm
+collect rep01_000347_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08353.0_eV_007of010.xrm
+collect rep01_000348_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08353.0_eV_008of010.xrm
+collect rep01_000349_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08353.0_eV_009of010.xrm
+collect rep01_000350_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08353.0_eV_010of010.xrm
+setexp 0.50
+setbinning 2
+moveto t 6.97
+moveto z 3552.55
+moveto x -5178.10
+moveto y 5217.10
+collect rep01_20161456_NCA_Pg41-10_pristine_fov08_XANES_08353.0_eV_001of003.xrm
+collect rep01_20161456_NCA_Pg41-10_pristine_fov08_XANES_08353.0_eV_002of003.xrm
+collect rep01_20161456_NCA_Pg41-10_pristine_fov08_XANES_08353.0_eV_003of003.xrm
+;;;; set the MONO and the ZP
+sete 8354.00
+moveto zpx -11.12
+moveto zpy -4.93
+moveto zpz -1517.34
+collect rep01_20161456_NCA_Pg41-10_pristine_fov08_XANES_08354.0_eV_001of003.xrm
+collect rep01_20161456_NCA_Pg41-10_pristine_fov08_XANES_08354.0_eV_002of003.xrm
+collect rep01_20161456_NCA_Pg41-10_pristine_fov08_XANES_08354.0_eV_003of003.xrm
+moveto x 8322.05
+moveto y 5217.20
+setexp 0.30
+setbinning 2
+collect rep01_000351_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08354.0_eV_001of010.xrm
+collect rep01_000352_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08354.0_eV_002of010.xrm
+collect rep01_000353_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08354.0_eV_003of010.xrm
+collect rep01_000354_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08354.0_eV_004of010.xrm
+collect rep01_000355_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08354.0_eV_005of010.xrm
+collect rep01_000356_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08354.0_eV_006of010.xrm
+collect rep01_000357_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08354.0_eV_007of010.xrm
+collect rep01_000358_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08354.0_eV_008of010.xrm
+collect rep01_000359_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08354.0_eV_009of010.xrm
+collect rep01_000360_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08354.0_eV_010of010.xrm
+setexp 0.50
+setbinning 2
+;;;; set the MONO and the ZP
+sete 8355.00
+moveto zpx -11.09
+moveto zpy -4.92
+moveto zpz -1512.25
+moveto x 8322.05
+moveto y 5217.20
+setexp 0.30
+setbinning 2
+collect rep01_000361_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08355.0_eV_001of010.xrm
+collect rep01_000362_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08355.0_eV_002of010.xrm
+collect rep01_000363_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08355.0_eV_003of010.xrm
+collect rep01_000364_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08355.0_eV_004of010.xrm
+collect rep01_000365_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08355.0_eV_005of010.xrm
+collect rep01_000366_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08355.0_eV_006of010.xrm
+collect rep01_000367_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08355.0_eV_007of010.xrm
+collect rep01_000368_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08355.0_eV_008of010.xrm
+collect rep01_000369_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08355.0_eV_009of010.xrm
+collect rep01_000370_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08355.0_eV_010of010.xrm
+setexp 0.50
+setbinning 2
+moveto t 6.97
+moveto z 3552.55
+moveto x -5178.10
+moveto y 5217.10
+collect rep01_20161456_NCA_Pg41-10_pristine_fov08_XANES_08355.0_eV_001of003.xrm
+collect rep01_20161456_NCA_Pg41-10_pristine_fov08_XANES_08355.0_eV_002of003.xrm
+collect rep01_20161456_NCA_Pg41-10_pristine_fov08_XANES_08355.0_eV_003of003.xrm
+;;;; set the MONO and the ZP
+sete 8356.00
+moveto zpx -11.06
+moveto zpy -4.91
+moveto zpz -1507.16
+collect rep01_20161456_NCA_Pg41-10_pristine_fov08_XANES_08356.0_eV_001of003.xrm
+collect rep01_20161456_NCA_Pg41-10_pristine_fov08_XANES_08356.0_eV_002of003.xrm
+collect rep01_20161456_NCA_Pg41-10_pristine_fov08_XANES_08356.0_eV_003of003.xrm
+moveto x 8322.05
+moveto y 5217.20
+setexp 0.30
+setbinning 2
+collect rep01_000371_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08356.0_eV_001of010.xrm
+collect rep01_000372_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08356.0_eV_002of010.xrm
+collect rep01_000373_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08356.0_eV_003of010.xrm
+collect rep01_000374_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08356.0_eV_004of010.xrm
+collect rep01_000375_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08356.0_eV_005of010.xrm
+collect rep01_000376_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08356.0_eV_006of010.xrm
+collect rep01_000377_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08356.0_eV_007of010.xrm
+collect rep01_000378_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08356.0_eV_008of010.xrm
+collect rep01_000379_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08356.0_eV_009of010.xrm
+collect rep01_000380_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08356.0_eV_010of010.xrm
+setexp 0.50
+setbinning 2
+;;;; set the MONO and the ZP
+sete 8357.00
+moveto zpx -11.03
+moveto zpy -4.90
+moveto zpz -1502.08
+moveto x 8322.05
+moveto y 5217.20
+setexp 0.30
+setbinning 2
+collect rep01_000381_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08357.0_eV_001of010.xrm
+collect rep01_000382_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08357.0_eV_002of010.xrm
+collect rep01_000383_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08357.0_eV_003of010.xrm
+collect rep01_000384_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08357.0_eV_004of010.xrm
+collect rep01_000385_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08357.0_eV_005of010.xrm
+collect rep01_000386_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08357.0_eV_006of010.xrm
+collect rep01_000387_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08357.0_eV_007of010.xrm
+collect rep01_000388_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08357.0_eV_008of010.xrm
+collect rep01_000389_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08357.0_eV_009of010.xrm
+collect rep01_000390_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08357.0_eV_010of010.xrm
+setexp 0.50
+setbinning 2
+moveto t 6.97
+moveto z 3552.55
+moveto x -5178.10
+moveto y 5217.10
+collect rep01_20161456_NCA_Pg41-10_pristine_fov08_XANES_08357.0_eV_001of003.xrm
+collect rep01_20161456_NCA_Pg41-10_pristine_fov08_XANES_08357.0_eV_002of003.xrm
+collect rep01_20161456_NCA_Pg41-10_pristine_fov08_XANES_08357.0_eV_003of003.xrm
+;;;; set the MONO and the ZP
+sete 8358.00
+moveto zpx -11.00
+moveto zpy -4.90
+moveto zpz -1496.99
+collect rep01_20161456_NCA_Pg41-10_pristine_fov08_XANES_08358.0_eV_001of003.xrm
+collect rep01_20161456_NCA_Pg41-10_pristine_fov08_XANES_08358.0_eV_002of003.xrm
+collect rep01_20161456_NCA_Pg41-10_pristine_fov08_XANES_08358.0_eV_003of003.xrm
+moveto x 8322.05
+moveto y 5217.20
+setexp 0.30
+setbinning 2
+collect rep01_000391_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08358.0_eV_001of010.xrm
+collect rep01_000392_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08358.0_eV_002of010.xrm
+collect rep01_000393_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08358.0_eV_003of010.xrm
+collect rep01_000394_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08358.0_eV_004of010.xrm
+collect rep01_000395_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08358.0_eV_005of010.xrm
+collect rep01_000396_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08358.0_eV_006of010.xrm
+collect rep01_000397_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08358.0_eV_007of010.xrm
+collect rep01_000398_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08358.0_eV_008of010.xrm
+collect rep01_000399_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08358.0_eV_009of010.xrm
+collect rep01_000400_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08358.0_eV_010of010.xrm
+setexp 0.50
+setbinning 2
+;;;; set the MONO and the ZP
+sete 8359.00
+moveto zpx -10.97
+moveto zpy -4.89
+moveto zpz -1491.90
+moveto x 8322.05
+moveto y 5217.20
+setexp 0.30
+setbinning 2
+collect rep01_000401_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08359.0_eV_001of010.xrm
+collect rep01_000402_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08359.0_eV_002of010.xrm
+collect rep01_000403_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08359.0_eV_003of010.xrm
+collect rep01_000404_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08359.0_eV_004of010.xrm
+collect rep01_000405_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08359.0_eV_005of010.xrm
+collect rep01_000406_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08359.0_eV_006of010.xrm
+collect rep01_000407_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08359.0_eV_007of010.xrm
+collect rep01_000408_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08359.0_eV_008of010.xrm
+collect rep01_000409_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08359.0_eV_009of010.xrm
+collect rep01_000410_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08359.0_eV_010of010.xrm
+setexp 0.50
+setbinning 2
+moveto t 6.97
+moveto z 3552.55
+moveto x -5178.10
+moveto y 5217.10
+collect rep01_20161456_NCA_Pg41-10_pristine_fov08_XANES_08359.0_eV_001of003.xrm
+collect rep01_20161456_NCA_Pg41-10_pristine_fov08_XANES_08359.0_eV_002of003.xrm
+collect rep01_20161456_NCA_Pg41-10_pristine_fov08_XANES_08359.0_eV_003of003.xrm
+;;;; set the MONO and the ZP
+sete 8360.00
+moveto zpx -10.93
+moveto zpy -4.88
+moveto zpz -1486.82
+collect rep01_20161456_NCA_Pg41-10_pristine_fov08_XANES_08360.0_eV_001of003.xrm
+collect rep01_20161456_NCA_Pg41-10_pristine_fov08_XANES_08360.0_eV_002of003.xrm
+collect rep01_20161456_NCA_Pg41-10_pristine_fov08_XANES_08360.0_eV_003of003.xrm
+moveto x 8322.05
+moveto y 5217.20
+setexp 0.30
+setbinning 2
+collect rep01_000411_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08360.0_eV_001of010.xrm
+collect rep01_000412_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08360.0_eV_002of010.xrm
+collect rep01_000413_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08360.0_eV_003of010.xrm
+collect rep01_000414_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08360.0_eV_004of010.xrm
+collect rep01_000415_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08360.0_eV_005of010.xrm
+collect rep01_000416_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08360.0_eV_006of010.xrm
+collect rep01_000417_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08360.0_eV_007of010.xrm
+collect rep01_000418_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08360.0_eV_008of010.xrm
+collect rep01_000419_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08360.0_eV_009of010.xrm
+collect rep01_000420_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08360.0_eV_010of010.xrm
+setexp 0.50
+setbinning 2
+;;;; set the MONO and the ZP
+sete 8364.00
+moveto zpx -10.81
+moveto zpy -4.85
+moveto zpz -1466.47
+moveto x 8322.05
+moveto y 5217.20
+setexp 0.30
+setbinning 2
+collect rep01_000421_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08364.0_eV_001of010.xrm
+collect rep01_000422_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08364.0_eV_002of010.xrm
+collect rep01_000423_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08364.0_eV_003of010.xrm
+collect rep01_000424_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08364.0_eV_004of010.xrm
+collect rep01_000425_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08364.0_eV_005of010.xrm
+collect rep01_000426_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08364.0_eV_006of010.xrm
+collect rep01_000427_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08364.0_eV_007of010.xrm
+collect rep01_000428_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08364.0_eV_008of010.xrm
+collect rep01_000429_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08364.0_eV_009of010.xrm
+collect rep01_000430_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08364.0_eV_010of010.xrm
+setexp 0.50
+setbinning 2
+moveto t 6.97
+moveto z 3552.55
+moveto x -5178.10
+moveto y 5217.10
+collect rep01_20161456_NCA_Pg41-10_pristine_fov08_XANES_08364.0_eV_001of003.xrm
+collect rep01_20161456_NCA_Pg41-10_pristine_fov08_XANES_08364.0_eV_002of003.xrm
+collect rep01_20161456_NCA_Pg41-10_pristine_fov08_XANES_08364.0_eV_003of003.xrm
+;;;; set the MONO and the ZP
+sete 8368.00
+moveto zpx -10.69
+moveto zpy -4.82
+moveto zpz -1446.13
+collect rep01_20161456_NCA_Pg41-10_pristine_fov08_XANES_08368.0_eV_001of003.xrm
+collect rep01_20161456_NCA_Pg41-10_pristine_fov08_XANES_08368.0_eV_002of003.xrm
+collect rep01_20161456_NCA_Pg41-10_pristine_fov08_XANES_08368.0_eV_003of003.xrm
+moveto x 8322.05
+moveto y 5217.20
+setexp 0.30
+setbinning 2
+collect rep01_000431_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08368.0_eV_001of010.xrm
+collect rep01_000432_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08368.0_eV_002of010.xrm
+collect rep01_000433_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08368.0_eV_003of010.xrm
+collect rep01_000434_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08368.0_eV_004of010.xrm
+collect rep01_000435_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08368.0_eV_005of010.xrm
+collect rep01_000436_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08368.0_eV_006of010.xrm
+collect rep01_000437_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08368.0_eV_007of010.xrm
+collect rep01_000438_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08368.0_eV_008of010.xrm
+collect rep01_000439_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08368.0_eV_009of010.xrm
+collect rep01_000440_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08368.0_eV_010of010.xrm
+setexp 0.50
+setbinning 2
+;;;; set the MONO and the ZP
+sete 8372.00
+moveto zpx -10.56
+moveto zpy -4.79
+moveto zpz -1425.78
+moveto x 8322.05
+moveto y 5217.20
+setexp 0.30
+setbinning 2
+collect rep01_000441_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08372.0_eV_001of010.xrm
+collect rep01_000442_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08372.0_eV_002of010.xrm
+collect rep01_000443_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08372.0_eV_003of010.xrm
+collect rep01_000444_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08372.0_eV_004of010.xrm
+collect rep01_000445_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08372.0_eV_005of010.xrm
+collect rep01_000446_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08372.0_eV_006of010.xrm
+collect rep01_000447_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08372.0_eV_007of010.xrm
+collect rep01_000448_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08372.0_eV_008of010.xrm
+collect rep01_000449_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08372.0_eV_009of010.xrm
+collect rep01_000450_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08372.0_eV_010of010.xrm
+setexp 0.50
+setbinning 2
+moveto t 6.97
+moveto z 3552.55
+moveto x -5178.10
+moveto y 5217.10
+collect rep01_20161456_NCA_Pg41-10_pristine_fov08_XANES_08372.0_eV_001of003.xrm
+collect rep01_20161456_NCA_Pg41-10_pristine_fov08_XANES_08372.0_eV_002of003.xrm
+collect rep01_20161456_NCA_Pg41-10_pristine_fov08_XANES_08372.0_eV_003of003.xrm
+;;;; set the MONO and the ZP
+sete 8376.00
+moveto zpx -10.44
+moveto zpy -4.76
+moveto zpz -1405.43
+collect rep01_20161456_NCA_Pg41-10_pristine_fov08_XANES_08376.0_eV_001of003.xrm
+collect rep01_20161456_NCA_Pg41-10_pristine_fov08_XANES_08376.0_eV_002of003.xrm
+collect rep01_20161456_NCA_Pg41-10_pristine_fov08_XANES_08376.0_eV_003of003.xrm
+moveto x 8322.05
+moveto y 5217.20
+setexp 0.30
+setbinning 2
+collect rep01_000451_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08376.0_eV_001of010.xrm
+collect rep01_000452_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08376.0_eV_002of010.xrm
+collect rep01_000453_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08376.0_eV_003of010.xrm
+collect rep01_000454_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08376.0_eV_004of010.xrm
+collect rep01_000455_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08376.0_eV_005of010.xrm
+collect rep01_000456_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08376.0_eV_006of010.xrm
+collect rep01_000457_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08376.0_eV_007of010.xrm
+collect rep01_000458_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08376.0_eV_008of010.xrm
+collect rep01_000459_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08376.0_eV_009of010.xrm
+collect rep01_000460_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08376.0_eV_010of010.xrm
+setexp 0.50
+setbinning 2
+;;;; set the MONO and the ZP
+sete 8380.00
+moveto zpx -10.32
+moveto zpy -4.73
+moveto zpz -1385.09
+moveto x 8322.05
+moveto y 5217.20
+setexp 0.30
+setbinning 2
+collect rep01_000461_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08380.0_eV_001of010.xrm
+collect rep01_000462_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08380.0_eV_002of010.xrm
+collect rep01_000463_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08380.0_eV_003of010.xrm
+collect rep01_000464_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08380.0_eV_004of010.xrm
+collect rep01_000465_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08380.0_eV_005of010.xrm
+collect rep01_000466_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08380.0_eV_006of010.xrm
+collect rep01_000467_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08380.0_eV_007of010.xrm
+collect rep01_000468_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08380.0_eV_008of010.xrm
+collect rep01_000469_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08380.0_eV_009of010.xrm
+collect rep01_000470_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08380.0_eV_010of010.xrm
+setexp 0.50
+setbinning 2
+moveto t 6.97
+moveto z 3552.55
+moveto x -5178.10
+moveto y 5217.10
+collect rep01_20161456_NCA_Pg41-10_pristine_fov08_XANES_08380.0_eV_001of003.xrm
+collect rep01_20161456_NCA_Pg41-10_pristine_fov08_XANES_08380.0_eV_002of003.xrm
+collect rep01_20161456_NCA_Pg41-10_pristine_fov08_XANES_08380.0_eV_003of003.xrm
+;;;; set the MONO and the ZP
+sete 8384.00
+moveto zpx -10.19
+moveto zpy -4.70
+moveto zpz -1364.74
+collect rep01_20161456_NCA_Pg41-10_pristine_fov08_XANES_08384.0_eV_001of003.xrm
+collect rep01_20161456_NCA_Pg41-10_pristine_fov08_XANES_08384.0_eV_002of003.xrm
+collect rep01_20161456_NCA_Pg41-10_pristine_fov08_XANES_08384.0_eV_003of003.xrm
+moveto x 8322.05
+moveto y 5217.20
+setexp 0.30
+setbinning 2
+collect rep01_000471_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08384.0_eV_001of010.xrm
+collect rep01_000472_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08384.0_eV_002of010.xrm
+collect rep01_000473_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08384.0_eV_003of010.xrm
+collect rep01_000474_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08384.0_eV_004of010.xrm
+collect rep01_000475_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08384.0_eV_005of010.xrm
+collect rep01_000476_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08384.0_eV_006of010.xrm
+collect rep01_000477_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08384.0_eV_007of010.xrm
+collect rep01_000478_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08384.0_eV_008of010.xrm
+collect rep01_000479_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08384.0_eV_009of010.xrm
+collect rep01_000480_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08384.0_eV_010of010.xrm
+setexp 0.50
+setbinning 2
+;;;; set the MONO and the ZP
+sete 8388.00
+moveto zpx -10.07
+moveto zpy -4.67
+moveto zpz -1344.40
+moveto x 8322.05
+moveto y 5217.20
+setexp 0.30
+setbinning 2
+collect rep01_000481_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08388.0_eV_001of010.xrm
+collect rep01_000482_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08388.0_eV_002of010.xrm
+collect rep01_000483_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08388.0_eV_003of010.xrm
+collect rep01_000484_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08388.0_eV_004of010.xrm
+collect rep01_000485_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08388.0_eV_005of010.xrm
+collect rep01_000486_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08388.0_eV_006of010.xrm
+collect rep01_000487_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08388.0_eV_007of010.xrm
+collect rep01_000488_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08388.0_eV_008of010.xrm
+collect rep01_000489_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08388.0_eV_009of010.xrm
+collect rep01_000490_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08388.0_eV_010of010.xrm
+setexp 0.50
+setbinning 2
+moveto t 6.97
+moveto z 3552.55
+moveto x -5178.10
+moveto y 5217.10
+collect rep01_20161456_NCA_Pg41-10_pristine_fov08_XANES_08388.0_eV_001of003.xrm
+collect rep01_20161456_NCA_Pg41-10_pristine_fov08_XANES_08388.0_eV_002of003.xrm
+collect rep01_20161456_NCA_Pg41-10_pristine_fov08_XANES_08388.0_eV_003of003.xrm
+;;;; set the MONO and the ZP
+sete 8392.00
+moveto zpx -9.95
+moveto zpy -4.64
+moveto zpz -1324.05
+collect rep01_20161456_NCA_Pg41-10_pristine_fov08_XANES_08392.0_eV_001of003.xrm
+collect rep01_20161456_NCA_Pg41-10_pristine_fov08_XANES_08392.0_eV_002of003.xrm
+collect rep01_20161456_NCA_Pg41-10_pristine_fov08_XANES_08392.0_eV_003of003.xrm
+moveto x 8322.05
+moveto y 5217.20
+setexp 0.30
+setbinning 2
+collect rep01_000491_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08392.0_eV_001of010.xrm
+collect rep01_000492_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08392.0_eV_002of010.xrm
+collect rep01_000493_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08392.0_eV_003of010.xrm
+collect rep01_000494_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08392.0_eV_004of010.xrm
+collect rep01_000495_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08392.0_eV_005of010.xrm
+collect rep01_000496_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08392.0_eV_006of010.xrm
+collect rep01_000497_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08392.0_eV_007of010.xrm
+collect rep01_000498_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08392.0_eV_008of010.xrm
+collect rep01_000499_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08392.0_eV_009of010.xrm
+collect rep01_000500_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08392.0_eV_010of010.xrm
+setexp 0.50
+setbinning 2
+;;;; set the MONO and the ZP
+sete 8396.00
+moveto zpx -9.82
+moveto zpy -4.61
+moveto zpz -1303.71
+moveto x 8322.05
+moveto y 5217.20
+setexp 0.30
+setbinning 2
+collect rep01_000501_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08396.0_eV_001of010.xrm
+collect rep01_000502_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08396.0_eV_002of010.xrm
+collect rep01_000503_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08396.0_eV_003of010.xrm
+collect rep01_000504_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08396.0_eV_004of010.xrm
+collect rep01_000505_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08396.0_eV_005of010.xrm
+collect rep01_000506_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08396.0_eV_006of010.xrm
+collect rep01_000507_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08396.0_eV_007of010.xrm
+collect rep01_000508_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08396.0_eV_008of010.xrm
+collect rep01_000509_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08396.0_eV_009of010.xrm
+collect rep01_000510_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08396.0_eV_010of010.xrm
+setexp 0.50
+setbinning 2
+moveto t 6.97
+moveto z 3552.55
+moveto x -5178.10
+moveto y 5217.10
+collect rep01_20161456_NCA_Pg41-10_pristine_fov08_XANES_08396.0_eV_001of003.xrm
+collect rep01_20161456_NCA_Pg41-10_pristine_fov08_XANES_08396.0_eV_002of003.xrm
+collect rep01_20161456_NCA_Pg41-10_pristine_fov08_XANES_08396.0_eV_003of003.xrm
+;;;; set the MONO and the ZP
+sete 8400.00
+moveto zpx -9.70
+moveto zpy -4.58
+moveto zpz -1283.36
+collect rep01_20161456_NCA_Pg41-10_pristine_fov08_XANES_08400.0_eV_001of003.xrm
+collect rep01_20161456_NCA_Pg41-10_pristine_fov08_XANES_08400.0_eV_002of003.xrm
+collect rep01_20161456_NCA_Pg41-10_pristine_fov08_XANES_08400.0_eV_003of003.xrm
+moveto x 8322.05
+moveto y 5217.20
+setexp 0.30
+setbinning 2
+collect rep01_000511_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08400.0_eV_001of010.xrm
+collect rep01_000512_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08400.0_eV_002of010.xrm
+collect rep01_000513_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08400.0_eV_003of010.xrm
+collect rep01_000514_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08400.0_eV_004of010.xrm
+collect rep01_000515_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08400.0_eV_005of010.xrm
+collect rep01_000516_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08400.0_eV_006of010.xrm
+collect rep01_000517_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08400.0_eV_007of010.xrm
+collect rep01_000518_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08400.0_eV_008of010.xrm
+collect rep01_000519_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08400.0_eV_009of010.xrm
+collect rep01_000520_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08400.0_eV_010of010.xrm
+setexp 0.50
+setbinning 2
+;;;; set the MONO and the ZP
+sete 8408.00
+moveto zpx -9.45
+moveto zpy -4.52
+moveto zpz -1242.67
+moveto x 8322.05
+moveto y 5217.20
+setexp 0.30
+setbinning 2
+collect rep01_000521_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08408.0_eV_001of010.xrm
+collect rep01_000522_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08408.0_eV_002of010.xrm
+collect rep01_000523_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08408.0_eV_003of010.xrm
+collect rep01_000524_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08408.0_eV_004of010.xrm
+collect rep01_000525_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08408.0_eV_005of010.xrm
+collect rep01_000526_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08408.0_eV_006of010.xrm
+collect rep01_000527_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08408.0_eV_007of010.xrm
+collect rep01_000528_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08408.0_eV_008of010.xrm
+collect rep01_000529_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08408.0_eV_009of010.xrm
+collect rep01_000530_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08408.0_eV_010of010.xrm
+setexp 0.50
+setbinning 2
+moveto t 6.97
+moveto z 3552.55
+moveto x -5178.10
+moveto y 5217.10
+collect rep01_20161456_NCA_Pg41-10_pristine_fov08_XANES_08408.0_eV_001of003.xrm
+collect rep01_20161456_NCA_Pg41-10_pristine_fov08_XANES_08408.0_eV_002of003.xrm
+collect rep01_20161456_NCA_Pg41-10_pristine_fov08_XANES_08408.0_eV_003of003.xrm
+;;;; set the MONO and the ZP
+sete 8416.00
+moveto zpx -9.21
+moveto zpy -4.46
+moveto zpz -1201.98
+collect rep01_20161456_NCA_Pg41-10_pristine_fov08_XANES_08416.0_eV_001of003.xrm
+collect rep01_20161456_NCA_Pg41-10_pristine_fov08_XANES_08416.0_eV_002of003.xrm
+collect rep01_20161456_NCA_Pg41-10_pristine_fov08_XANES_08416.0_eV_003of003.xrm
+moveto x 8322.05
+moveto y 5217.20
+setexp 0.30
+setbinning 2
+collect rep01_000531_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08416.0_eV_001of010.xrm
+collect rep01_000532_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08416.0_eV_002of010.xrm
+collect rep01_000533_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08416.0_eV_003of010.xrm
+collect rep01_000534_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08416.0_eV_004of010.xrm
+collect rep01_000535_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08416.0_eV_005of010.xrm
+collect rep01_000536_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08416.0_eV_006of010.xrm
+collect rep01_000537_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08416.0_eV_007of010.xrm
+collect rep01_000538_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08416.0_eV_008of010.xrm
+collect rep01_000539_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08416.0_eV_009of010.xrm
+collect rep01_000540_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08416.0_eV_010of010.xrm
+setexp 0.50
+setbinning 2
+;;;; set the MONO and the ZP
+sete 8424.00
+moveto zpx -8.96
+moveto zpy -4.40
+moveto zpz -1161.29
+moveto x 8322.05
+moveto y 5217.20
+setexp 0.30
+setbinning 2
+collect rep01_000541_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08424.0_eV_001of010.xrm
+collect rep01_000542_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08424.0_eV_002of010.xrm
+collect rep01_000543_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08424.0_eV_003of010.xrm
+collect rep01_000544_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08424.0_eV_004of010.xrm
+collect rep01_000545_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08424.0_eV_005of010.xrm
+collect rep01_000546_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08424.0_eV_006of010.xrm
+collect rep01_000547_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08424.0_eV_007of010.xrm
+collect rep01_000548_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08424.0_eV_008of010.xrm
+collect rep01_000549_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08424.0_eV_009of010.xrm
+collect rep01_000550_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08424.0_eV_010of010.xrm
+setexp 0.50
+setbinning 2
+moveto t 6.97
+moveto z 3552.55
+moveto x -5178.10
+moveto y 5217.10
+collect rep01_20161456_NCA_Pg41-10_pristine_fov08_XANES_08424.0_eV_001of003.xrm
+collect rep01_20161456_NCA_Pg41-10_pristine_fov08_XANES_08424.0_eV_002of003.xrm
+collect rep01_20161456_NCA_Pg41-10_pristine_fov08_XANES_08424.0_eV_003of003.xrm
+;;;; set the MONO and the ZP
+sete 8432.00
+moveto zpx -8.71
+moveto zpy -4.34
+moveto zpz -1120.59
+collect rep01_20161456_NCA_Pg41-10_pristine_fov08_XANES_08432.0_eV_001of003.xrm
+collect rep01_20161456_NCA_Pg41-10_pristine_fov08_XANES_08432.0_eV_002of003.xrm
+collect rep01_20161456_NCA_Pg41-10_pristine_fov08_XANES_08432.0_eV_003of003.xrm
+moveto x 8322.05
+moveto y 5217.20
+setexp 0.30
+setbinning 2
+collect rep01_000551_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08432.0_eV_001of010.xrm
+collect rep01_000552_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08432.0_eV_002of010.xrm
+collect rep01_000553_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08432.0_eV_003of010.xrm
+collect rep01_000554_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08432.0_eV_004of010.xrm
+collect rep01_000555_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08432.0_eV_005of010.xrm
+collect rep01_000556_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08432.0_eV_006of010.xrm
+collect rep01_000557_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08432.0_eV_007of010.xrm
+collect rep01_000558_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08432.0_eV_008of010.xrm
+collect rep01_000559_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08432.0_eV_009of010.xrm
+collect rep01_000560_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08432.0_eV_010of010.xrm
+setexp 0.50
+setbinning 2
+;;;; set the MONO and the ZP
+sete 8440.00
+moveto zpx -8.47
+moveto zpy -4.28
+moveto zpz -1079.90
+moveto x 8322.05
+moveto y 5217.20
+setexp 0.30
+setbinning 2
+collect rep01_000561_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08440.0_eV_001of010.xrm
+collect rep01_000562_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08440.0_eV_002of010.xrm
+collect rep01_000563_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08440.0_eV_003of010.xrm
+collect rep01_000564_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08440.0_eV_004of010.xrm
+collect rep01_000565_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08440.0_eV_005of010.xrm
+collect rep01_000566_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08440.0_eV_006of010.xrm
+collect rep01_000567_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08440.0_eV_007of010.xrm
+collect rep01_000568_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08440.0_eV_008of010.xrm
+collect rep01_000569_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08440.0_eV_009of010.xrm
+collect rep01_000570_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08440.0_eV_010of010.xrm
+setexp 0.50
+setbinning 2
+moveto t 6.97
+moveto z 3552.55
+moveto x -5178.10
+moveto y 5217.10
+collect rep01_20161456_NCA_Pg41-10_pristine_fov08_XANES_08440.0_eV_001of003.xrm
+collect rep01_20161456_NCA_Pg41-10_pristine_fov08_XANES_08440.0_eV_002of003.xrm
+collect rep01_20161456_NCA_Pg41-10_pristine_fov08_XANES_08440.0_eV_003of003.xrm
+;;;; set the MONO and the ZP
+sete 8490.00
+moveto zpx -6.92
+moveto zpy -3.90
+moveto zpz -825.58
+collect rep01_20161456_NCA_Pg41-10_pristine_fov08_XANES_08490.0_eV_001of003.xrm
+collect rep01_20161456_NCA_Pg41-10_pristine_fov08_XANES_08490.0_eV_002of003.xrm
+collect rep01_20161456_NCA_Pg41-10_pristine_fov08_XANES_08490.0_eV_003of003.xrm
+moveto x 8322.05
+moveto y 5217.20
+setexp 0.30
+setbinning 2
+collect rep01_000571_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08490.0_eV_001of010.xrm
+collect rep01_000572_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08490.0_eV_002of010.xrm
+collect rep01_000573_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08490.0_eV_003of010.xrm
+collect rep01_000574_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08490.0_eV_004of010.xrm
+collect rep01_000575_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08490.0_eV_005of010.xrm
+collect rep01_000576_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08490.0_eV_006of010.xrm
+collect rep01_000577_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08490.0_eV_007of010.xrm
+collect rep01_000578_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08490.0_eV_008of010.xrm
+collect rep01_000579_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08490.0_eV_009of010.xrm
+collect rep01_000580_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08490.0_eV_010of010.xrm
+setexp 0.50
+setbinning 2
+;;;; set the MONO and the ZP
+sete 8540.00
+moveto zpx -5.38
+moveto zpy -3.53
+moveto zpz -571.26
+moveto x 8322.05
+moveto y 5217.20
+setexp 0.30
+setbinning 2
+collect rep01_000581_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08540.0_eV_001of010.xrm
+collect rep01_000582_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08540.0_eV_002of010.xrm
+collect rep01_000583_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08540.0_eV_003of010.xrm
+collect rep01_000584_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08540.0_eV_004of010.xrm
+collect rep01_000585_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08540.0_eV_005of010.xrm
+collect rep01_000586_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08540.0_eV_006of010.xrm
+collect rep01_000587_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08540.0_eV_007of010.xrm
+collect rep01_000588_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08540.0_eV_008of010.xrm
+collect rep01_000589_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08540.0_eV_009of010.xrm
+collect rep01_000590_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08540.0_eV_010of010.xrm
+setexp 0.50
+setbinning 2
+moveto t 6.97
+moveto z 3552.55
+moveto x -5178.10
+moveto y 5217.10
+collect rep01_20161456_NCA_Pg41-10_pristine_fov08_XANES_08540.0_eV_001of003.xrm
+collect rep01_20161456_NCA_Pg41-10_pristine_fov08_XANES_08540.0_eV_002of003.xrm
+collect rep01_20161456_NCA_Pg41-10_pristine_fov08_XANES_08540.0_eV_003of003.xrm
+;;;; set the MONO and the ZP
+sete 8590.00
+moveto zpx -3.84
+moveto zpy -3.15
+moveto zpz -316.93
+collect rep01_20161456_NCA_Pg41-10_pristine_fov08_XANES_08590.0_eV_001of003.xrm
+collect rep01_20161456_NCA_Pg41-10_pristine_fov08_XANES_08590.0_eV_002of003.xrm
+collect rep01_20161456_NCA_Pg41-10_pristine_fov08_XANES_08590.0_eV_003of003.xrm
+moveto x 8322.05
+moveto y 5217.20
+setexp 0.30
+setbinning 2
+collect rep01_000591_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08590.0_eV_001of010.xrm
+collect rep01_000592_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08590.0_eV_002of010.xrm
+collect rep01_000593_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08590.0_eV_003of010.xrm
+collect rep01_000594_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08590.0_eV_004of010.xrm
+collect rep01_000595_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08590.0_eV_005of010.xrm
+collect rep01_000596_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08590.0_eV_006of010.xrm
+collect rep01_000597_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08590.0_eV_007of010.xrm
+collect rep01_000598_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08590.0_eV_008of010.xrm
+collect rep01_000599_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08590.0_eV_009of010.xrm
+collect rep01_000600_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08590.0_eV_010of010.xrm
+setexp 0.50
+setbinning 2
+;;;; set the MONO and the ZP
+sete 8640.00
+moveto zpx -2.29
+moveto zpy -2.78
+moveto zpz -62.61
+moveto x 8322.05
+moveto y 5217.20
+setexp 0.30
+setbinning 2
+collect rep01_000601_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08640.0_eV_001of010.xrm
+collect rep01_000602_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08640.0_eV_002of010.xrm
+collect rep01_000603_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08640.0_eV_003of010.xrm
+collect rep01_000604_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08640.0_eV_004of010.xrm
+collect rep01_000605_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08640.0_eV_005of010.xrm
+collect rep01_000606_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08640.0_eV_006of010.xrm
+collect rep01_000607_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08640.0_eV_007of010.xrm
+collect rep01_000608_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08640.0_eV_008of010.xrm
+collect rep01_000609_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08640.0_eV_009of010.xrm
+collect rep01_000610_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08640.0_eV_010of010.xrm
+setexp 0.50
+setbinning 2
+moveto t 6.97
+moveto z 3552.55
+moveto x -5178.10
+moveto y 5217.10
+collect rep01_20161456_NCA_Pg41-10_pristine_fov08_XANES_08640.0_eV_001of003.xrm
+collect rep01_20161456_NCA_Pg41-10_pristine_fov08_XANES_08640.0_eV_002of003.xrm
+collect rep01_20161456_NCA_Pg41-10_pristine_fov08_XANES_08640.0_eV_003of003.xrm
+;;;; set the MONO and the ZP
+sete 8690.00
+moveto zpx -0.75
+moveto zpy -2.40
+moveto zpz 191.71
+collect rep01_20161456_NCA_Pg41-10_pristine_fov08_XANES_08690.0_eV_001of003.xrm
+collect rep01_20161456_NCA_Pg41-10_pristine_fov08_XANES_08690.0_eV_002of003.xrm
+collect rep01_20161456_NCA_Pg41-10_pristine_fov08_XANES_08690.0_eV_003of003.xrm
+moveto x 8322.05
+moveto y 5217.20
+setexp 0.30
+setbinning 2
+collect rep01_000611_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08690.0_eV_001of010.xrm
+collect rep01_000612_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08690.0_eV_002of010.xrm
+collect rep01_000613_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08690.0_eV_003of010.xrm
+collect rep01_000614_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08690.0_eV_004of010.xrm
+collect rep01_000615_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08690.0_eV_005of010.xrm
+collect rep01_000616_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08690.0_eV_006of010.xrm
+collect rep01_000617_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08690.0_eV_007of010.xrm
+collect rep01_000618_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08690.0_eV_008of010.xrm
+collect rep01_000619_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08690.0_eV_009of010.xrm
+collect rep01_000620_ref_20161456_NCA_Pg41-10_pristine_fov08_XANES_08690.0_eV_010of010.xrm
+setexp 0.50
+setbinning 2
