@@ -27,6 +27,8 @@ import os
 import shutil
 import warnings
 from collections import namedtuple
+import sys
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir)))
 
 import h5py
 import numpy as np
@@ -449,7 +451,10 @@ class PtychographyImportTest(XanespyTestCase):
             # Check that things are ordered by energy
             saved_Es = f['/merged/imported/energies'].value
             np.testing.assert_array_equal(saved_Es, np.sort(saved_Es))
+            # Construct the expected path relative to the current directory
             relpath = "ptycho-data-als/NS_160406074-{}-energy/160406074/{}/NS_160406074.cxi"
+            relpath = os.path.join(TEST_DIR, relpath)
+            # Compare the expeected file names
             sorted_files = [[bytes(relpath.format("low", "001"), 'ascii'),
                              bytes(relpath.format("low", "009"), 'ascii'),
                              bytes(relpath.format("high", "021"), 'ascii'),]]
@@ -476,7 +481,7 @@ class APSImportTest(XanespyTestCase):
         os.mkdir(EMPTY_DIR)
         try:
             with self.assertRaisesRegex(exceptions.DataNotFoundError,
-                                        'xanespy-tests/temp-empty-dir'):
+                                        '/temp-empty-dir'):
                 import_aps_8BM_frameset(EMPTY_DIR, hdf_filename="test-file.hdf")
         finally:
             # Clean up by deleting any temporary files/directories
@@ -646,13 +651,14 @@ class SSRLImportTest(XanespyTestCase):
         pixel_sizes = np.array([[1, 2], [1, 2]])
         scales, translations = magnification_correction(imgs, pixel_sizes)
         # Check that the right shape result is returns
-        self.assertEqual(scales.shape, (2, 2))
+        self.assertEqual(scales.shape, (2, 2, 2))
+        np.testing.assert_equal(scales[..., 0], scales[..., 1])
         # Check that the first result is not corrected
-        self.assertEqual(scales[0,0], 1.)
-        self.assertEqual(list(translations[0, 0]), [0, 0])
-        # Check the values for translation and scale for the changed image
-        self.assertEqual(scales[0,1], 0.5)
-        self.assertEqual(list(translations[0,1]), [1., 1.])
+        np.testing.assert_equal(scales[0, 0], (1., 1.))
+        np.testing.assert_equal(translations[0, 0], (0, 0))
+        # # Check the values for translation and scale for the changed image
+        np.testing.assert_equal(scales[0, 1], (0.5, 0.5))
+        np.testing.assert_equal(translations[0,1], (1., 1.))
 
 
 class TXMStoreTest(XanespyTestCase):
@@ -862,8 +868,12 @@ class TXMFramesetTest(XanespyTestCase):
     def test_align_frames(self):
         # Perform an excessive translation to ensure data are correctable
         with self.frameset.store(mode='r+') as store:
+            Ts = np.identity(3)
+            Ts = np.copy(np.broadcast_to(Ts, (*store.absorbances.shape[0:2], 3, 3)))
+            Ts[0, 1, 0, 2] = 100
+            Ts[0, 1, 1, 2] = 100
             transform_images(store.absorbances,
-                             translations=np.array([[0, 0],[100, 100]]),
+                             transformations=Ts,
                              out=store.absorbances)
             old_imgs = store.absorbances.value
         # Check that reference_frame arguments of the wrong shape are rejected
@@ -1154,11 +1164,13 @@ class XanesMathTest(XanespyTestCase):
 
     def test_transform_images(self):
         data = self.coins().astype('int')
-        ret = transform_images(data)
+        Ts = np.identity(3)
+        Ts = np.broadcast_to(Ts, shape=(*data.shape[0:2], 3, 3))
+        ret = transform_images(data, transformations=Ts)
         self.assertEqual(ret.dtype, np.float)
         # Test complex images
         data = self.coins().astype(np.complex)
-        ret = transform_images(data)
+        ret = transform_images(data, transformations=Ts)
         self.assertEqual(ret.dtype, np.complex)
 
     # def test_extract_signals(self):
