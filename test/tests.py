@@ -37,7 +37,7 @@ import matplotlib
 matplotlib.use("Agg")
 from matplotlib.colors import Normalize
 import pytz
-from skimage import data
+from skimage import data, transform
 
 from cases import XanespyTestCase
 from xanespy import exceptions
@@ -51,7 +51,7 @@ from xanespy.xanes_math import (transform_images, direct_whitelines,
                                 apply_references, iter_indices,
                                 predict_edge, fit_kedge, kedge_params,
                                 KEdgeParams, extract_signals_nmf,
-                                guess_kedge)
+                                guess_kedge, transformation_matrices)
 from xanespy.edges import KEdge, k_edges, l_edges
 from xanespy.importers import (import_ssrl_frameset,
                                import_aps_8BM_frameset,
@@ -890,41 +890,47 @@ class TXMFramesetTest(XanespyTestCase):
     def test_deferred_transformations(self):
         """Test that the system properly stores data transformations for later
         processing."""
+        with self.frameset.store() as store:
+            data_shape = store.absorbances.shape
         # Check that staged transforms are initially None
-        self.assertTrue(self.frameset._translations is None)
-        self.assertTrue(self.frameset._scales is None)
-        self.assertTrue(self.frameset._rotations is None)
+        self.assertTrue(self.frameset._transformations is None)
         # Stage some transformations
         self.frameset.stage_transformations(
-            translations=np.array([[0, 0],[1, 1]]),
-            scales=np.array([[1, 0.5]]),
-            rotations=np.array([[0, 3]])
+            translations=np.array([[[0, 0],[1, 1]]]),
+            scales=np.array([[[1, 1], [0.5, 0.5]]]),
+            rotations=np.array([[[0], [3]]])
         )
         # Check that the transformations have been saved
-        self.assertFalse(self.frameset._translations is None)
-        self.assertFalse(self.frameset._scales is None)
-        self.assertFalse(self.frameset._rotations is None)
-        # Check that transformations accumulated
-        self.frameset.stage_transformations(
-            translations=np.array([[0, 0],[1, 1]]),
-            scales=np.array([[1, 0.5]]),
-            rotations=np.array([[0, 3]])
+        self.assertFalse(self.frameset._transformations is None)
+        self.assertEqual(
+            self.frameset._transformations.shape,
+            (1, 2, 3, 3)
         )
-        self.assertTrue(np.array_equal(self.frameset._translations,
-                                       np.array([[0, 0],[2, 2]])))
-        self.assertTrue(np.array_equal(self.frameset._scales,
-                                       np.array([[1., 0.25]])))
-        self.assertTrue(np.array_equal(self.frameset._rotations,
-                                       np.array([[0, 6]])))
+        t1 = transform.AffineTransform(scale=(0.5, 0.5), rotation=3, translation=(1, 1))
+        np.testing.assert_allclose(
+            self.frameset._transformations[0, 1],
+            t1.params
+        )
+        # # Check that transformations accumulated
+        # Stage some transformations
+        self.frameset.stage_transformations(
+            translations=np.array([[[0, 0],[1, 1]]]),
+            scales=np.array([[[1, 1], [0.5, 0.5]]]),
+            rotations=np.array([[[0], [1.5]]])
+        )
+        t2 = transform.AffineTransform(scale=(0.5, 0.5), rotation=1.5, translation=(1, 1))
+        cumulative = t1.params @ t2.params
+        np.testing.assert_allclose(
+            self.frameset._transformations[0, 1],
+            cumulative
+        )
         # Check that transformations are reset after being applied
         self.frameset.apply_transformations(commit=True, crop=True)
-        self.assertEqual(self.frameset._translations, None)
-        self.assertEqual(self.frameset._scales, None)
-        self.assertEqual(self.frameset._rotations, None)
-        # Check that cropping was successfully applied
+        self.assertEqual(self.frameset._transformations, None)
+        # # Check that cropping was successfully applied
         with self.frameset.store() as store:
             new_shape = store.absorbances.shape
-        self.assertEqual(new_shape, (1, 2, 1022, 1022))
+        self.assertEqual(new_shape, (1, 2, 1023, 1023))
 
     def test_spectrum(self):
         spectrum = self.frameset.spectrum()
@@ -990,6 +996,38 @@ class XanesMathTest(XanespyTestCase):
         S = 1/(1+np.exp(-(self.K_Es-8353))) + 0.1*np.sin(4*self.K_Es-4*8353)
         coins = (coins * S.reshape(3, 61,1,1))
         return coins
+
+    def test_transformation_matrices(self):
+        r = np.array([math.pi/2])
+        s = np.array([0.5, 0.75])
+        t = np.array([20, 25])
+        # Rotation only
+        res = transformation_matrices(rotations=r)
+        expected = np.array([
+            [0, -1, 0],
+            [1,  0, 0],
+            [0,  0, 1],
+        ])
+        np.testing.assert_almost_equal(res, expected)
+        # Translation only
+        res = transformation_matrices(translations=t)
+        expected = np.array([
+            [1, 0, 20],
+            [0, 1, 25],
+            [0, 0,  1],
+        ])
+        np.testing.assert_almost_equal(res, expected)
+        # Scaling only
+        res = transformation_matrices(scales=s)
+        expected = np.array([
+            [0.5, 0,    0],
+            [0,   0.75, 0],
+            [0,   0,    1],
+        ])
+        np.testing.assert_almost_equal(res, expected)
+        # No transformations should raise a value error
+        with self.assertRaises(ValueError):
+            transformation_matrices()
 
     def test_iter_indices(self):
         """Check that frame_indices method returns the right slices."""
@@ -1194,7 +1232,6 @@ class UtilitiesTest(XanespyTestCase):
 
 
 class XradiaTest(XanespyTestCase):
-
     def test_pixel_size(self):
         sample_filename = "rep01_20161456_ssrl-test-data_08324.0_eV_001of003.xrm"
         xrm = XRMFile(os.path.join(SSRL_DIR, sample_filename), flavor="ssrl")
