@@ -82,10 +82,6 @@ class Zoneplate():
         )
         return pos
 
-    def z_position(self, energy: float):
-        """Predict the z-position of the zoneplate for the given energy."""
-        raise NotImplementedError("Use position().z instead")
-
 
 class Detector(Zoneplate):
     """A calibration object for the position of the detector."""

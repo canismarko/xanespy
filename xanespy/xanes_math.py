@@ -72,7 +72,6 @@ def apply_internal_reference(intensities, out=None):
     log.debug("Starting internal reference correction")
     if out is None:
         out = np.empty_like(intensities)
-
     def apply_ref(idx):
         # Calculate background intensity using thresholding
         log.debug("Applying reference for frame %s", idx)
@@ -85,17 +84,25 @@ def apply_internal_reference(intensities, out=None):
         log.debug("I0 for frame %s = %f", idx, I_0)
         # Calculate absorbance based on background
         absorbance = np.log(I_0 / np.abs(frame))
-        # Calculate relative phase shift
-        phase = np.angle(frame)
-        phase - np.median((phase * graymask)[graymask > 0])
-        # The phase data has a gradient in the background, so remove it
-        x,y = np.meshgrid(np.arange(phase.shape[-1]),np.arange(phase.shape[-2]))
-        A = np.column_stack([y.flatten(), x.flatten(), np.ones_like(x.flatten())])
-        p, residuals, rank, s = linalg.lstsq(A, phase.flatten())
-        bg = p[0] * y + p[1] * x + p[2]
-        phase = phase - bg
-        j = complex(0, 1)
-        out[idx] = phase + j*absorbance
+        if np.iscomplexobj(out):
+            # Calculate relative phase shift if complex data is required
+            phase = np.angle(frame)
+            phase - np.median((phase * graymask)[graymask > 0])
+            # The phase data has a gradient in the background, so remove it
+            x, y = np.meshgrid(np.arange(phase.shape[-1]),
+                               np.arange(phase.shape[-2]))
+            A = np.column_stack([y.flatten(),
+                                 x.flatten(),
+                                 np.ones_like(x.flatten())])
+            p, residuals, rank, s = linalg.lstsq(A, phase.flatten())
+            bg = p[0] * y + p[1] * x + p[2]
+            # Prepare the complex output data
+            phase = phase - bg
+            j = complex(0, 1)
+            out[idx] = phase + j*absorbance
+        else:
+            # Real data (optical-depth) only
+            out[idx] = absorbance
         log.debug("Applied internal reference for frame %s", idx)
     # Call the actual function for each frame
     iter_frames = iter_indices(intensities, leftover_dims=2,
@@ -353,16 +360,17 @@ def particle_labels(frames: np.ndarray, energies: np.ndarray, edge,
 
 
 kedge_params = (
-    'scale', 'voffset', 'E0', # Global parameters
-    'sigw', # Sharpness of the edge sigmoid
-    'pre_m', 'pre_b', # Linear pre-edge slope/intercept
-    'ga', 'gb', 'gc', # Gaussian height, center and width
+    'scale', 'voffset', 'E0',  # Global parameters
+    'sigw',  # Sharpness of the edge sigmoid
+    'pre_m', 'pre_b',  # Linear pre-edge slope/intercept
+    'ga', 'gb', 'gc',  # Gaussian height, center and width
 )
 KEdgeParams = namedtuple('KEdgeParams', kedge_params)
 
 
 def predict_edge(energies, *params):
-    """Defines the curve function that gets fit to the data for an absorbance K-edge.
+    """Defines the curve function that gets fit to the data for an
+    absorbance K-edge.
 
     Returns a numpy array with predicted absorbance values.
 
@@ -373,6 +381,7 @@ def predict_edge(energies, *params):
     - *params : The curve parameters that should be used for the
        prediction. Their order is described by kedge_params
        variable.
+
     """
     # Named tuple to help keep track of parameters
     Params = namedtuple('Params', kedge_params)
@@ -420,11 +429,11 @@ def guess_kedge(spectrum, energies, edge):
     # Estimate the whiteline Gaussian parameters
     ga = 5 * (np.max(spectrum) - scale - voffset)
     gb = energies[np.argmax(spectrum)] - E0
-    gc = 4 # Arbitrary choice, should improve this in the future
+    gc = 4  # Arbitrary choice, should improve this in the future
     # Construct the parameters tuple
     params = KEdgeParams(scale=scale, voffset=voffset, E0=E0,
                          sigw=0.5, pre_m=0, pre_b=0,
-                         ga=ga, gb=gb, gc=4)
+                         ga=ga, gb=gb, gc=gc)
     return params
 
 
@@ -437,8 +446,8 @@ class _fit_spectrum():
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
             try:
-                popt, pcov = curve_fit(f=predict_edge, xdata=Es, ydata=Is, p0=self.p0)
-                # popt = np.random.random(len(self.p0)) # Fast result for testing
+                popt, pcov = curve_fit(f=predict_edge, xdata=Es,
+                                       ydata=Is, p0=self.p0)
             except RuntimeError:
                 # Failed fitting, so set everything to not-a-number
                 popt = np.empty((len(self.p0),))
@@ -483,7 +492,7 @@ def fit_kedge(spectra, energies, p0):
                             desc="Fitting spectra")
     f = _fit_spectrum(p0=p0)
     with mp.Pool() as pool:
-        chunksize = 223 # Prime number just for kicks
+        chunksize = 223  # Prime number just for kicks
         result = pool.starmap(f, spectra_iter, chunksize=chunksize)
         # result.wait()
         pool.close()
@@ -700,6 +709,7 @@ def register_correlations(frames, reference, upsample_factor=10,
     """
     t_shape = (*frames.shape[:-2], 2)
     translations = np.empty(shape=t_shape, dtype=np.float)
+
     def get_translation(idx):
         frm = frames[idx]
         results = feature.register_translation(reference,
@@ -718,15 +728,27 @@ def register_correlations(frames, reference, upsample_factor=10,
 
 def register_template(frames, reference, template, desc="Registering"):
     """Calculate the relative translation between the reference image and
-    each image in `frames` using a template matching algorithm.
+    each image in `frames` using a template matching algorithm. The
+    `register_correlations` algorithm is simpler to use in most cases
+    but sometimes results in unreasonable results; in those cases,
+    this method can be more reliable to achieve a first approximation.
 
     Arguments
     ---------
+
+    - frames : An array of 2D frames that will be registered.
+
+    - reference : A 2D frame of similar shape to those in
+      `frames`. All other frames will be aligned to this one.
+
+    - template : A 2D array (smaller than frames and reference) that
+      will be identified in each frame and used for alignment.
 
     - desc (str) : Description to put in the progress bar.
 
     Returns: Array with same dimensions as 0th axis of `frames`
     containing (x, y) translations for each frame.
+
     """
     t_shape = (*frames.shape[:-2], 2)
     translations = np.empty(shape=t_shape, dtype=np.float)

@@ -53,7 +53,9 @@ from xanespy.xanes_math import (transform_images, direct_whitelines,
                                 apply_references, iter_indices,
                                 predict_edge, fit_kedge, kedge_params,
                                 KEdgeParams, extract_signals_nmf,
-                                guess_kedge, transformation_matrices)
+                                guess_kedge, transformation_matrices,
+                                apply_internal_reference,
+                                register_template, _fit_spectrum)
 from xanespy.edges import KEdge, k_edges, l_edges
 from xanespy.importers import (import_ssrl_frameset,
                                import_aps_8BM_frameset,
@@ -66,6 +68,7 @@ from xanespy.xradia import XRMFile
 from xanespy.beamlines import (sector8_xanes_script, ssrl6_xanes_script,
                                Zoneplate, ZoneplatePoint, Detector)
 from xanespy.txmstore import TXMStore
+
 
 TEST_DIR = os.path.dirname(__file__)
 SSRL_DIR = os.path.join(TEST_DIR, 'txm-data-ssrl')
@@ -981,7 +984,6 @@ class TXMFramesetTest(XanespyTestCase):
         self.frameset.fork_data_group('new_group')
 
 
-
 class XanesMathTest(XanespyTestCase):
 
     def setUp(self):
@@ -1006,6 +1008,111 @@ class XanesMathTest(XanespyTestCase):
         S = 1/(1+np.exp(-(self.K_Es-8353))) + 0.1*np.sin(4*self.K_Es-4*8353)
         coins = (coins * S.reshape(3, 61,1,1))
         return coins
+
+    def test_predict_edge(self):
+        params = KEdgeParams(
+            scale=1, voffset=0, E0=8353,
+            sigw=1,
+            pre_m=0, pre_b=0,
+            ga=0, gb=1, gc=1,
+        )
+        x = np.linspace(8330, 8440)
+        result = predict_edge(x, *params)
+        # Predict the expected result for arctan function
+        expected = np.arctan(x-8353) / np.pi + 1/2
+        np.testing.assert_equal(result, expected)
+
+    def test_register_template(self):
+        # Prepare some sample data arrays for registration
+        frame0 = np.array([
+            [1, 1, 1, 0, 0],
+            [1, 3, 1, 0, 0],
+            [1, 1, 1, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+        ])
+        frame1 = np.array([
+            [0, 0, 0, 0, 0],
+            [0, 1, 1, 1, 0],
+            [0, 1, 3, 1, 0],
+            [0, 1, 1, 1, 0],
+            [0, 0, 0, 0, 0],
+        ])
+        frames = np.array([frame0, frame1])
+        template = np.array([
+            [2, 2, 2],
+            [2, 6, 2],
+            [2, 2, 2],
+        ])
+        # Do the actual registration
+        results = register_template(frames, reference=frame0, template=template)
+        # Compare results
+        expected = np.array([[0, 0], [1, 1]])
+        np.testing.assert_equal(results, expected)
+
+
+    def test_fit_spectrum(self):
+        params = KEdgeParams(
+            scale=1, voffset=0, E0=8353,
+            sigw=1,
+            pre_m=0, pre_b=0,
+            ga=0, gb=1, gc=1,
+        )
+        Es = np.linspace(8250, 8640)
+        predicted = predict_edge(Es, *params)
+        # Fit against the initial parameters and check that it returns
+        # the same params
+        func = _fit_spectrum(params)
+        result = func(predicted, Es)
+        np.testing.assert_equal(result, params)
+        # Test ridiculously bad fits return `nan`
+        params = KEdgeParams(
+            scale=0, voffset=0, E0=0,
+            sigw=1,
+            pre_m=0, pre_b=0,
+            ga=0, gb=1, gc=1,
+        )
+        func = _fit_spectrum(params)
+        result = func(predicted, Es)
+        np.testing.assert_equal(result, [np.nan] * 9)
+
+
+    def test_apply_internal_reference(self):
+        # With real data
+        d = np.array([[
+            [1., 1.,  1.,   1.,  1.],
+            [1., 0.5, 0.5,  0.5, 1.],
+            [1., 0.5, 0.05, 0.5, 1.],
+            [1., 0.5, 0.5,  0.5, 1.],
+            [1., 1.,  1.,   1.,  1.],
+        ]], dtype='float64')
+        result = apply_internal_reference(d)
+        expected = np.array([[
+            [0., 0.,  0.,   0.,  0.],
+            [0., 0.7, 0.7,  0.7, 0.],
+            [0., 0.7, 3,    0.7, 0.],
+            [0., 0.7, 0.7,  0.7, 0.],
+            [0., 0.,  0.,   0.,  0.],
+        ]], dtype='float64')
+        np.testing.assert_almost_equal(result, expected, decimal=2)
+        # With complex data
+        d = np.array([[
+            [1., 1.,  1.,   1.,  1.],
+            [1., 0.5, 0.5,  0.5, 1.],
+            [1., 0.5, 0.05, 0.5, 1.],
+            [1., 0.5, 0.5,  0.5, 1.],
+            [1., 1.,  1.,   1.,  1.],
+        ]], dtype='complex128')
+        result = apply_internal_reference(d)
+        expected = np.array([[
+            [0., 0.,  0.,   0.,  0.],
+            [0., 0.7, 0.7,  0.7, 0.],
+            [0., 0.7, 3,    0.7, 0.],
+            [0., 0.7, 0.7,  0.7, 0.],
+            [0., 0.,  0.,   0.,  0.],
+        ]], dtype='float64')
+        expected = np.zeros_like(expected) + complex(0, 1) * expected
+        np.testing.assert_almost_equal(result, expected, decimal=2)
 
     def test_transformation_matrices(self):
         r = np.array([math.pi/2])
@@ -1080,9 +1187,9 @@ class XanesMathTest(XanespyTestCase):
                 [1, 1]]
         refs = np.array([refs, refs])
         refs = refs.reshape(1, 2, 2, 2)
-        out = np.zeros_like(Is)
+        # out = np.zeros_like(Is)
         # Apply actual reference function
-        As = apply_references(Is, refs, out)
+        As = apply_references(Is, refs)
         self.assertEqual(As.shape, Is.shape)
         calculated = -np.log(Is/refs)
         self.assertTrue(np.array_equal(As, calculated))
@@ -1143,6 +1250,14 @@ class XanesMathTest(XanespyTestCase):
         # Check that frames are reduced to a 2D image
         self.assertEqual(ej.shape, frames.shape[-2:])
         self.assertEqual(ej.dtype, np.float)
+        # Check that it fails with imcomplatible input shapes
+        with self.assertRaises(ValueError):
+            ej = k_edge_jump(frames[0:-1], energies=self.K_Es, edge=self.KEdge())
+        # Check that it fails with no post-edge energies
+        with self.assertRaisesRegex(exceptions.XanesMathError, "post-edge"):
+            ej = k_edge_jump(frames[..., 0:20],
+                             energies=self.K_Es[..., 0:20],
+                             edge=self.KEdge())
 
     def test_k_edge_mask(self):
         """Check that the edge jump filter can be successfully turned into a

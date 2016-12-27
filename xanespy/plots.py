@@ -27,14 +27,6 @@ from matplotlib.ticker import ScalarFormatter
 from utilities import pixel_to_xy, Extent, Pixel
 
 
-class ElectronVoltFormatter(ScalarFormatter):
-    """Matplotlib formatter for showing energies as electon-volts."""
-    def __call__(self, *args, **kwargs):
-        formatted_value = super().__call__(*args, **kwargs)
-        formatted_value = "{value} eV".format(value=formatted_value)
-        return formatted_value
-
-
 def remove_extra_spines(ax):
     """Removes the right and top borders from the axes."""
     ax.spines['right'].set_visible(False)
@@ -44,7 +36,7 @@ def remove_extra_spines(ax):
     return ax
 
 
-def set_axes_color(ax, color):
+def set_axes_color(ax, color):  # pragma: no cover
     """Set the axes, tick marks, etc of `ax` to mpl color `color`. Also,
     "doegreen" has special significance as the color associated with the
     US department of energy."""
@@ -62,7 +54,7 @@ def set_axes_color(ax, color):
     ax.yaxis.label.set_color(color)
     ax.xaxis.label.set_color(color)
 
-def set_outside_ticks(ax):
+def set_outside_ticks(ax):  # pragma: no cover
     """Convert all the axes so that the ticks are on the outside and don't
     obscure data."""
     ax.get_yaxis().set_tick_params(which='both', direction='out')
@@ -85,24 +77,18 @@ def new_axes(height=5, width=None):
     return ax
 
 
-def new_image_axes(height=5, width=5):
+def new_image_axes(height=5, width=5):  # pragma: no cover
     """Square axes with ticks on the outside."""
     ax = new_axes(height, width)
     return set_outside_ticks(ax)
 
 
-def big_axes():
+def big_axes():  # pragma: no cover
     """Return a new Axes object, but larger than the default."""
     return new_axes(height=9, width=16)
 
 
-def xrd_axes():
-    """Return a new Axes object, with a size appropriate for display x-ray
-    diffraction data."""
-    return new_axes(width=8)
-
-
-def dual_axes(fig=None, orientation='horizontal'):
+def dual_axes(fig=None, orientation='horizontal'):  # pragma: no cover
     """Two new axes for mapping, side-by-side."""
     if fig is None:
         fig = pyplot.figure()
@@ -122,7 +108,8 @@ def dual_axes(fig=None, orientation='horizontal'):
     return (ax1, ax2)
 
 
-def draw_colorbar(ax, cmap, norm, energies, orientation="vertical", *args, **kwargs):
+def draw_colorbar(ax, cmap, norm, energies, orientation="vertical",
+                  *args, **kwargs):  # pragma: no cover
     """Draw a colorbar on the side of a mapping axes to show to range of
     colors used. Returns an artist for the newly added colorbar.
 
@@ -158,7 +145,7 @@ def draw_colorbar(ax, cmap, norm, energies, orientation="vertical", *args, **kwa
 
 
 def plot_pixel_spectra(pixels, extent, spectra, energies, map_ax,
-                       spectra_ax=None, step_size=0):
+                       spectra_ax=None, step_size=0):  # pragma: no cover
     """Highlight certain pixels in an already-plotted map and plot their
     spectra. The map should already have been plotted.
 
@@ -248,8 +235,7 @@ def plot_pixel_spectra(pixels, extent, spectra, energies, map_ax,
 
 def plot_xanes_spectrum(spectrum, energies, norm=Normalize(),
                         show_fit=False, ax=None, ax2=None,
-                        linestyle=':', cmap="plasma"):
-
+                        linestyle=':', cmap="plasma"):  # pragma: no cover
     """Plot a XANES spectrum on an axes. Applies some color formatting if
     `edge` is a valid XANES Edge object.
 
@@ -325,7 +311,7 @@ def plot_xanes_spectrum(spectrum, energies, norm=Normalize(),
     return artist
 
 
-def plot_composite_map(data, ax=None, origin="lower", *args, **kwargs):
+def plot_composite_map(data, ax=None, origin="lower", *args, **kwargs):  # pragma: no cover
     """Plot an RGB composite map on the given axes."""
     while data.shape[-1] < 3:
         data = np.concatenate((data, np.zeros_like(data)),
@@ -338,7 +324,7 @@ def plot_composite_map(data, ax=None, origin="lower", *args, **kwargs):
 
 
 def plot_txm_map(data, edge, norm=None, ax=None, cmap='plasma',
-                 origin="lower", *args, **kwargs):
+                 origin="lower", *args, **kwargs):  # pragma: no cover
     # Get a default normalizer
     if norm is None:
         norm = Normalize()
@@ -358,7 +344,8 @@ def plot_txm_map(data, edge, norm=None, ax=None, cmap='plasma',
     return artist
 
 
-def plot_txm_histogram(data, ax=None, norm=None, bins=100, cmap='plasma', add_cbar=True):
+def plot_txm_histogram(data, ax=None, norm=None, bins=100,
+                       cmap='plasma', add_cbar=True):  # pragma: no cover
     """Take an array of data values and show a histogram with some
     color-coding related to normalization value.
 
@@ -430,7 +417,7 @@ def plot_txm_histogram(data, ax=None, norm=None, bins=100, cmap='plasma', add_cb
     return ax
 
 
-def plot_txm_intermediates(images):
+def plot_txm_intermediates(images):  # pragma: no cover
     """Accept a dictionary of images and plots them each on its own axes
     using matplotlib's `imshow`. This is a complement to routines that
     operate on a microscopy frame and optionally return all the
