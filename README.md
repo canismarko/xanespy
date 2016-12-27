@@ -2,7 +2,7 @@ Xanespy
 =======
 
 [!["Travis-CI"](https://travis-ci.org/m3wolf/xanespy.svg?branch=master "Travis-CI")](https://travis-ci.org/m3wolf/xanespy/ "Travis-CI")
-[!["Travis-CI"](https://travis-ci.org/m3wolf/xanespy.svg?branch=master "Travis-CI")](https://travis-ci.org/m3wolf/xanespy/ "Travis-CI")
+[!["Coverage Status"](https://coveralls.io/repos/github/m3wolf/xanespy/badge.svg?branch=master "Coverage status")](https://coveralls.io/github/m3wolf/xanespy?branch=master "Coverage status")
 
 Motivation & Features
 ---------------------
