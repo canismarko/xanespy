@@ -54,72 +54,6 @@ predefined.define_units()
 log = logging.getLogger(__name__)
 
 
-def build_series(frames):
-    energies = [frame.energy for frame in frames]
-    images = [frame.image_data for frame in frames]
-    series = pd.Series(images, index=energies)
-    return series
-
-
-def merge_framesets(framesets, new_group="merged"):
-    """Combine two set of frame data into one. No energy should be
-    duplicated. A new HDF group will be greated.
-    """
-    ref_fs = framesets[0]
-    dest = "/" + new_group
-    with ref_fs.hdf_file(mode="a") as f:
-        # Copy first group as a template
-        try:
-            del f[dest]
-        except KeyError:
-            pass
-        src_group = f[ref_fs.frameset_group]
-        src_group.copy(src_group, dest=dest)
-        for key in f[dest]:
-            del f[dest][key]
-        # Set some attributes
-        new_fs_group = f[dest].create_group("merged")
-        f[dest].attrs['latest_group'] = new_fs_group.name
-        new_fs_group.attrs['level'] = 0
-        new_fs_group.attrs['parent'] = ""
-        # Now link to the other nodes
-        for fs in framesets:
-            for frame in fs:
-                key = energy_key.format(frame.energy)
-                new_fs_group[key] = f[frame.frame_group]
-    # return new_frameset
-    fs = XanesFrameset(filename=ref_fs.hdf_filename,
-                       edge=ref_fs.edge,
-                       groupname=dest)
-    return fs
-
-
-def _transform(data, scale=None, rotation=None, translation=None):
-    """Apply a similarity transformation to the given (optionally complex)
-    data. Arguments are the same as
-    http://scikit-image.org/docs/dev/api/skimage.transform.html"""
-    transformation = transform.SimilarityTransform(
-        scale=scale,
-        translation=translation,
-        rotation=rotation
-    )
-    warp_kwargs = {
-        'order': 3,
-        'inverse_map': transformation,
-        'mode': 'wrap',
-        'preserve_range': True,
-    }
-    # Apply the transformation
-    new_data = transform.warp(data.real, **warp_kwargs)
-    # Apply transformation to imaginary component
-    if np.any(data.imag):
-        j = complex(0, 1)
-        new_data = np.add(
-            new_data,
-            j * transform.warp(data.imag, **warp_kwargs))
-    return new_data
-
-
 class XanesFrameset():
     """A collection of TXM frames at different energies moving across an
     absorption edge. Iterating over this object gives the individual
@@ -152,8 +86,8 @@ class XanesFrameset():
             self.data_name = store.latest_data_name
 
     def __repr__(self):
-        s = "<{cls} '{filename}'>"
-        return s.format(cls=self.__class__.__name__, filename=self.hdf_filename)
+        s = "<{cls}: '{name}'>"
+        return s.format(cls=self.__class__.__name__, name=self.parent_name)
 
     @property
     def data_name(self):
@@ -164,18 +98,6 @@ class XanesFrameset():
         self._data_name = val
         with self.store() as store:
             store.data_name = val
-
-    def _frame_keys(self):
-        """Return a list of valid hdf5 keys in the group that correspond to
-        actual energy frames."""
-        keys = []
-        with self.hdf_file() as f:
-            parent_group = f[self.active_group]
-            # Filter out groups that do not have an energy associated with them
-            for group in parent_group:
-                if parent_group[group].attrs.get('energy', False):
-                    keys.append(group)
-        return keys
 
     def store(self, mode='r'):
         """Get a TXM Store object that saves and retrieves data from the HDF5
@@ -188,14 +110,6 @@ class XanesFrameset():
                         parent_name=self.parent_name,
                         data_name=self.data_name,
                         mode=mode)
-
-    def save_images(self, directory):
-        """Save a series of TIF's of the individual frames in `directory`."""
-        if not os.path.exists(directory):
-            os.mkdir(directory)
-        for frame in self:
-            path = os.path.join(directory, str(frame.energy) + ".tif")
-            pyplot.imsave(path, frame.image_data)
 
     def clear_caches(self):
         """Clear cached function values so they will be recomputed with fresh
@@ -246,38 +160,6 @@ class XanesFrameset():
         """Retrieve a list of valid representations for these data."""
         reps = ['modulus']
         return reps
-
-    def switch_group(self, name=""):
-        """Set the frameset to retrieve image data from a different hdf
-        group. Special value 'background_frames' sets to the reference
-        image used during importing.
-
-        Arguments
-        ---------
-        name (str) - The HDF groupname for this frameset. If omitted
-          or "", a list of available options will be listed.
-        """
-        raise UserWarning("Use switch_data_group() instead")
-        # raise UserWarning("This is not correct anymore")
-        # with self.hdf_file() as f:
-        #     valid_groups = list(f[self.frameset_group].keys())
-        if name not in valid_groups:
-            msg = "{name} is not a valid group. Choices are {choices}."
-            raise exceptions.GroupKeyError(
-                msg.format(name=name, choices=valid_groups)
-            )
-        if name == 'background_frames':
-            # Clear cached value
-            self.active_group = self.background_groupname
-        else:
-            self.active_group = os.path.join(self.frameset_group, name)
-        self.clear_caches()
-
-    def switch_data_group(self, new_name):
-        """Turn on different active data for this frameset's store object."""
-        raise UserWarning("Just set self.data_name instead")
-        with self.store(mode='r+') as store:
-            store.active_data_group = new_name
 
     def fork_data_group(self, new_name, src=None):
         """Turn on different active data for this frameset's store
@@ -752,10 +634,6 @@ class XanesFrameset():
             As = np.reshape(As, (-1, *self.frame_shape()))
             mean_A = np.mean(As, axis=0)
         return mean_A
-
-    def xanes_spectrum(self, *args, **kwargs):
-        raise (UserWarning('use spectrum()'))
-        return self.spectrum(*args, **kwargs)
 
     def frame_shape(self):
         """Return the shape of the individual energy frames."""
@@ -1611,68 +1489,3 @@ class PtychoFrameset(XanesFrameset):
             ax.set_title("Background Intensity used for Reference Correction")
             ax.set_xlabel("Energy (eV)")
             ax.set_ylabel("$I_0$")
-
-
-def process_with_smp(frameset: XanesFrameset,
-                     worker: Callable[[dict], dict],
-                     process_result: Callable[[dict], dict]=None,
-                     description: str="Processing frames"):
-    """Runs a computation on all frames in a frameset using parrallel
-    processing and saves the result.
-
-    Arguments
-    ---------
-    - frameset: Set of frames to be process.
-
-    - worker: function to do the actual calculation. Should accept a
-      dictionary payload which contains the frame's `key`, `energy`,
-      `data`, and `labels`. Should return a similar dictionary with
-      modified `data` and/or `labels`. If worker does not modify
-      `data` or `labels`, it should remove them from the return
-      dictionary to avoid unnecessary disk I/O.
-
-    - process_result: A callback to perform additional
-      post-processing. Should accept return a similar dictionary as
-      worker. If the returned dicionary does not contain `data` or
-      `labels` then the corresponding data will not be saved
-      automatically.
-
-    - description: A string describing the operation. Used in a status
-      bar.
-
-    """
-    # Prepare callbacks and queue
-    def result_callback(payload):
-        frame = frameset.FrameClass(frameset=frameset, groupname=payload['key'])
-        # Call user-provided result callback
-        if process_result is not None:
-            payload = process_result(payload)
-        # Save data and/or labels if necessary
-        if 'data' in payload.keys():
-            frame.image_data = payload['data']
-        if 'labels' in payload.keys():
-            frame.particle_labels = payload['labels']
-        if 'pixel_size_value' in payload.keys():
-            px_unit = unit(payload['pixel_size_unit'])
-            px_size = px_unit(payload['pixel_size_value'])
-            frame.pixel_size = px_size
-    queue = smp.Queue(worker=worker,
-                      totalsize=len(frameset),
-                      result_callback=result_callback,
-                      description=description)
-
-    # Populate the queue
-    for frame in frameset:
-        payload = {
-            'data': frame.image_data,
-            'key': frame.frame_group,
-            'energy': frame.energy,
-            'pixel_size_value': frame.pixel_size.num,
-            'pixel_size_unit': str(frame.pixel_size.unit),
-        }
-        labels = frame.particle_labels
-        if labels is not None:
-            payload['labels'] = labels
-        queue.put(payload)
-    # Join the queue and wait for all processes to complete
-    queue.join()

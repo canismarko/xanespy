@@ -98,8 +98,28 @@ class SSRLScriptTest(unittest.TestCase):
         )
 
     def tearDown(self):
-        os.remove(self.output_path)
-        os.remove(self.scaninfo_path)
+        if os.path.exists(self.output_path):
+            os.remove(self.output_path)
+        if os.path.exists(self.scaninfo_path):
+            os.remove(self.scaninfo_path)
+
+    def test_bad_arguments(self):
+        """Check that incompatible arguments to the script generator results
+        in exceptions being raised.
+        """
+        # Abba_mode and frame_rest are incompatible
+        with self.assertRaisesRegex(ValueError, "frame_rest.+abba_mode"):
+            ssrl6_xanes_script(dest=None,
+                               edge=k_edges["Ni_NCA"](),
+                               binning=2,
+                               zoneplate=self.zp,
+                               iterations=["Test0", "Snorlax"],
+                               frame_rest=5,
+                               repetitions=8,
+                               ref_repetitions=15,
+                               positions=[position(3, 4, 5)],
+                               reference_position=position(0, 1, 2),
+                               abba_mode=True)
 
     def test_scaninfo_generation(self):
         """Check that the script writes all the filenames to a ScanInfo file
@@ -113,6 +133,7 @@ class SSRLScriptTest(unittest.TestCase):
                                frame_rest=0,
                                repetitions=8,
                                ref_repetitions=15,
+                               iteration_rest=5,
                                positions=[position(3, 4, 5)],
                                reference_position=position(0, 1, 2),
                                abba_mode=False)
@@ -187,7 +208,6 @@ class SSRLScriptTest(unittest.TestCase):
             self.assertEqual(f.readline(), 'collect Test0_fov0_08250.0_eV_000of005.xrm\n')
 
 
-@unittest.skip("Fix these tests before next APS beamtime")
 class ApsScriptTest(unittest.TestCase):
     """Verify that a script is created for running an operando
     TXM experiment at APS beamline 8-BM-B."""
@@ -214,7 +234,7 @@ class ApsScriptTest(unittest.TestCase):
 
     def test_file_created(self):
         with open(self.output_path, 'w') as f:
-            sector8_xanes_script(dest=f, edge=k_edges["Ni"](),
+            sector8_xanes_script(dest=f, edge=k_edges["Ni_NCA"](),
                                  zoneplate=self.zp, detector=self.det,
                                  names=["test_sample"], sample_positions=[])
         # Check that a file was created
@@ -224,7 +244,7 @@ class ApsScriptTest(unittest.TestCase):
 
     def test_binning(self):
         with open(self.output_path, 'w') as f:
-            sector8_xanes_script(dest=f, edge=k_edges["Ni"](),
+            sector8_xanes_script(dest=f, edge=k_edges["Ni_NCA"](),
                                  binning=2, zoneplate=self.zp,
                                  detector=self.det, names=[],
                                  sample_positions=[])
@@ -234,7 +254,7 @@ class ApsScriptTest(unittest.TestCase):
 
     def test_exposure(self):
         with open(self.output_path, 'w') as f:
-            sector8_xanes_script(dest=f, edge=k_edges["Ni"](),
+            sector8_xanes_script(dest=f, edge=k_edges["Ni_NCA"](),
                                  exposure=44, zoneplate=self.zp,
                                  detector=self.det, names=["test_sample"],
                                  sample_positions=[])
@@ -252,9 +272,15 @@ class ApsScriptTest(unittest.TestCase):
                                  names=[], sample_positions=[])
         with open(self.output_path, 'r') as f:
             lines = f.readlines()
+        # Check that several energies are scanned through
+        self.assertEqual(lines[2], 'moveto energy 8150.00\n')
+        self.assertEqual(lines[3], 'moveto energy 8152.00\n')
+        self.assertEqual(lines[51], 'moveto energy 8248.00\n')
+        self.assertEqual(lines[52], 'moveto energy 8250.00\n')
         # Check that the first zone plate is properly set
-        assert False, "Test output of lines"
-
+        self.assertEqual(lines[53], 'moveto zpz 2797.81\n')
+        self.assertEqual(lines[54], 'moveto detz 377.59\n')
+        
     def test_first_frame(self):
         with open(self.output_path, 'w') as f:
             sector8_xanes_script(
@@ -268,17 +294,17 @@ class ApsScriptTest(unittest.TestCase):
         with open(self.output_path, 'r') as f:
             lines = f.readlines()
         # Check that x, y are set
-        self.assertEqual(lines[2].strip(), "moveto x 1653.00")
-        self.assertEqual(lines[3].strip(), "moveto y -1727.00")
-        self.assertEqual(lines[4].strip(), "moveto z 0.00")
+        self.assertEqual(lines[55].strip(), "moveto x 1653.00")
+        self.assertEqual(lines[56].strip(), "moveto y -1727.00")
+        self.assertEqual(lines[57].strip(), "moveto z 0.00")
         # Check that the energy approach lines are in tact
-        self.assertEqual(lines[5].strip(), "moveto energy 8150.00")
-        self.assertEqual(lines[54].strip(), "moveto energy 8248.00")
+        self.assertEqual(lines[2].strip(), "moveto energy 8150.00")
+        self.assertEqual(lines[51].strip(), "moveto energy 8248.00")
         # Check that energy is set
-        self.assertEqual(lines[55].strip(), "moveto energy 8250.00")
+        self.assertEqual(lines[52].strip(), "moveto energy 8250.00")
         # Check that zone-plate and detector are set
-        self.assertEqual(lines[56].strip(), "moveto zpz 2797.81")
-        self.assertEqual(lines[57].strip(), "moveto detz 377.59")
+        self.assertEqual(lines[53].strip(), "moveto zpz 2797.81")
+        self.assertEqual(lines[54].strip(), "moveto detz 377.59")
         # Check that collect command is sent
         self.assertEqual(
             lines[58].strip(),
@@ -298,9 +324,8 @@ class ApsScriptTest(unittest.TestCase):
             )
         with open(self.output_path, 'r') as f:
             lines = f.readlines()
-        self.assertEqual(lines[247], "moveto x 1706.20\n")
-        self.assertEqual(lines[248], "moveto y -1927.20\n")
-        self.assertEqual(lines[250].strip(), "moveto energy 8150.00")
+        self.assertEqual(lines[242], "moveto x 1706.20\n")
+        self.assertEqual(lines[243], "moveto y -1927.20\n")
 
     def test_multiple_iterations(self):
         with open(self.output_path, 'w') as f:
@@ -321,7 +346,7 @@ class ApsScriptTest(unittest.TestCase):
             "collect test_sample_xanesocv_8250_0eV.xrm"
         )
         self.assertEqual(
-            lines[1090].strip(),
+            lines[1361].strip(),
             "collect test_sample_xanes02_8342_0eV.xrm"
         )
 
@@ -868,6 +893,10 @@ class TXMFramesetTest(XanespyTestCase):
         if os.path.exists(cls.originhdf):
             os.remove(cls.originhdf)
 
+    def test_repr(self):
+        expected = "<XanesFrameset: 'ssrl-test-data'>"
+        self.assertEqual(self.frameset.__repr__(), expected)
+
     def test_align_frames(self):
         # Perform an excessive translation to ensure data are correctable
         with self.frameset.store(mode='r+') as store:
@@ -977,11 +1006,13 @@ class TXMFramesetTest(XanespyTestCase):
 
     def test_switch_groups(self):
         """Test that switching between HDF5 groups works robustly."""
+        # Without the `src` argument
         old_group = self.frameset.data_name
         self.frameset.fork_data_group('new_group')
         self.frameset.data_name = old_group
         self.assertEqual(self.frameset.data_name, old_group)
         self.frameset.fork_data_group('new_group')
+        # With the `src` argument
 
 
 class XanesMathTest(XanespyTestCase):
@@ -1389,37 +1420,6 @@ class XradiaTest(XanespyTestCase):
         end = dt.datetime(2016, 7, 2, 17, 51, 25, tzinfo=pytz.timezone('US/Central'))
         self.assertEqual(xrm.endtime(), end)
         xrm.close()
-
-@unittest.skip("Probably not the right way to go about this")
-class MultipleFramesetTest(XanespyTestCase):
-    """Tests for how we can work with and combine multiple framesets."""
-    hdf = os.path.join(PTYCHO_DIR, 'mock-ptycho-data.h5')
-
-    def setUp(self):
-        if os.path.exists(self.hdf):
-            os.remove(self.hdf)
-
-    def tearDown(self):
-        if os.path.exists(self.hdf):
-            os.remove(self.hdf)
-
-    def create_hdf_file(self):
-        # Create some fake HDF5 file group for testing
-        with h5py.File(self.hdf, mode="w"):
-            pass
-
-    def test_combine_framesets(self):
-        """Test the method that merges mutliple framesets into one."""
-        self.create_hdf_file()
-        fs_list = [
-            XanesFrameset(filename=self.hdf, groupname='group1', edge=None),
-            XanesFrameset(filename=self.hdf, groupname='group1', edge=None),
-        ]
-        # Check that it fails if the group exists
-        with self.assertRaises(exceptions.GroupKeyError):
-            merge_framesets(fs_list, new_group="group1")
-        # import_nanosurveyor_frameset(PTYCHO_DIR + "/", hdf_filename=self.hdf, quiet=True)
-
 
 
 # Launch the tests if this is run as a script

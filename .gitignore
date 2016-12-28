@@ -5,3 +5,5 @@ __pycache__
 tests/testdata
 tests/.ipynb_checkpoints
 .venv/
+.coverage
+htmlcov
