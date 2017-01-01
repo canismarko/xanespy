@@ -481,7 +481,8 @@ class PtychographyImportTest(XanespyTestCase):
             np.testing.assert_array_equal(saved_Es, np.sort(saved_Es))
             # Construct the expected path relative to the current directory
             relpath = "ptycho-data-als/NS_160406074-{}-energy/160406074/{}/NS_160406074.cxi"
-            relpath = os.path.join(TEST_DIR, relpath)
+            CURR_DIR = 'tests'
+            relpath = os.path.join(CURR_DIR, relpath)
             # Compare the expeected file names
             sorted_files = [[bytes(relpath.format("low", "001"), 'ascii'),
                              bytes(relpath.format("low", "009"), 'ascii'),

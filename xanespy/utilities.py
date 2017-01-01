@@ -203,25 +203,3 @@ def  prog(*args, leave=False, dynamic_ncols=True, **kwargs):
     prog_iter = wrapper(*args, leave=leave,
                         dynamic_ncols=dynamic_ncols, **kwargs)
     return prog_iter
-
-
-def prepare_hdf_group(*args, **kwargs):
-    """Check the filenames and create an hdf file as needed. Will
-    overwrite the group if it already exists.
-
-    Returns: The opened HDF5 group.
-
-    Arguments
-    ---------
-
-    - filename : name of the requested hdf file, may be None if not
-      provided, in which case the filename will be generated
-      automatically based on `dirname`.
-
-    - groupname : Requested groupname for these data.
-
-    - dirname : Used to derive a default filename if None is passed
-      for `filename` attribute.
-    """
-    raise UserWarning("Use txmstore.prepare_txm_store() instead")
-    # return prepare_txm_store(*args, **kwargs)

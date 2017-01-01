@@ -51,12 +51,16 @@ class Edge():
     map_range: 2-tuple (start, stop) - Energy range used for
       normalizing maps. If not supplied, will be determine from pre-
       and post-edge arguments.
+
+    edge_range: 2-tuple (start, stop) - Energy range used to determine
+      the official beginning and edge of the edge itself.
     """
     regions = []
     E_0 = None
     pre_edge = None
     post_edge = None
     map_range = None
+    edge_range = None
     post_edge_order = 2
     pre_edge_fit = None
 

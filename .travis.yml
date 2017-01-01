@@ -6,6 +6,6 @@ install:
   - pip install numpy scipy
   - pip install -r requirements.txt
   - echo $TRAVIS_BUILD_DIR
-script: coverage run --source=xanespy test/tests.py
+script: coverage run --source=xanespy tests/test_all.py
 after_success:
   - coveralls

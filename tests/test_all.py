@@ -1,3 +1,4 @@
+#!/bin/python3
 # -*- coding: utf-8 -*-
 #
 # Copyright © 2016 Mark Wolf
@@ -17,23 +18,17 @@
 # You should have received a copy of the GNU General Public License
 # along with Xanespy.  If not, see <http://www.gnu.org/licenses/>.
 
-import sys
+# flake8: noqa
+
+"""Loader for running all the tests for xanespy. Discovers any file
+matching "test*.py"."""
+
+import unittest
 import os
 
-# Make sure this directory is in python path for imports
-sys.path.append(os.path.dirname(__file__))
 
-import exceptions
-import xradia
-from importers import (import_ssrl_frameset, import_aps_8BM_frameset,
-                       import_nanosurveyor_frameset)
-from xanes_frameset import XanesFrameset, PtychoFrameset
-from edges import k_edges, l_edges
-from plots import (dual_axes, new_axes, new_image_axes, plot_txm_map,
-                   set_axes_color, plot_pixel_spectra, plot_txm_histogram)
-import plots
-import xanes_math as xanes_math
-import utilities
-from qt_frameset_presenter import QtFramesetPresenter
-from qt_frame_view import QtFrameView
-from qt_map_view import QtMapView
+if __name__ == '__main__':
+    start_dir = os.path.dirname(__file__)
+    tests = unittest.defaultTestLoader.discover(start_dir)
+    runner = unittest.runner.TextTestRunner()
+    runner.run(tests)

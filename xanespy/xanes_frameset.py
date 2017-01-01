@@ -1105,6 +1105,26 @@ class XanesFrameset():
         with self.store(mode="r+") as store:
             store.cluster_map = label_frame
 
+    @functools.lru_cache(maxsize=2)
+    def frames(self, timeidx=0):
+        """Return the frames for the given time index.
+
+        Returns: A 3-dimensional array with the form (energy, row,
+        col).
+        """
+        with self.store() as store:
+            return store.absorbances[timeidx]
+
+    @functools.lru_cache(maxsize=2)
+    def energies(self, timeidx=0):
+        """Return the array of beam energies for the given time index.
+
+        Returns: A 3-dimensional array with the form (energy, row,
+        col).
+        """
+        with self.store() as store:
+            return store.energies[timeidx]
+
     def masked_map(self, goodness_filter=True):
         """Generate a map based on pixel-wise Xanes spectra and apply an
         edge-jump filter mask. Default is to compute X-ray whiteline
@@ -1199,6 +1219,12 @@ class XanesFrameset():
     def num_timesteps(self):
         with self.store() as store:
             val = store.absorbances.shape[0]
+        return val
+
+    @property
+    def num_energies(self):
+        with self.store() as store:
+            val = store.energies.shape[-1]
         return val
 
     def plot_map(self, ax=None, map_name="whiteline_map", timeidx=0, vmin=None, vmax=None):
@@ -1391,6 +1417,16 @@ class XanesFrameset():
         viewer.show()
         # Close the current blank plot
         pyplot.close()
+
+    def qt_viewer(self):
+        from qt_frameset_presenter import QtFramesetPresenter
+        from qt_frame_view import QtFrameView
+        log.debug("Launching Qt viewer")
+        presenter = QtFramesetPresenter(frameset=self,
+                                      map_view=None,
+                                      frame_view=QtFrameView())
+        presenter.prepare_ui()
+        presenter.launch()
 
 
 class PtychoFrameset(XanesFrameset):

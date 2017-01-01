@@ -108,10 +108,40 @@ def dual_axes(fig=None, orientation='horizontal'):  # pragma: no cover
     return (ax1, ax2)
 
 
+def draw_histogram_colorbar(ax, *args, **kwargs):
+    """Similar to `draw_colorbar()` with some special formatting options
+    to put it along the X-axis of the axes."""
+    cbar = draw_colorbar(ax=ax, pad=0, orientation="horizontal", energies=None, *args, **kwargs)
+    ax.tick_params(
+        axis='x',          # changes apply to the x-axis
+        which='both',      # both major and minor ticks are affected
+        bottom='off',      # ticks along the bottom edge are off
+        top='off',         # ticks along the top edge are off
+        labelbottom='off',
+        labeltop='off')
+    ax.spines['bottom'].set_visible(False)
+    # print(dir(ax))
+    # ax.xaxis.labelpad += 35
+    cbar.ax.set_xlabel(ax.get_xlabel())
+    ax.xaxis.set_visible(False)
+    cbar.ax.set_title("")
+    cbar.outline.set_visible(False)
+    gray = (0.1, 0.1, 0.1)
+    cbar.ax.axhline(cbar.ax.get_ylim()[1], linewidth=2, linestyle=":", color=gray)
+    cbar.ax.tick_params(
+        axis='x',
+        which='both',
+        bottom='on',
+        top='on',
+        labelbottom="on",
+    )
+    return cbar
+
+
 def draw_colorbar(ax, cmap, norm, energies, orientation="vertical",
                   *args, **kwargs):  # pragma: no cover
-    """Draw a colorbar on the side of a mapping axes to show to range of
-    colors used. Returns an artist for the newly added colorbar.
+    """Draw a colorbar on the side of a mapping axes to show the range of
+    colors used. Returns the newly created colorbar object.
 
     Arguments
     ---------
@@ -125,7 +155,6 @@ def draw_colorbar(ax, cmap, norm, energies, orientation="vertical",
 
     - energies : Iterable of values to put as the tick marks on the
       colorbar.
-
     """
     mappable = cm.ScalarMappable(norm=norm, cmap=cmap)
     mappable.set_array(np.arange(0, 3))
@@ -235,7 +264,7 @@ def plot_pixel_spectra(pixels, extent, spectra, energies, map_ax,
 
 def plot_xanes_spectrum(spectrum, energies, norm=Normalize(),
                         show_fit=False, ax=None, ax2=None,
-                        linestyle=':', cmap="plasma"):  # pragma: no cover
+                        linestyle=':', color="blue", cmap="plasma"):  # pragma: no cover
     """Plot a XANES spectrum on an axes. Applies some color formatting if
     `edge` is a valid XANES Edge object.
 
@@ -261,6 +290,10 @@ def plot_xanes_spectrum(spectrum, energies, norm=Normalize(),
 
     - cmap : Colormap, passed on to matplotlib
 
+    - color : Specifies the color for the circles plotted. Either "x"
+      or "y" will decide based on the numerical value, `norm` and
+      `cmap` arguments. Anything else will be passed as a color spec
+      to the matplotlib commands.
     """
     if ax is None:
         ax = new_axes()
@@ -268,7 +301,12 @@ def plot_xanes_spectrum(spectrum, energies, norm=Normalize(),
     # Retrieve `values` in case it's a pandas series
     spectrum = getattr(spectrum, 'values', spectrum)
     # Color code the markers by energy
-    colors = cm.get_cmap(cmap)(norm(energies))
+    if color == "x":
+        colors = cm.get_cmap(cmap)(norm(energies))
+    elif color == "y":
+        colors = cm.get_cmap(cmap)(norm(spectrum))
+    else:
+        colors = [color] * len(energies)
     is_complex = np.iscomplexobj(spectrum)
     if is_complex:
         # Remove secondary axes and re-add them
@@ -323,8 +361,8 @@ def plot_composite_map(data, ax=None, origin="lower", *args, **kwargs):  # pragm
     return artist
 
 
-def plot_txm_map(data, edge, norm=None, ax=None, cmap='plasma',
-                 origin="lower", *args, **kwargs):  # pragma: no cover
+def plot_txm_map(data, edge=None, norm=None, ax=None, cmap='plasma',
+                 origin="upper", *args, **kwargs):  # pragma: no cover
     # Get a default normalizer
     if norm is None:
         norm = Normalize()
@@ -332,7 +370,10 @@ def plot_txm_map(data, edge, norm=None, ax=None, cmap='plasma',
     # Create axes if necessary
     if ax is None:
         ax = new_image_axes()
-        energies = edge.energies_in_range(norm_range=(norm.vmin, norm.vmax))
+        if edge is None:
+            energies = np.linspace(norm.vmin, norm.vmax, num=10)
+        else:
+            energies = edge.energies_in_range(norm_range=(norm.vmin, norm.vmax))
         draw_colorbar(ax=ax, cmap=cmap, norm=norm, energies=energies)
     # Do the plotting
     artist = ax.imshow(data,
@@ -345,7 +386,7 @@ def plot_txm_map(data, edge, norm=None, ax=None, cmap='plasma',
 
 
 def plot_txm_histogram(data, ax=None, norm=None, bins=100,
-                       cmap='plasma', add_cbar=True):  # pragma: no cover
+                       cmap='plasma', add_cbar=True, *args, **kwargs):  # pragma: no cover
     """Take an array of data values and show a histogram with some
     color-coding related to normalization value.
 
@@ -353,6 +394,8 @@ def plot_txm_histogram(data, ax=None, norm=None, bins=100,
 
     Arguments
     ---------
+    - data : An array of values to plot on the histogram.
+
     - ax : Matplotlib axes to receive the plot. If None, a new axes
       will created.
 
@@ -365,11 +408,14 @@ def plot_txm_histogram(data, ax=None, norm=None, bins=100,
     - add_cbar : Boolean to decide whether to add a colorbar along the
       bottom axis or not.
 
+    - *args : Positional arguments passed to matplotlib's `hist` method.
+
+    - *kwargs : Keyword arguments passed to matplotlib's `hist` method.
+
     """
     if ax is None:
         ax = new_axes()
     # Flatten the data so it can be nicely plotted
-    # data = np.round(data.flatten(), decimals=0)
     data = data.flatten()
     # Remove any Not-a-number values
     data = data[~np.isnan(data)]
@@ -377,8 +423,10 @@ def plot_txm_histogram(data, ax=None, norm=None, bins=100,
     if norm is None:
         norm = Normalize()
         norm.autoscale_None(data)
+    # Clip the data so that it includes the end-members
+    clip_data = np.clip(data, norm.vmin, norm.vmax)
     # Plot the histogram
-    n, bins, patches = ax.hist(data, bins=bins)
+    n, bins, patches = ax.hist(clip_data, bins=bins, *args, **kwargs)
     # Set colors on histogram
     for patch in patches:
         x_position = patch.get_x()
@@ -393,27 +441,7 @@ def plot_txm_histogram(data, ax=None, norm=None, bins=100,
     ax.xaxis.get_major_formatter().set_useOffset(False)
     # Draw a colorbar along the bottom axes
     if add_cbar:
-        cbar = draw_colorbar(ax=ax, cmap=cmap, energies=None,
-                             norm=norm, pad=0, orientation="horizontal")
-        ax.tick_params(
-            axis='x',          # changes apply to the x-axis
-            which='both',      # both major and minor ticks are affected
-            bottom='off',      # ticks along the bottom edge are off
-            top='off',         # ticks along the top edge are off
-            labelbottom='off')
-        ax.spines['bottom'].set_visible(False)
-        ax.xaxis.labelpad += 35
-        cbar.ax.set_title("")
-        cbar.outline.set_visible(False)
-        gray = (0.1, 0.1, 0.1)
-        cbar.ax.axhline(cbar.ax.get_ylim()[1], linewidth=2, linestyle=":", color=gray)
-        cbar.ax.tick_params(
-            axis='x',
-            which='both',
-            bottom='on',
-            top='on',
-            labelbottom="on",
-        )
+        cbar = draw_histogram_colorbar(ax=ax, cmap=cmap, norm=norm)
     return ax
 
 
