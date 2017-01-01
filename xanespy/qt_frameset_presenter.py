@@ -40,7 +40,7 @@ class QtFramesetPresenter():
 
     def prepare_ui(self):
         log.debug("Preparing UI from {}".format(self))
-        self.app = QtWidgets.QApplication([])
+        self.create_app()
         self.frame_view.setup()
         # Set the colormap lists with valid colormaps
         cmap_list = sorted(list(plt.cm.datad.keys()))
@@ -67,7 +67,10 @@ class QtFramesetPresenter():
         self.play_timer.timeout.connect(self.next_frame)
         self.set_play_speed(15)
 
-    def launch(self):
+    def create_app(self):  # pragma: no cover
+        self.app = QtWidgets.QApplication([])
+
+    def launch(self):  # pragma: no cover
         # Show the graphs and launch to event loop
         self.frame_view.show()
         return self.app.exec_()

@@ -1,4 +1,4 @@
-#!/usr/local/bin/env python
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
 # Copyright © 2016 Mark Wolf
@@ -51,6 +51,7 @@ class QtTestCase(unittest.TestCase):
                                 frame_view=self.frameview,
                                 map_view=self.mapview)
         self.presenter = p
+        self.presenter.create_app = mock.MagicMock(name="create_app")
 
 
 class FrameViewerTestcase(QtTestCase):
@@ -81,7 +82,6 @@ class FrameViewerTestcase(QtTestCase):
         self.assertTrue(self.frameview.draw_histogram.emit.called)
         # Check that the frame range was reset
         self.assertAlmostEqual(presenter._frame_vmin, 6)
-        
 
     def test_change_vmin_vmax(self):
         presenter = self.presenter
