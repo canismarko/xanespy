@@ -63,12 +63,6 @@ def _average_frames(*frames):
     return new_frame
 
 
-def import_txm_framesets(*args, **kwargs):
-    msg = "This function is ambiguous."
-    msg += " Choose from the more specific importers."
-    raise NotImplementedError(msg)
-
-
 def read_metadata(filenames, flavor):
     """Take a list of filenames and return a pandas dataframe with all the
     metadata."""
@@ -118,34 +112,34 @@ def read_metadata(filenames, flavor):
 def import_nanosurveyor_frameset(directory: str, quiet=False,
                                  hdf_filename=None, hdf_groupname=None,
                                  energy_range=None, exclude_re=None, append=False):
-    """Import a set of images as a new frameset for generating
-    ptychography chemical maps based on data collected at ALS beamline
+    """Import a set of images from reconstructed ptychography scanning microscope data.
+
+    This generates ptychography chemical maps based on data collected at ALS beamline
     5.3.2.1
 
-    Arguments
-    ---------
-
-    - directory : Directory where to look for results. It should
-    contain .cxi files that are the output of the ptychography reconstruction."
-
-    - quiet : If truthy, progress bars will not be shown.
-
-    - hdf_filename : HDF File used to store computed results. If
-      omitted or None, the `directory` basename is used
-
-    - hdf_groupname : String to use for the hdf group of this
-      dataset. If omitted or None, the `directory` basename is
-      used. Raises an exception if the group already exists in the HDF
-      file.
-
-    - energy_range : A 2-tuple with the (min, max) energy to be
-      imported. This is useful if only a subset of the available data
-      is usable. Values are assumed to be in electron-volts.
-
-    - exclude_re : Any filenames matching this regular expression will
-    not be imported. A string or compiled re object can be given.
-
-    - append : If True, any existing dataset will be added to, rather
+    Parameters
+    ----------
+    directory : str
+      Directory where to look for results. It should contain .cxi
+      files that are the output of the ptychography reconstruction."
+    quiet : Bool, optional
+      If truthy, progress bars will not be shown.
+    hdf_filename : str, optional
+      HDF File used to store computed results. If omitted or None, the
+      `directory` basename is used
+    hdf_groupname : str, optional
+      Name to use for the hdf group of this dataset. If omitted or
+      None, the `directory` basename is used. Raises an exception if
+      the group already exists in the HDF file.
+    energy_range : 2-tuple, optional
+      A 2-tuple with the (min, max) energy to be imported. This is
+      useful if only a subset of the available data is usable. Values
+      are assumed to be in electron-volts.
+    exclude_re : str, optional
+      Any filenames matching this regular expression will not be
+      imported. A string or compiled re object can be given.
+    append : bool, optional
+      If True, any existing dataset will be added to, rather
       than replaced (default False)
 
     """
@@ -328,18 +322,21 @@ def magnification_correction(frames, pixel_sizes):
     changes and so the image is zoomed-out at higher energies. This
     method applies a correction to each frame to make the
     magnification similar to that of the first frame. Some beamlines
-    correct for this automatically during acquisition: APS 8-BM-B, 32-ID-C.
-
-    Returns a 2-tuple of (scale, translation) arrays. Each array has
-    the same length as `frames` with an additional length-2 dimension
-    at the end for (x, y).
+    correct for this automatically during acquisition and don't need
+    this function: APS 8-BM-B, 32-ID-C.
 
     Arguments
     ---------
-    - frames : Numpy array of image frames that need to be corrected.
+    frames : np.ndarray
+      Numpy array of image frames that need to be corrected.
+    pixel_sizes : np.ndarray
+      Numpy array of pixel sizes corresponding to entries in `frames`.
 
-    - pixel_sizes : Numpy array of pixel sizes corresponding to
-    entries in `frames`.
+    Returns
+    -------
+    (scales2D, translations) : (np.ndarray, np.ndarray)
+      An array of scale factors to use for applying a correction to
+      each frame. Translations show how much to move each frame array by to re-center it.
 
     """
     scales = np.min(pixel_sizes) / pixel_sizes
@@ -353,7 +350,9 @@ def magnification_correction(frames, pixel_sizes):
 def import_ssrl_frameset(directory, hdf_filename=None):
     """Import all files in the given directory collected at SSRL beamline
     6-2c and process into framesets. Images are assumed to full-field
-    transmission X-ray micrographs and repetitions will be averaged.
+    transmission X-ray micrographs and repetitions will be
+    averaged. Passed on to ``xanespy.importers.import_frameset``
+    
     """
     imp_group = import_frameset(directory, hdf_filename=hdf_filename,
                                 flavor='ssrl')
@@ -431,10 +430,23 @@ def import_aps_8BM_frameset(directory, hdf_filename, quiet=False):
 
 
 def import_frameset(directory, flavor, hdf_filename):
-    """Import all files in the given directory collected at APS beamline
-    8-BM-B and process into framesets. Images are assumed to
-    full-field transmission X-ray micrographs. This beamline does not
-    produce the flux to warrant averaging.
+    """Import all files in the given directory collected at an X-ray
+    microscope beamline.
+
+    Images are assumed to full-field transmission X-ray micrographs.
+
+    Parameters
+    ----------
+    directory : str
+      A valid path to a directory containing the frame data to import.
+    flavor : str 
+      Indicates what type of naming conventions and data structure to
+      assume. See documentation for ``xanespy.xradia.XRMFile for
+      possible choice.
+    hdf_filename : str
+      Where to save the output to. An exception is throw if this file
+      already exists.
+
     """
     # Check that file does not exist
     if os.path.exists(hdf_filename):

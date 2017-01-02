@@ -788,35 +788,53 @@ a dictionary.</p>
 <dl class="function">
 <dt id="xanespy.importers.import_frameset">
 <code class="descclassname">xanespy.importers.</code><code class="descname">import_frameset</code><span class="sig-paren">(</span><em>directory</em>, <em>flavor</em>, <em>hdf_filename</em><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.importers.import_frameset" title="Permalink to this definition">¶</a></dt>
-<dd><p>Import all files in the given directory collected at APS beamline
-8-BM-B and process into framesets. Images are assumed to
-full-field transmission X-ray micrographs. This beamline does not
-produce the flux to warrant averaging.</p>
+<dd><p>Import all files in the given directory collected at an X-ray
+microscope beamline.</p>
+<p>Images are assumed to full-field transmission X-ray micrographs.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>directory</strong> (<em>str</em>) &#8211; A valid path to a directory containing the frame data to import.</li>
+<li><strong>flavor</strong> (<em>str</em>) &#8211; Indicates what type of naming conventions and data structure to
+assume. See documentation for <a href="#id5"><span class="problematic" id="id6">``</span></a>xanespy.xradia.XRMFile for
+possible choice.</li>
+<li><strong>hdf_filename</strong> (<em>str</em>) &#8211; Where to save the output to. An exception is throw if this file
+already exists.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="function">
 <dt id="xanespy.importers.import_nanosurveyor_frameset">
 <code class="descclassname">xanespy.importers.</code><code class="descname">import_nanosurveyor_frameset</code><span class="sig-paren">(</span><em>directory: str</em>, <em>quiet=False</em>, <em>hdf_filename=None</em>, <em>hdf_groupname=None</em>, <em>energy_range=None</em>, <em>exclude_re=None</em>, <em>append=False</em><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.importers.import_nanosurveyor_frameset" title="Permalink to this definition">¶</a></dt>
-<dd><p>Import a set of images as a new frameset for generating
-ptychography chemical maps based on data collected at ALS beamline
+<dd><p>Import a set of images from reconstructed ptychography scanning microscope data.</p>
+<p>This generates ptychography chemical maps based on data collected at ALS beamline
 5.3.2.1</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>directory</strong> (<em>-</em>) &#8211; </li>
-<li><strong>cxi files that are the output of the ptychography reconstruction.&quot;</strong> (<em>contain</em>) &#8211; </li>
-<li><strong>quiet</strong> (<em>-</em>) &#8211; </li>
-<li><strong>hdf_filename</strong> (<em>-</em>) &#8211; omitted or None, the <cite>directory</cite> basename is used</li>
-<li><strong>hdf_groupname</strong> (<em>-</em>) &#8211; dataset. If omitted or None, the <cite>directory</cite> basename is
-used. Raises an exception if the group already exists in the HDF
-file.</li>
-<li><strong>energy_range</strong> (<em>-</em>) &#8211; imported. This is useful if only a subset of the available data
-is usable. Values are assumed to be in electron-volts.</li>
-<li><strong>exclude_re</strong> (<em>-</em>) &#8211; </li>
-<li><strong>be imported. A string</strong><strong> or </strong><strong>compiled re object can be given.</strong> (<em>not</em>) &#8211; </li>
-<li><strong>append</strong> (<em>-</em>) &#8211; than replaced (default False)</li>
+<li><strong>directory</strong> (<em>str</em>) &#8211; Directory where to look for results. It should contain .cxi
+files that are the output of the ptychography reconstruction.&#8221;</li>
+<li><strong>quiet</strong> (<em>Bool</em><em>, </em><em>optional</em>) &#8211; If truthy, progress bars will not be shown.</li>
+<li><strong>hdf_filename</strong> (<em>str</em><em>, </em><em>optional</em>) &#8211; HDF File used to store computed results. If omitted or None, the
+<cite>directory</cite> basename is used</li>
+<li><strong>hdf_groupname</strong> (<em>str</em><em>, </em><em>optional</em>) &#8211; Name to use for the hdf group of this dataset. If omitted or
+None, the <cite>directory</cite> basename is used. Raises an exception if
+the group already exists in the HDF file.</li>
+<li><strong>energy_range</strong> (<em>2-tuple</em><em>, </em><em>optional</em>) &#8211; A 2-tuple with the (min, max) energy to be imported. This is
+useful if only a subset of the available data is usable. Values
+are assumed to be in electron-volts.</li>
+<li><strong>exclude_re</strong> (<em>str</em><em>, </em><em>optional</em>) &#8211; Any filenames matching this regular expression will not be
+imported. A string or compiled re object can be given.</li>
+<li><strong>append</strong> (<em>bool</em><em>, </em><em>optional</em>) &#8211; If True, any existing dataset will be added to, rather
+than replaced (default False)</li>
 </ul>
 </td>
 </tr>
@@ -829,13 +847,9 @@ is usable. Values are assumed to be in electron-volts.</li>
 <code class="descclassname">xanespy.importers.</code><code class="descname">import_ssrl_frameset</code><span class="sig-paren">(</span><em>directory</em>, <em>hdf_filename=None</em><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.importers.import_ssrl_frameset" title="Permalink to this definition">¶</a></dt>
 <dd><p>Import all files in the given directory collected at SSRL beamline
 6-2c and process into framesets. Images are assumed to full-field
-transmission X-ray micrographs and repetitions will be averaged.</p>
+transmission X-ray micrographs and repetitions will be
+averaged. Passed on to <code class="docutils literal"><span class="pre">xanespy.importers.import_frameset</span></code></p>
 </dd></dl>
-
-<dl class="function">
-<dt id="xanespy.importers.import_txm_framesets">
-<code class="descclassname">xanespy.importers.</code><code class="descname">import_txm_framesets</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.importers.import_txm_framesets" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
 
 <dl class="function">
 <dt id="xanespy.importers.magnification_correction">
@@ -845,19 +859,23 @@ transmission X-ray micrographs and repetitions will be averaged.</p>
 changes and so the image is zoomed-out at higher energies. This
 method applies a correction to each frame to make the
 magnification similar to that of the first frame. Some beamlines
-correct for this automatically during acquisition: APS 8-BM-B, 32-ID-C.</p>
-<p>Returns a 2-tuple of (scale, translation) arrays. Each array has
-the same length as <cite>frames</cite> with an additional length-2 dimension
-at the end for (x, y).</p>
+correct for this automatically during acquisition and don&#8217;t need
+this function: APS 8-BM-B, 32-ID-C.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>frames</strong> (<em>-</em>) &#8211; </li>
-<li><strong>pixel_sizes</strong> (<em>-</em>) &#8211; </li>
-<li><strong>in frames.</strong> (<em>entries</em>) &#8211; </li>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>frames</strong> (<em>np.ndarray</em>) &#8211; Numpy array of image frames that need to be corrected.</li>
+<li><strong>pixel_sizes</strong> (<em>np.ndarray</em>) &#8211; Numpy array of pixel sizes corresponding to entries in <cite>frames</cite>.</li>
 </ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>(scales2D, translations)</strong> &#8211; An array of scale factors to use for applying a correction to
+each frame. Translations show how much to move each frame array by to re-center it.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">(np.ndarray, np.ndarray)</p>
 </td>
 </tr>
 </tbody>
@@ -1889,7 +1907,7 @@ suitable for numpy indexing.</p>
 <code class="descclassname">xanespy.utilities.</code><code class="descname">prog</code><span class="sig-paren">(</span><em>*args</em>, <em>leave=False</em>, <em>dynamic_ncols=True</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.utilities.prog" title="Permalink to this definition">¶</a></dt>
 <dd><p>A progress bar for displaying how many iterations have been
 completed. This is mostly just a wrapper around the tqdm
-library. <a href="#id21"><span class="problematic" id="id22">*</span></a>args and <a href="#id23"><span class="problematic" id="id24">**</span></a>kwargs are passed directly to either
+library. <a href="#id23"><span class="problematic" id="id24">*</span></a>args and <a href="#id25"><span class="problematic" id="id26">**</span></a>kwargs are passed directly to either
 tqdm.tqdm or tqdm.tqdm_notebook.</p>
 </dd></dl>
 
@@ -2650,31 +2668,56 @@ conservative threshold.</li>
 <dl class="method">
 <dt id="xanespy.xanes_frameset.XanesFrameset.stage_transformations">
 <code class="descname">stage_transformations</code><span class="sig-paren">(</span><em>translations=None</em>, <em>rotations=None</em>, <em>center=(0</em>, <em>0)</em>, <em>scales=None</em><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.xanes_frameset.XanesFrameset.stage_transformations" title="Permalink to this definition">¶</a></dt>
-<dd><p>Allows for deferred transformation of the frame data. Since each
-transformation introduces interpolation error, the best
-results occur when the translations are saved up and then
+<dd><p>Allows for deferred transformation of the frame data.</p>
+<p>Since each transformation introduces interpolation error, the
+best results occur when the translations are saved up and then
 applied all in one shot. Takes a combination of arrays of
 translations (x, y), rotations and/or scales and saves them
 for later application. This method should be used in
 conjunction apply_transformations().</p>
+<p>All three arguments should have shapes that are compatible
+with the frame data, though this is not strictly enforced for
+now. Rotation will necessarily have one less degree of freedom
+than translation/scale values.</p>
+<p>Example Shapes:</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="41%" />
+<col width="21%" />
+<col width="19%" />
+<col width="19%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Frames</th>
+<th class="head">Translations</th>
+<th class="head">Rotations</th>
+<th class="head">Scales</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>(10, 48, 1024, 1024)</td>
+<td>(10, 48, 2)</td>
+<td>(10, 48, 1)</td>
+<td>(10, 48, 2)</td>
+</tr>
+<tr class="row-odd"><td>(10, 48, 1024, 1024, 1024)</td>
+<td>(10, 48, 3)</td>
+<td>(10, 48, 2)</td>
+<td>(10, 48, 3)</td>
+</tr>
+</tbody>
+</table>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>translations</strong> (<em>-</em>) &#8211; </li>
-<li><strong>rotations</strong> (<em>-</em>) &#8211; pixel.</li>
-<li><strong>center</strong> (<em>-</em>) &#8211; first pixel (0, 0).</li>
-<li><strong>scales</strong> (<em>-</em>) &#8211; (x, y[, z]).</li>
-<li><strong>three arguments should have shapes that are compatible</strong> (<em>All</em>) &#8211; </li>
-<li><strong>the frame data</strong><strong>, </strong><strong>though this is not strictly enforced for</strong> (<em>with</em>) &#8211; </li>
-<li><strong>Rotation will necessarily have one less degree of freedom</strong> (<em>now.</em>) &#8211; </li>
-<li><strong>translation/scale values.</strong> (<em>than</em>) &#8211; </li>
-<li><strong>Shapes</strong> (<em>Example</em>) &#8211; </li>
-<li><strong>Frames                     | Translations | Rotations   | Scales      |</strong> (<em>|</em>) &#8211; </li>
-<li><strong>--------------------------------------------------------------------|</strong> &#8211; </li>
-<li><strong></strong><strong>(</strong><strong>10</strong><strong>, </strong><strong>48</strong><strong>, </strong><strong>1024</strong><strong>, </strong><strong>1024</strong><strong>)       </strong><strong>|</strong><strong> (</strong><strong>10</strong><strong>, </strong><strong>48</strong><strong>, </strong><strong>2</strong><strong>)  </strong><strong>|</strong><strong> (</strong><strong>10</strong><strong>, </strong><strong>48</strong><strong>, </strong><strong>1</strong><strong>) </strong><strong>|</strong><strong> (</strong><strong>10</strong><strong>, </strong><strong>48</strong><strong>, </strong><strong>2</strong><strong>) </strong><strong>|</strong> (<em>|</em>) &#8211; </li>
-<li><strong></strong><strong>(</strong><strong>10</strong><strong>, </strong><strong>48</strong><strong>, </strong><strong>1024</strong><strong>, </strong><strong>1024</strong><strong>, </strong><strong>1024</strong><strong>) </strong><strong>|</strong><strong> (</strong><strong>10</strong><strong>, </strong><strong>48</strong><strong>, </strong><strong>3</strong><strong>)  </strong><strong>|</strong><strong> (</strong><strong>10</strong><strong>, </strong><strong>48</strong><strong>, </strong><strong>2</strong><strong>) </strong><strong>|</strong><strong> (</strong><strong>10</strong><strong>, </strong><strong>48</strong><strong>, </strong><strong>3</strong><strong>) </strong><strong>|</strong> (<em>|</em>) &#8211; </li>
+<li><strong>translations</strong> (<em>np.ndarray</em>) &#8211; How much to move each axis (x, y[, z]).</li>
+<li><strong>rotations</strong> (<em>np.ndarray</em>) &#8211; How much to rotate around the origin (0, 0) pixel.</li>
+<li><strong>center</strong> (<em>2-tuple</em>) &#8211; Where to set the origin of rotation. Default is the first
+pixel (0, 0).</li>
+<li><strong>scales</strong> (<em>np.ndarray</em>) &#8211; How much to scale the image by in each dimension (x, y[,
+z]).</li>
 </ul>
 </td>
 </tr>
@@ -2780,7 +2823,7 @@ functions will operate on large arrays of data.</p>
 <dt id="xanespy.xanes_math.apply_internal_reference">
 <code class="descclassname">xanespy.xanes_math.</code><code class="descname">apply_internal_reference</code><span class="sig-paren">(</span><em>intensities</em>, <em>out=None</em><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.xanes_math.apply_internal_reference" title="Permalink to this definition">¶</a></dt>
 <dd><p>Apply a reference correction to complex data to convert intensities
-into refractive index. I_0 is determined by separating the pixels
+into refractive index. <span class="math">\(I_0\)</span> is determined by separating the pixels
 into background and foreground using Otsu&#8217;s method.</p>
 <p>Arrays <cite>intensities</cite> and <cite>out</cite> must all have the same shape where
 the last two dimensions are image rows and column.</p>
@@ -2790,9 +2833,25 @@ the last two dimensions are image rows and column.</p>
 <dt id="xanespy.xanes_math.apply_references">
 <code class="descclassname">xanespy.xanes_math.</code><code class="descname">apply_references</code><span class="sig-paren">(</span><em>intensities</em>, <em>references</em>, <em>out=None</em><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.xanes_math.apply_references" title="Permalink to this definition">¶</a></dt>
 <dd><p>Apply a reference correction to convert intensity values to optical
-depth (-ln(I/I0)) values. Arrays <cite>intensities</cite>, <cite>references</cite> and
-<cite>out</cite> must all have the same shape where the last two dimensions
-are image rows and columns.</p>
+depth.</p>
+<p>The formula <span class="math">\(-ln\frac{intensities}{references}\)</span> is used to
+calculate the new values. Arrays <code class="docutils literal"><span class="pre">intensities</span></code>, <code class="docutils literal"><span class="pre">references</span></code>
+and <code class="docutils literal"><span class="pre">out</span></code> must all have the same shape where the last two
+dimensions are image rows and columns.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>intensities</strong> (<em>np.ndarray</em>) &#8211; Sample input signal data.</li>
+<li><strong>references</strong> (<em>np.ndarray</em>) &#8211; Background input signal data. Must be the same shape as
+intensities.</li>
+<li><strong>out</strong> (<em>np.ndarray</em><em>, </em><em>optional</em>) &#8211; Array to receive the results.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="function">

@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.17 (TeX Live 2016/Arch Linux) (preloaded format=pdflatex 2016.11.21)  1 JAN 2017 21:29
+This is pdfTeX, Version 3.14159265-2.6-1.40.17 (TeX Live 2016/Arch Linux) (preloaded format=pdflatex 2016.11.21)  2 JAN 2017 00:59
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -1156,7 +1156,25 @@ LaTeX Font Info:    Font shape `T1/ptm/bx/n' in size <10> not available
 
 ]
 Chapter 1.
-[3] [4
+LaTeX Font Info:    Try loading font information for TS1+ptm on input line 84.
+(/usr/share/texmf-dist/tex/latex/psnfss/ts1ptm.fd
+File: ts1ptm.fd 2001/06/04 font definitions for TS1/ptm.
+)
+LaTeX Font Info:    Try loading font information for T1+pcr on input line 100.
+
+(/usr/share/texmf-dist/tex/latex/psnfss/t1pcr.fd
+File: t1pcr.fd 2001/06/04 font definitions for T1/pcr.
+)
+LaTeX Font Info:    Font shape `T1/pcr/bx/n' in size <9> not available
+(Font)              Font shape `T1/pcr/b/n' tried instead on input line 101.
+LaTeX Font Info:    Font shape `T1/pcr/m/it' in size <9> not available
+(Font)              Font shape `T1/pcr/m/sl' tried instead on input line 103.
+LaTeX Font Info:    Try loading font information for TS1+pcr on input line 104.
+
+
+(/usr/share/texmf-dist/tex/latex/psnfss/ts1pcr.fd
+File: ts1pcr.fd 2001/06/04 font definitions for TS1/pcr.
+) [3] [4
 
 ]
 Chapter 2.
@@ -1176,38 +1194,36 @@ Chapter 5.
 
 ]
 Chapter 6.
-LaTeX Font Info:    Try loading font information for TS1+ptm on input line 118.
-
-(/usr/share/texmf-dist/tex/latex/psnfss/ts1ptm.fd
-File: ts1ptm.fd 2001/06/04 font definitions for TS1/ptm.
-) (./Xanespy.ind)
-Package atveryend Info: Empty hook `BeforeClearDocument' on input line 133.
+(./Xanespy.ind)
+Package atveryend Info: Empty hook `BeforeClearDocument' on input line 202.
  [13]
-Package atveryend Info: Empty hook `AfterLastShipout' on input line 133.
-
-(./Xanespy.aux)
-Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 133.
-Package atveryend Info: Executing hook `AtEndAfterFileList' on input line 133.
+Package atveryend Info: Empty hook `AfterLastShipout' on input line 202.
+ (./Xanespy.aux)
+Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 202.
+Package atveryend Info: Executing hook `AtEndAfterFileList' on input line 202.
 Package rerunfilecheck Info: File `Xanespy.out' has not changed.
-(rerunfilecheck)             Checksum: AFF10A56642079559DCAC3529DFA650C;2801.
-Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 133.
+(rerunfilecheck)             Checksum: 79F228EA7F0FD86EE6CD01D38C8B1F75;2686.
+Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 202.
  ) 
 Here is how much of TeX's memory you used:
- 13681 strings out of 493013
- 186093 string characters out of 6139316
- 279170 words of memory out of 5000000
- 16895 multiletter control sequences out of 15000+600000
- 38350 words of font info for 56 fonts, out of 8000000 for 9000
+ 13756 strings out of 493013
+ 187054 string characters out of 6139316
+ 296131 words of memory out of 5000000
+ 16947 multiletter control sequences out of 15000+600000
+ 46057 words of font info for 69 fonts, out of 8000000 for 9000
  1142 hyphenation exceptions out of 8191
- 37i,11n,45p,303b,363s stack positions out of 5000i,500n,10000p,200000b,80000s
+ 37i,11n,45p,408b,435s stack positions out of 5000i,500n,10000p,200000b,80000s
 {/usr/share/texmf-dist/fonts/enc/dvips/base/8r.enc}</usr/share/texmf-dist/fon
-ts/type1/urw/helvetic/uhvb8a.pfb></usr/share/texmf-dist/fonts/type1/urw/helveti
-c/uhvbo8a.pfb></usr/share/texmf-dist/fonts/type1/urw/times/utmb8a.pfb></usr/sha
-re/texmf-dist/fonts/type1/urw/times/utmr8a.pfb>
-Output written on Xanespy.pdf (17 pages, 62067 bytes).
+ts/type1/urw/courier/ucrb8a.pfb></usr/share/texmf-dist/fonts/type1/urw/courier/
+ucrr8a.pfb></usr/share/texmf-dist/fonts/type1/urw/courier/ucrro8a.pfb></usr/sha
+re/texmf-dist/fonts/type1/urw/helvetic/uhvb8a.pfb></usr/share/texmf-dist/fonts/
+type1/urw/helvetic/uhvbo8a.pfb></usr/share/texmf-dist/fonts/type1/urw/times/utm
+b8a.pfb></usr/share/texmf-dist/fonts/type1/urw/times/utmr8a.pfb></usr/share/tex
+mf-dist/fonts/type1/urw/times/utmri8a.pfb>
+Output written on Xanespy.pdf (17 pages, 107833 bytes).
 PDF statistics:
- 195 PDF objects out of 1000 (max. 8388607)
- 165 compressed objects within 2 object streams
- 35 named destinations out of 1000 (max. 500000)
- 157 words of extra memory for PDF output out of 10000 (max. 10000000)
+ 206 PDF objects out of 1000 (max. 8388607)
+ 172 compressed objects within 2 object streams
+ 34 named destinations out of 1000 (max. 500000)
+ 149 words of extra memory for PDF output out of 10000 (max. 10000000)
 

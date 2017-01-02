@@ -257,26 +257,14 @@ class XanesFrameset():
 
     def stage_transformations(self, translations=None, rotations=None, center=(0, 0),
                               scales=None):
-        """Allows for deferred transformation of the frame data. Since each
-        transformation introduces interpolation error, the best
-        results occur when the translations are saved up and then
+        """Allows for deferred transformation of the frame data.
+
+        Since each transformation introduces interpolation error, the
+        best results occur when the translations are saved up and then
         applied all in one shot. Takes a combination of arrays of
         translations (x, y), rotations and/or scales and saves them
         for later application. This method should be used in
         conjunction apply_transformations().
-
-        Arguments
-        ---------
-        - translations : How much to move each axis (x, y[, z]).
-
-        - rotations : How much to rotate around the origin (0, 0)
-          pixel.
-
-        - center : Where to set the origin of rotation. Default is the
-          first pixel (0, 0).
-
-        - scales : How much to scale the image by in each dimension
-          (x, y[, z]).
 
         All three arguments should have shapes that are compatible
         with the frame data, though this is not strictly enforced for
@@ -284,10 +272,28 @@ class XanesFrameset():
         than translation/scale values.
 
         Example Shapes:
+
+        +----------------------------+--------------+-------------+-------------+
         | Frames                     | Translations | Rotations   | Scales      |
-        |----------------------------|--------------|-------------|-------------|
+        +============================+==============+=============+=============+
         | (10, 48, 1024, 1024)       | (10, 48, 2)  | (10, 48, 1) | (10, 48, 2) |
+        +----------------------------+--------------+-------------+-------------+
         | (10, 48, 1024, 1024, 1024) | (10, 48, 3)  | (10, 48, 2) | (10, 48, 3) |
+        +----------------------------+--------------+-------------+-------------+
+
+        Parameters
+        ----------
+        translations : np.ndarray
+          How much to move each axis (x, y[, z]).
+        rotations : np.ndarray
+          How much to rotate around the origin (0, 0) pixel.
+        center : 2-tuple
+          Where to set the origin of rotation. Default is the first
+          pixel (0, 0).
+        scales : np.ndarray
+          How much to scale the image by in each dimension (x, y[,
+          z]).
+
         """
         # Compute the new transformation matrics for the given transformations
         new_transforms = xm.transformation_matrices(scales=scales,

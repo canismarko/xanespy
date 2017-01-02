@@ -41,7 +41,7 @@
 
 
 \title{Xanespy Documentation}
-\date{Jan 01, 2017}
+\date{Jan 02, 2017}
 \release{0.1}
 \author{Mark Wolf}
 \newcommand{\sphinxlogo}{}
@@ -64,21 +64,62 @@ it represents could change at any time.
 
 
 \chapter{Introduction}
-\label{\detokenize{intro::doc}}\label{\detokenize{intro:xanespy-s-documentation}}\label{\detokenize{intro:introduction}}
-Hello, I'm an introduction
+\label{\detokenize{intro:xanespy-documentation}}\label{\detokenize{intro::doc}}\label{\detokenize{intro:introduction}}
+Xanespy is a toolkit for interacting with X-ray microscopy data, most
+likely collected at a synchrotron beamline. By collecting a set of
+frames at multiple X-ray energies, spectral maps are reconstructed to
+provide chemical insight. Multiple framesets can be collected
+sequentially as part of an \sphinxstyleemphasis{operando} experiment and analyzed
+simultaneously in python. Slow operations take advantage of multiple
+cores when available.
 
 
-\section{Purpose}
-\label{\detokenize{intro:purpose}}
+\section{X-Ray Absorbance Basics}
+\label{\detokenize{intro:x-ray-absorbance-basics}}
 
-\section{X-Ray Absorbance Fundamentals}
-\label{\detokenize{intro:x-ray-absorbance-fundamentals}}
+\section{Example Workflow}
+\label{\detokenize{intro:example-workflow}}
+A typical prcocedure for interacting with microscope frame-sets involves the following parts:
+\begin{itemize}
+\item {} 
+Import the raw data
 
-\section{Sample WorkFlow}
-\label{\detokenize{intro:sample-workflow}}
+\item {} 
+Apply corrections and align the images
+
+\item {} 
+Calculate some metric and create maps of it
+
+\item {} 
+Visualize the maps, static or interactively.
+
+\end{itemize}
+
+Example for a single frameset across an X-ray absorbance edge:
+
+\begin{sphinxVerbatim}[commandchars=\\\{\}]
+\PYG{k+kn}{import} \PYG{n+nn}{xanespy}
+
+\PYG{c+c1}{\PYGZsh{} Example for importing from SSRL beamline 6\PYGZhy{}2c}
+\PYG{n}{xanespy}\PYG{o}{.}\PYG{n}{import\PYGZus{}ssrl\PYGZus{}frameset}\PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}}\PYG{l+s+s1}{\PYGZlt{}data\PYGZus{}dir\PYGZgt{}}\PYG{l+s+s1}{\PYGZsq{}}\PYG{p}{,} \PYG{n}{hdf\PYGZus{}filename}\PYG{o}{=}\PYG{l+s+s1}{\PYGZsq{}}\PYG{l+s+s1}{imported\PYGZus{}data.h5}\PYG{l+s+s1}{\PYGZsq{}}\PYG{p}{)}
+
+\PYG{c+c1}{\PYGZsh{} Load a pre\PYGZhy{}defined XAS edge or create your own subclass xanespy.Edge}
+\PYG{n}{edge} \PYG{o}{=} \PYG{n}{xanespy}\PYG{o}{.}\PYG{n}{k\PYGZus{}edges}\PYG{p}{[}\PYG{l+s+s1}{\PYGZsq{}}\PYG{l+s+s1}{Ni\PYGZus{}NCA}\PYG{l+s+s1}{\PYGZsq{}}\PYG{p}{]}
+\PYG{c+c1}{\PYGZsh{} Now load the newly created HDF5 file and the X\PYGZhy{}ray absorbance edge}
+\PYG{n}{fs} \PYG{o}{=} \PYG{n}{xanespy}\PYG{o}{.}\PYG{n}{XanesFrameset}\PYG{p}{(}\PYG{n}{filename}\PYG{o}{=}\PYG{l+s+s1}{\PYGZsq{}}\PYG{l+s+s1}{imported\PYGZus{}data.h5}\PYG{l+s+s1}{\PYGZsq{}}\PYG{p}{,} \PYG{n}{edge}\PYG{o}{=}\PYG{n}{edge}\PYG{p}{)}
+
+\PYG{c+c1}{\PYGZsh{} Perform automatic frame alignment}
+\PYG{n}{fs}\PYG{o}{.}\PYG{n}{align\PYGZus{}frames}\PYG{p}{(}\PYG{n}{passes}\PYG{o}{=}\PYG{l+m+mi}{5}\PYG{p}{)}
+\PYG{c+c1}{\PYGZsh{} Fit the absorbance spectra and extract the edge position (SLOW!)}
+\PYG{n}{fs}\PYG{o}{.}\PYG{n}{fit\PYGZus{}spectra}\PYG{p}{(}\PYG{p}{)}
+
+\PYG{c+c1}{\PYGZsh{} Inspect the result with the built\PYGZhy{}in Qt5 GUI}
+\PYG{n}{fs}\PYG{o}{.}\PYG{n}{qt\PYGZus{}viewer}\PYG{p}{(}\PYG{p}{)}
+\end{sphinxVerbatim}
+
 
 \chapter{Importing Data into Xanespy}
-\label{\detokenize{importing::doc}}\label{\detokenize{importing:importing-data-into-xanespy}}
+\label{\detokenize{importing:importing-data-into-xanespy}}\label{\detokenize{importing::doc}}
 
 \section{TXM from 8-BM (APS) and 6-2c (SSRL)}
 \label{\detokenize{importing:txm-from-8-bm-aps-and-6-2c-ssrl}}
@@ -87,7 +128,7 @@ Hello, I'm an introduction
 \label{\detokenize{importing:ptychography-from-5-3-2-1-als}}
 
 \chapter{Analyzing the Data}
-\label{\detokenize{analysis::doc}}\label{\detokenize{analysis:analyzing-the-data}}
+\label{\detokenize{analysis:analyzing-the-data}}\label{\detokenize{analysis::doc}}
 
 \section{Frame Alignment}
 \label{\detokenize{analysis:frame-alignment}}
@@ -102,7 +143,7 @@ Hello, I'm an introduction
 \label{\detokenize{analysis:spectrum-fitting-l-edge}}
 
 \chapter{Visualization of Results}
-\label{\detokenize{visualization::doc}}\label{\detokenize{visualization:visualization-of-results}}
+\label{\detokenize{visualization:visualization-of-results}}\label{\detokenize{visualization::doc}}
 
 \section{Plotting}
 \label{\detokenize{visualization:plotting}}
@@ -112,6 +153,34 @@ Hello, I'm an introduction
 
 \chapter{Accessing the Data Directly}
 \label{\detokenize{data_stores:accessing-the-data-directly}}\label{\detokenize{data_stores::doc}}
+While the \sphinxcode{XanesFrameset} class has methods for common tasks,
+sometimes it is necessary to access the data directly, as either numpy
+arrays or h5py datasets. The xanes\_frameset has a \sphinxcode{store()} method
+that returns an interface (\sphinxcode{TXMStore}) to the underlying HDF5 file.
+
+\begin{sphinxadmonition}{warning}{Warning:}
+The \sphinxcode{TXMStore} created by \sphinxcode{xanes\_frameset.store()} is
+attached to an open HDF5 file. It is strongly recommended to use
+the \sphinxcode{with} statement described below. Otherwise make sure to call
+the store's \sphinxcode{close()} method in a \sphinxcode{try...except}
+block. File corruption is possible if not opened in this manner.
+\end{sphinxadmonition}
+
+Call the following to get access to the associated datasets. Properties of the interface will
+return an HDF5 dataset in most cases.:
+
+\begin{sphinxVerbatim}[commandchars=\\\{\}]
+\PYG{k+kn}{import} \PYG{n+nn}{xanespy} \PYG{k}{as} \PYG{n+nn}{xp}
+\PYG{n}{frameset} \PYG{o}{=} \PYG{n}{xp}\PYG{o}{.}\PYG{n}{XanesFrameset}\PYG{p}{(}\PYG{o}{.}\PYG{o}{.}\PYG{o}{.}\PYG{p}{)}
+
+\PYG{c+c1}{\PYGZsh{} Open the TXMStore interface}
+\PYG{k}{with} \PYG{n}{frameset}\PYG{o}{.}\PYG{n}{store}\PYG{p}{(}\PYG{p}{)} \PYG{k}{as} \PYG{n}{store}\PYG{p}{:}
+    \PYG{c+c1}{\PYGZsh{} For example, the images are in (timestep, energy, row, column) order}
+    \PYG{k}{assert} \PYG{n}{store}\PYG{o}{.}\PYG{n}{absorbances}\PYG{o}{.}\PYG{n}{shape} \PYG{o}{==} \PYG{p}{(}\PYG{l+m+mi}{10}\PYG{p}{,} \PYG{l+m+mi}{62}\PYG{p}{,} \PYG{l+m+mi}{1024}\PYG{p}{,} \PYG{l+m+mi}{1024}\PYG{p}{)}
+    \PYG{c+c1}{\PYGZsh{} Energies are in (timestep, energy) order}
+    \PYG{k}{assert} \PYG{n}{store}\PYG{o}{.}\PYG{n}{energies}\PYG{o}{.}\PYG{n}{shape} \PYG{o}{==} \PYG{p}{(}\PYG{l+m+mi}{10}\PYG{p}{,} \PYG{l+m+mi}{62}\PYG{p}{)}
+\end{sphinxVerbatim}
+
 
 \chapter{Indices and tables}
 \label{\detokenize{index:indices-and-tables}}\begin{itemize}

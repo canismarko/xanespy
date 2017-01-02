@@ -4,7 +4,7 @@
    contain the root `toctree` directive.
 .. title:: Xanespy Documentation
 
-Xanespy's documentation
+Xanespy documentation
 =======================
 
 Python library for analyzing **X-Ray absorbance spectroscopy** data.

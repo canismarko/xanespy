@@ -28,7 +28,7 @@
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Importing Data into Xanespy" href="importing.html" />
-    <link rel="prev" title="Xanespy’s documentation" href="index.html" /> 
+    <link rel="prev" title="Xanespy documentation" href="index.html" /> 
   </head>
   <body role="document">
     <div class="related" role="navigation" aria-label="related navigation">
@@ -44,7 +44,7 @@
           <a href="importing.html" title="Importing Data into Xanespy"
              accesskey="N">next</a> |</li>
         <li class="right" >
-          <a href="index.html" title="Xanespy’s documentation"
+          <a href="index.html" title="Xanespy documentation"
              accesskey="P">previous</a> |</li>
         <li class="nav-item nav-item-0"><a href="index.html">Xanespy 0.1 documentation</a> &#187;</li> 
       </ul>
@@ -57,15 +57,45 @@
             
   <div class="section" id="introduction">
 <h1>Introduction<a class="headerlink" href="#introduction" title="Permalink to this headline">¶</a></h1>
-<p>Hello, I&#8217;m an introduction</p>
-<div class="section" id="purpose">
-<h2>Purpose<a class="headerlink" href="#purpose" title="Permalink to this headline">¶</a></h2>
+<p>Xanespy is a toolkit for interacting with X-ray microscopy data, most
+likely collected at a synchrotron beamline. By collecting a set of
+frames at multiple X-ray energies, spectral maps are reconstructed to
+provide chemical insight. Multiple framesets can be collected
+sequentially as part of an <em>operando</em> experiment and analyzed
+simultaneously in python. Slow operations take advantage of multiple
+cores when available.</p>
+<div class="section" id="x-ray-absorbance-basics">
+<h2>X-Ray Absorbance Basics<a class="headerlink" href="#x-ray-absorbance-basics" title="Permalink to this headline">¶</a></h2>
 </div>
-<div class="section" id="x-ray-absorbance-fundamentals">
-<h2>X-Ray Absorbance Fundamentals<a class="headerlink" href="#x-ray-absorbance-fundamentals" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="example-workflow">
+<h2>Example Workflow<a class="headerlink" href="#example-workflow" title="Permalink to this headline">¶</a></h2>
+<p>A typical prcocedure for interacting with microscope frame-sets involves the following parts:</p>
+<ul class="simple">
+<li>Import the raw data</li>
+<li>Apply corrections and align the images</li>
+<li>Calculate some metric and create maps of it</li>
+<li>Visualize the maps, static or interactively.</li>
+</ul>
+<p>Example for a single frameset across an X-ray absorbance edge:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">xanespy</span>
+
+<span class="c1"># Example for importing from SSRL beamline 6-2c</span>
+<span class="n">xanespy</span><span class="o">.</span><span class="n">import_ssrl_frameset</span><span class="p">(</span><span class="s1">&#39;&lt;data_dir&gt;&#39;</span><span class="p">,</span> <span class="n">hdf_filename</span><span class="o">=</span><span class="s1">&#39;imported_data.h5&#39;</span><span class="p">)</span>
+
+<span class="c1"># Load a pre-defined XAS edge or create your own subclass xanespy.Edge</span>
+<span class="n">edge</span> <span class="o">=</span> <span class="n">xanespy</span><span class="o">.</span><span class="n">k_edges</span><span class="p">[</span><span class="s1">&#39;Ni_NCA&#39;</span><span class="p">]</span>
+<span class="c1"># Now load the newly created HDF5 file and the X-ray absorbance edge</span>
+<span class="n">fs</span> <span class="o">=</span> <span class="n">xanespy</span><span class="o">.</span><span class="n">XanesFrameset</span><span class="p">(</span><span class="n">filename</span><span class="o">=</span><span class="s1">&#39;imported_data.h5&#39;</span><span class="p">,</span> <span class="n">edge</span><span class="o">=</span><span class="n">edge</span><span class="p">)</span>
+
+<span class="c1"># Perform automatic frame alignment</span>
+<span class="n">fs</span><span class="o">.</span><span class="n">align_frames</span><span class="p">(</span><span class="n">passes</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
+<span class="c1"># Fit the absorbance spectra and extract the edge position (SLOW!)</span>
+<span class="n">fs</span><span class="o">.</span><span class="n">fit_spectra</span><span class="p">()</span>
+
+<span class="c1"># Inspect the result with the built-in Qt5 GUI</span>
+<span class="n">fs</span><span class="o">.</span><span class="n">qt_viewer</span><span class="p">()</span>
+</pre></div>
 </div>
-<div class="section" id="sample-workflow">
-<h2>Sample WorkFlow<a class="headerlink" href="#sample-workflow" title="Permalink to this headline">¶</a></h2>
 </div>
 </div>
 
@@ -81,16 +111,15 @@
   <h3><a href="index.html">Table Of Contents</a></h3>
   <ul>
 <li><a class="reference internal" href="#">Introduction</a><ul>
-<li><a class="reference internal" href="#purpose">Purpose</a></li>
-<li><a class="reference internal" href="#x-ray-absorbance-fundamentals">X-Ray Absorbance Fundamentals</a></li>
-<li><a class="reference internal" href="#sample-workflow">Sample WorkFlow</a></li>
+<li><a class="reference internal" href="#x-ray-absorbance-basics">X-Ray Absorbance Basics</a></li>
+<li><a class="reference internal" href="#example-workflow">Example Workflow</a></li>
 </ul>
 </li>
 </ul>
 
   <h4>Previous topic</h4>
   <p class="topless"><a href="index.html"
-                        title="previous chapter">Xanespy&#8217;s documentation</a></p>
+                        title="previous chapter">Xanespy documentation</a></p>
   <h4>Next topic</h4>
   <p class="topless"><a href="importing.html"
                         title="next chapter">Importing Data into Xanespy</a></p>
@@ -128,7 +157,7 @@
           <a href="importing.html" title="Importing Data into Xanespy"
              >next</a> |</li>
         <li class="right" >
-          <a href="index.html" title="Xanespy’s documentation"
+          <a href="index.html" title="Xanespy documentation"
              >previous</a> |</li>
         <li class="nav-item nav-item-0"><a href="index.html">Xanespy 0.1 documentation</a> &#187;</li> 
       </ul>

@@ -62,7 +62,7 @@ def iter_indices(data, leftover_dims=1, desc=None):
 
 def apply_internal_reference(intensities, out=None):
     """Apply a reference correction to complex data to convert intensities
-    into refractive index. I_0 is determined by separating the pixels
+    into refractive index. :math:`I_0` is determined by separating the pixels
     into background and foreground using Otsu's method.
 
     Arrays `intensities` and `out` must all have the same shape where
@@ -154,9 +154,23 @@ def extract_signals_nmf(spectra, n_components, nmf_kwargs=None, mask=None):
 def apply_references(intensities, references, out=None):
 
     """Apply a reference correction to convert intensity values to optical
-    depth (-ln(I/I0)) values. Arrays `intensities`, `references` and
-    `out` must all have the same shape where the last two dimensions
-    are image rows and columns.
+    depth.
+
+    The formula :math:`-ln\\frac{intensities}{references}` is used to
+    calculate the new values. Arrays ``intensities``, ``references``
+    and ``out`` must all have the same shape where the last two
+    dimensions are image rows and columns.
+
+    Parameters
+    ----------
+    intensities : np.ndarray
+      Sample input signal data.
+    references : np.ndarray
+      Background input signal data. Must be the same shape as
+      intensities.
+    out : np.ndarray, optional
+      Array to receive the results.
+
     """
     # Create an empty array to hold the results
     if out is None:

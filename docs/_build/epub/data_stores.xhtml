@@ -18,6 +18,31 @@
             
   <div class="section" id="accessing-the-data-directly">
 <h1>Accessing the Data Directly</h1>
+<p>While the <code class="docutils literal"><span class="pre">XanesFrameset</span></code> class has methods for common tasks,
+sometimes it is necessary to access the data directly, as either numpy
+arrays or h5py datasets. The xanes_frameset has a <code class="docutils literal"><span class="pre">store()</span></code> method
+that returns an interface (<code class="docutils literal"><span class="pre">TXMStore</span></code>) to the underlying HDF5 file.</p>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p class="last">The <code class="docutils literal"><span class="pre">TXMStore</span></code> created by <code class="docutils literal"><span class="pre">xanes_frameset.store()</span></code> is
+attached to an open HDF5 file. It is strongly recommended to use
+the <code class="docutils literal"><span class="pre">with</span></code> statement described below. Otherwise make sure to call
+the store&#8217;s <code class="docutils literal"><span class="pre">close()</span></code> method in a <code class="docutils literal"><span class="pre">try...except</span></code>
+block. File corruption is possible if not opened in this manner.</p>
+</div>
+<p>Call the following to get access to the associated datasets. Properties of the interface will
+return an HDF5 dataset in most cases.:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">xanespy</span> <span class="k">as</span> <span class="nn">xp</span>
+<span class="n">frameset</span> <span class="o">=</span> <span class="n">xp</span><span class="o">.</span><span class="n">XanesFrameset</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
+
+<span class="c1"># Open the TXMStore interface</span>
+<span class="k">with</span> <span class="n">frameset</span><span class="o">.</span><span class="n">store</span><span class="p">()</span> <span class="k">as</span> <span class="n">store</span><span class="p">:</span>
+    <span class="c1"># For example, the images are in (timestep, energy, row, column) order</span>
+    <span class="k">assert</span> <span class="n">store</span><span class="o">.</span><span class="n">absorbances</span><span class="o">.</span><span class="n">shape</span> <span class="o">==</span> <span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">62</span><span class="p">,</span> <span class="mi">1024</span><span class="p">,</span> <span class="mi">1024</span><span class="p">)</span>
+    <span class="c1"># Energies are in (timestep, energy) order</span>
+    <span class="k">assert</span> <span class="n">store</span><span class="o">.</span><span class="n">energies</span><span class="o">.</span><span class="n">shape</span> <span class="o">==</span> <span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">62</span><span class="p">)</span>
+</pre></div>
+</div>
 </div>
 
 

@@ -10,127 +10,121 @@
     <text>Xanespy</text>
   </docTitle>
   <navMap>
-    <navPoint id="navPoint18" playOrder="1">
+    <navPoint id="navPoint17" playOrder="1">
       <navLabel>
-        <text>Xanespy&#39;s documentation</text>
+        <text>Xanespy documentation</text>
       </navLabel>
       <content src="index.xhtml" />
     </navPoint>
-    <navPoint id="navPoint19" playOrder="2">
+    <navPoint id="navPoint18" playOrder="2">
       <navLabel>
         <text>Introduction</text>
       </navLabel>
       <content src="intro.xhtml" />
-      <navPoint id="navPoint20" playOrder="2">
+      <navPoint id="navPoint19" playOrder="2">
         <navLabel>
           <text>Introduction</text>
         </navLabel>
         <content src="intro.xhtml" />
       </navPoint>
-      <navPoint id="navPoint21" playOrder="3">
+      <navPoint id="navPoint20" playOrder="3">
         <navLabel>
-          <text>Purpose</text>
+          <text>X-Ray Absorbance Basics</text>
         </navLabel>
-        <content src="intro.xhtml#purpose" />
+        <content src="intro.xhtml#x-ray-absorbance-basics" />
       </navPoint>
-      <navPoint id="navPoint22" playOrder="4">
+      <navPoint id="navPoint21" playOrder="4">
         <navLabel>
-          <text>X-Ray Absorbance Fundamentals</text>
+          <text>Example Workflow</text>
         </navLabel>
-        <content src="intro.xhtml#x-ray-absorbance-fundamentals" />
-      </navPoint>
-      <navPoint id="navPoint23" playOrder="5">
-        <navLabel>
-          <text>Sample WorkFlow</text>
-        </navLabel>
-        <content src="intro.xhtml#sample-workflow" />
+        <content src="intro.xhtml#example-workflow" />
       </navPoint>
     </navPoint>
-    <navPoint id="navPoint24" playOrder="6">
+    <navPoint id="navPoint22" playOrder="5">
       <navLabel>
         <text>Importing Data into Xanespy</text>
       </navLabel>
       <content src="importing.xhtml" />
-      <navPoint id="navPoint25" playOrder="6">
+      <navPoint id="navPoint23" playOrder="5">
         <navLabel>
           <text>Importing Data into Xanespy</text>
         </navLabel>
         <content src="importing.xhtml" />
       </navPoint>
-      <navPoint id="navPoint26" playOrder="7">
+      <navPoint id="navPoint24" playOrder="6">
         <navLabel>
           <text>TXM from 8-BM (APS) and 6-2c (SSRL)</text>
         </navLabel>
         <content src="importing.xhtml#txm-from-8-bm-aps-and-6-2c-ssrl" />
       </navPoint>
-      <navPoint id="navPoint27" playOrder="8">
+      <navPoint id="navPoint25" playOrder="7">
         <navLabel>
           <text>Ptychography from 5.3.2.1 (ALS)</text>
         </navLabel>
         <content src="importing.xhtml#ptychography-from-5-3-2-1-als" />
       </navPoint>
     </navPoint>
-    <navPoint id="navPoint28" playOrder="9">
+    <navPoint id="navPoint26" playOrder="8">
       <navLabel>
         <text>Analyzing the Data</text>
       </navLabel>
       <content src="analysis.xhtml" />
-      <navPoint id="navPoint29" playOrder="9">
+      <navPoint id="navPoint27" playOrder="8">
         <navLabel>
           <text>Analyzing the Data</text>
         </navLabel>
         <content src="analysis.xhtml" />
       </navPoint>
-      <navPoint id="navPoint30" playOrder="10">
+      <navPoint id="navPoint28" playOrder="9">
         <navLabel>
           <text>Frame Alignment</text>
         </navLabel>
         <content src="analysis.xhtml#frame-alignment" />
       </navPoint>
-      <navPoint id="navPoint31" playOrder="11">
+      <navPoint id="navPoint29" playOrder="10">
         <navLabel>
           <text>Subtracting Surroundings</text>
         </navLabel>
         <content src="analysis.xhtml#subtracting-surroundings" />
       </navPoint>
-      <navPoint id="navPoint32" playOrder="12">
+      <navPoint id="navPoint30" playOrder="11">
         <navLabel>
           <text>Spectrum Fitting - K-Edge</text>
         </navLabel>
         <content src="analysis.xhtml#spectrum-fitting-k-edge" />
       </navPoint>
-      <navPoint id="navPoint33" playOrder="13">
+      <navPoint id="navPoint31" playOrder="12">
         <navLabel>
           <text>Spectrum Fitting - L-Edge</text>
         </navLabel>
         <content src="analysis.xhtml#spectrum-fitting-l-edge" />
       </navPoint>
     </navPoint>
-    <navPoint id="navPoint34" playOrder="14">
+    <navPoint id="navPoint32" playOrder="13">
       <navLabel>
         <text>Visualization of Results</text>
       </navLabel>
       <content src="visualization.xhtml" />
-      <navPoint id="navPoint35" playOrder="14">
+      <navPoint id="navPoint33" playOrder="13">
         <navLabel>
           <text>Visualization of Results</text>
         </navLabel>
         <content src="visualization.xhtml" />
       </navPoint>
-      <navPoint id="navPoint36" playOrder="15">
+      <navPoint id="navPoint34" playOrder="14">
         <navLabel>
           <text>Plotting</text>
         </navLabel>
         <content src="visualization.xhtml#plotting" />
       </navPoint>
-      <navPoint id="navPoint37" playOrder="16">
+      <navPoint id="navPoint35" playOrder="15">
         <navLabel>
           <text>Interactive Viewer (Qt)</text>
         </navLabel>
         <content src="visualization.xhtml#interactive-viewer-qt" />
       </navPoint>
     </navPoint>
-    <navPoint id="navPoint38" playOrder="17">
+    <navPoint id="navPoint36" playOrder="16">
       <navLabel>
         <text>Accessing the Data Directly</text>
       </navLabel>
