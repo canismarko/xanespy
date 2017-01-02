@@ -3,7 +3,9 @@ Xanespy
 
 [!["Travis-CI"](https://travis-ci.org/m3wolf/xanespy.svg?branch=master "Travis-CI")](https://travis-ci.org/m3wolf/xanespy/ "Travis-CI")
 [!["Coverage Status"](https://coveralls.io/repos/github/m3wolf/xanespy/badge.svg?branch=master "Coverage status")](https://coveralls.io/github/m3wolf/xanespy?branch=master "Coverage status")
-[!["Documentation Status"](https://img.shields.io/badge/docs-latest-brightgreen.svg?style=flat "Documentation status")](https://coveralls.io/github/m3wolf/xanespy?branch=master "Documentation status")
+[!["Documentation Status"](https://readthedocs.org/projects/xanespy/badge/?version=latest "Documentation status")](http://xanespy.readthedocs.io/en/latest/?badge=latest "Documentation status")
+
+
 
 Xanespy is a library for analyzing X-ray absorbance spectroscopy data
 for materials science, chemistry and similar fields. The major focus

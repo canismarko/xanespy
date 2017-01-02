@@ -1,0 +1,3290 @@
+<!DOCTYPE html>
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>xanespy package</title>
+    
+    <link rel="stylesheet" href="_static/epub.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" /> 
+  </head>
+  <body role="document">
+
+    <div class="document">
+      <div class="documentwrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="xanespy-package">
+<h1>xanespy package</h1>
+<div class="section" id="submodules">
+<h2>Submodules</h2>
+</div>
+<div class="section" id="module-xanespy.beamlines">
+<span id="xanespy-beamlines-module"></span><h2>xanespy.beamlines module</h2>
+<p>Functions and classes that prepare experiments at specific
+synchrotron beamlines.</p>
+<dl class="class">
+<dt id="xanespy.beamlines.Detector">
+<em class="property">class </em><code class="descclassname">xanespy.beamlines.</code><code class="descname">Detector</code><span class="sig-paren">(</span><em>start: xanespy.beamlines.ZoneplatePoint</em>, <em>z_step: int = None</em>, <em>end: xanespy.beamlines.ZoneplatePoint = None</em><span class="sig-paren">)</span></dt>
+<dd><p>Bases: <a class="reference internal" href="#xanespy.beamlines.Zoneplate" title="xanespy.beamlines.Zoneplate"><code class="xref py py-class docutils literal"><span class="pre">xanespy.beamlines.Zoneplate</span></code></a></p>
+<p>A calibration object for the position of the detector.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="xanespy.beamlines.DetectorPoint">
+<em class="property">class </em><code class="descclassname">xanespy.beamlines.</code><code class="descname">DetectorPoint</code><span class="sig-paren">(</span><em>z</em>, <em>energy</em><span class="sig-paren">)</span></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">tuple</span></code></p>
+<dl class="attribute">
+<dt id="xanespy.beamlines.DetectorPoint.energy">
+<code class="descname">energy</code></dt>
+<dd><p>Alias for field number 1</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="xanespy.beamlines.DetectorPoint.z">
+<code class="descname">z</code></dt>
+<dd><p>Alias for field number 0</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="xanespy.beamlines.Zoneplate">
+<em class="property">class </em><code class="descclassname">xanespy.beamlines.</code><code class="descname">Zoneplate</code><span class="sig-paren">(</span><em>start: xanespy.beamlines.ZoneplatePoint</em>, <em>z_step: int = None</em>, <em>end: xanespy.beamlines.ZoneplatePoint = None</em><span class="sig-paren">)</span></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<p>Type of focusing optic using in X-ray microscopy. It must be moved
+with changing energy to properly focus the beam. In order to
+properly predict zoneplate positions, it needs either two
+position-energy pairs or one position-energy pair and a
+step. Passing two position-energy pairs is preffered because this
+allows x, y and z to be set properly instead of just z.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>start</strong> (<em>-</em>) &#8211; </li>
+<li><strong>z_step</strong> (<em>-</em>) &#8211; of beam energy.</li>
+<li><strong>end</strong> (<em>-</em>) &#8211; </li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="xanespy.beamlines.Zoneplate.position">
+<code class="descname">position</code><span class="sig-paren">(</span><em>energy: float</em><span class="sig-paren">)</span></dt>
+<dd><p>Predict the x, y and z position of the zonplate for the given energy.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="xanespy.beamlines.ZoneplatePoint">
+<em class="property">class </em><code class="descclassname">xanespy.beamlines.</code><code class="descname">ZoneplatePoint</code><span class="sig-paren">(</span><em>x</em>, <em>y</em>, <em>z</em>, <em>energy</em><span class="sig-paren">)</span></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">tuple</span></code></p>
+<dl class="attribute">
+<dt id="xanespy.beamlines.ZoneplatePoint.energy">
+<code class="descname">energy</code></dt>
+<dd><p>Alias for field number 3</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="xanespy.beamlines.ZoneplatePoint.x">
+<code class="descname">x</code></dt>
+<dd><p>Alias for field number 0</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="xanespy.beamlines.ZoneplatePoint.y">
+<code class="descname">y</code></dt>
+<dd><p>Alias for field number 1</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="xanespy.beamlines.ZoneplatePoint.z">
+<code class="descname">z</code></dt>
+<dd><p>Alias for field number 2</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="xanespy.beamlines.sector8_xanes_script">
+<code class="descclassname">xanespy.beamlines.</code><code class="descname">sector8_xanes_script</code><span class="sig-paren">(</span><em>dest, edge: edges.KEdge, zoneplate: xanespy.beamlines.Zoneplate, detector: xanespy.beamlines.Detector, sample_positions: typing.List[utilities.position], names: typing.List[str], iterations: typing.Iterable = range(0, 1), binning: int = 1, exposure: int = 30, abba_mode: bool = True</em><span class="sig-paren">)</span></dt>
+<dd><p>Prepare an script file for running multiple consecutive XANES
+framesets on the transmission x-ray micrscope at the Advanced
+Photon Source beamline 8-BM-B.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>dest</strong> (<em>-</em>) &#8211; </li>
+<li><strong>edge</strong> (<em>-</em>) &#8211; </li>
+<li><strong>binning</strong> (<em>-</em>) &#8211; (eg. 2 means 2x2 CCD pixels become 1 image pixel.</li>
+<li><strong>exposure</strong> (<em>-</em>) &#8211; </li>
+<li><strong>sample_positions</strong> (<em>-</em>) &#8211; order to capture the image.</li>
+<li><strong>zoneplate</strong> (<em>-</em>) &#8211; </li>
+<li><strong>detector</strong> (<em>-</em>) &#8211; </li>
+<li><strong>names</strong> (<em>-</em>) &#8211; </li>
+<li><strong>iterations</strong> (<em>-</em>) &#8211; set of xanes location with reference.</li>
+<li><strong>abba_mode</strong> (<em>-</em>) &#8211; to save time. Eg: reference, sample, change-energy, sample,
+reference, change-energy, etc. Not compatible with <cite>frame_rest</cite>
+argument.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="xanespy.beamlines.ssrl6_xanes_script">
+<code class="descclassname">xanespy.beamlines.</code><code class="descname">ssrl6_xanes_script</code><span class="sig-paren">(</span><em>dest, edge: edges.KEdge, zoneplate: xanespy.beamlines.Zoneplate, positions: typing.List[utilities.position], reference_position: utilities.position, iterations: typing.Iterable, iteration_rest: int = 0, frame_rest: int = 0, binning: int = 2, exposure: int = 0.5, repetitions: int = 5, ref_repetitions: int = 10, abba_mode: bool = True</em><span class="sig-paren">)</span></dt>
+<dd><p>Prepare a script file for running multiple consecutive XANES
+framesets on the transmission x-ray micrscope at the Advanced
+Photon Source beamline 8-BM-B. Both <cite>iteration_rest</cite> and
+<cite>frame_rest</cite> can be used to give the material time to recover from
+X-ray damage.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>dest</strong> (<em>-</em>) &#8211; </li>
+<li><strong>edge</strong> (<em>-</em>) &#8211; </li>
+<li><strong>binning</strong> (<em>-</em>) &#8211; (eg. 2 means 2x2 CCD pixels become 1 image pixel.</li>
+<li><strong>exposure</strong> (<em>-</em>) &#8211; </li>
+<li><strong>positions</strong> (<em>-</em>) &#8211; order to capture the image.</li>
+<li><strong>reference_position</strong> (<em>-</em>) &#8211; reference frame.</li>
+<li><strong>iteration_rest</strong> (<em>-</em>) &#8211; iterations. Beam will wait at reference location before starting
+next XANES set.</li>
+<li><strong>frame_rest</strong> (<em>-</em>) &#8211; wait at reference location before starting next energy frame.</li>
+<li><strong>zoneplate</strong> (<em>-</em>) &#8211; </li>
+<li><strong>detector</strong> (<em>-</em>) &#8211; </li>
+<li><strong>iterations</strong> (<em>-</em>) &#8211; </li>
+<li><strong>repetitions</strong> (<em>-</em>) &#8211; location/energy. These frames will then be averaged during
+analysis.</li>
+<li><strong>ref_repetitions</strong> (<em>-</em>) &#8211; </li>
+<li><strong>abba_mode</strong> (<em>-</em>) &#8211; locations first to save time. Eg: reference, sample,
+change-energy, sample, reference, change-energy, etc. Not
+compatible with <cite>frame_rest</cite> argument.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="xanespy.beamlines.write_scaninfo_header">
+<code class="descclassname">xanespy.beamlines.</code><code class="descname">write_scaninfo_header</code><span class="sig-paren">(</span><em>f</em>, <em>abba_mode</em>, <em>repetitions</em>, <em>ref_repetitions</em><span class="sig-paren">)</span></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="module-xanespy.edges">
+<span id="xanespy-edges-module"></span><h2>xanespy.edges module</h2>
+<p>Descriptions of X-ray energy absorption edge.</p>
+<dl class="class">
+<dt id="xanespy.edges.Edge">
+<em class="property">class </em><code class="descclassname">xanespy.edges.</code><code class="descname">Edge</code></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<p>An X-ray absorption edge. It is defined by a series of energy
+ranges. All energies are assumed to be in units of
+electron-volts. This class is intended to be extended into K-edge,
+L-edge, etc.</p>
+<dl class="attribute">
+<dt id="xanespy.edges.Edge.E_0">
+<code class="descname">E_0</code></dt>
+<dd><p><em>number - The energy of the absorption edge itself.</em></p>
+</dd></dl>
+
+<dl class="attribute">
+<dt>
+<code class="descname">*regions</code></dt>
+<dd><p><em>3-tuples - All the energy regions. Each tuple is of the</em> &#8211; form (start, end, step) and is inclusive at both ends.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="xanespy.edges.Edge.name">
+<code class="descname">name</code></dt>
+<dd><p><em>string - A human-readable name for this edge (eg &#8220;Ni K-edge&#8221;)</em></p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="xanespy.edges.Edge.pre_edge">
+<code class="descname">pre_edge</code></dt>
+<dd><p><em>2-tuple (start, stop) - Energy range that defines points</em> &#8211; below the edge region, inclusive.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="xanespy.edges.Edge.post_edge">
+<code class="descname">post_edge</code></dt>
+<dd><p><em>2-tuple (start, stop) - Energy range that defines points</em> &#8211; above the edge region, inclusive.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt>
+<code class="descname">post_edge_order - What degree polynomial to use for fitting</code></dt>
+<dd><p>the post_edge region.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="xanespy.edges.Edge.map_range">
+<code class="descname">map_range</code></dt>
+<dd><p><em>2-tuple (start, stop) - Energy range used for</em> &#8211; normalizing maps. If not supplied, will be determine from pre-
+and post-edge arguments.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="xanespy.edges.Edge.edge_range">
+<code class="descname">edge_range</code></dt>
+<dd><p><em>2-tuple (start, stop) - Energy range used to determine</em> &#8211; the official beginning and edge of the edge itself.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt>
+<code class="descname">E_0</code><em class="property"> = None</em></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="xanespy.edges.Edge.all_energies">
+<code class="descname">all_energies</code><span class="sig-paren">(</span><span class="sig-paren">)</span></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt>
+<code class="descname">edge_range</code><em class="property"> = None</em></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="xanespy.edges.Edge.energies_in_range">
+<code class="descname">energies_in_range</code><span class="sig-paren">(</span><em>norm_range=None</em><span class="sig-paren">)</span></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt>
+<code class="descname">map_range</code><em class="property"> = None</em></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt>
+<code class="descname">post_edge</code><em class="property"> = None</em></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="xanespy.edges.Edge.post_edge_order">
+<code class="descname">post_edge_order</code><em class="property"> = 2</em></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt>
+<code class="descname">pre_edge</code><em class="property"> = None</em></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="xanespy.edges.Edge.pre_edge_fit">
+<code class="descname">pre_edge_fit</code><em class="property"> = None</em></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="xanespy.edges.Edge.regions">
+<code class="descname">regions</code><em class="property"> = []</em></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="xanespy.edges.KEdge">
+<em class="property">class </em><code class="descclassname">xanespy.edges.</code><code class="descname">KEdge</code></dt>
+<dd><p>Bases: <a class="reference internal" href="#xanespy.edges.Edge" title="xanespy.edges.Edge"><code class="xref py py-class docutils literal"><span class="pre">xanespy.edges.Edge</span></code></a></p>
+<p>An X-ray absorption K-edge corresponding to a 1s transition.</p>
+<dl class="method">
+<dt id="xanespy.edges.KEdge.annotate_spectrum">
+<code class="descname">annotate_spectrum</code><span class="sig-paren">(</span><em>ax</em><span class="sig-paren">)</span></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="xanespy.edges.KEdge.mask">
+<code class="descname">mask</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span></dt>
+<dd><p>Return a numpy array mask for material that&#8217;s active at this
+edge. Calculations are done in <a href="#id1"><span class="problematic" id="id2">`</span></a>xanes_math.l_edge_mask().</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="xanespy.edges.LEdge">
+<em class="property">class </em><code class="descclassname">xanespy.edges.</code><code class="descname">LEdge</code></dt>
+<dd><p>Bases: <a class="reference internal" href="#xanespy.edges.Edge" title="xanespy.edges.Edge"><code class="xref py py-class docutils literal"><span class="pre">xanespy.edges.Edge</span></code></a></p>
+<p>An X-ray absorption K-edge corresponding to a 2s or 2p
+transition.</p>
+<dl class="method">
+<dt id="xanespy.edges.LEdge.annotate_spectrum">
+<code class="descname">annotate_spectrum</code><span class="sig-paren">(</span><em>ax</em><span class="sig-paren">)</span></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="xanespy.edges.LEdge.mask">
+<code class="descname">mask</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span></dt>
+<dd><p>Return a numpy array mask for material that&#8217;s active at this
+edge. Calculations are done in <a href="#id3"><span class="problematic" id="id4">`</span></a>xanes_math.l_edge_mask().</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="xanespy.edges.LMOMnKEdge">
+<em class="property">class </em><code class="descclassname">xanespy.edges.</code><code class="descname">LMOMnKEdge</code></dt>
+<dd><p>Bases: <a class="reference internal" href="#xanespy.edges.KEdge" title="xanespy.edges.KEdge"><code class="xref py py-class docutils literal"><span class="pre">xanespy.edges.KEdge</span></code></a></p>
+<dl class="attribute">
+<dt id="xanespy.edges.LMOMnKEdge.regions">
+<code class="descname">regions</code><em class="property"> = [(6450, 6510, 20), (6524, 6542, 2), (6544, 6564, 1), (6566, 6568, 2), (6572, 6600, 4), (6610, 6650, 10), (6700, 6850, 50)]</em></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="xanespy.edges.NCACobaltLEdge">
+<em class="property">class </em><code class="descclassname">xanespy.edges.</code><code class="descname">NCACobaltLEdge</code></dt>
+<dd><p>Bases: <a class="reference internal" href="#xanespy.edges.LEdge" title="xanespy.edges.LEdge"><code class="xref py py-class docutils literal"><span class="pre">xanespy.edges.LEdge</span></code></a></p>
+<dl class="attribute">
+<dt id="xanespy.edges.NCACobaltLEdge.E_0">
+<code class="descname">E_0</code><em class="property"> = 793.2</em></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="xanespy.edges.NCACobaltLEdge.map_range">
+<code class="descname">map_range</code><em class="property"> = (0, 1)</em></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="xanespy.edges.NCACobaltLEdge.post_edge">
+<code class="descname">post_edge</code><em class="property"> = (785, 790)</em></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="xanespy.edges.NCACobaltLEdge.pre_edge">
+<code class="descname">pre_edge</code><em class="property"> = (770, 775)</em></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="xanespy.edges.NCACobaltLEdge.regions">
+<code class="descname">regions</code><em class="property"> = [(770, 775, 1), (775, 785, 0.5), (785, 790, 1)]</em></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="xanespy.edges.NCANickelKEdge">
+<em class="property">class </em><code class="descclassname">xanespy.edges.</code><code class="descname">NCANickelKEdge</code></dt>
+<dd><p>Bases: <a class="reference internal" href="#xanespy.edges.KEdge" title="xanespy.edges.KEdge"><code class="xref py py-class docutils literal"><span class="pre">xanespy.edges.KEdge</span></code></a></p>
+<dl class="attribute">
+<dt id="xanespy.edges.NCANickelKEdge.E_0">
+<code class="descname">E_0</code><em class="property"> = 8333</em></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="xanespy.edges.NCANickelKEdge.edge_range">
+<code class="descname">edge_range</code><em class="property"> = (8341, 8358)</em></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="xanespy.edges.NCANickelKEdge.map_range">
+<code class="descname">map_range</code><em class="property"> = (8341, 8358)</em></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="xanespy.edges.NCANickelKEdge.post_edge">
+<code class="descname">post_edge</code><em class="property"> = (8440, 8640)</em></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="xanespy.edges.NCANickelKEdge.pre_edge">
+<code class="descname">pre_edge</code><em class="property"> = (8249, 8281)</em></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="xanespy.edges.NCANickelKEdge.regions">
+<code class="descname">regions</code><em class="property"> = [(8250, 8310, 20), (8324, 8344, 2), (8344, 8356, 1), (8356, 8360, 2), (8360, 8400, 4), (8400, 8440, 8), (8440, 8640, 50)]</em></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="xanespy.edges.NCANickelKEdge.shell">
+<code class="descname">shell</code><em class="property"> = 'K'</em></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="xanespy.edges.NCANickelKEdge61">
+<em class="property">class </em><code class="descclassname">xanespy.edges.</code><code class="descname">NCANickelKEdge61</code></dt>
+<dd><p>Bases: <a class="reference internal" href="#xanespy.edges.NCANickelKEdge" title="xanespy.edges.NCANickelKEdge"><code class="xref py py-class docutils literal"><span class="pre">xanespy.edges.NCANickelKEdge</span></code></a></p>
+<dl class="attribute">
+<dt id="xanespy.edges.NCANickelKEdge61.regions">
+<code class="descname">regions</code><em class="property"> = [(8250, 8310, 15), (8324, 8360, 1), (8360, 8400, 4), (8400, 8440, 8), (8440, 8640, 50)]</em></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="xanespy.edges.NCANickelKEdge62">
+<em class="property">class </em><code class="descclassname">xanespy.edges.</code><code class="descname">NCANickelKEdge62</code></dt>
+<dd><p>Bases: <a class="reference internal" href="#xanespy.edges.NCANickelKEdge" title="xanespy.edges.NCANickelKEdge"><code class="xref py py-class docutils literal"><span class="pre">xanespy.edges.NCANickelKEdge</span></code></a></p>
+<dl class="attribute">
+<dt id="xanespy.edges.NCANickelKEdge62.regions">
+<code class="descname">regions</code><em class="property"> = [(8250, 8310, 15), (8324, 8360, 1), (8360, 8400, 4), (8400, 8440, 8), (8440, 8690, 50)]</em></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="xanespy.edges.NCANickelLEdge">
+<em class="property">class </em><code class="descclassname">xanespy.edges.</code><code class="descname">NCANickelLEdge</code></dt>
+<dd><p>Bases: <a class="reference internal" href="#xanespy.edges.LEdge" title="xanespy.edges.LEdge"><code class="xref py py-class docutils literal"><span class="pre">xanespy.edges.LEdge</span></code></a></p>
+<dl class="attribute">
+<dt id="xanespy.edges.NCANickelLEdge.E_0">
+<code class="descname">E_0</code><em class="property"> = 853</em></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="xanespy.edges.NCANickelLEdge.map_range">
+<code class="descname">map_range</code><em class="property"> = (0, 1)</em></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="xanespy.edges.NCANickelLEdge.post_edge">
+<code class="descname">post_edge</code><em class="property"> = (857, 862)</em></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="xanespy.edges.NCANickelLEdge.pre_edge">
+<code class="descname">pre_edge</code><em class="property"> = (844, 848)</em></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="xanespy.edges.NCANickelLEdge.regions">
+<code class="descname">regions</code><em class="property"> = [(844, 848, 1), (849, 856, 0.25), (857, 862, 1)]</em></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-xanespy.exceptions">
+<span id="xanespy-exceptions-module"></span><h2>xanespy.exceptions module</h2>
+<p>Define classes for more fine-grained control over exception
+handling.</p>
+<dl class="exception">
+<dt id="xanespy.exceptions.CreateGroupError">
+<em class="property">exception </em><code class="descclassname">xanespy.exceptions.</code><code class="descname">CreateGroupError</code></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">ValueError</span></code></p>
+<p>Tried to import a TXM frameset into a group but the corresponding
+HDF group already exists or is otherwise inaccessible.</p>
+</dd></dl>
+
+<dl class="exception">
+<dt id="xanespy.exceptions.DataFormatError">
+<em class="property">exception </em><code class="descclassname">xanespy.exceptions.</code><code class="descname">DataFormatError</code></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">RuntimeError</span></code></p>
+<p>The raw data are arranged in a way that the importers or TXM classes do
+not understand.</p>
+</dd></dl>
+
+<dl class="exception">
+<dt id="xanespy.exceptions.DataNotFoundError">
+<em class="property">exception </em><code class="descclassname">xanespy.exceptions.</code><code class="descname">DataNotFoundError</code></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">FileNotFoundError</span></code></p>
+<p>Expected a directory containing data but found none.</p>
+</dd></dl>
+
+<dl class="exception">
+<dt id="xanespy.exceptions.DatasetExistsError">
+<em class="property">exception </em><code class="descclassname">xanespy.exceptions.</code><code class="descname">DatasetExistsError</code></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">RuntimeError</span></code></p>
+<p>Trying to save a new dataset but one already exists with the given
+path.</p>
+</dd></dl>
+
+<dl class="exception">
+<dt id="xanespy.exceptions.FileExistsError">
+<em class="property">exception </em><code class="descclassname">xanespy.exceptions.</code><code class="descname">FileExistsError</code></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">OSError</span></code></p>
+<p>Tried to import a TXM frameset but the corresponding HDF file
+already exists.</p>
+</dd></dl>
+
+<dl class="exception">
+<dt id="xanespy.exceptions.FilenameParseError">
+<em class="property">exception </em><code class="descclassname">xanespy.exceptions.</code><code class="descname">FilenameParseError</code></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">ValueError</span></code></p>
+<p>The parameters in the filename do not match the naming scheme
+associated with this flavor.</p>
+</dd></dl>
+
+<dl class="exception">
+<dt id="xanespy.exceptions.FrameFileNotFound">
+<em class="property">exception </em><code class="descclassname">xanespy.exceptions.</code><code class="descname">FrameFileNotFound</code></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">OSError</span></code></p>
+<p>Expected to load a TXM frame file but it doesn&#8217;t exist.</p>
+</dd></dl>
+
+<dl class="exception">
+<dt id="xanespy.exceptions.GroupKeyError">
+<em class="property">exception </em><code class="descclassname">xanespy.exceptions.</code><code class="descname">GroupKeyError</code></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">KeyError</span></code></p>
+<p>Tried to load or create an HDF group but failed. Examples include:
+the group doesn&#8217;t exist, is ambiguous or already exists when being
+created.</p>
+</dd></dl>
+
+<dl class="exception">
+<dt id="xanespy.exceptions.HDFScopeError">
+<em class="property">exception </em><code class="descclassname">xanespy.exceptions.</code><code class="descname">HDFScopeError</code></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">ValueError</span></code></p>
+<p>Tried to pass an HDF scope that is not recognized.</p>
+</dd></dl>
+
+<dl class="exception">
+<dt id="xanespy.exceptions.NoParticleError">
+<em class="property">exception </em><code class="descclassname">xanespy.exceptions.</code><code class="descname">NoParticleError</code></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">Exception</span></code></p>
+</dd></dl>
+
+<dl class="exception">
+<dt id="xanespy.exceptions.RefinementError">
+<em class="property">exception </em><code class="descclassname">xanespy.exceptions.</code><code class="descname">RefinementError</code></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">RuntimeError</span></code></p>
+</dd></dl>
+
+<dl class="exception">
+<dt id="xanespy.exceptions.XanesMathError">
+<em class="property">exception </em><code class="descclassname">xanespy.exceptions.</code><code class="descname">XanesMathError</code></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">RuntimeError</span></code></p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-xanespy.gtk_plotter">
+<span id="xanespy-gtk-plotter-module"></span><h2>xanespy.gtk_plotter module</h2>
+<dl class="class">
+<dt id="xanespy.gtk_plotter.DummyGtkPlotter">
+<em class="property">class </em><code class="descclassname">xanespy.gtk_plotter.</code><code class="descname">DummyGtkPlotter</code><span class="sig-paren">(</span><em>frameset</em><span class="sig-paren">)</span></dt>
+<dd><p>Bases: <a class="reference internal" href="#xanespy.gtk_plotter.GtkFramesetPlotter" title="xanespy.gtk_plotter.GtkFramesetPlotter"><code class="xref py py-class docutils literal"><span class="pre">xanespy.gtk_plotter.GtkFramesetPlotter</span></code></a></p>
+<dl class="method">
+<dt id="xanespy.gtk_plotter.DummyGtkPlotter.connect_animation">
+<code class="descname">connect_animation</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="xanespy.gtk_plotter.GtkFramesetPlotter">
+<em class="property">class </em><code class="descclassname">xanespy.gtk_plotter.</code><code class="descname">GtkFramesetPlotter</code><span class="sig-paren">(</span><em>frameset</em><span class="sig-paren">)</span></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<p>A class that handles the graphic display of TXM data using GTK
+canvases, keeping track of things like active representation and
+axes for each plot type. It should be thought of as an interface
+to a plotting library, such as matplotlib.</p>
+<dl class="attribute">
+<dt id="xanespy.gtk_plotter.GtkFramesetPlotter.active_component">
+<code class="descname">active_component</code><em class="property"> = 'modulus'</em></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="xanespy.gtk_plotter.GtkFramesetPlotter.active_pixel">
+<code class="descname">active_pixel</code><em class="property"> = None</em></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="xanespy.gtk_plotter.GtkFramesetPlotter.active_representation">
+<code class="descname">active_representation</code><em class="property"> = 'absorbances'</em></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="xanespy.gtk_plotter.GtkFramesetPlotter.active_timestep">
+<code class="descname">active_timestep</code><em class="property"> = 0</em></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="xanespy.gtk_plotter.GtkFramesetPlotter.active_xy">
+<code class="descname">active_xy</code><em class="property"> = None</em></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="xanespy.gtk_plotter.GtkFramesetPlotter.apply_edge_jump">
+<code class="descname">apply_edge_jump</code><em class="property"> = False</em></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="xanespy.gtk_plotter.GtkFramesetPlotter.connect_animation">
+<code class="descname">connect_animation</code><span class="sig-paren">(</span><em>event_source</em><span class="sig-paren">)</span></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="xanespy.gtk_plotter.GtkFramesetPlotter.create_axes">
+<code class="descname">create_axes</code><span class="sig-paren">(</span><span class="sig-paren">)</span></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="xanespy.gtk_plotter.GtkFramesetPlotter.destroy">
+<code class="descname">destroy</code><span class="sig-paren">(</span><span class="sig-paren">)</span></dt>
+<dd><p>Remove figures and attempt to reclaim memory.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="xanespy.gtk_plotter.GtkFramesetPlotter.draw">
+<code class="descname">draw</code><span class="sig-paren">(</span><span class="sig-paren">)</span></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="xanespy.gtk_plotter.GtkFramesetPlotter.draw_crosshairs">
+<code class="descname">draw_crosshairs</code><span class="sig-paren">(</span><em>active_xy=None</em>, <em>color='black'</em><span class="sig-paren">)</span></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="xanespy.gtk_plotter.GtkFramesetPlotter.draw_map">
+<code class="descname">draw_map</code><span class="sig-paren">(</span><em>show_map=True</em>, <em>show_background=False</em><span class="sig-paren">)</span></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="xanespy.gtk_plotter.GtkFramesetPlotter.draw_map_xanes">
+<code class="descname">draw_map_xanes</code><span class="sig-paren">(</span><em>active_pixel=None</em><span class="sig-paren">)</span></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="xanespy.gtk_plotter.GtkFramesetPlotter.frame_figure">
+<code class="descname">frame_figure</code></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="xanespy.gtk_plotter.GtkFramesetPlotter.image_crosshairs">
+<code class="descname">image_crosshairs</code><em class="property"> = None</em></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="xanespy.gtk_plotter.GtkFramesetPlotter.map_cmap">
+<code class="descname">map_cmap</code><em class="property"> = 'plasma'</em></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="xanespy.gtk_plotter.GtkFramesetPlotter.map_crosshairs">
+<code class="descname">map_crosshairs</code><em class="property"> = None</em></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="xanespy.gtk_plotter.GtkFramesetPlotter.map_figure">
+<code class="descname">map_figure</code></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="xanespy.gtk_plotter.GtkFramesetPlotter.normalize_map_xanes">
+<code class="descname">normalize_map_xanes</code><em class="property"> = True</em></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="xanespy.gtk_plotter.GtkFramesetPlotter.normalize_xanes">
+<code class="descname">normalize_xanes</code><em class="property"> = True</em></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="xanespy.gtk_plotter.GtkFramesetPlotter.plot_frame_spectra">
+<code class="descname">plot_frame_spectra</code><span class="sig-paren">(</span><em>active_pixel=None</em><span class="sig-paren">)</span></dt>
+<dd><p>Plot the XANES spectra on the axes in the frame window.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="xanespy.gtk_plotter.GtkFramesetPlotter.plot_histogram">
+<code class="descname">plot_histogram</code><span class="sig-paren">(</span><span class="sig-paren">)</span></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="xanespy.gtk_plotter.GtkFramesetPlotter.plot_map_spectra">
+<code class="descname">plot_map_spectra</code><span class="sig-paren">(</span><em>active_pixel=None</em><span class="sig-paren">)</span></dt>
+<dd><p>Plot the XANES spectra on the axes in the map window.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="xanespy.gtk_plotter.GtkFramesetPlotter.plot_xanes_spectra">
+<code class="descname">plot_xanes_spectra</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="xanespy.gtk_plotter.GtkFramesetPlotter.refresh_artists">
+<code class="descname">refresh_artists</code><span class="sig-paren">(</span><span class="sig-paren">)</span></dt>
+<dd><p>Prepare artist objects for each frame and animate them for easy
+transitioning.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="xanespy.gtk_plotter.GtkFramesetPlotter.show_particles">
+<code class="descname">show_particles</code><em class="property"> = False</em></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="xanespy.gtk_plotter.GtkFramesetPlotter.xanes_scatter">
+<code class="descname">xanes_scatter</code><em class="property"> = None</em></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="xanespy-gtk-viewer-module">
+<h2>xanespy.gtk_viewer module</h2>
+</div>
+<div class="section" id="module-xanespy.importers">
+<span id="xanespy-importers-module"></span><h2>xanespy.importers module</h2>
+<dl class="function">
+<dt id="xanespy.importers.decode_aps_params">
+<code class="descclassname">xanespy.importers.</code><code class="descname">decode_aps_params</code><span class="sig-paren">(</span><em>filename</em><span class="sig-paren">)</span></dt>
+<dd><p>Accept the filename of an XRM file and return sample parameters as
+a dictionary.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="xanespy.importers.decode_ssrl_params">
+<code class="descclassname">xanespy.importers.</code><code class="descname">decode_ssrl_params</code><span class="sig-paren">(</span><em>filename</em><span class="sig-paren">)</span></dt>
+<dd><p>Accept the filename of an XRM file and return sample parameters as
+a dictionary.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="xanespy.importers.import_aps_8BM_frameset">
+<code class="descclassname">xanespy.importers.</code><code class="descname">import_aps_8BM_frameset</code><span class="sig-paren">(</span><em>directory</em>, <em>hdf_filename</em>, <em>quiet=False</em><span class="sig-paren">)</span></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="xanespy.importers.import_frameset">
+<code class="descclassname">xanespy.importers.</code><code class="descname">import_frameset</code><span class="sig-paren">(</span><em>directory</em>, <em>flavor</em>, <em>hdf_filename</em><span class="sig-paren">)</span></dt>
+<dd><p>Import all files in the given directory collected at APS beamline
+8-BM-B and process into framesets. Images are assumed to
+full-field transmission X-ray micrographs. This beamline does not
+produce the flux to warrant averaging.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="xanespy.importers.import_nanosurveyor_frameset">
+<code class="descclassname">xanespy.importers.</code><code class="descname">import_nanosurveyor_frameset</code><span class="sig-paren">(</span><em>directory: str</em>, <em>quiet=False</em>, <em>hdf_filename=None</em>, <em>hdf_groupname=None</em>, <em>energy_range=None</em>, <em>exclude_re=None</em>, <em>append=False</em><span class="sig-paren">)</span></dt>
+<dd><p>Import a set of images as a new frameset for generating
+ptychography chemical maps based on data collected at ALS beamline
+5.3.2.1</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>directory</strong> (<em>-</em>) &#8211; </li>
+<li><strong>cxi files that are the output of the ptychography reconstruction.&quot;</strong> (<em>contain</em>) &#8211; </li>
+<li><strong>quiet</strong> (<em>-</em>) &#8211; </li>
+<li><strong>hdf_filename</strong> (<em>-</em>) &#8211; omitted or None, the <cite>directory</cite> basename is used</li>
+<li><strong>hdf_groupname</strong> (<em>-</em>) &#8211; dataset. If omitted or None, the <cite>directory</cite> basename is
+used. Raises an exception if the group already exists in the HDF
+file.</li>
+<li><strong>energy_range</strong> (<em>-</em>) &#8211; imported. This is useful if only a subset of the available data
+is usable. Values are assumed to be in electron-volts.</li>
+<li><strong>exclude_re</strong> (<em>-</em>) &#8211; </li>
+<li><strong>be imported. A string</strong><strong> or </strong><strong>compiled re object can be given.</strong> (<em>not</em>) &#8211; </li>
+<li><strong>append</strong> (<em>-</em>) &#8211; than replaced (default False)</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="xanespy.importers.import_ssrl_frameset">
+<code class="descclassname">xanespy.importers.</code><code class="descname">import_ssrl_frameset</code><span class="sig-paren">(</span><em>directory</em>, <em>hdf_filename=None</em><span class="sig-paren">)</span></dt>
+<dd><p>Import all files in the given directory collected at SSRL beamline
+6-2c and process into framesets. Images are assumed to full-field
+transmission X-ray micrographs and repetitions will be averaged.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="xanespy.importers.import_txm_framesets">
+<code class="descclassname">xanespy.importers.</code><code class="descname">import_txm_framesets</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="xanespy.importers.magnification_correction">
+<code class="descclassname">xanespy.importers.</code><code class="descname">magnification_correction</code><span class="sig-paren">(</span><em>frames</em>, <em>pixel_sizes</em><span class="sig-paren">)</span></dt>
+<dd><p>Correct for changes in magnification at different energies.</p>
+<p>As the X-ray energy increases, the focal length of the zone plate
+changes and so the image is zoomed-out at higher energies. This
+method applies a correction to each frame to make the
+magnification similar to that of the first frame. Some beamlines
+correct for this automatically during acquisition: APS 8-BM-B, 32-ID-C.</p>
+<p>Returns a 2-tuple of (scale, translation) arrays. Each array has
+the same length as <cite>frames</cite> with an additional length-2 dimension
+at the end for (x, y).</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>frames</strong> (<em>-</em>) &#8211; </li>
+<li><strong>pixel_sizes</strong> (<em>-</em>) &#8211; </li>
+<li><strong>in frames.</strong> (<em>entries</em>) &#8211; </li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="xanespy.importers.read_metadata">
+<code class="descclassname">xanespy.importers.</code><code class="descname">read_metadata</code><span class="sig-paren">(</span><em>filenames</em>, <em>flavor</em><span class="sig-paren">)</span></dt>
+<dd><p>Take a list of filenames and return a pandas dataframe with all the
+metadata.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-xanespy.particle">
+<span id="xanespy-particle-module"></span><h2>xanespy.particle module</h2>
+<dl class="class">
+<dt id="xanespy.particle.BoundingBox">
+<em class="property">class </em><code class="descclassname">xanespy.particle.</code><code class="descname">BoundingBox</code><span class="sig-paren">(</span><em>bottom</em>, <em>left</em>, <em>top</em>, <em>right</em><span class="sig-paren">)</span></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">tuple</span></code></p>
+<dl class="attribute">
+<dt id="xanespy.particle.BoundingBox.bottom">
+<code class="descname">bottom</code></dt>
+<dd><p>Alias for field number 0</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="xanespy.particle.BoundingBox.left">
+<code class="descname">left</code></dt>
+<dd><p>Alias for field number 1</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="xanespy.particle.BoundingBox.right">
+<code class="descname">right</code></dt>
+<dd><p>Alias for field number 3</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="xanespy.particle.BoundingBox.top">
+<code class="descname">top</code></dt>
+<dd><p>Alias for field number 2</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="xanespy.particle.Particle">
+<em class="property">class </em><code class="descclassname">xanespy.particle.</code><code class="descname">Particle</code><span class="sig-paren">(</span><em>regionprops</em>, <em>frame</em><span class="sig-paren">)</span></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<p>A single secondary particle detected by image
+processing. Properties determine by regionprops routine from
+skimage.</p>
+<dl class="method">
+<dt id="xanespy.particle.Particle.area">
+<code class="descname">area</code><span class="sig-paren">(</span><span class="sig-paren">)</span></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="xanespy.particle.Particle.bbox">
+<code class="descname">bbox</code><span class="sig-paren">(</span><span class="sig-paren">)</span></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="xanespy.particle.Particle.centroid">
+<code class="descname">centroid</code><span class="sig-paren">(</span><span class="sig-paren">)</span></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="xanespy.particle.Particle.convex_area">
+<code class="descname">convex_area</code><span class="sig-paren">(</span><span class="sig-paren">)</span></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="xanespy.particle.Particle.full_mask">
+<code class="descname">full_mask</code><span class="sig-paren">(</span><span class="sig-paren">)</span></dt>
+<dd><p>Return a mask the same size as frame data with only this particle
+exposed.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="xanespy.particle.Particle.image">
+<code class="descname">image</code><span class="sig-paren">(</span><span class="sig-paren">)</span></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="xanespy.particle.Particle.mask">
+<code class="descname">mask</code><span class="sig-paren">(</span><span class="sig-paren">)</span></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="xanespy.particle.Particle.masked_frame_image">
+<code class="descname">masked_frame_image</code><span class="sig-paren">(</span><span class="sig-paren">)</span></dt>
+<dd><p>Return a masked array for the whole frame with only this particle
+only marked as valid.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="xanespy.particle.Particle.plot_image">
+<code class="descname">plot_image</code><span class="sig-paren">(</span><em>show_particles=False</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span></dt>
+<dd><p>Calls the regular plotting routine but with cropped data.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="xanespy.particle.Particle.relative_position">
+<code class="descname">relative_position</code><span class="sig-paren">(</span><span class="sig-paren">)</span></dt>
+<dd><p>Convert centroid in pixels to relative sample position in x, y
+(µm).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="xanespy.particle.Particle.sample_position">
+<code class="descname">sample_position</code><span class="sig-paren">(</span><span class="sig-paren">)</span></dt>
+<dd><p>Convert centroid in pixels to sample position in x, y (µm).</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-xanespy.plots">
+<span id="xanespy-plots-module"></span><h2>xanespy.plots module</h2>
+<p>Helper functions for setting up and displaying plots using matplotlib.</p>
+<dl class="function">
+<dt id="xanespy.plots.big_axes">
+<code class="descclassname">xanespy.plots.</code><code class="descname">big_axes</code><span class="sig-paren">(</span><span class="sig-paren">)</span></dt>
+<dd><p>Return a new Axes object, but larger than the default.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="xanespy.plots.draw_colorbar">
+<code class="descclassname">xanespy.plots.</code><code class="descname">draw_colorbar</code><span class="sig-paren">(</span><em>ax</em>, <em>cmap</em>, <em>norm</em>, <em>energies</em>, <em>orientation='vertical'</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span></dt>
+<dd><p>Draw a colorbar on the side of a mapping axes to show the range of
+colors used. Returns the newly created colorbar object.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>ax</strong> (<em>-</em>) &#8211; </li>
+<li><strong>cmap</strong> (<em>-</em>) &#8211; to use.</li>
+<li><strong>norm</strong> (<em>-</em>) &#8211; use.</li>
+<li><strong>energies</strong> (<em>-</em>) &#8211; colorbar.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="xanespy.plots.draw_histogram_colorbar">
+<code class="descclassname">xanespy.plots.</code><code class="descname">draw_histogram_colorbar</code><span class="sig-paren">(</span><em>ax</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span></dt>
+<dd><p>Similar to <cite>draw_colorbar()</cite> with some special formatting options
+to put it along the X-axis of the axes.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="xanespy.plots.dual_axes">
+<code class="descclassname">xanespy.plots.</code><code class="descname">dual_axes</code><span class="sig-paren">(</span><em>fig=None</em>, <em>orientation='horizontal'</em><span class="sig-paren">)</span></dt>
+<dd><p>Two new axes for mapping, side-by-side.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="xanespy.plots.new_axes">
+<code class="descclassname">xanespy.plots.</code><code class="descname">new_axes</code><span class="sig-paren">(</span><em>height=5</em>, <em>width=None</em><span class="sig-paren">)</span></dt>
+<dd><p>Create a new set of matplotlib axes for plotting. Height in inches.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="xanespy.plots.new_image_axes">
+<code class="descclassname">xanespy.plots.</code><code class="descname">new_image_axes</code><span class="sig-paren">(</span><em>height=5</em>, <em>width=5</em><span class="sig-paren">)</span></dt>
+<dd><p>Square axes with ticks on the outside.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="xanespy.plots.plot_composite_map">
+<code class="descclassname">xanespy.plots.</code><code class="descname">plot_composite_map</code><span class="sig-paren">(</span><em>data</em>, <em>ax=None</em>, <em>origin='lower'</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span></dt>
+<dd><p>Plot an RGB composite map on the given axes.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="xanespy.plots.plot_pixel_spectra">
+<code class="descclassname">xanespy.plots.</code><code class="descname">plot_pixel_spectra</code><span class="sig-paren">(</span><em>pixels</em>, <em>extent</em>, <em>spectra</em>, <em>energies</em>, <em>map_ax</em>, <em>spectra_ax=None</em>, <em>step_size=0</em><span class="sig-paren">)</span></dt>
+<dd><p>Highlight certain pixels in an already-plotted map and plot their
+spectra. The map should already have been plotted.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>pixels</strong> (<em>-</em>) &#8211; to highlight and plot.</li>
+<li><strong>extent</strong> (<em>-</em>) &#8211; positions to (row, column) positions.</li>
+<li><strong>spectra</strong> (<em>-</em>) &#8211; in <cite>pixels</cite> will use this array to get spectra. Shape is assumed
+to be (row, column, energy).</li>
+<li><strong>energies</strong> (<em>-</em>) &#8211; plotting spectra.</li>
+<li><strong>map_ax</strong> (<em>-</em>) &#8211; pixels.</li>
+<li><strong>spectra_ax</strong> (<em>-</em>) &#8211; None (default) a new axes will be created.</li>
+<li><strong>step_size</strong> (<em>-</em>) &#8211; directly on top of each other.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="xanespy.plots.plot_txm_histogram">
+<code class="descclassname">xanespy.plots.</code><code class="descname">plot_txm_histogram</code><span class="sig-paren">(</span><em>data</em>, <em>ax=None</em>, <em>norm=None</em>, <em>bins=100</em>, <em>cmap='plasma'</em>, <em>add_cbar=True</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span></dt>
+<dd><p>Take an array of data values and show a histogram with some
+color-coding related to normalization value.</p>
+<p>Returns: The matplotlib axes object used for plotting.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>data</strong> (<em>-</em>) &#8211; </li>
+<li><strong>ax</strong> (<em>-</em>) &#8211; will created.</li>
+<li><strong>norm</strong> (<em>-</em>) &#8211; </li>
+<li><strong>bins</strong> (<em>-</em>) &#8211; </li>
+<li><strong>cmap</strong> (<em>-</em>) &#8211; </li>
+<li><strong>add_cbar</strong> (<em>-</em>) &#8211; bottom axis or not.</li>
+<li><strong>*args</strong> (<em>-</em>) &#8211; </li>
+<li><strong>*kwargs</strong> (<em>-</em>) &#8211; </li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="xanespy.plots.plot_txm_intermediates">
+<code class="descclassname">xanespy.plots.</code><code class="descname">plot_txm_intermediates</code><span class="sig-paren">(</span><em>images</em><span class="sig-paren">)</span></dt>
+<dd><p>Accept a dictionary of images and plots them each on its own axes
+using matplotlib&#8217;s <cite>imshow</cite>. This is a complement to routines that
+operate on a microscopy frame and optionally return all the
+intermediate calculated frames.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="xanespy.plots.plot_txm_map">
+<code class="descclassname">xanespy.plots.</code><code class="descname">plot_txm_map</code><span class="sig-paren">(</span><em>data</em>, <em>edge=None</em>, <em>norm=None</em>, <em>ax=None</em>, <em>cmap='plasma'</em>, <em>origin='upper'</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="xanespy.plots.plot_xanes_spectrum">
+<code class="descclassname">xanespy.plots.</code><code class="descname">plot_xanes_spectrum</code><span class="sig-paren">(</span><em>spectrum</em>, <em>energies</em>, <em>norm=&lt;matplotlib.colors.Normalize object&gt;</em>, <em>show_fit=False</em>, <em>ax=None</em>, <em>ax2=None</em>, <em>linestyle=':'</em>, <em>color='blue'</em>, <em>cmap='plasma'</em><span class="sig-paren">)</span></dt>
+<dd><p>Plot a XANES spectrum on an axes. Applies some color formatting if
+<cite>edge</cite> is a valid XANES Edge object.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>spectrum</strong> (<em>-</em>) &#8211; </li>
+<li><strong>energies</strong> (<em>-</em>) &#8211; </li>
+<li><strong>norm</strong> (<em>-</em>) &#8211; range. This will be used to annotate the plot if it is give.</li>
+<li><strong>show_fit</strong> (<em>-</em>) &#8211; </li>
+<li><strong>ax</strong> (<em>-</em>) &#8211; will be generated.</li>
+<li><strong>ax2</strong> (<em>-</em>) &#8211; the data are complex.</li>
+<li><strong>linestyle</strong> (<em>-</em>) &#8211; </li>
+<li><strong>cmap</strong> (<em>-</em>) &#8211; </li>
+<li><strong>color</strong> (<em>-</em>) &#8211; or &#8220;y&#8221; will decide based on the numerical value, <cite>norm</cite> and
+<cite>cmap</cite> arguments. Anything else will be passed as a color spec
+to the matplotlib commands.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="xanespy.plots.remove_extra_spines">
+<code class="descclassname">xanespy.plots.</code><code class="descname">remove_extra_spines</code><span class="sig-paren">(</span><em>ax</em><span class="sig-paren">)</span></dt>
+<dd><p>Removes the right and top borders from the axes.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="xanespy.plots.set_axes_color">
+<code class="descclassname">xanespy.plots.</code><code class="descname">set_axes_color</code><span class="sig-paren">(</span><em>ax</em>, <em>color</em><span class="sig-paren">)</span></dt>
+<dd><p>Set the axes, tick marks, etc of <cite>ax</cite> to mpl color <cite>color</cite>. Also,
+&#8220;doegreen&#8221; has special significance as the color associated with the
+US department of energy.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="xanespy.plots.set_outside_ticks">
+<code class="descclassname">xanespy.plots.</code><code class="descname">set_outside_ticks</code><span class="sig-paren">(</span><em>ax</em><span class="sig-paren">)</span></dt>
+<dd><p>Convert all the axes so that the ticks are on the outside and don&#8217;t
+obscure data.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-xanespy.qt_frame_view">
+<span id="xanespy-qt-frame-view-module"></span><h2>xanespy.qt_frame_view module</h2>
+<dl class="class">
+<dt id="xanespy.qt_frame_view.FrameAnimation">
+<em class="property">class </em><code class="descclassname">xanespy.qt_frame_view.</code><code class="descname">FrameAnimation</code><span class="sig-paren">(</span><em>fig</em>, <em>artists</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">matplotlib.animation.ArtistAnimation</span></code></p>
+<p>Performs the animation for scrolling through frames arbitarily.</p>
+<dl class="method">
+<dt id="xanespy.qt_frame_view.FrameAnimation.stop">
+<code class="descname">stop</code><span class="sig-paren">(</span><span class="sig-paren">)</span></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="xanespy.qt_frame_view.FrameChangeSource">
+<em class="property">class </em><code class="descclassname">xanespy.qt_frame_view.</code><code class="descname">FrameChangeSource</code><span class="sig-paren">(</span><em>view</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">PyQt5.QtCore.QObject</span></code></p>
+<dl class="method">
+<dt id="xanespy.qt_frame_view.FrameChangeSource.add_callback">
+<code class="descname">add_callback</code><span class="sig-paren">(</span><em>func</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="xanespy.qt_frame_view.FrameChangeSource.callbacks">
+<code class="descname">callbacks</code><em class="property"> = []</em></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="xanespy.qt_frame_view.FrameChangeSource.remove_callback">
+<code class="descname">remove_callback</code><span class="sig-paren">(</span><em>func</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="xanespy.qt_frame_view.FrameChangeSource.start">
+<code class="descname">start</code><span class="sig-paren">(</span><span class="sig-paren">)</span></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="xanespy.qt_frame_view.FrameChangeSource.stop">
+<code class="descname">stop</code><span class="sig-paren">(</span><span class="sig-paren">)</span></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="xanespy.qt_frame_view.QtFrameView">
+<em class="property">class </em><code class="descclassname">xanespy.qt_frame_view.</code><code class="descname">QtFrameView</code></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">PyQt5.QtCore.QObject</span></code></p>
+<dl class="method">
+<dt id="xanespy.qt_frame_view.QtFrameView.connect_signals">
+<code class="descname">connect_signals</code><span class="sig-paren">(</span><em>presenter</em><span class="sig-paren">)</span></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="xanespy.qt_frame_view.QtFrameView.create_canvas">
+<code class="descname">create_canvas</code><span class="sig-paren">(</span><span class="sig-paren">)</span></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="xanespy.qt_frame_view.QtFrameView.draw_frames">
+<code class="descname">draw_frames</code></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="xanespy.qt_frame_view.QtFrameView.draw_histogram">
+<code class="descname">draw_histogram</code></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="xanespy.qt_frame_view.QtFrameView.draw_spectrum">
+<code class="descname">draw_spectrum</code><span class="sig-paren">(</span><em>spectrum</em>, <em>energies</em>, <em>norm</em>, <em>cmap</em>, <em>edge_range</em><span class="sig-paren">)</span></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="xanespy.qt_frame_view.QtFrameView.edge_ax">
+<code class="descname">edge_ax</code><em class="property"> = None</em></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="xanespy.qt_frame_view.QtFrameView.fig">
+<code class="descname">fig</code><em class="property"> = None</em></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="xanespy.qt_frame_view.QtFrameView.frame_changed">
+<code class="descname">frame_changed</code></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="xanespy.qt_frame_view.QtFrameView.hist_ax">
+<code class="descname">hist_ax</code><em class="property"> = None</em></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="xanespy.qt_frame_view.QtFrameView.hist_cb">
+<code class="descname">hist_cb</code><em class="property"> = None</em></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="xanespy.qt_frame_view.QtFrameView.set_cmap">
+<code class="descname">set_cmap</code><span class="sig-paren">(</span><em>cmap</em><span class="sig-paren">)</span></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="xanespy.qt_frame_view.QtFrameView.set_cmap_list">
+<code class="descname">set_cmap_list</code><span class="sig-paren">(</span><em>cmap_list</em><span class="sig-paren">)</span></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="xanespy.qt_frame_view.QtFrameView.set_slider_max">
+<code class="descname">set_slider_max</code><span class="sig-paren">(</span><em>val</em><span class="sig-paren">)</span></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="xanespy.qt_frame_view.QtFrameView.set_timestep">
+<code class="descname">set_timestep</code><span class="sig-paren">(</span><em>idx</em><span class="sig-paren">)</span></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="xanespy.qt_frame_view.QtFrameView.set_timestep_list">
+<code class="descname">set_timestep_list</code><span class="sig-paren">(</span><em>timestep_list</em><span class="sig-paren">)</span></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="xanespy.qt_frame_view.QtFrameView.set_ui_enabled">
+<code class="descname">set_ui_enabled</code><span class="sig-paren">(</span><em>enable=True</em><span class="sig-paren">)</span></dt>
+<dd><p>Turn on (default) or off the main interactive elements in the
+frame window. Useful for indicating blocking operations.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="xanespy.qt_frame_view.QtFrameView.set_vmax">
+<code class="descname">set_vmax</code><span class="sig-paren">(</span><em>val</em><span class="sig-paren">)</span></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="xanespy.qt_frame_view.QtFrameView.set_vmax_decimals">
+<code class="descname">set_vmax_decimals</code><span class="sig-paren">(</span><em>val</em><span class="sig-paren">)</span></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="xanespy.qt_frame_view.QtFrameView.set_vmax_minimum">
+<code class="descname">set_vmax_minimum</code><span class="sig-paren">(</span><em>val</em><span class="sig-paren">)</span></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="xanespy.qt_frame_view.QtFrameView.set_vmax_step">
+<code class="descname">set_vmax_step</code><span class="sig-paren">(</span><em>val</em><span class="sig-paren">)</span></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="xanespy.qt_frame_view.QtFrameView.set_vmin">
+<code class="descname">set_vmin</code><span class="sig-paren">(</span><em>val</em><span class="sig-paren">)</span></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="xanespy.qt_frame_view.QtFrameView.set_vmin_decimals">
+<code class="descname">set_vmin_decimals</code><span class="sig-paren">(</span><em>val</em><span class="sig-paren">)</span></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="xanespy.qt_frame_view.QtFrameView.set_vmin_maximum">
+<code class="descname">set_vmin_maximum</code><span class="sig-paren">(</span><em>val</em><span class="sig-paren">)</span></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="xanespy.qt_frame_view.QtFrameView.set_vmin_step">
+<code class="descname">set_vmin_step</code><span class="sig-paren">(</span><em>val</em><span class="sig-paren">)</span></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="xanespy.qt_frame_view.QtFrameView.setup">
+<code class="descname">setup</code><span class="sig-paren">(</span><span class="sig-paren">)</span></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="xanespy.qt_frame_view.QtFrameView.show">
+<code class="descname">show</code><span class="sig-paren">(</span><span class="sig-paren">)</span></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="xanespy.qt_frame_view.QtFrameView.show_status_message">
+<code class="descname">show_status_message</code><span class="sig-paren">(</span><em>message</em><span class="sig-paren">)</span></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="xanespy.qt_frame_view.QtFrameView.spectrum_ax">
+<code class="descname">spectrum_ax</code><em class="property"> = None</em></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="xanespy.qt_frame_view.QtFrameView.ui">
+<code class="descname">ui</code><em class="property"> = None</em></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="xanespy.qt_frame_view.QtFrameView.window">
+<code class="descname">window</code><em class="property"> = None</em></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-xanespy.qt_frameset_presenter">
+<span id="xanespy-qt-frameset-presenter-module"></span><h2>xanespy.qt_frameset_presenter module</h2>
+<dl class="class">
+<dt id="xanespy.qt_frameset_presenter.QtFramesetPresenter">
+<em class="property">class </em><code class="descclassname">xanespy.qt_frameset_presenter.</code><code class="descname">QtFramesetPresenter</code><span class="sig-paren">(</span><em>frameset</em>, <em>map_view</em>, <em>frame_view</em><span class="sig-paren">)</span></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<dl class="attribute">
+<dt id="xanespy.qt_frameset_presenter.QtFramesetPresenter.active_frame">
+<code class="descname">active_frame</code><em class="property"> = 0</em></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="xanespy.qt_frameset_presenter.QtFramesetPresenter.active_timestep">
+<code class="descname">active_timestep</code><em class="property"> = 0</em></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="xanespy.qt_frameset_presenter.QtFramesetPresenter.animate_frames">
+<code class="descname">animate_frames</code><span class="sig-paren">(</span><span class="sig-paren">)</span></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="xanespy.qt_frameset_presenter.QtFramesetPresenter.change_cmap">
+<code class="descname">change_cmap</code><span class="sig-paren">(</span><em>new_cmap</em><span class="sig-paren">)</span></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="xanespy.qt_frameset_presenter.QtFramesetPresenter.create_app">
+<code class="descname">create_app</code><span class="sig-paren">(</span><span class="sig-paren">)</span></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="xanespy.qt_frameset_presenter.QtFramesetPresenter.dirty">
+<code class="descname">dirty</code></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="xanespy.qt_frameset_presenter.QtFramesetPresenter.draw_frame_histogram">
+<code class="descname">draw_frame_histogram</code><span class="sig-paren">(</span><span class="sig-paren">)</span></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="xanespy.qt_frameset_presenter.QtFramesetPresenter.draw_frame_spectra">
+<code class="descname">draw_frame_spectra</code><span class="sig-paren">(</span><span class="sig-paren">)</span></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="xanespy.qt_frameset_presenter.QtFramesetPresenter.first_frame">
+<code class="descname">first_frame</code><span class="sig-paren">(</span><span class="sig-paren">)</span></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="xanespy.qt_frameset_presenter.QtFramesetPresenter.frame_cmap">
+<code class="descname">frame_cmap</code><em class="property"> = 'copper'</em></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="xanespy.qt_frameset_presenter.QtFramesetPresenter.frame_norm">
+<code class="descname">frame_norm</code><span class="sig-paren">(</span><span class="sig-paren">)</span></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="xanespy.qt_frameset_presenter.QtFramesetPresenter.last_frame">
+<code class="descname">last_frame</code><span class="sig-paren">(</span><span class="sig-paren">)</span></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="xanespy.qt_frameset_presenter.QtFramesetPresenter.launch">
+<code class="descname">launch</code><span class="sig-paren">(</span><span class="sig-paren">)</span></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="xanespy.qt_frameset_presenter.QtFramesetPresenter.map_cmap">
+<code class="descname">map_cmap</code><em class="property"> = 'plasma'</em></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="xanespy.qt_frameset_presenter.QtFramesetPresenter.move_slider">
+<code class="descname">move_slider</code><span class="sig-paren">(</span><em>new_value</em><span class="sig-paren">)</span></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="xanespy.qt_frameset_presenter.QtFramesetPresenter.next_frame">
+<code class="descname">next_frame</code><span class="sig-paren">(</span><span class="sig-paren">)</span></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="xanespy.qt_frameset_presenter.QtFramesetPresenter.num_frames">
+<code class="descname">num_frames</code><em class="property"> = 0</em></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="xanespy.qt_frameset_presenter.QtFramesetPresenter.play_frames">
+<code class="descname">play_frames</code><span class="sig-paren">(</span><em>start</em><span class="sig-paren">)</span></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="xanespy.qt_frameset_presenter.QtFramesetPresenter.prepare_ui">
+<code class="descname">prepare_ui</code><span class="sig-paren">(</span><span class="sig-paren">)</span></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="xanespy.qt_frameset_presenter.QtFramesetPresenter.previous_frame">
+<code class="descname">previous_frame</code><span class="sig-paren">(</span><span class="sig-paren">)</span></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="xanespy.qt_frameset_presenter.QtFramesetPresenter.refresh_frames">
+<code class="descname">refresh_frames</code><span class="sig-paren">(</span><span class="sig-paren">)</span></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="xanespy.qt_frameset_presenter.QtFramesetPresenter.reset_frame_range">
+<code class="descname">reset_frame_range</code><span class="sig-paren">(</span><span class="sig-paren">)</span></dt>
+<dd><p>Reset the frame plotting vmin and vmax based on the currently
+selected data. VMin will be the 2nd percentile and VMax will
+be the 98th percentile.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="xanespy.qt_frameset_presenter.QtFramesetPresenter.set_frame_vmax">
+<code class="descname">set_frame_vmax</code><span class="sig-paren">(</span><em>new_value</em><span class="sig-paren">)</span></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="xanespy.qt_frameset_presenter.QtFramesetPresenter.set_frame_vmin">
+<code class="descname">set_frame_vmin</code><span class="sig-paren">(</span><em>new_value</em><span class="sig-paren">)</span></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="xanespy.qt_frameset_presenter.QtFramesetPresenter.set_play_speed">
+<code class="descname">set_play_speed</code><span class="sig-paren">(</span><em>new_speed</em><span class="sig-paren">)</span></dt>
+<dd><p>Change how fast the play timer ticks. Input speeds should be in the
+range of 0, 30 with 30 being the fastest. This is converted to timer
+intervals between 1ms and 1000ms on a exponential scale.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="xanespy.qt_frameset_presenter.QtFramesetPresenter.set_timestep">
+<code class="descname">set_timestep</code><span class="sig-paren">(</span><em>new_timestep</em><span class="sig-paren">)</span></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="xanespy.qt_frameset_presenter.QtFramesetPresenter.timer">
+<code class="descname">timer</code><em class="property"> = None</em></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="xanespy.qt_frameset_presenter.QtFramesetPresenter.update_frame_range_limits">
+<code class="descname">update_frame_range_limits</code><span class="sig-paren">(</span><span class="sig-paren">)</span></dt>
+<dd><p>Check that the (min, max, step) of the frame spinboxes are
+reasonable. This should be called when the spinbox values change.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-xanespy.qt_map_view">
+<span id="xanespy-qt-map-view-module"></span><h2>xanespy.qt_map_view module</h2>
+<dl class="class">
+<dt id="xanespy.qt_map_view.QtMapView">
+<em class="property">class </em><code class="descclassname">xanespy.qt_map_view.</code><code class="descname">QtMapView</code></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-xanespy.txmstore">
+<span id="xanespy-txmstore-module"></span><h2>xanespy.txmstore module</h2>
+<p>Tools for accessing TXM data stored in an HDF5 file.</p>
+<dl class="class">
+<dt id="xanespy.txmstore.TXMStore">
+<em class="property">class </em><code class="descclassname">xanespy.txmstore.</code><code class="descname">TXMStore</code><span class="sig-paren">(</span><em>hdf_filename: str</em>, <em>parent_name: str</em>, <em>data_name: str</em>, <em>mode='r'</em><span class="sig-paren">)</span></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<p>Wrapper around HDF5 file that stores TXM data. It has a series of
+properties that return the corresponding HDF5 dataset object; the
+TXMStore().attribute.value pattern can be used to get pure numpy
+arrays. These objects should be used as a context manager to ensure
+that the file is closed, especially if using a writing mode:</p>
+<blockquote>
+<div><dl class="docutils">
+<dt>with TXMStore() as store:</dt>
+<dd># Do stuff with store here</dd>
+</dl>
+</div></blockquote>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>hdf_filename</strong> (<em>-</em>) &#8211; </li>
+<li><strong>parent_name</strong> (<em>-</em>) &#8211; </li>
+<li><strong>data_name</strong> (<em>-</em>) &#8211; specific data iterations (eg. imported, aligned)</li>
+<li><strong>mode</strong> (<em>-</em>) &#8211; </li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="attribute">
+<dt id="xanespy.txmstore.TXMStore.VERSION">
+<code class="descname">VERSION</code><em class="property"> = 1</em></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="xanespy.txmstore.TXMStore.absorbances">
+<code class="descname">absorbances</code></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="xanespy.txmstore.TXMStore.close">
+<code class="descname">close</code><span class="sig-paren">(</span><span class="sig-paren">)</span></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="xanespy.txmstore.TXMStore.cluster_map">
+<code class="descname">cluster_map</code></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="xanespy.txmstore.TXMStore.data_group">
+<code class="descname">data_group</code><span class="sig-paren">(</span><span class="sig-paren">)</span></dt>
+<dd><p>Retrieve the currently active second-level HDF5 group object for
+this file and groupname. Ex. &#8220;imported&#8221; or &#8220;aligned_frames&#8221;.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="xanespy.txmstore.TXMStore.data_name">
+<code class="descname">data_name</code></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="xanespy.txmstore.TXMStore.data_tree">
+<code class="descname">data_tree</code><span class="sig-paren">(</span><span class="sig-paren">)</span></dt>
+<dd><p>Create a tree of the possible groups this store could access. The
+first level is samples, then data_groups (ie. same sample but
+different analysis status), then representations. Maps are not
+included in this tree.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="xanespy.txmstore.TXMStore.energies">
+<code class="descname">energies</code></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="xanespy.txmstore.TXMStore.filenames">
+<code class="descname">filenames</code></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="xanespy.txmstore.TXMStore.fit_parameters">
+<code class="descname">fit_parameters</code></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="xanespy.txmstore.TXMStore.fork_data_group">
+<code class="descname">fork_data_group</code><span class="sig-paren">(</span><em>new_name</em><span class="sig-paren">)</span></dt>
+<dd><p>Turn on different active data group for this store. This method
+deletes the existing group and copies symlinks from the
+current one.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="xanespy.txmstore.TXMStore.get_frames">
+<code class="descname">get_frames</code><span class="sig-paren">(</span><em>name</em><span class="sig-paren">)</span></dt>
+<dd><p>Get a set of frames, specified by the value of <cite>name</cite>.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="xanespy.txmstore.TXMStore.get_map">
+<code class="descname">get_map</code><span class="sig-paren">(</span><em>name</em><span class="sig-paren">)</span></dt>
+<dd><p>Get a map of the frames, specified by the value of <cite>name</cite>.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="xanespy.txmstore.TXMStore.group">
+<code class="descname">group</code><span class="sig-paren">(</span><span class="sig-paren">)</span></dt>
+<dd><p>Retrieve the top-level HDF5 group object for this file and
+groupname.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="xanespy.txmstore.TXMStore.has_dataset">
+<code class="descname">has_dataset</code><span class="sig-paren">(</span><em>name</em><span class="sig-paren">)</span></dt>
+<dd><p>Return a boolean indicated whether this dataset exists in the HDF
+file.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="xanespy.txmstore.TXMStore.intensities">
+<code class="descname">intensities</code></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="xanespy.txmstore.TXMStore.latest_data_name">
+<code class="descname">latest_data_name</code></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="xanespy.txmstore.TXMStore.original_positions">
+<code class="descname">original_positions</code></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="xanespy.txmstore.TXMStore.parent_group">
+<code class="descname">parent_group</code><span class="sig-paren">(</span><span class="sig-paren">)</span></dt>
+<dd><p>Retrieve the top-level HDF5 group object for this file and
+groupname.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="xanespy.txmstore.TXMStore.particle_labels">
+<code class="descname">particle_labels</code></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="xanespy.txmstore.TXMStore.pixel_sizes">
+<code class="descname">pixel_sizes</code></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="xanespy.txmstore.TXMStore.pixel_unit">
+<code class="descname">pixel_unit</code></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="xanespy.txmstore.TXMStore.references">
+<code class="descname">references</code></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="xanespy.txmstore.TXMStore.relative_positions">
+<code class="descname">relative_positions</code></dt>
+<dd><p>(x, y, z) position values for each frame.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="xanespy.txmstore.TXMStore.replace_dataset">
+<code class="descname">replace_dataset</code><span class="sig-paren">(</span><em>name</em>, <em>data</em>, <em>context=None</em>, <em>attrs={}</em>, <em>compression=None</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span></dt>
+<dd><p>Wrapper for h5py.create_dataset that removes the existing dataset
+if it exists.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>name</strong> (<em>-</em>) &#8211; </li>
+<li><strong>data</strong> (<em>-</em>) &#8211; </li>
+<li><strong>context</strong> (<em>-</em>) &#8211; stored. Eg. &#8220;frameset&#8221;, &#8220;metadata&#8221;, &#8220;map&#8221;.</li>
+<li><strong>attrs</strong> (<em>-</em>) &#8211; set on the resulting dataset.</li>
+<li><strong>*args</strong><strong>, </strong><strong>**kwargs</strong> (<em>-</em>) &#8211; <p>method.</p>
+</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="xanespy.txmstore.TXMStore.set_frames">
+<code class="descname">set_frames</code><span class="sig-paren">(</span><em>name</em>, <em>val</em><span class="sig-paren">)</span></dt>
+<dd><p>Set data for a set of frames, specificied by the value of <cite>name</cite>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="xanespy.txmstore.TXMStore.signal_map">
+<code class="descname">signal_map</code></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="xanespy.txmstore.TXMStore.signal_method">
+<code class="descname">signal_method</code></dt>
+<dd><p>String describing how the previously extracted signals were
+calculated.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="xanespy.txmstore.TXMStore.signal_weights">
+<code class="descname">signal_weights</code></dt>
+<dd><p>Get the pixel weights of the previously extracted signals using any
+one of a variety of decomposition methods, saved as
+<cite>signal_method</cite>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="xanespy.txmstore.TXMStore.signals">
+<code class="descname">signals</code></dt>
+<dd><p>Get the previously extracted signals using any one of a variety of
+decomposition methods, saved as <cite>signal_method</cite>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="xanespy.txmstore.TXMStore.timestamps">
+<code class="descname">timestamps</code></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="xanespy.txmstore.TXMStore.timestep_names">
+<code class="descname">timestep_names</code></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="xanespy.txmstore.TXMStore.whiteline_map">
+<code class="descname">whiteline_map</code></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="xanespy.txmstore.prepare_txm_store">
+<code class="descclassname">xanespy.txmstore.</code><code class="descname">prepare_txm_store</code><span class="sig-paren">(</span><em>filename: str</em>, <em>parent_name: str</em>, <em>data_name='imported'</em>, <em>dirname: str = None</em><span class="sig-paren">)</span></dt>
+<dd><p>Check the filenames and create an hdf file as needed. Will
+overwrite the group if it already exists.</p>
+<p>Returns: An opened TXMStore object ready to accept data (r+ mode).</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>filename</strong> (<em>-</em>) &#8211; provided, in which case the filename will be generated
+automatically based on <cite>dirname</cite>.</li>
+<li><strong>parent_name</strong> (<em>-</em>) &#8211; </li>
+<li><strong>data_name</strong> (<em>-</em>) &#8211; </li>
+<li><strong>dirname</strong> (<em>-</em>) &#8211; for <cite>filename</cite> attribute.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="module-xanespy.utilities">
+<span id="xanespy-utilities-module"></span><h2>xanespy.utilities module</h2>
+<p>A collection of classes and functions that arent&#8217; specific to any
+one type of measurement. Also, it defines some namedtuples for
+describing coordinates.</p>
+<dl class="attribute">
+<dt id="xanespy.utilities.Extent">
+<code class="descclassname">xanespy.utilities.</code><code class="descname">Extent</code></dt>
+<dd><p>alias of <code class="xref py py-class docutils literal"><span class="pre">extent</span></code></p>
+</dd></dl>
+
+<dl class="class">
+<dt id="xanespy.utilities.Pixel">
+<em class="property">class </em><code class="descclassname">xanespy.utilities.</code><code class="descname">Pixel</code><span class="sig-paren">(</span><em>vertical</em>, <em>horizontal</em><span class="sig-paren">)</span></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">tuple</span></code></p>
+<dl class="attribute">
+<dt id="xanespy.utilities.Pixel.horizontal">
+<code class="descname">horizontal</code></dt>
+<dd><p>Alias for field number 1</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="xanespy.utilities.Pixel.vertical">
+<code class="descname">vertical</code></dt>
+<dd><p>Alias for field number 0</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="xanespy.utilities.broadcast_reverse">
+<code class="descclassname">xanespy.utilities.</code><code class="descname">broadcast_reverse</code><span class="sig-paren">(</span><em>array</em>, <em>shape</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span></dt>
+<dd><p>Take the array and extends it as much as possible to match
+<cite>shape</cite>. Similar to numpy&#8217;s broadcast_to function, but starts with
+the most significant axis. For example, if <cite>array</cite> has shape (7,
+29), it can be broadcast to (7, 29, 1024, 1024).</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="xanespy.utilities.foreach">
+<code class="descclassname">xanespy.utilities.</code><code class="descname">foreach</code><span class="sig-paren">(</span><em>f</em>, <em>l</em>, <em>threads=6</em>, <em>return_=False</em><span class="sig-paren">)</span></dt>
+<dd><p>Apply f to each element of l, in parallel</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="xanespy.utilities.get_component">
+<code class="descclassname">xanespy.utilities.</code><code class="descname">get_component</code><span class="sig-paren">(</span><em>data</em>, <em>name</em><span class="sig-paren">)</span></dt>
+<dd><p>If complex, turn to given component, otherwise return original data.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="xanespy.utilities.is_kernel">
+<code class="descclassname">xanespy.utilities.</code><code class="descname">is_kernel</code><span class="sig-paren">(</span><span class="sig-paren">)</span></dt>
+<dd><p>Detect whether or not we&#8217;re running inside an IPython kernel. NB:
+This does not distinguish between eg IPython notebook and IPython
+QtConsole.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="xanespy.utilities.parallel_map">
+<code class="descclassname">xanespy.utilities.</code><code class="descname">parallel_map</code><span class="sig-paren">(</span><em>f</em>, <em>l</em>, <em>threads=6</em><span class="sig-paren">)</span></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="xanespy.utilities.pixel_to_xy">
+<code class="descclassname">xanespy.utilities.</code><code class="descname">pixel_to_xy</code><span class="sig-paren">(</span><em>pixel</em>, <em>extent</em>, <em>shape</em><span class="sig-paren">)</span></dt>
+<dd><p>Take an xy location on an image and convert it to a pixel location
+suitable for numpy indexing.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="xanespy.utilities.position">
+<em class="property">class </em><code class="descclassname">xanespy.utilities.</code><code class="descname">position</code><span class="sig-paren">(</span><em>x</em>, <em>y</em>, <em>z</em><span class="sig-paren">)</span></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">tuple</span></code></p>
+<dl class="attribute">
+<dt id="xanespy.utilities.position.x">
+<code class="descname">x</code></dt>
+<dd><p>Alias for field number 0</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="xanespy.utilities.position.y">
+<code class="descname">y</code></dt>
+<dd><p>Alias for field number 1</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="xanespy.utilities.position.z">
+<code class="descname">z</code></dt>
+<dd><p>Alias for field number 2</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="xanespy.utilities.prog">
+<code class="descclassname">xanespy.utilities.</code><code class="descname">prog</code><span class="sig-paren">(</span><em>*args</em>, <em>leave=False</em>, <em>dynamic_ncols=True</em>, <em>**kwargs</em><span class="sig-paren">)</span></dt>
+<dd><p>A progress bar for displaying how many iterations have been
+completed. This is mostly just a wrapper around the tqdm
+library. <a href="#id21"><span class="problematic" id="id22">*</span></a>args and <a href="#id23"><span class="problematic" id="id24">**</span></a>kwargs are passed directly to either
+tqdm.tqdm or tqdm.tqdm_notebook.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="xanespy.utilities.shape">
+<em class="property">class </em><code class="descclassname">xanespy.utilities.</code><code class="descname">shape</code><span class="sig-paren">(</span><em>rows</em>, <em>columns</em><span class="sig-paren">)</span></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">tuple</span></code></p>
+<dl class="attribute">
+<dt id="xanespy.utilities.shape.columns">
+<code class="descname">columns</code></dt>
+<dd><p>Alias for field number 1</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="xanespy.utilities.shape.rows">
+<code class="descname">rows</code></dt>
+<dd><p>Alias for field number 0</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="xanespy.utilities.xy_to_pixel">
+<code class="descclassname">xanespy.utilities.</code><code class="descname">xy_to_pixel</code><span class="sig-paren">(</span><em>xy</em>, <em>extent</em>, <em>shape</em><span class="sig-paren">)</span></dt>
+<dd><p>Take an xy location on an image and convert it to a pixel location
+suitable for numpy indexing.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="xanespy.utilities.xycoord">
+<em class="property">class </em><code class="descclassname">xanespy.utilities.</code><code class="descname">xycoord</code><span class="sig-paren">(</span><em>x</em>, <em>y</em><span class="sig-paren">)</span></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">tuple</span></code></p>
+<dl class="attribute">
+<dt id="xanespy.utilities.xycoord.x">
+<code class="descname">x</code></dt>
+<dd><p>Alias for field number 0</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="xanespy.utilities.xycoord.y">
+<code class="descname">y</code></dt>
+<dd><p>Alias for field number 1</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-xanespy.xanes_frameset">
+<span id="xanespy-xanes-frameset-module"></span><h2>xanespy.xanes_frameset module</h2>
+<p>Class definitions for working with a whole stack of X-ray
+microscopy frames. Each frame is a micrograph at a different energy. A
+frameset then is a three-dimenional dataset with of dimenions (energy,
+row, column).</p>
+<dl class="class">
+<dt id="xanespy.xanes_frameset.PtychoFrameset">
+<em class="property">class </em><code class="descclassname">xanespy.xanes_frameset.</code><code class="descname">PtychoFrameset</code><span class="sig-paren">(</span><em>filename</em>, <em>groupname</em>, <em>edge</em><span class="sig-paren">)</span></dt>
+<dd><p>Bases: <a class="reference internal" href="#xanespy.xanes_frameset.XanesFrameset" title="xanespy.xanes_frameset.XanesFrameset"><code class="xref py py-class docutils literal"><span class="pre">xanespy.xanes_frameset.XanesFrameset</span></code></a></p>
+<p>A set of images (&#8220;frames&#8221;) at different energies moving across an
+absorption edge. The individual frames should be generated by
+ptychographic reconstruction of scanning transmission X-ray
+microscopy (STXM) to produce an array complex intensity
+values. This class does <em>not</em> include any code responsible for the
+collection and reconstruction of such data, only for the analysis
+in the context of X-ray absorption near edge spectroscopy.</p>
+<dl class="method">
+<dt id="xanespy.xanes_frameset.PtychoFrameset.apply_internal_reference">
+<code class="descname">apply_internal_reference</code><span class="sig-paren">(</span><em>plot_background=True</em>, <em>ax=None</em><span class="sig-paren">)</span></dt>
+<dd><p>Use a portion of each frame for internal reference correction. The
+result is the complex refraction for each pixel: the real
+component describes the phase shift, and the imaginary
+component is exponential decay, ie. absorbance.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>plot_background</strong> (<em>If truthy</em><em>, </em><em>the values of I_0 are plotted as</em>) &#8211; a function of energy.</li>
+<li><strong>ax</strong> (The axes to use for plotting if <cite>plot_background</cite> is) &#8211; truthy.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="xanespy.xanes_frameset.PtychoFrameset.representations">
+<code class="descname">representations</code><span class="sig-paren">(</span><span class="sig-paren">)</span></dt>
+<dd><p>Retrieve a list of valid representations for these data, such as
+modulus or phase data for ptychography.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="xanespy.xanes_frameset.XanesFrameset">
+<em class="property">class </em><code class="descclassname">xanespy.xanes_frameset.</code><code class="descname">XanesFrameset</code><span class="sig-paren">(</span><em>filename</em>, <em>groupname</em>, <em>edge</em><span class="sig-paren">)</span></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<p>A collection of TXM frames at different energies moving across an
+absorption edge. Iterating over this object gives the individual
+Frame() objects. The class assumes that the data have
+been imported into an HDF file.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>filename</strong> (<em>-</em>) &#8211; </li>
+<li><strong>groupname</strong> (<em>-</em>) &#8211; frameset. This argument is only required if there is more than
+one top-level group.</li>
+<li><strong>edge</strong> (<em>-</em>) &#8211; response characteristics.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="attribute">
+<dt id="xanespy.xanes_frameset.XanesFrameset.active_group">
+<code class="descname">active_group</code><em class="property"> = ''</em></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="xanespy.xanes_frameset.XanesFrameset.active_labels_groupname">
+<code class="descname">active_labels_groupname</code></dt>
+<dd><p>The group name for the latest frameset of detected particle labels.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="xanespy.xanes_frameset.XanesFrameset.add_frame">
+<code class="descname">add_frame</code><span class="sig-paren">(</span><em>frame</em><span class="sig-paren">)</span></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="xanespy.xanes_frameset.XanesFrameset.align_frames">
+<code class="descname">align_frames</code><span class="sig-paren">(</span><em>reference_frame='mean'</em>, <em>blur=None</em>, <em>method: str = 'cross_correlation'</em>, <em>template=None</em>, <em>passes=1</em>, <em>commit=True</em>, <em>component='modulus'</em>, <em>plot_results=True</em><span class="sig-paren">)</span></dt>
+<dd><p>Use cross correlation algorithm to line up the frames. All frames
+will have their sample position set to (0, 0) since we don&#8217;t
+know which one is the real position. This operation will
+interpolate between pixels so introduces error. If multiple
+passes are performed, the translations are saved and combined
+at the end so this error is only introduced once. Using the
+<cite>commit=False</cite> argument allows for multiple different types of
+registration to be performed in sequence, since uncommitted
+translations will be applied before the next round of
+registration.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong></strong><strong>(</strong><strong>int</strong><strong>, </strong><strong>str</strong><strong> or </strong><strong>None</strong><strong>)</strong><strong></strong> (<em>reference_frame</em>) &#8211; which all other frames should be aligned. If None, the frame
+of highest intensity will be used. If &#8220;mean&#8221; (default) or
+&#8220;median&#8221;, the average or median of all frames will be
+used. If &#8220;max&#8221;, the frame with highest absorbance is
+used. This attribute has no effect if template matching is
+used.</li>
+<li><strong>blur</strong> (<em>A type of filter to apply to each frame of the data</em>) &#8211; before attempting registration. Choices are &#8220;median&#8221; or None</li>
+<li><strong>method</strong> (<em>Which technique to use to calculate the translation</em>) &#8211; <ul>
+<li>&#8220;cross_correlation&#8221; (default)</li>
+<li>&#8220;template_match&#8221;</li>
+</ul>
+<p>(If &#8220;template_match&#8221; is used, the <cite>template</cite> argument should
+also be provided.)</p>
+</li>
+<li><strong>passes</strong> (<em>How many times this alignment should be done. Default: 1.</em>) &#8211; </li>
+<li><strong>template</strong> (<em>Image data that should be matched if the</em>) &#8211; <cite>template_match</cite> method is used.</li>
+<li><strong>commit</strong> (<em>If truthy</em><em> (</em><em>default</em><em>)</em><em></em><em>, </em><em>the final translation will be</em>) &#8211; applied to the data stored on disk by calling
+<cite>self.apply_translations(crop=True)</cite> after all passes have
+finished.</li>
+<li><strong>component</strong> (<em>What component of the data to use: 'modulus'</em><em>,</em><em></em>) &#8211; &#8216;phase&#8217;, &#8216;imag&#8217; or &#8216;real&#8217;.</li>
+<li><strong>plot_results</strong> (<em>If truthy</em><em> (</em><em>default</em><em>)</em><em></em><em>, </em><em>plot the root-mean-square of the</em>) &#8211; translation distance for each pass.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="xanespy.xanes_frameset.XanesFrameset.apply_transformations">
+<code class="descname">apply_transformations</code><span class="sig-paren">(</span><em>crop=True</em>, <em>commit=True</em><span class="sig-paren">)</span></dt>
+<dd><p>Take any transformations staged with <cite>self.stage_transformations()</cite>
+and apply them. If commit is truthy, the staged
+transformations are reset.</p>
+<p>Returns: Transformed array of the absorbances frames.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>crop</strong> (<em>-</em>) &#8211; </li>
+<li><strong>so there are not edges. If falsy</strong><strong>, </strong><strong>the images will</strong> (<em>translated</em><em>,</em><em></em>) &#8211; </li>
+<li><strong>wrapped.</strong> (<em>be</em>) &#8211; </li>
+<li><strong>commit</strong> (<em>-</em>) &#8211; store for absorbances, intensities and references, and the
+staged transformations will be cleared. Otherwise, only the
+absorbance data will be transformed and returned.</li>
+<li><strong>frames_name</strong> (<em>-</em>) &#8211; transformation too (eg. &#8216;absorbances&#8217;)</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="xanespy.xanes_frameset.XanesFrameset.background_group">
+<code class="descname">background_group</code><span class="sig-paren">(</span><span class="sig-paren">)</span></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="xanespy.xanes_frameset.XanesFrameset.background_normalizer">
+<code class="descname">background_normalizer</code><span class="sig-paren">(</span><span class="sig-paren">)</span></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="xanespy.xanes_frameset.XanesFrameset.calculate_maps">
+<code class="descname">calculate_maps</code><span class="sig-paren">(</span><span class="sig-paren">)</span></dt>
+<dd><p>Generate a set of maps based on pixel-wise Xanes spectra: whiteline
+position, particle labels.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>-fit_spectra</strong> (<em>If truthy</em><em>, </em><em>the whiteline will be found by</em>) &#8211; fitting curves, instead of the default of taking the direct
+maximum.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="xanespy.xanes_frameset.XanesFrameset.calculate_signals">
+<code class="descname">calculate_signals</code><span class="sig-paren">(</span><em>n_components=2</em>, <em>method='nmf'</em>, <em>edge_mask=True</em><span class="sig-paren">)</span></dt>
+<dd><p>Extract signals and assign each pixel to a group, then save the
+resulting RGB cluster map.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>n_components</strong> (<em>-</em>) &#8211; into which the data will be separated.</li>
+<li><strong>method</strong> (<em>-</em>) &#8211; signals. Currently only &#8220;nmf&#8221; is supported.</li>
+<li><strong>edge_mask</strong> (<em>-</em>) &#8211; the edge filter will be considered.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="xanespy.xanes_frameset.XanesFrameset.calculate_whitelines">
+<code class="descname">calculate_whitelines</code><span class="sig-paren">(</span><em>edge_mask=False</em><span class="sig-paren">)</span></dt>
+<dd><p>Calculate and save a map of the whiteline position of each pixel by
+calculating the energy of simple maximum absorbance.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>edge_mask</strong> (<em>-</em>) &#8211; be fit and the remaning pixels will be set to a default
+value. This can help reduce computing time.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="xanespy.xanes_frameset.XanesFrameset.clear_caches">
+<code class="descname">clear_caches</code><span class="sig-paren">(</span><span class="sig-paren">)</span></dt>
+<dd><p>Clear cached function values so they will be recomputed with fresh
+data</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="xanespy.xanes_frameset.XanesFrameset.cmap">
+<code class="descname">cmap</code><em class="property"> = 'plasma'</em></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="xanespy.xanes_frameset.XanesFrameset.data_name">
+<code class="descname">data_name</code></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="xanespy.xanes_frameset.XanesFrameset.drop_frame">
+<code class="descname">drop_frame</code><span class="sig-paren">(</span><em>index</em><span class="sig-paren">)</span></dt>
+<dd><p>Delete frame with the given index (int) or energy (float). This
+destructively removes the data from the HDF5 file, so use with
+caution.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="xanespy.xanes_frameset.XanesFrameset.edge_jump">
+<code class="descname">edge_jump</code></dt>
+<dd><p>Calculate a image showing the difference in
+signal across the X-ray edge.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="xanespy.xanes_frameset.XanesFrameset.edge_mask">
+<code class="descname">edge_mask</code></dt>
+<dd><p>Calculate a mask for what is likely active material at this
+edge.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>sensitivity</strong> (<em>-</em>) &#8211; the actual threshold.</li>
+<li><strong>min_size</strong> (<em>-</em>) &#8211; removed. Passing zero (default) will result in no effect.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="xanespy.xanes_frameset.XanesFrameset.endtime">
+<code class="descname">endtime</code><span class="sig-paren">(</span><span class="sig-paren">)</span></dt>
+<dd><p>Determine the latest timestamp amongst all of the frames.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="xanespy.xanes_frameset.XanesFrameset.energies">
+<code class="descname">energies</code></dt>
+<dd><p>Return the array of beam energies for the given time index.</p>
+<p>Returns: A 3-dimensional array with the form (energy, row,
+col).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="xanespy.xanes_frameset.XanesFrameset.extent">
+<code class="descname">extent</code><span class="sig-paren">(</span><em>representation</em>, <em>idx=(0</em>, <em>0)</em><span class="sig-paren">)</span></dt>
+<dd><p>Determine physical dimensions for axes values.</p>
+<p>Returns: If idx was given, a single tuple of (left, right,
+bottom, up), otherwise return an array of extents for each frame.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>-idx</strong> (<em>Index for a given frame. This allows for faster</em>) &#8211; calculation if only a single frame is required. By default,
+returns the first frame.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="xanespy.xanes_frameset.XanesFrameset.fit_spectra">
+<code class="descname">fit_spectra</code><span class="sig-paren">(</span><em>edge_mask=True</em><span class="sig-paren">)</span></dt>
+<dd><p>Fit a series of curves to the spectrum at each pixel.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>edge_mask</strong> (<em>-</em>) &#8211; be fit and the remaning pixels will be set to a default
+value. This can help reduce computing time.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="xanespy.xanes_frameset.XanesFrameset.fork_data_group">
+<code class="descname">fork_data_group</code><span class="sig-paren">(</span><em>new_name</em>, <em>src=None</em><span class="sig-paren">)</span></dt>
+<dd><p>Turn on different active data for this frameset&#8217;s store
+object. Similar to <cite>switch_data_group</cite> except that this method
+deletes the existing group and copies symlinks from the current one.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>new_name</strong> (<em>-</em>) &#8211; </li>
+<li><strong>src</strong> (<em>-</em>) &#8211; from. If None (default), the current data group will be
+used.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="xanespy.xanes_frameset.XanesFrameset.frame_shape">
+<code class="descname">frame_shape</code><span class="sig-paren">(</span><span class="sig-paren">)</span></dt>
+<dd><p>Return the shape of the individual energy frames.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="xanespy.xanes_frameset.XanesFrameset.frames">
+<code class="descname">frames</code></dt>
+<dd><p>Return the frames for the given time index.</p>
+<p>Returns: A 3-dimensional array with the form (energy, row,
+col).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="xanespy.xanes_frameset.XanesFrameset.goodness_mask">
+<code class="descname">goodness_mask</code><span class="sig-paren">(</span><em>sensitivity: float = 0.5</em><span class="sig-paren">)</span></dt>
+<dd><p>Calculate an image based on the goodness of fit. <cite>calculate_map</cite>
+must have been called previously. Goodness filter is converted
+to a binary map using (Otsu) threshold filtering.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>sensitivity</strong> (<em>-</em>) &#8211; the actual threshold.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="xanespy.xanes_frameset.XanesFrameset.gtk_viewer">
+<code class="descname">gtk_viewer</code><span class="sig-paren">(</span><span class="sig-paren">)</span></dt>
+<dd><p>Launch a GTK gui to view the data in the frameset.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="xanespy.xanes_frameset.XanesFrameset.hdf_file">
+<code class="descname">hdf_file</code><span class="sig-paren">(</span><em>mode='r'</em><span class="sig-paren">)</span></dt>
+<dd><p>Return an open h5py.File object for this (any maybe other) frameset.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>mode</strong> (<em>A mode string</em><em>, </em><em>see h5py documentation for options. To</em>) &#8211; </li>
+<li><strong>file corruption</strong><strong>, </strong><strong>calling this method as a context</strong> (<em>avoid</em>) &#8211; </li>
+<li><strong>is recommended</strong><strong>, </strong><strong>especially with a mode other than 'r'.</strong> (<em>manager</em>) &#8211; </li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="xanespy.xanes_frameset.XanesFrameset.hdf_node">
+<code class="descname">hdf_node</code><span class="sig-paren">(</span><span class="sig-paren">)</span></dt>
+<dd><p>For use with HDFAttribute descriptor.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="xanespy.xanes_frameset.XanesFrameset.image_normalizer">
+<code class="descname">image_normalizer</code></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="xanespy.xanes_frameset.XanesFrameset.is_background">
+<code class="descname">is_background</code><span class="sig-paren">(</span><span class="sig-paren">)</span></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="xanespy.xanes_frameset.XanesFrameset.label_particles">
+<code class="descname">label_particles</code><span class="sig-paren">(</span><em>min_distance=20</em><span class="sig-paren">)</span></dt>
+<dd><p>Use watershed segmentation to identify particles.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>min_distance</strong> (<em>-</em>) &#8211; grouping areas into particles. Lower numbers means more
+particles, but might split large particles into two.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="xanespy.xanes_frameset.XanesFrameset.masked_map">
+<code class="descname">masked_map</code><span class="sig-paren">(</span><em>goodness_filter=True</em><span class="sig-paren">)</span></dt>
+<dd><p>Generate a map based on pixel-wise Xanes spectra and apply an
+edge-jump filter mask. Default is to compute X-ray whiteline
+position.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="xanespy.xanes_frameset.XanesFrameset.mean_frame">
+<code class="descname">mean_frame</code><span class="sig-paren">(</span><span class="sig-paren">)</span></dt>
+<dd><p>Return the mean absorbance with the same shape as an individual
+frame.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="xanespy.xanes_frameset.XanesFrameset.movie_plotter">
+<code class="descname">movie_plotter</code><span class="sig-paren">(</span><span class="sig-paren">)</span></dt>
+<dd><p>Creates an animation of all the frames in ascending energy, but
+does not display it anywhere, that&#8217;s up to you.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="xanespy.xanes_frameset.XanesFrameset.normalize">
+<code class="descname">normalize</code><span class="sig-paren">(</span><em>plot_fit=False</em>, <em>new_name='normalized'</em><span class="sig-paren">)</span></dt>
+<dd><p>Correct for background material not absorbing at this edge. Uses
+method described in DOI 10.1038/ncomms7883: fit line against
+material that fails edge_jump_filter and use this line to
+correct entire frame.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>plot_fit</strong> (<em>-</em>) &#8211; </li>
+<li><strong>line.</strong> (<em>best-fit</em>) &#8211; </li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="xanespy.xanes_frameset.XanesFrameset.num_energies">
+<code class="descname">num_energies</code></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="xanespy.xanes_frameset.XanesFrameset.num_timesteps">
+<code class="descname">num_timesteps</code></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="xanespy.xanes_frameset.XanesFrameset.particle">
+<code class="descname">particle</code><span class="sig-paren">(</span><em>particle_idx=0</em><span class="sig-paren">)</span></dt>
+<dd><p>Prepare a particle frameset for the given particle index.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="xanespy.xanes_frameset.XanesFrameset.particle_area_spectrum">
+<code class="descname">particle_area_spectrum</code><span class="sig-paren">(</span><em>loc=xycoord(x=20</em>, <em>y=20)</em><span class="sig-paren">)</span></dt>
+<dd><p>Calculate a spectrum based on the area of the particle closest to
+the given location in the frame. This may be useful for assessing
+magnification across multiple frames.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="xanespy.xanes_frameset.XanesFrameset.particle_centroid_spectrum">
+<code class="descname">particle_centroid_spectrum</code><span class="sig-paren">(</span><em>loc=xycoord(x=20</em>, <em>y=20)</em><span class="sig-paren">)</span></dt>
+<dd><p>Calculate a spectrum based on the image centroid of the particle
+closest to the given location in the frame. This may be useful
+for assessing systematic drift across multiple frames.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="xanespy.xanes_frameset.XanesFrameset.particle_regions">
+<code class="descname">particle_regions</code><span class="sig-paren">(</span><em>intensity_image=None</em>, <em>labels=None</em><span class="sig-paren">)</span></dt>
+<dd><p>Return a list of regions (1 for each particle) sorted by area.
+(largest first). This requires that the <cite>label_particles</cite>
+method be called first.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>intensity_image</strong> (<em>-</em>) &#8211; <cite>regionprops</cite> function to determine what shows up in the
+image for each particle.</li>
+<li><strong>labels</strong> (<em>-</em>) &#8211; particles segmented. If None, the <cite>particle_labels</cite>
+attribute of the TXM store will be used.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="xanespy.xanes_frameset.XanesFrameset.particle_series">
+<code class="descname">particle_series</code><span class="sig-paren">(</span><em>map_name='whiteline_map'</em><span class="sig-paren">)</span></dt>
+<dd><p>Generate an array of values from map_name averaged across each
+particle.</p>
+<p>Returns: A 2D array where the first dimension is particles and
+the second is the first dimension of the map dataset (usually time).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="xanespy.xanes_frameset.XanesFrameset.plot_edge_jump">
+<code class="descname">plot_edge_jump</code><span class="sig-paren">(</span><em>ax=None</em>, <em>alpha=1</em><span class="sig-paren">)</span></dt>
+<dd><p>Plot the results of the edge jump filter.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="xanespy.xanes_frameset.XanesFrameset.plot_frame">
+<code class="descname">plot_frame</code><span class="sig-paren">(</span><em>idx</em>, <em>ax=None</em>, <em>cmap='gray'</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span></dt>
+<dd><p>Plot the frame with given index as an image.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="xanespy.xanes_frameset.XanesFrameset.plot_goodness">
+<code class="descname">plot_goodness</code><span class="sig-paren">(</span><em>plotter=None</em>, <em>ax=None</em>, <em>norm_range=None</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span></dt>
+<dd><p>Use a default frameset plotter to draw a map of the goodness of fit
+as determined by the Edge object.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="xanespy.xanes_frameset.XanesFrameset.plot_histogram">
+<code class="descname">plot_histogram</code><span class="sig-paren">(</span><em>plotter=None</em>, <em>timeidx=None</em>, <em>ax=None</em>, <em>vmin=None</em>, <em>vmax=None</em>, <em>goodness_filter=False</em>, <em>active_pixel=None</em>, <em>bins='energies'</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span></dt>
+<dd><p>Use a default frameset plotter to draw a map of the chemical
+data.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="xanespy.xanes_frameset.XanesFrameset.plot_map">
+<code class="descname">plot_map</code><span class="sig-paren">(</span><em>ax=None</em>, <em>map_name='whiteline_map'</em>, <em>timeidx=0</em>, <em>vmin=None</em>, <em>vmax=None</em><span class="sig-paren">)</span></dt>
+<dd><p>Prepare data and plot a map of whiteline positions.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="xanespy.xanes_frameset.XanesFrameset.plot_map_pixel_spectra">
+<code class="descname">plot_map_pixel_spectra</code><span class="sig-paren">(</span><em>pixels</em>, <em>map_ax=None</em>, <em>spectra_ax=None</em>, <em>map_name='whiteline_map'</em>, <em>timeidx=0</em>, <em>step_size=0</em><span class="sig-paren">)</span></dt>
+<dd><p>Plot the frameset&#8217;s map and highlight some pixels on it then plot
+those pixel&#8217;s spectra on another set of axes.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>pixels</strong> (<em>-</em>) &#8211; column) pixels to highlight.</li>
+<li><strong>map_ax</strong> (<em>-</em>) &#8211; None, a new 2-wide subplot will be created for both map_ax
+and spectra_ax.</li>
+<li><strong>spectra_ax</strong> (<em>-</em>) &#8211; spectra. Will only be used if <cite>map_ax</cite> is not None.</li>
+<li><strong>map_name</strong> (<em>-</em>) &#8211; passed to the TXM store object and retrieved from the hdf5
+file. If falsy, no map will be plotted.</li>
+<li><strong>timeidx</strong> (<em>-</em>) &#8211; </li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="xanespy.xanes_frameset.XanesFrameset.plot_mean_image">
+<code class="descname">plot_mean_image</code><span class="sig-paren">(</span><em>ax=None</em>, <em>component='modulus'</em><span class="sig-paren">)</span></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="xanespy.xanes_frameset.XanesFrameset.plot_signal_map">
+<code class="descname">plot_signal_map</code><span class="sig-paren">(</span><em>ax=None</em>, <em>signals_idx=None</em><span class="sig-paren">)</span></dt>
+<dd><p>Plot the map of signal strength for signals extracted from
+self.calculate_signals().</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>ax</strong> (<em>-</em>) &#8211; axes object is created.</li>
+<li><strong>signals_idx</strong> (<em>-</em>) &#8211; </li>
+<li><strong>as a numpy array index. Special value None</strong><strong> (</strong><strong>default</strong><strong>)</strong><strong></strong> (<em>passed</em>) &#8211; </li>
+<li><strong>first three signals will be plotted.</strong> (<em>means</em>) &#8211; </li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="xanespy.xanes_frameset.XanesFrameset.plot_signals">
+<code class="descname">plot_signals</code><span class="sig-paren">(</span><em>cmap='viridis'</em><span class="sig-paren">)</span></dt>
+<dd><p>Plot the signals from the previously extracted data. Requires that
+self.store().signals and self.store().signal_weights be
+set.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="xanespy.xanes_frameset.XanesFrameset.plot_xanes_edge">
+<code class="descname">plot_xanes_edge</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span></dt>
+<dd><p>Call self.plots.plot_xanes_spectrum() but zoomed in on the edge.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="xanespy.xanes_frameset.XanesFrameset.plot_xanes_spectrum">
+<code class="descname">plot_xanes_spectrum</code><span class="sig-paren">(</span><em>ax=None</em>, <em>pixel=None</em>, <em>norm_range=None</em>, <em>normalize=False</em>, <em>representation='modulus'</em>, <em>show_fit=False</em>, <em>edge_jump_filter=False</em>, <em>linestyle=':'</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span></dt>
+<dd><p>Calculate and plot the xanes spectrum for this field-of-view.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>- matplotlib axes object on which to draw</strong> (<em>ax</em>) &#8211; </li>
+<li><strong>- Coordinates of a specific pixel on the image to plot.</strong> (<em>pixel</em>) &#8211; </li>
+<li><strong>- If truthy</strong><strong>, </strong><strong>will set the pre-edge at zero and the</strong> (<a class="reference internal" href="#xanespy.xanes_frameset.XanesFrameset.normalize" title="xanespy.xanes_frameset.XanesFrameset.normalize"><em>normalize</em></a>) &#8211; post-edge at 1.</li>
+<li><strong>- If truthy</strong><strong>, </strong><strong>will use the edge object to fit the data</strong> (<em>show_fit</em>) &#8211; and plot the resulting fit line.</li>
+<li><strong>- If truthy</strong><strong>, </strong><strong>will only include those values</strong> (<em>edge_jump_filter</em>) &#8211; that show a strong absorbtion jump across this edge.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="xanespy.xanes_frameset.XanesFrameset.qt_viewer">
+<code class="descname">qt_viewer</code><span class="sig-paren">(</span><span class="sig-paren">)</span></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="xanespy.xanes_frameset.XanesFrameset.representations">
+<code class="descname">representations</code><span class="sig-paren">(</span><span class="sig-paren">)</span></dt>
+<dd><p>Retrieve a list of valid representations for these data.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="xanespy.xanes_frameset.XanesFrameset.save_movie">
+<code class="descname">save_movie</code><span class="sig-paren">(</span><em>filename</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span></dt>
+<dd><p>Save an animation of all the frames and XANES to the specified
+filename.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="xanespy.xanes_frameset.XanesFrameset.spectra">
+<code class="descname">spectra</code><span class="sig-paren">(</span><em>edge_filter=False</em><span class="sig-paren">)</span></dt>
+<dd><p>Return a two-dimensional array of spectra for all the pixels in
+shape of (pixel, energy).</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong></strong><strong>(</strong><strong>bool</strong><strong> or </strong><strong>str</strong><strong>)</strong><strong></strong> (<em>edge_jump_filter</em>) &#8211; truthy, only pixels that pass the edge jump filter are
+used to calculate the spectrum. If &#8220;inverse&#8221; is given,
+then the edge jump filter is logically not-ted and
+calculated with a more conservative threshold.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="xanespy.xanes_frameset.XanesFrameset.spectrum">
+<code class="descname">spectrum</code><span class="sig-paren">(</span><em>pixel=None</em>, <em>edge_jump_filter=False</em>, <em>representation='absorbances'</em>, <em>index=0</em><span class="sig-paren">)</span></dt>
+<dd><p>Collapse the dataset down to a two-dimensional spectrum. Returns a
+pandas series containing the resulting spectrum.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>pixel</strong> (<em>A 2-tuple that causes the returned series to represent</em>) &#8211; the spectrum for only 1 pixel in the frameset. If None, a
+larger part of the frame will be used, depending on the
+other arguments.</li>
+<li><strong></strong><strong>(</strong><strong>bool</strong><strong> or </strong><strong>str</strong><strong>)</strong><strong></strong> (<em>edge_jump_filter</em>) &#8211; pass the edge jump filter are used to calculate the
+spectrum. If &#8220;inverse&#8221; is given, then the edge jump filter
+is logically not-ted and calculated with a more
+conservative threshold.</li>
+<li><strong>representation</strong> (<em>What kind of data to use for creating the</em>) &#8211; </li>
+<li><strong>This will be passed to TXMStore.get_map</strong><strong>(</strong><strong></strong><strong>)</strong><strong></strong> (<em>spectrum.</em>) &#8211; </li>
+<li><strong>index</strong> (<em>Which step in the frameset to use. When used to index</em>) &#8211; store().absorbances, this should return a 3D array like
+(energy, rows, columns).</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="xanespy.xanes_frameset.XanesFrameset.stage_transformations">
+<code class="descname">stage_transformations</code><span class="sig-paren">(</span><em>translations=None</em>, <em>rotations=None</em>, <em>center=(0</em>, <em>0)</em>, <em>scales=None</em><span class="sig-paren">)</span></dt>
+<dd><p>Allows for deferred transformation of the frame data. Since each
+transformation introduces interpolation error, the best
+results occur when the translations are saved up and then
+applied all in one shot. Takes a combination of arrays of
+translations (x, y), rotations and/or scales and saves them
+for later application. This method should be used in
+conjunction apply_transformations().</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>translations</strong> (<em>-</em>) &#8211; </li>
+<li><strong>rotations</strong> (<em>-</em>) &#8211; pixel.</li>
+<li><strong>center</strong> (<em>-</em>) &#8211; first pixel (0, 0).</li>
+<li><strong>scales</strong> (<em>-</em>) &#8211; (x, y[, z]).</li>
+<li><strong>three arguments should have shapes that are compatible</strong> (<em>All</em>) &#8211; </li>
+<li><strong>the frame data</strong><strong>, </strong><strong>though this is not strictly enforced for</strong> (<em>with</em>) &#8211; </li>
+<li><strong>Rotation will necessarily have one less degree of freedom</strong> (<em>now.</em>) &#8211; </li>
+<li><strong>translation/scale values.</strong> (<em>than</em>) &#8211; </li>
+<li><strong>Shapes</strong> (<em>Example</em>) &#8211; </li>
+<li><strong>Frames                     | Translations | Rotations   | Scales      |</strong> (<em>|</em>) &#8211; </li>
+<li><strong>--------------------------------------------------------------------|</strong> &#8211; </li>
+<li><strong></strong><strong>(</strong><strong>10</strong><strong>, </strong><strong>48</strong><strong>, </strong><strong>1024</strong><strong>, </strong><strong>1024</strong><strong>)       </strong><strong>|</strong><strong> (</strong><strong>10</strong><strong>, </strong><strong>48</strong><strong>, </strong><strong>2</strong><strong>)  </strong><strong>|</strong><strong> (</strong><strong>10</strong><strong>, </strong><strong>48</strong><strong>, </strong><strong>1</strong><strong>) </strong><strong>|</strong><strong> (</strong><strong>10</strong><strong>, </strong><strong>48</strong><strong>, </strong><strong>2</strong><strong>) </strong><strong>|</strong> (<em>|</em>) &#8211; </li>
+<li><strong></strong><strong>(</strong><strong>10</strong><strong>, </strong><strong>48</strong><strong>, </strong><strong>1024</strong><strong>, </strong><strong>1024</strong><strong>, </strong><strong>1024</strong><strong>) </strong><strong>|</strong><strong> (</strong><strong>10</strong><strong>, </strong><strong>48</strong><strong>, </strong><strong>3</strong><strong>)  </strong><strong>|</strong><strong> (</strong><strong>10</strong><strong>, </strong><strong>48</strong><strong>, </strong><strong>2</strong><strong>) </strong><strong>|</strong><strong> (</strong><strong>10</strong><strong>, </strong><strong>48</strong><strong>, </strong><strong>3</strong><strong>) </strong><strong>|</strong> (<em>|</em>) &#8211; </li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="xanespy.xanes_frameset.XanesFrameset.starttime">
+<code class="descname">starttime</code><span class="sig-paren">(</span><span class="sig-paren">)</span></dt>
+<dd><p>Determine the earliest timestamp amongst all of the frames.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="xanespy.xanes_frameset.XanesFrameset.store">
+<code class="descname">store</code><span class="sig-paren">(</span><em>mode='r'</em><span class="sig-paren">)</span></dt>
+<dd><p>Get a TXM Store object that saves and retrieves data from the HDF5
+file. The mode argument is passed to h5py as is. This method
+should be used as a context manager, especially if mode is
+something writeable:</p>
+<blockquote>
+<div>with self.store() as store:</div></blockquote>
+</dd></dl>
+
+<dl class="method">
+<dt id="xanespy.xanes_frameset.XanesFrameset.subtract_surroundings">
+<code class="descname">subtract_surroundings</code><span class="sig-paren">(</span><span class="sig-paren">)</span></dt>
+<dd><p>Use the edge mask to separate &#8220;surroundings&#8221; from &#8220;sample&#8221;, then
+subtract the average surrounding absorbance from each
+frame. This effective removes effects where the entire frame
+is brighter from one energy to the next.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-xanespy.xanes_math">
+<span id="xanespy-xanes-math-module"></span><h2>xanespy.xanes_math module</h2>
+<p>Module containing all the computationally demanding functions. This
+allows for easy optimization of parallelizable algorithms. Most
+functions will operate on large arrays of data.</p>
+<dl class="class">
+<dt id="xanespy.xanes_math.KEdgeParams">
+<em class="property">class </em><code class="descclassname">xanespy.xanes_math.</code><code class="descname">KEdgeParams</code><span class="sig-paren">(</span><em>scale</em>, <em>voffset</em>, <em>E0</em>, <em>sigw</em>, <em>pre_m</em>, <em>pre_b</em>, <em>ga</em>, <em>gb</em>, <em>gc</em><span class="sig-paren">)</span></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">tuple</span></code></p>
+<dl class="attribute">
+<dt id="xanespy.xanes_math.KEdgeParams.E0">
+<code class="descname">E0</code></dt>
+<dd><p>Alias for field number 2</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="xanespy.xanes_math.KEdgeParams.ga">
+<code class="descname">ga</code></dt>
+<dd><p>Alias for field number 6</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="xanespy.xanes_math.KEdgeParams.gb">
+<code class="descname">gb</code></dt>
+<dd><p>Alias for field number 7</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="xanespy.xanes_math.KEdgeParams.gc">
+<code class="descname">gc</code></dt>
+<dd><p>Alias for field number 8</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="xanespy.xanes_math.KEdgeParams.pre_b">
+<code class="descname">pre_b</code></dt>
+<dd><p>Alias for field number 5</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="xanespy.xanes_math.KEdgeParams.pre_m">
+<code class="descname">pre_m</code></dt>
+<dd><p>Alias for field number 4</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="xanespy.xanes_math.KEdgeParams.scale">
+<code class="descname">scale</code></dt>
+<dd><p>Alias for field number 0</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="xanespy.xanes_math.KEdgeParams.sigw">
+<code class="descname">sigw</code></dt>
+<dd><p>Alias for field number 3</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="xanespy.xanes_math.KEdgeParams.voffset">
+<code class="descname">voffset</code></dt>
+<dd><p>Alias for field number 1</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="xanespy.xanes_math.apply_internal_reference">
+<code class="descclassname">xanespy.xanes_math.</code><code class="descname">apply_internal_reference</code><span class="sig-paren">(</span><em>intensities</em>, <em>out=None</em><span class="sig-paren">)</span></dt>
+<dd><p>Apply a reference correction to complex data to convert intensities
+into refractive index. I_0 is determined by separating the pixels
+into background and foreground using Otsu&#8217;s method.</p>
+<p>Arrays <cite>intensities</cite> and <cite>out</cite> must all have the same shape where
+the last two dimensions are image rows and column.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="xanespy.xanes_math.apply_references">
+<code class="descclassname">xanespy.xanes_math.</code><code class="descname">apply_references</code><span class="sig-paren">(</span><em>intensities</em>, <em>references</em>, <em>out=None</em><span class="sig-paren">)</span></dt>
+<dd><p>Apply a reference correction to convert intensity values to optical
+depth (-ln(I/I0)) values. Arrays <cite>intensities</cite>, <cite>references</cite> and
+<cite>out</cite> must all have the same shape where the last two dimensions
+are image rows and columns.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="xanespy.xanes_math.direct_whitelines">
+<code class="descclassname">xanespy.xanes_math.</code><code class="descname">direct_whitelines</code><span class="sig-paren">(</span><em>spectra</em>, <em>energies</em>, <em>edge</em><span class="sig-paren">)</span></dt>
+<dd><p>Takes an array of X-ray absorbance spectra and calculates the
+positions of maximum intensities over the near-edge region.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>spectra</strong> (<em>np.array</em>) &#8211; 2D numpy array of absorbance spectra where the last dimension is
+energy.</li>
+<li><strong>energies</strong> (<em>np.array</em>) &#8211; Array of X-ray energies in electron-volts. Must be broadcastable
+to the shape of spectra.</li>
+<li><strong>edge</strong> &#8211; An XAS Edge object that describes the absorbance edge in
+question.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>out</strong> &#8211; Array with the whiteline position of each spectrum.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">np.ndarray</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="xanespy.xanes_math.extract_signals_nmf">
+<code class="descclassname">xanespy.xanes_math.</code><code class="descname">extract_signals_nmf</code><span class="sig-paren">(</span><em>spectra</em>, <em>n_components</em>, <em>nmf_kwargs=None</em>, <em>mask=None</em><span class="sig-paren">)</span></dt>
+<dd><p>Extract the signal components present in the given spectra using
+non-negative matrix factorization. Input data can be negative, but
+it will be shifted up, processed, then shifted down again.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>spectra</strong> (<em>-</em>) &#8211; </li>
+<li><strong>n_components</strong> (<em>-</em>) &#8211; </li>
+<li><strong>nmf_kwargs</strong> (<em>-</em>) &#8211; the constructor of the estimator.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"></p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">2-tuple of arrays (components, weights)</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="xanespy.xanes_math.fit_kedge">
+<code class="descclassname">xanespy.xanes_math.</code><code class="descname">fit_kedge</code><span class="sig-paren">(</span><em>spectra</em>, <em>energies</em>, <em>p0</em><span class="sig-paren">)</span></dt>
+<dd><p>Use least squares to fit a set of curves to the data. Currently
+this is a line for the baseline absorbance decreasing at higher
+energies, plus a sigmoid for the edge and a gaussian for the
+whiteline.</p>
+<p>Returns an array with a similar shape to spectra but the last axis
+is replaced with fitting parameters, describe by the named tupled
+<cite>KParams</cite> defined in this module.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>spectra</strong> (<em>-</em>) &#8211; index is energy. This can be a multi-dimensional array, which
+allows calculation of image frames, etc. The last axis should be
+X-ray energy.</li>
+<li><strong>energies</strong> (<em>-</em>) &#8211; </li>
+<li><strong>p0</strong> (<em>-</em>) &#8211; described by kedge_params.</li>
+<li><strong>out</strong> (<em>-</em>) &#8211; </li>
+<li><strong>be created.</strong> (<em>will</em>) &#8211; </li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="xanespy.xanes_math.guess_kedge">
+<code class="descclassname">xanespy.xanes_math.</code><code class="descname">guess_kedge</code><span class="sig-paren">(</span><em>spectrum</em>, <em>energies</em>, <em>edge</em><span class="sig-paren">)</span></dt>
+<dd><p>Guess initial starting parameters for a k-edge curve. This will
+give a rough estimate, appropriate for giving to the fit_kedge
+function as the starting parameters, p0.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>spectrum</strong> (<em>-</em>) &#8211; K-edge spectrum. Only 1-dimensional data are currently accepted.</li>
+<li><strong>energies</strong> (<em>-</em>) &#8211; the points in <cite>spectrum</cite>. Must have the same shape as <cite>spectrum</cite>.</li>
+<li><strong>edge</strong> (<em>-</em>) &#8211; actual edge energy itself.</li>
+<li><strong>Returns</strong> (<em>A named tuple with the estimated parameters</em><em> (</em><em>see</em>) &#8211; .KEdgeParams for definition)</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="xanespy.xanes_math.iter_indices">
+<code class="descclassname">xanespy.xanes_math.</code><code class="descname">iter_indices</code><span class="sig-paren">(</span><em>data</em>, <em>leftover_dims=1</em>, <em>desc=None</em><span class="sig-paren">)</span></dt>
+<dd><p>Accept an array of frames, indices, etc. and generate slices for
+each frame. Assumes the last two dimensions of <cite>data</cite> are rows and
+columns. All other dimensions will be iterated over.</p>
+<ul class="simple">
+<li>leftover_dims : Integer describing which dimensions should not
+be iterated over. Eg. if data is 3D array and leftover_dims == 1,
+only first two dimenions will be iterated.</li>
+<li>desc : String to put in the progress bar.</li>
+</ul>
+</dd></dl>
+
+<dl class="function">
+<dt id="xanespy.xanes_math.k_edge_jump">
+<code class="descclassname">xanespy.xanes_math.</code><code class="descname">k_edge_jump</code><span class="sig-paren">(</span><em>frames: numpy.ndarray</em>, <em>energies: numpy.ndarray</em>, <em>edge</em><span class="sig-paren">)</span></dt>
+<dd><p>Determine what the difference is between the post_edge and the
+pre_edge.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="xanespy.xanes_math.k_edge_mask">
+<code class="descclassname">xanespy.xanes_math.</code><code class="descname">k_edge_mask</code><span class="sig-paren">(</span><em>frames: numpy.ndarray</em>, <em>energies: numpy.ndarray</em>, <em>edge</em>, <em>sensitivity: float = 1</em>, <em>min_size=0</em><span class="sig-paren">)</span></dt>
+<dd><p>Calculate a mask for what is likely active material at this
+edge. This is done by comparing the edge-jump to the standard
+deviation. Foreground material will be identified when the
+edge-jump accounts for most of the standard deviation.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>frames</strong> (<em>-</em>) &#8211; </li>
+<li><strong>energies</strong> (<em>-</em>) &#8211; <cite>frames</cite>. Must have the same shape along the first dimenion as
+<cite>frames</cite>.</li>
+<li><strong>edge</strong> (<em>-</em>) &#8211; elemental edge being studied.</li>
+<li><strong>sensitivity</strong> (<em>-</em>) &#8211; the actual threshold.</li>
+<li><strong>min_size</strong> (<em>-</em>) &#8211; removed. Passing zero (default) will result in no effect.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"><ul class="simple">
+<li><em>- A boolean mask with the same shape as the last two dimensions of</em></li>
+<li><cite>frames</cite> where True pixels are likely to be background material.</li>
+</ul>
+</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="xanespy.xanes_math.l_edge_mask">
+<code class="descclassname">xanespy.xanes_math.</code><code class="descname">l_edge_mask</code><span class="sig-paren">(</span><em>frames: numpy.ndarray</em>, <em>energies: numpy.ndarray</em>, <em>edge</em>, <em>sensitivity: float = 1</em>, <em>frame_dims=2</em>, <em>min_size=0</em><span class="sig-paren">)</span></dt>
+<dd><p>Calculate a mask for what is likely active material at this
+edge. This is done by comparing each spectrum to the overall
+spectrum using the dot product. A normalization is first applied
+to mitigate differences in total intensity.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>frames</strong> (<em>-</em>) &#8211; </li>
+<li><strong>energies</strong> (<em>-</em>) &#8211; <cite>frames</cite>. Must have the same shape along the first dimenion as
+<cite>frames</cite>.</li>
+<li><strong>edge</strong> (<em>-</em>) &#8211; elemental edge being studied.</li>
+<li><strong>sensitivity</strong> (<em>-</em>) &#8211; the actual threshold.</li>
+<li><strong>frame_dims</strong> (<em>-</em>) &#8211; means each frame is a two-dimensional image.</li>
+<li><strong>min_size</strong> (<em>-</em>) &#8211; removed. Passing zero (default) will result in no effect.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"><ul class="simple">
+<li><em>- A boolean mask with the same shape as the last two dimensions of</em></li>
+<li><cite>frames</cite> where True pixels are likely to be background material.</li>
+</ul>
+</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="xanespy.xanes_math.particle_labels">
+<code class="descclassname">xanespy.xanes_math.</code><code class="descname">particle_labels</code><span class="sig-paren">(</span><em>frames: numpy.ndarray</em>, <em>energies: numpy.ndarray</em>, <em>edge</em>, <em>min_distance=20</em><span class="sig-paren">)</span></dt>
+<dd><p>Prepare a map by segmenting the images into particles.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>frames</strong> (<em>-</em>) &#8211; energy. These will be merged and used for segmentation.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="xanespy.xanes_math.predict_edge">
+<code class="descclassname">xanespy.xanes_math.</code><code class="descname">predict_edge</code><span class="sig-paren">(</span><em>energies</em>, <em>*params</em><span class="sig-paren">)</span></dt>
+<dd><p>Defines the curve function that gets fit to the data for an
+absorbance K-edge.</p>
+<p>The predicted curve is a combination of a straight line (for
+background), an arctan function (for the edge), and a gaussian
+peak (for the whiteline).</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>energies</strong> (<em>np.ndarray</em>) &#8211; Array with energy values to be predicted.</li>
+<li><strong>*params</strong> (<em>tuple</em><em>(</em><em>int</em><em>)</em><em></em>) &#8211; The curve parameters that should be used for the
+prediction. Their order is described by kedge_params variable.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>curve</strong> &#8211; The predicted absorbance values based on the input
+parameters. Shape will match <cite>energies</cite>.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">np.ndarray</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="xanespy.xanes_math.register_correlations">
+<code class="descclassname">xanespy.xanes_math.</code><code class="descname">register_correlations</code><span class="sig-paren">(</span><em>frames</em>, <em>reference</em>, <em>upsample_factor=10</em>, <em>desc='Registering'</em><span class="sig-paren">)</span></dt>
+<dd><p>Calculate the relative translation between the reference image and
+a series of frames.</p>
+<p>This uses phase correlation through scikit-image&#8217;s
+<cite>register_translation</cite> function.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>frames</strong> (<em>np.ndarray</em>) &#8211; Array where the last two dimensions are (column, row) of images
+to be registered.</li>
+<li><strong>reference</strong> (<em>np.ndarray</em>) &#8211; Image frame against which to align the entries in <cite>frames</cite>.</li>
+<li><strong>upsample_factor</strong> (<em>int</em><em>, </em><em>optional</em>) &#8211; Factor controls subpixel registration via scikit-image.</li>
+<li><strong>desc</strong> (<em>str</em><em>, </em><em>optional</em>) &#8211; Description for putting in the progress bar.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>translations</strong> &#8211; Array with same dimensions as 0-th axis of <cite>frames</cite> containing
+(x, y) translations for each frame.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">np.ndarray</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="xanespy.xanes_math.register_template">
+<code class="descclassname">xanespy.xanes_math.</code><code class="descname">register_template</code><span class="sig-paren">(</span><em>frames</em>, <em>reference</em>, <em>template</em>, <em>desc='Registering'</em><span class="sig-paren">)</span></dt>
+<dd><p>Calculate the relative translation between the reference image and
+a series of frames.</p>
+<p>This uses template cross correlation through scikit-image&#8217;s
+<cite>match_template</cite> function.</p>
+<p>The <cite>register_correlations</cite> algorithm is simpler to use in most
+cases but sometimes results in unreasonable results; in those
+cases, this method can be more reliable to achieve a first
+approximation.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>frames</strong> (<em>np.ndarray</em>) &#8211; Array where the last two dimensions are (column, row) of images
+to be registered.</li>
+<li><strong>reference</strong> (<em>np.ndarray</em>) &#8211; Image frame against which to align the entries in <cite>frames</cite>.</li>
+<li><strong>template</strong> (<em>np.ndarray</em>) &#8211; A 2D array (smaller than frames and reference) that will be
+identified in each frame and used for alignment.</li>
+<li><strong>desc</strong> (<em>str</em><em>, </em><em>optional</em>) &#8211; Description for putting in the progress bar.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>translations</strong> &#8211; Array with same dimensions as 0-th axis of <cite>frames</cite> containing
+(x, y) translations for each frame.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">np.ndarray</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="xanespy.xanes_math.transform_images">
+<code class="descclassname">xanespy.xanes_math.</code><code class="descname">transform_images</code><span class="sig-paren">(</span><em>data</em>, <em>transformations</em>, <em>out=None</em>, <em>mode='median'</em><span class="sig-paren">)</span></dt>
+<dd><p>Takes image data and applies the given translation matrices.</p>
+<p>It is assumed that the first dimension of <cite>data</cite> is the same as
+the length of <cite>transformations</cite>. The transformation matrices can
+be generated from translation, rotation and scale parameters via
+the <code class="xref py py-meth docutils literal"><span class="pre">xanespy.xanes_math.transformation_matrics()</span></code>
+function. Data will be written to <cite>out</cite> if given, otherwise
+returned as a new array.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>data</strong> (<em>np.ndarray</em>) &#8211; Numeric array with frames to transform. Last two dimensions are
+assumed to be (row, columns).</li>
+<li><strong>transformations</strong> (<em>np.ndarray</em>) &#8211; A numeric array shaped compatibally with <cite>data</cite>. The last two
+dimensions are assumed to be (3, 3) and each (3, 3) encodes a
+transformation matrix for the corresponding frame in <cite>data</cite>.</li>
+<li><strong>out</strong> (<em>np.ndarray</em><em>, </em><em>optional</em>) &#8211; A numeric array with same shape as <cite>data</cite> that will hold the
+transformed data.</li>
+<li><strong>mode</strong> (<em>str</em><em>, </em><em>optional</em>) &#8211; Describes how to deal with edges. See scikit-image documentation
+for options. Special value &#8220;median&#8221; (default), takes the median
+pixel intensity of that frame and uses it as the constant value.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>out</strong> &#8211; A new array with similar dimensions to <cite>data</cite> but with
+transformations applied and converted to float datatype.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">np.ndarray</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="xanespy.xanes_math.transformation_matrices">
+<code class="descclassname">xanespy.xanes_math.</code><code class="descname">transformation_matrices</code><span class="sig-paren">(</span><em>translations=None</em>, <em>rotations=None</em>, <em>scales=None</em>, <em>center=(0</em>, <em>0)</em><span class="sig-paren">)</span></dt>
+<dd><p>Takes array of operations and calculates (3, 3) transformation
+matrices.</p>
+<p>This function operates by calculating an AffineTransform similar
+to that described in the scikit-image package.</p>
+<p>All three arguments (<cite>translations</cite>, <cite>rotations</cite>, and <cite>scales</cite>,
+should have shapes that are compatible with the frame data, though
+this is not strictly enforced for now. Rotation will necessarily
+have one less degree of freedom than translation/scale values.</p>
+<p>Example Shapes:</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="41%" />
+<col width="21%" />
+<col width="19%" />
+<col width="19%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Frames</th>
+<th class="head">Translations</th>
+<th class="head">Rotations</th>
+<th class="head">Scales</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>(10, 48, 1024, 1024)</td>
+<td>(10, 48, 2)</td>
+<td>(10, 48, 1)</td>
+<td>(10, 48, 2)</td>
+</tr>
+<tr class="row-odd"><td>(10, 48, 1024, 1024, 1024)</td>
+<td>(10, 48, 3)</td>
+<td>(10, 48, 2)</td>
+<td>(10, 48, 3)</td>
+</tr>
+</tbody>
+</table>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>translations</strong> (<em>np.ndarray</em><em>, </em><em>optional</em>) &#8211; How much to move each axis (x, y[, z]).</li>
+<li><strong>rotations</strong> (<em>np.ndarray</em><em>, </em><em>optional</em>) &#8211; How much to rotate around the origin (0, 0) pixel.</li>
+<li><strong>center</strong> (<em>np.ndarray</em><em>, </em><em>optional</em>) &#8211; Where to set the origin of rotation. Default is the
+first pixel (0, 0).</li>
+<li><strong>scales</strong> (<em>np.ndarray</em><em>, </em><em>optional</em>) &#8211; How much to scale the image by in each dimension
+(x, y[, z]).</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>new_transforms</strong> &#8211; Resulting transformation matrices. Will have the same shape as the
+input arrays but with the last dimension replaced by (3, 3).</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">np.ndarray</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="module-xanespy.xradia">
+<span id="xanespy-xradia-module"></span><h2>xanespy.xradia module</h2>
+<p>Tools for importing X-ray microscopy frames in formats produced by
+Xradia instruments.</p>
+<dl class="class">
+<dt id="xanespy.xradia.XRMFile">
+<em class="property">class </em><code class="descclassname">xanespy.xradia.</code><code class="descname">XRMFile</code><span class="sig-paren">(</span><em>filename</em>, <em>flavor: str</em><span class="sig-paren">)</span></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<p>Single X-ray micrscopy frame created using XRadia XRM format.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>filename</strong> (<em>-</em>) &#8211; </li>
+<li><strong>flavor</strong> (<em>-</em>) &#8211; choices are [&#8216;ssrl&#8217;, &#8216;aps&#8217;, &#8216;aps-old1&#8217;]. These choices should
+line up with whatever is generated using the scripts in
+beamlines moudles.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="attribute">
+<dt id="xanespy.xradia.XRMFile.aps_old1_regex">
+<code class="descname">aps_old1_regex</code><em class="property"> = re.compile('(\\d{8})_([a-zA-Z0-9_]+)_([a-zA-Z0-9]+)_(\\d{4}).xrm')</em></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="xanespy.xradia.XRMFile.binning">
+<code class="descname">binning</code><span class="sig-paren">(</span><span class="sig-paren">)</span></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="xanespy.xradia.XRMFile.close">
+<code class="descname">close</code><span class="sig-paren">(</span><span class="sig-paren">)</span></dt>
+<dd><p>Close original XRM (ole) file on disk.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="xanespy.xradia.XRMFile.endtime">
+<code class="descname">endtime</code><span class="sig-paren">(</span><span class="sig-paren">)</span></dt>
+<dd><p>Retrieve a datetime object representing when this frame was
+finished collecting. Duration is decided by exposure time of the frame
+and the start time.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="xanespy.xradia.XRMFile.energy">
+<code class="descname">energy</code><span class="sig-paren">(</span><span class="sig-paren">)</span></dt>
+<dd><p>Beam energy in electronvoltes.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="xanespy.xradia.XRMFile.image_data">
+<code class="descname">image_data</code><span class="sig-paren">(</span><span class="sig-paren">)</span></dt>
+<dd><p>TXM Image frame.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="xanespy.xradia.XRMFile.image_dtype">
+<code class="descname">image_dtype</code><span class="sig-paren">(</span><span class="sig-paren">)</span></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="xanespy.xradia.XRMFile.image_shape">
+<code class="descname">image_shape</code><span class="sig-paren">(</span><span class="sig-paren">)</span></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="xanespy.xradia.XRMFile.ole_value">
+<code class="descname">ole_value</code><span class="sig-paren">(</span><em>stream</em>, <em>fmt=None</em><span class="sig-paren">)</span></dt>
+<dd><p>Get arbitrary data from the ole file and convert from bytes.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="xanespy.xradia.XRMFile.print_ole">
+<code class="descname">print_ole</code><span class="sig-paren">(</span><span class="sig-paren">)</span></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="xanespy.xradia.XRMFile.sample_position">
+<code class="descname">sample_position</code><span class="sig-paren">(</span><span class="sig-paren">)</span></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="xanespy.xradia.XRMFile.starttime">
+<code class="descname">starttime</code><span class="sig-paren">(</span><span class="sig-paren">)</span></dt>
+<dd><p>Retrieve a datetime object representing when this frame was
+collected. Timezone is inferred from flavor (eg. ssrl -&gt; california
+time).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="xanespy.xradia.XRMFile.um_per_pixel">
+<code class="descname">um_per_pixel</code><span class="sig-paren">(</span><span class="sig-paren">)</span></dt>
+<dd><p>Describe the size of a pixel in microns. If this is an SSRL frame,
+the pixel size is dependent on energy. For APS frames, the pixel size
+is uniform and assumes a 40µm field-of-view.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-xanespy">
+<span id="module-contents"></span><h2>Module contents</h2>
+</div>
+</div>
+
+
+          </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+  </body>
+</html>

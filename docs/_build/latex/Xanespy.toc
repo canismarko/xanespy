@@ -1,6 +1,18 @@
 \select@language {english}
-\contentsline {chapter}{\numberline {1}Introduction}{1}{chapter.1}
-\contentsline {section}{\numberline {1.1}Purpose}{1}{section.1.1}
-\contentsline {section}{\numberline {1.2}X-Ray Absorbance Fundamentals}{1}{section.1.2}
-\contentsline {section}{\numberline {1.3}Sample WorkFlow}{1}{section.1.3}
-\contentsline {chapter}{\numberline {2}Indices and tables}{3}{chapter.2}
+\contentsline {chapter}{\numberline {1}Introduction}{3}{chapter.1}
+\contentsline {section}{\numberline {1.1}Purpose}{3}{section.1.1}
+\contentsline {section}{\numberline {1.2}X-Ray Absorbance Fundamentals}{3}{section.1.2}
+\contentsline {section}{\numberline {1.3}Sample WorkFlow}{3}{section.1.3}
+\contentsline {chapter}{\numberline {2}Importing Data into Xanespy}{5}{chapter.2}
+\contentsline {section}{\numberline {2.1}TXM from 8-BM (APS) and 6-2c (SSRL)}{5}{section.2.1}
+\contentsline {section}{\numberline {2.2}Ptychography from 5.3.2.1 (ALS)}{5}{section.2.2}
+\contentsline {chapter}{\numberline {3}Analyzing the Data}{7}{chapter.3}
+\contentsline {section}{\numberline {3.1}Frame Alignment}{7}{section.3.1}
+\contentsline {section}{\numberline {3.2}Subtracting Surroundings}{7}{section.3.2}
+\contentsline {section}{\numberline {3.3}Spectrum Fitting - K-Edge}{7}{section.3.3}
+\contentsline {section}{\numberline {3.4}Spectrum Fitting - L-Edge}{7}{section.3.4}
+\contentsline {chapter}{\numberline {4}Visualization of Results}{9}{chapter.4}
+\contentsline {section}{\numberline {4.1}Plotting}{9}{section.4.1}
+\contentsline {section}{\numberline {4.2}Interactive Viewer (Qt)}{9}{section.4.2}
+\contentsline {chapter}{\numberline {5}Accessing the Data Directly}{11}{chapter.5}
+\contentsline {chapter}{\numberline {6}Indices and tables}{13}{chapter.6}
