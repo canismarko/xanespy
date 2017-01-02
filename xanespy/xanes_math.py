@@ -372,15 +372,23 @@ def predict_edge(energies, *params):
     """Defines the curve function that gets fit to the data for an
     absorbance K-edge.
 
-    Returns a numpy array with predicted absorbance values.
+    The predicted curve is a combination of a straight line (for
+    background), an arctan function (for the edge), and a gaussian
+    peak (for the whiteline).
 
     Arguments
     ---------
-    - energies : Array with energy values to be predicted.
+    energies : np.ndarray
+      Array with energy values to be predicted.
+    *params : tuple(int)
+      The curve parameters that should be used for the
+      prediction. Their order is described by kedge_params variable.
 
-    - *params : The curve parameters that should be used for the
-       prediction. Their order is described by kedge_params
-       variable.
+    Returns
+    -------
+    curve : np.ndarray
+      The predicted absorbance values based on the input
+      parameters. Shape will match `energies`.
 
     """
     # Named tuple to help keep track of parameters
@@ -396,7 +404,8 @@ def predict_edge(energies, *params):
     # Background
     bg = x * p.pre_m + p.pre_b
     curve = sig + gaus + bg
-    return p.scale * curve + p.voffset
+    curve = p.scale * curve + p.voffset
+    return curve
 
 
 def guess_kedge(spectrum, energies, edge):
@@ -508,15 +517,20 @@ def direct_whitelines(spectra, energies, edge):
 
     Arguments
     ---------
-
-    - spectra : 2D numpy array of absorbance spectra where the last
-      dimension is energy.
-
-    - energies : Array of X-ray energies in electron-volts. Must be
-      broadcastable to the shape of spectra.
-
-    - edge : An XAS Edge object that describes the absorbance edge in
+    spectra : np.array
+      2D numpy array of absorbance spectra where the last dimension is
+      energy.
+    energies : np.array
+      Array of X-ray energies in electron-volts. Must be broadcastable
+      to the shape of spectra.
+    edge
+      An XAS Edge object that describes the absorbance edge in
       question.
+
+    Returns
+    -------
+    out : np.ndarray
+      Array with the whiteline position of each spectrum.
 
     """
     # Broadcast energies to be same shape as spectra
@@ -544,32 +558,38 @@ def direct_whitelines(spectra, energies, edge):
 
 
 def transform_images(data, transformations, out=None, mode='median'):
-    """Takes an array of images and applies each translation, rotation and
-    scale. It is assumed that the first dimension of data is the same
-    as the length of translations, rotations and scales. Data will be
-    written to `out` if given, otherwise returned as a new array.
+    """Takes image data and applies the given translation matrices.
 
-    Returns: A new array with similar dimensions to `data` but with
-      transformations applied and converted to float datatype.
+    It is assumed that the first dimension of `data` is the same as
+    the length of `transformations`. The transformation matrices can
+    be generated from translation, rotation and scale parameters via
+    the :py:meth:`xanespy.xanes_math.transformation_matrics`
+    function. Data will be written to `out` if given, otherwise
+    returned as a new array.
 
     Arguments
     ---------
+    data : np.ndarray
+      Numeric array with frames to transform. Last two dimensions are
+      assumed to be (row, columns).
+    transformations : np.ndarray
+      A numeric array shaped compatibally with `data`. The last two
+      dimensions are assumed to be (3, 3) and each (3, 3) encodes a
+      transformation matrix for the corresponding frame in `data`.
+    out : np.ndarray, optional
+      A numeric array with same shape as `data` that will hold the
+      transformed data.
+    mode : str, optional
+      Describes how to deal with edges. See scikit-image documentation
+      for options. Special value "median" (default), takes the median
+      pixel intensity of that frame and uses it as the constant value.
 
-    - data : Numeric array with frames to transform. Last two
-    - dimensions are assumed to be (row, columns).
+    Returns
+    -------
+    out : np.ndarray
+      A new array with similar dimensions to `data` but with
+      transformations applied and converted to float datatype.
 
-    - transformations : A numeric array shaped compatibally with
-      `data`. The last two dimensions are assumed to be 3x3 and each
-      3x3 encodes a transformation matrix for the corresponding frame
-      in `data`.
-
-    - out : A numeric array with same shape as `data` that will hold
-      the transformed data.
-
-    - mode : String with how to deal with edges. See scikit-image
-      documentation for options. Special value "median" (default),
-      takes the median pixel intensity of that frame and uses it as
-      the constant value.
     """
     logstart = time()
     # Create a new array if one is not given
@@ -631,30 +651,48 @@ def transform_images(data, transformations, out=None, mode='median'):
 
 
 def transformation_matrices(translations=None, rotations=None, scales=None, center=(0, 0)):
-    """
-    Arguments
-    ---------
-    - translations : How much to move each axis (x, y[, z]).
+    """Takes array of operations and calculates (3, 3) transformation
+    matrices.
 
-    - rotations : How much to rotate around the origin (0, 0)
-      pixel.
+    This function operates by calculating an AffineTransform similar
+    to that described in the scikit-image package.
 
-    - center : Where to set the origin of rotation. Default is the
-      first pixel (0, 0).
-
-    - scales : How much to scale the image by in each dimension
-      (x, y[, z]).
-
-    All three arguments should have shapes that are compatible
-    with the frame data, though this is not strictly enforced for
-    now. Rotation will necessarily have one less degree of freedom
-    than translation/scale values.
+    All three arguments (`translations`, `rotations`, and `scales`,
+    should have shapes that are compatible with the frame data, though
+    this is not strictly enforced for now. Rotation will necessarily
+    have one less degree of freedom than translation/scale values.
 
     Example Shapes:
+
+    +----------------------------+--------------+-------------+-------------+
     | Frames                     | Translations | Rotations   | Scales      |
-    |----------------------------|--------------|-------------|-------------|
+    +============================+==============+=============+=============+
     | (10, 48, 1024, 1024)       | (10, 48, 2)  | (10, 48, 1) | (10, 48, 2) |
+    +----------------------------+--------------+-------------+-------------+
     | (10, 48, 1024, 1024, 1024) | (10, 48, 3)  | (10, 48, 2) | (10, 48, 3) |
+    +----------------------------+--------------+-------------+-------------+
+
+    Parameters
+    ----------
+    translations : np.ndarray, optional
+      How much to move each axis (x, y[, z]).
+
+    rotations : np.ndarray, optional
+      How much to rotate around the origin (0, 0) pixel.
+
+    center : np.ndarray, optional
+      Where to set the origin of rotation. Default is the
+      first pixel (0, 0).
+
+    scales : np.ndarray, optional
+      How much to scale the image by in each dimension
+      (x, y[, z]).
+
+    Returns
+    -------
+    new_transforms : np.ndarray
+      Resulting transformation matrices. Will have the same shape as the
+      input arrays but with the last dimension replaced by (3, 3).
 
     """
     spatial_dims = 2
@@ -694,17 +732,30 @@ def transformation_matrices(translations=None, rotations=None, scales=None, cent
 
 
 def register_correlations(frames, reference, upsample_factor=10,
-                          desc="registering"):
+                          desc="Registering"):
     """Calculate the relative translation between the reference image and
-    each image in `frames` using a modified cross-correlation algorithm.
+    a series of frames.
 
-    Arguments
-    ---------
+    This uses phase correlation through scikit-image's
+    `register_translation` function.
 
-    - desc (str) : Description for putting in the progress bar.
+    Parameters
+    ----------
+    frames : np.ndarray
+      Array where the last two dimensions are (column, row) of images
+      to be registered.
+    reference : np.ndarray
+      Image frame against which to align the entries in `frames`.
+    upsample_factor : int, optional
+      Factor controls subpixel registration via scikit-image.
+    desc : str, optional
+      Description for putting in the progress bar.
 
-    Returns: Array with same dimensions as 0th axis of `frames`
-    containing (x, y) translations for each frame.
+    Returns
+    -------
+    translations : np.ndarray
+      Array with same dimensions as 0-th axis of `frames` containing
+      (x, y) translations for each frame.
 
     """
     t_shape = (*frames.shape[:-2], 2)
@@ -728,26 +779,34 @@ def register_correlations(frames, reference, upsample_factor=10,
 
 def register_template(frames, reference, template, desc="Registering"):
     """Calculate the relative translation between the reference image and
-    each image in `frames` using a template matching algorithm. The
-    `register_correlations` algorithm is simpler to use in most cases
-    but sometimes results in unreasonable results; in those cases,
-    this method can be more reliable to achieve a first approximation.
+    a series of frames.
+
+    This uses template cross correlation through scikit-image's
+    `match_template` function.
+    
+    The `register_correlations` algorithm is simpler to use in most
+    cases but sometimes results in unreasonable results; in those
+    cases, this method can be more reliable to achieve a first
+    approximation.
 
     Arguments
     ---------
+    frames : np.ndarray
+      Array where the last two dimensions are (column, row) of images
+      to be registered.
+    reference : np.ndarray
+      Image frame against which to align the entries in `frames`.
+    template : np.ndarray
+      A 2D array (smaller than frames and reference) that will be
+      identified in each frame and used for alignment.
+    desc : str, optional
+      Description for putting in the progress bar.
 
-    - frames : An array of 2D frames that will be registered.
-
-    - reference : A 2D frame of similar shape to those in
-      `frames`. All other frames will be aligned to this one.
-
-    - template : A 2D array (smaller than frames and reference) that
-      will be identified in each frame and used for alignment.
-
-    - desc (str) : Description to put in the progress bar.
-
-    Returns: Array with same dimensions as 0th axis of `frames`
-    containing (x, y) translations for each frame.
+    Returns
+    -------
+    translations : np.ndarray
+      Array with same dimensions as 0-th axis of `frames` containing
+      (x, y) translations for each frame.
 
     """
     t_shape = (*frames.shape[:-2], 2)
