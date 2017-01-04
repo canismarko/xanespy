@@ -94,7 +94,6 @@ class QtFrameView(QtCore.QObject):  # pragma: no cover
     hist_cb = None
     edge_ax = None
     _frame_animation = None
-    _hist_animation = None
 
     # Signals
     frame_changed = QtCore.pyqtSignal(int)
@@ -114,7 +113,7 @@ class QtFrameView(QtCore.QObject):  # pragma: no cover
         self.ui = Ui_FrameWindow()
         self.ui.setupUi(self.window)
         # Add some labels to the statusbar
-        self.create_status_bar()
+        # self.create_status_bar()
         # Add labels to the HDF Tree widget
         self.ui.hdfTree.setHeaderLabels(['Name', 'Type'])
         header = self.ui.hdfTree.header()
@@ -128,15 +127,13 @@ class QtFrameView(QtCore.QObject):  # pragma: no cover
         self.draw_histogram.connect(self._draw_histogram)
 
     def create_status_bar(self):
-        # Create the status indicator
-        self.ui.statusbar.addWidget(QtWidgets.QLabel("Status:"))
-        self.lblStatus = QtWidgets.QLabel()
-        self.lblStatus.setMinimumWidth(200)
-        self.ui.statusbar.addWidget(self.lblStatus)
+        print(dir(self.ui.statusbar))
+        self.status_layout = QtWidgets.QVboxLayout()
+        self.ui.statusbar.layout().addItem(QtWidgets.QSpacerItem(100, 20))
         # Indicator for the current frame shape
         self.ui.statusbar.addWidget(QtWidgets.QLabel("Shape:"))
         self.lblShape = QtWidgets.QLabel()
-        self.lblShape.setMinimumWidth(100)
+        self.lblShape.setMinimumWidth(120)
         self.ui.statusbar.addWidget(self.lblShape)
         # Indicator for the current index
         self.ui.statusbar.addWidget(QtWidgets.QLabel("Frame:"))
@@ -365,22 +362,28 @@ class QtFrameView(QtCore.QObject):  # pragma: no cover
         self.ui.cmbTimestep.setCurrentIndex(idx)
 
     def show_status_message(self, message):
-        self.lblStatus.setText(message)
+        self.ui.statusbar.showMessage(message)
 
     def set_status_shape(self, msg):
-        self.lblShape.setText(msg)
-
-    def set_status_energy(self, msg):
-        self.lblEnergy.setText(msg)
+        self.ui.lblShape.setText(msg)
 
     def set_status_index(self, msg):
-        self.lblIndex.setText(msg)
+        self.ui.lblIndex.setText(msg)
+
+    def set_status_energy(self, msg):
+        self.ui.lblEnergy.setText(msg)
 
     def set_status_cursor(self, msg):
-        self.lblCursor.setText(msg)
+        self.ui.lblCursor.setText(msg)
+
+    def set_status_unit(self, msg):
+        self.ui.lblUnit.setText(msg)
 
     def set_status_pixel(self, msg):
-        self.lblPixel.setText(msg)
+        self.ui.lblPixel.setText(msg)
 
     def set_status_value(self, msg):
-        self.lblValue.setText(msg)
+        self.ui.lblValue.setText(msg)
+
+    def set_window_title(self, title):
+        self.window.setWindowTitle(title)

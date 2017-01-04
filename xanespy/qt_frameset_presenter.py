@@ -24,7 +24,7 @@ class QtFramesetPresenter():
     map_cmap = "plasma"
     active_frame = 0
     active_timestep = 0
-    active_representation = 'intensities'
+    frame_representation = 'intensities'
     frame_pixel = None
     num_frames = 0
     timer = None
@@ -36,9 +36,9 @@ class QtFramesetPresenter():
         self.frame_view = frame_view
         # Switch to absorbances representation if it's valid
         if self.frameset.has_representation('absorbances'):
-            self.active_representation = 'absorbances'
+            self.frame_representation = 'absorbances'
         else:
-            self.active_representation = 'intensities'
+            self.frame_representation = 'intensities'
 
     @property
     def dirty(self):
@@ -69,6 +69,7 @@ class QtFramesetPresenter():
         self.draw_frame_histogram()
         self.animate_frames()
         self.update_status_shape()
+        self.update_status_unit()
         # Update some widgets
         num_energies = self.active_frames().shape[0]
         self.frame_view.set_slider_max(num_energies - 1)
@@ -162,7 +163,7 @@ class QtFramesetPresenter():
     def draw_frame_spectra(self):
         frame_spectrum = self.frameset.spectrum(
             edge_jump_filter=True,
-            representation=self.active_representation,
+            representation=self.frame_representation,
             index=self.active_timestep)
         self.frame_view.draw_spectrum(frame_spectrum.values,
                                       energies=frame_spectrum.index,
@@ -193,7 +194,7 @@ class QtFramesetPresenter():
             'frameset': QtGui.QIcon.fromTheme('emblem-photos'),
             'map': QtGui.QIcon.fromTheme('image-x-generic'),
         }
-        active_path = self.frameset.hdf_path(self.active_representation)
+        active_path = self.frameset.hdf_path(self.frame_representation)
         self._active_tree_item = None
 
         # Recursive helper function for building the tree
@@ -232,7 +233,7 @@ class QtFramesetPresenter():
                 ancestor = ancestor.parent()
 
     def refresh_frames(self):
-        if self.active_representation is not None:
+        if self.frame_representation is not None:
             # A valid set of frames is available, so plot them
             self.draw_frame_histogram()
             self.draw_frame_spectra()
@@ -243,15 +244,16 @@ class QtFramesetPresenter():
             self.frame_view.clear_axes()
         # Update the status bar with new frame data
         self.update_status_shape()
+        self.update_status_unit()
 
     def active_frames(self):
         frames = self.frameset.frames(timeidx=self.active_timestep,
-                                      representation=self.active_representation)
+                                      representation=self.frame_representation)
         return frames
 
     def animate_frames(self):
         frames = self.active_frames()
-        extent = self.frameset.extent(self.active_representation)
+        extent = self.frameset.extent(self.frame_representation)
         energies = self.frameset.energies(timeidx=self.active_timestep)
         log.debug("Animating frames from presenter")
         self.frame_view.draw_frames.emit(frames,
@@ -261,21 +263,26 @@ class QtFramesetPresenter():
                                          extent)
 
     def hover_frame_pixel(self, xy):
-        if xy is None:
-            # Update the UI to clear the cursor data
-            cursor_s = ""
-            pixel_s = ""
-            self.frame_pixel = None
-        else:
-            # Update the UI with the cursor location
+        # Validate that the pixel's on the graph, and has data
+        pixel_is_valid = xy is not None
+        try:
+            extent = self.frameset.extent(self.frame_representation)
+            shape = self.frameset.frame_shape()
+        except exceptions.GroupKeyError:
+            pixel_is_valid = False
+        if pixel_is_valid:
+            # Modify the UI with the cursor location
             cursor_s = "({x:.2f}, {y:.2f})".format(x=xy.x, y=xy.y)
             # Convert from (x, y) to (row, col)
-            extent = self.frameset.extent(self.active_representation)
-            shape = self.frameset.frame_shape()
             pixel = xy_to_pixel(xy, extent=extent, shape=shape)
             pixel_s = "[{row}, {col}]".format(row=pixel.vertical,
                                               col=pixel.horizontal)
             self.frame_pixel = pixel
+        else:
+            # Modify the UI to clear the cursor data
+            cursor_s = ""
+            pixel_s = ""
+            self.frame_pixel = None
         # Now update the UI
         self.frame_view.set_status_pixel(pixel_s)
         self.frame_view.set_status_cursor(cursor_s)
@@ -328,15 +335,19 @@ class QtFramesetPresenter():
 
     def update_status_shape(self):
         try:
-            shape = self.active_frames().shape[-2:]
+            shape = self.active_frames().shape
         except exceptions.GroupKeyError:
             # No valid frames so show a placeholder
             s = "---"
         else:
-            s = "({rows}, {cols})"
-            s = s.format(rows=shape[0], cols=shape[1])
+            s = "{}".format(shape)
         # Set the UI's text
         self.frame_view.set_status_shape(s)
+
+    def update_status_unit(self):
+        unit = self.frameset.pixel_unit()
+        s = "({}):".format(unit)
+        self.frame_view.set_status_unit(s)
 
     def update_status_frame(self, new_frame):
         """Create a string (and send it to the UI) that indicates the energy
@@ -350,9 +361,10 @@ class QtFramesetPresenter():
         is_selectable = new_item.text(1) in ["frameset", "map"]
         old_name = old_item.text(0) if old_item is not None else "None"
         # Figure out the path for this group and set the new data_name
-        path = new_item.text(2).split('/')
-        if len(path) > 2:
-            self.frameset.data_name = path[2]
+        path = new_item.text(2)
+        path_nodes = path.split('/')
+        if len(path_nodes) > 2:
+            self.frameset.data_name = path_nodes[2]
         # Set the active representation and data groups
         if is_selectable:
             # A valid representation was chosen, so save it for future plotting
@@ -360,8 +372,13 @@ class QtFramesetPresenter():
         else:
             # A non-leaf node was chosen, so no representation
             new_representation = None
-        self.active_representation = new_representation
+        self.frame_representation = new_representation
         log.debug("Changing representation %s -> %s", old_name, new_representation)
         log.debug("New HDF data path: %s", path)
         self.reset_frame_range()
         self.refresh_frames()
+        # Update the window title with the new path
+        title = "Xanespy Frameset ({})".format(path)
+        self.frame_view.set_window_title(title)
+        # Update status bar info
+        

@@ -690,6 +690,12 @@ class XanesFrameset():
                 imshape = store.intensities.shape[-2:]
         return imshape
 
+    def pixel_unit(self):
+        """Return the unit of measure for the size of a pixel."""
+        with self.store() as store:
+            unit = store.pixel_unit
+        return unit
+
     def spectra(self, edge_filter=False):
         """Return a two-dimensional array of spectra for all the pixels in
         shape of (pixel, energy).

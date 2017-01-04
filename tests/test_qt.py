@@ -77,12 +77,12 @@ class FrameViewerTestcase(QtTestCase):
         frameset = MockFrameset()
         frameset.has_representation.return_value = True
         presenter = self.create_presenter(frameset=frameset)
-        self.assertEqual(presenter.active_representation, "absorbances")
+        self.assertEqual(presenter.frame_representation, "absorbances")
         # Don't switch to "absorbances" representation if it doesn't exist
         frameset = MockFrameset()
         frameset.has_representation.return_value = False
         presenter = self.create_presenter(frameset=frameset)
-        self.assertEqual(presenter.active_representation, "intensities")
+        self.assertEqual(presenter.frame_representation, "intensities")
 
     def test_prepare_ui(self):
         # Prepare a frameset object to test the presenter
@@ -108,7 +108,7 @@ class FrameViewerTestcase(QtTestCase):
         data = data.reshape((10, 128, 128))
         frameset.frames = mock.Mock(return_value=data)
         presenter = self.create_presenter(frameset=frameset)
-        presenter.active_representation = "absorbances"
+        presenter.frame_representation = "absorbances"
         # Now invoke to function to be tested
         presenter.set_timestep(5)
         # Check that all the view elements are updated
@@ -185,7 +185,7 @@ class FrameViewerTestcase(QtTestCase):
         presenter.frame_view.set_vmax.assert_called_with(P_upper)
         # Check what happens in the representation is invalid
         presenter.frame_view.set_vmin.reset_mock()
-        presenter.active_representation = None
+        presenter.frame_representation = None
         presenter.reset_frame_range()
         presenter.frame_view.set_vmin.assert_not_called()
 
@@ -209,7 +209,7 @@ class FrameViewerTestcase(QtTestCase):
         self.assertTrue(presenter.frame_view.draw_histogram.emit.called)
         self.assertTrue(presenter.frame_view.draw_spectrum.called)
         # Should just clear the axes if there's no data
-        presenter.active_representation = None
+        presenter.frame_representation = None
         presenter.refresh_frames()
         self.assertTrue(presenter.frame_view.clear_axes.called)
 
@@ -311,6 +311,7 @@ class FrameViewerTestcase(QtTestCase):
         frameset = MockFrameset()
         data = np.random.rand(10, 128, 128)
         frameset.frames = mock.Mock(return_value=data)
+        frameset.pixel_unit = mock.Mock(return_value='um')
         # Create the presenter object
         presenter = self.create_presenter(frameset=frameset)
         # Make a mock tree item
@@ -328,13 +329,19 @@ class FrameViewerTestcase(QtTestCase):
         # Call the actual method to change the active tree item
         presenter.change_hdf_group(new_item, old_item=None)
         # Check that the new representation is set and used
-        self.assertEqual(presenter.active_representation, 'new_groupname')
+        self.assertEqual(presenter.frame_representation, 'new_groupname')
         frameset.frames.assert_called_with(timeidx=0, representation='new_groupname')
         # Check that the data_name is set correctly
         self.assertEqual(frameset.data_name, 'aligned')
         # Check that the statusbar text is updated
         presenter.frame_view.set_status_shape.assert_called_with(
-            '(128, 128)')
+            '(10, 128, 128)')
+        presenter.frame_view.set_status_unit.assert_called_with(
+            '(um):')
+        # Check that the window titles were updated
+        presenter.frame_view.set_window_title.assert_called_with(
+            'Xanespy Frameset (/test-sample/aligned/new_groupname)'
+        )
 
     def test_update_status_shape(self):
         # Prepare a dummy frameset
@@ -346,9 +353,9 @@ class FrameViewerTestcase(QtTestCase):
         presenter.update_status_shape()
         # Assert that the right frame_view calls were made
         presenter.frame_view.set_status_shape.assert_called_with(
-            '(128, 128)')
+            '(10, 128, 128)')
         # Now make it invalid frame data
-        presenter.active_representation = None
+        presenter.frame_representation = None
         def side_effect(*args, **kwargs):
             raise exceptions.GroupKeyError()
         frameset.frames = mock.Mock(side_effect=side_effect)
@@ -434,6 +441,20 @@ class FrameViewerTestcase(QtTestCase):
             "")
         presenter.frame_view.set_status_value.assert_called_with(
             "")
+        # Now what happens if there's no valid dataset
+        # frameset = MockFrameset()
+        # # def key_error(obj):
+        # #     raise exceptions.GroupKeyError()
+        # # frameset.extent = mock.Mock(side_effect=key_error)
+        # presenter = self.create_presenter(frameset=frameset)
+        # presenter.frame_representation = 'invalid-name'
+        # presenter.hover_frame_pixel(xy=xycoord(3, 7))
+        # presenter.frame_view.set_status_value.assert_called_with(
+        #     "")
+        # presenter.frame_view.set_status_pixel.assert_called_with(
+        #     "")
+        # presenter.frame_view.set_status_value.assert_called_with(
+        #     "")
 
 class FrameSourceTestCase(unittest.TestCase):
 

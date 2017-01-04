@@ -116,6 +116,9 @@ def xy_to_pixel(xy, extent, shape):
     ratio_y = (xy.y - extent.bottom) / (extent.top - extent.bottom)
     # (1 - ratio) for y because images are top indexed
     pixel_v = int(round(ratio_y * shape[0]))
+    # Very right and top edges get set to the last pixel
+    pixel_v = min(pixel_v, shape[0] - 1)
+    pixel_h = min(pixel_h, shape[1] - 1)
     return Pixel(vertical=pixel_v, horizontal=pixel_h)
 
 

@@ -1401,6 +1401,20 @@ class UtilitiesTest(XanespyTestCase):
             shape=(10, 10)
         )
         self.assertEqual(result, Pixel(vertical=0, horizontal=5))
+        # Try an x-y value at the edge of the image
+        result = xy_to_pixel(
+            xy=xycoord(x=-900, y=300),
+            extent=extent,
+            shape=(10, 10)
+        )
+        self.assertEqual(result, Pixel(vertical=9, horizontal=9))
+        result = xy_to_pixel(
+            xy=xycoord(x=-1000, y=250),
+            extent=extent,
+            shape=(10, 10)
+        )
+        self.assertEqual(result, Pixel(vertical=0, horizontal=0))
+        
 
     def test_pixel_to_xy(self):
         extent = Extent(
