@@ -156,6 +156,7 @@ class XanesFrameset():
         self.edge_mask.cache_clear()
         self.frames.cache_clear()
         self.energies.cache_clear()
+        self.extent.cache_clear()
 
     @property
     def active_labels_groupname(self):
@@ -1168,8 +1169,11 @@ class XanesFrameset():
     def energies(self, timeidx=0):
         """Return the array of beam energies for the given time index.
 
-        Returns: A 3-dimensional array with the form (energy, row,
-        col).
+        Returns
+        -------
+        energies: np.ndarray
+          A 1-dimensional array with the energy for each frame.
+
         """
         with self.store() as store:
             return store.energies[timeidx]
@@ -1203,11 +1207,13 @@ class XanesFrameset():
             # Save the resultant data to disk
             store.absorbances = store.absorbances - bg
 
+    @functools.lru_cache(maxsize=64)
     def extent(self, representation, idx=(0, 0)):
         """Determine physical dimensions for axes values.
 
         Returns: If idx was given, a single tuple of (left, right,
-        bottom, up), otherwise return an array of extents for each frame.
+        bottom, up), otherwise if idx is None it returns an array of
+        extents for each frame.
 
         Arguments
         ---------

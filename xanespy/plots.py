@@ -385,7 +385,7 @@ def plot_txm_map(data, edge=None, norm=None, ax=None, cmap='plasma',
     return artist
 
 
-def plot_txm_histogram(data, ax=None, norm=None, bins=100,
+def plot_txm_histogram(data, ax=None, norm=None, bins=None,
                        cmap='plasma', add_cbar=True, *args, **kwargs):  # pragma: no cover
     """Take an array of data values and show a histogram with some
     color-coding related to normalization value.
@@ -401,7 +401,9 @@ def plot_txm_histogram(data, ax=None, norm=None, bins=100,
 
     - norm : Matplotlib Normalize instance with the colormap range.
 
-    - bins : Bins to pass to the matplotlib hist() routine.
+    - bins : Bins to pass to the matplotlib hist() routine. If None
+      (default), we will choose based on dtype of the data: integers
+      will yield 1-wide bins, anything else will give 256 bins.
 
     - cmap : Matplotlib colormap for coloring the bars.
 
@@ -425,6 +427,14 @@ def plot_txm_histogram(data, ax=None, norm=None, bins=100,
         norm.autoscale_None(data)
     # Clip the data so that it includes the end-members
     clip_data = np.clip(data, norm.vmin, norm.vmax)
+    # Determine a reasonable binning parameter based on data type
+    if bins is not None:
+        pass
+    elif np.issubdtype(data.dtype, np.integer):
+        # integers, so make the bins 1-wide
+        bins = np.arange(norm.vmin, norm.vmax, step=1)
+    else:
+        bins = 256
     # Plot the histogram
     n, bins, patches = ax.hist(clip_data, bins=bins, *args, **kwargs)
     # Set colors on histogram

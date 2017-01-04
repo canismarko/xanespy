@@ -8,6 +8,8 @@ import numpy as np
 
 import exceptions
 
+from utilities import xy_to_pixel
+
 
 CMAPS = ['viridis', 'inferno', 'plasma', 'magma', 'gray', 'bone',
          'copper', 'autumn', 'spring', 'summer', 'winter', 'spectral',
@@ -23,6 +25,7 @@ class QtFramesetPresenter():
     active_frame = 0
     active_timestep = 0
     active_representation = 'intensities'
+    frame_pixel = None
     num_frames = 0
     timer = None
 
@@ -65,6 +68,7 @@ class QtFramesetPresenter():
         self.draw_frame_spectra()
         self.draw_frame_histogram()
         self.animate_frames()
+        self.update_status_shape()
         # Update some widgets
         num_energies = self.active_frames().shape[0]
         self.frame_view.set_slider_max(num_energies - 1)
@@ -72,6 +76,8 @@ class QtFramesetPresenter():
         self.build_hdf_tree()
         # Connect response signals for the widgets
         self.frame_view.connect_signals(presenter=self)
+        self.frame_view.frame_changed.connect(self.update_status_frame)
+        self.frame_view.frame_changed.connect(self.update_status_value)
         # Create a timer for playing through all the frames
         self.play_timer = QtCore.QTimer()
         self.play_timer.timeout.connect(self.next_frame)
@@ -145,8 +151,8 @@ class QtFramesetPresenter():
             # Update the view with the new values
             self._frame_vmin = p_lower
             self._frame_vmax = p_upper
-            self.set_frame_vmax(p_upper)
             self.set_frame_vmin(p_lower)
+            self.set_frame_vmax(p_upper)
             self.dirty = True
 
     def frame_norm(self):
@@ -154,8 +160,10 @@ class QtFramesetPresenter():
         return norm
 
     def draw_frame_spectra(self):
-        frame_spectrum = self.frameset.spectrum(edge_jump_filter=True,
-                                                index=self.active_timestep)
+        frame_spectrum = self.frameset.spectrum(
+            edge_jump_filter=True,
+            representation=self.active_representation,
+            index=self.active_timestep)
         self.frame_view.draw_spectrum(frame_spectrum.values,
                                       energies=frame_spectrum.index,
                                       cmap=self.frame_cmap,
@@ -233,6 +241,8 @@ class QtFramesetPresenter():
         else:
             # Invalid frame data, so just clear the axes
             self.frame_view.clear_axes()
+        # Update the status bar with new frame data
+        self.update_status_shape()
 
     def active_frames(self):
         frames = self.frameset.frames(timeidx=self.active_timestep,
@@ -241,12 +251,44 @@ class QtFramesetPresenter():
 
     def animate_frames(self):
         frames = self.active_frames()
+        extent = self.frameset.extent(self.active_representation)
         energies = self.frameset.energies(timeidx=self.active_timestep)
         log.debug("Animating frames from presenter")
         self.frame_view.draw_frames.emit(frames,
                                          energies,
                                          self.frame_norm(),
-                                         self.frame_cmap)
+                                         self.frame_cmap,
+                                         extent)
+
+    def hover_frame_pixel(self, xy):
+        if xy is None:
+            # Update the UI to clear the cursor data
+            cursor_s = ""
+            pixel_s = ""
+            self.frame_pixel = None
+        else:
+            # Update the UI with the cursor location
+            cursor_s = "({x:.2f}, {y:.2f})".format(x=xy.x, y=xy.y)
+            # Convert from (x, y) to (row, col)
+            extent = self.frameset.extent(self.active_representation)
+            shape = self.frameset.frame_shape()
+            pixel = xy_to_pixel(xy, extent=extent, shape=shape)
+            pixel_s = "[{row}, {col}]".format(row=pixel.vertical,
+                                              col=pixel.horizontal)
+            self.frame_pixel = pixel
+        # Now update the UI
+        self.frame_view.set_status_pixel(pixel_s)
+        self.frame_view.set_status_cursor(cursor_s)
+        self.update_status_value()
+
+    def update_status_value(self):
+        px = self.frame_pixel
+        if px is not None:
+            # Get the value of this pixel from the frame data
+            value_s = str(self.active_frames()[self.active_frame][px])
+        else:
+            value_s = ""
+        self.frame_view.set_status_value(value_s)
 
     def play_frames(self, start):
         if start:
@@ -283,6 +325,26 @@ class QtFramesetPresenter():
     def last_frame(self):
         self.active_frame = self.num_frames - 1
         self.frame_view.frame_changed.emit(self.active_frame)
+
+    def update_status_shape(self):
+        try:
+            shape = self.active_frames().shape[-2:]
+        except exceptions.GroupKeyError:
+            # No valid frames so show a placeholder
+            s = "---"
+        else:
+            s = "({rows}, {cols})"
+            s = s.format(rows=shape[0], cols=shape[1])
+        # Set the UI's text
+        self.frame_view.set_status_shape(s)
+
+    def update_status_frame(self, new_frame):
+        """Create a string (and send it to the UI) that indicates the energy
+        of the requested frame."""
+        self.frame_view.set_status_index(str(new_frame))
+        energy = self.frameset.energies(self.active_timestep)[new_frame]
+        s = "{:.2f} eV".format(energy)
+        self.frame_view.set_status_energy(s)
 
     def change_hdf_group(self, new_item, old_item):
         is_selectable = new_item.text(1) in ["frameset", "map"]

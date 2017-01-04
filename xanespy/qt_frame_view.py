@@ -16,6 +16,7 @@ from matplotlib.animation import ArtistAnimation
 import numpy as np
 
 import plots
+from utilities import xycoord
 
 
 UI_FILE = os.path.join(os.path.dirname(__file__), 'qt_frame_window.ui')
@@ -97,8 +98,9 @@ class QtFrameView(QtCore.QObject):  # pragma: no cover
 
     # Signals
     frame_changed = QtCore.pyqtSignal(int)
-    draw_frames = QtCore.pyqtSignal(object, np.ndarray, object, 'QString',
-                                    arguments=('frames', 'energies', 'norm', 'cmap'))
+    draw_frames = QtCore.pyqtSignal(
+        object, np.ndarray, object, 'QString', tuple,
+        arguments=('frames', 'energies', 'norm', 'cmap', 'extent'))
     draw_histogram = QtCore.pyqtSignal(object, object, 'QString',
                                        arguments=('data', 'norm', 'cmap'))
 
@@ -112,9 +114,7 @@ class QtFrameView(QtCore.QObject):  # pragma: no cover
         self.ui = Ui_FrameWindow()
         self.ui.setupUi(self.window)
         # Add some labels to the statusbar
-        self.lblStatus = QtWidgets.QLabel()
-        self.lblStatus.setText("")
-        self.ui.statusbar.addWidget(self.lblStatus)
+        self.create_status_bar()
         # Add labels to the HDF Tree widget
         self.ui.hdfTree.setHeaderLabels(['Name', 'Type'])
         header = self.ui.hdfTree.header()
@@ -126,6 +126,43 @@ class QtFrameView(QtCore.QObject):  # pragma: no cover
         self.source = FrameChangeSource(view=self)
         self.draw_frames.connect(self._animate_frames)
         self.draw_histogram.connect(self._draw_histogram)
+
+    def create_status_bar(self):
+        # Create the status indicator
+        self.ui.statusbar.addWidget(QtWidgets.QLabel("Status:"))
+        self.lblStatus = QtWidgets.QLabel()
+        self.lblStatus.setMinimumWidth(200)
+        self.ui.statusbar.addWidget(self.lblStatus)
+        # Indicator for the current frame shape
+        self.ui.statusbar.addWidget(QtWidgets.QLabel("Shape:"))
+        self.lblShape = QtWidgets.QLabel()
+        self.lblShape.setMinimumWidth(100)
+        self.ui.statusbar.addWidget(self.lblShape)
+        # Indicator for the current index
+        self.ui.statusbar.addWidget(QtWidgets.QLabel("Frame:"))
+        self.lblIndex = QtWidgets.QLabel()
+        self.lblIndex.setMinimumWidth(30)
+        self.ui.statusbar.addWidget(self.lblIndex)
+        # Indicator for the current energy
+        self.ui.statusbar.addWidget(QtWidgets.QLabel("Energy:"))
+        self.lblEnergy = QtWidgets.QLabel()
+        self.lblEnergy.setMinimumWidth(100)
+        self.ui.statusbar.addWidget(self.lblEnergy)
+        # Indicator for the current cursor position
+        self.ui.statusbar.addWidget(QtWidgets.QLabel("Cursor x,y:"))
+        self.lblCursor = QtWidgets.QLabel()
+        self.lblCursor.setMinimumWidth(120)
+        self.ui.statusbar.addWidget(self.lblCursor)
+        # Indicator for the current pixel position
+        self.ui.statusbar.addWidget(QtWidgets.QLabel("Pixel:"))
+        self.lblPixel = QtWidgets.QLabel()
+        self.lblPixel.setMinimumWidth(100)
+        self.ui.statusbar.addWidget(self.lblPixel)
+        # Indicator for the current cursor value
+        self.ui.statusbar.addWidget(QtWidgets.QLabel("Value:"))
+        self.lblValue = QtWidgets.QLabel()
+        self.lblValue.setMinimumWidth(100)
+        self.ui.statusbar.addWidget(self.lblValue)
 
     def create_canvas(self):
         # Add the canvas to the UI
@@ -175,6 +212,16 @@ class QtFrameView(QtCore.QObject):  # pragma: no cover
         self.ui.sldPlaySpeed.valueChanged.connect(presenter.set_play_speed)
         # Update the UI from the presenter
         self.frame_changed.connect(self.ui.sldFrameSlider.setValue)
+        # Connect a handler for when the user hovers over the frame
+        
+        def hover_frame(event):
+            if event.inaxes is self.img_ax:
+                xy = xycoord(x=event.xdata, y=event.ydata)
+            else:
+                xy = None
+            presenter.hover_frame_pixel(xy)
+                
+        self.fig.canvas.mpl_connect('motion_notify_event', hover_frame)
 
     def set_ui_enabled(self, enable=True):
         """
@@ -197,7 +244,7 @@ class QtFrameView(QtCore.QObject):  # pragma: no cover
         self.ui.btnApplyLimits.setEnabled(enable)
         self.ui.btnResetLimits.setEnabled(enable)
         
-    def _animate_frames(self, frames, energies, norm, cmap):
+    def _animate_frames(self, frames, energies, norm, cmap, extent):
         # Disconnect the old animation first
         if self._frame_animation:
             log.debug("Disconnecting old frame animations")
@@ -210,7 +257,8 @@ class QtFrameView(QtCore.QObject):  # pragma: no cover
         start = time()
         for energy, frame in zip(energies, frames):
             im_artist = plots.plot_txm_map(frame, norm=norm,
-                                           cmap=cmap, ax=self.img_ax)
+                                           cmap=cmap, ax=self.img_ax,
+                                           extent=extent)
             line_artist = self.spectrum_ax.axvline(energy,
                                                    linestyle=":",
                                                    animated=True,
@@ -221,7 +269,6 @@ class QtFrameView(QtCore.QObject):  # pragma: no cover
                                                color="gray")
             artists.append([im_artist, line_artist, edge_artist])
         # Create animations from the collected artists
-        # source = FrameChangeSource(view=self)
         self._frame_animation = FrameAnimation(
             fig=self.fig,
             artists=artists,
@@ -319,3 +366,21 @@ class QtFrameView(QtCore.QObject):  # pragma: no cover
 
     def show_status_message(self, message):
         self.lblStatus.setText(message)
+
+    def set_status_shape(self, msg):
+        self.lblShape.setText(msg)
+
+    def set_status_energy(self, msg):
+        self.lblEnergy.setText(msg)
+
+    def set_status_index(self, msg):
+        self.lblIndex.setText(msg)
+
+    def set_status_cursor(self, msg):
+        self.lblCursor.setText(msg)
+
+    def set_status_pixel(self, msg):
+        self.lblPixel.setText(msg)
+
+    def set_status_value(self, msg):
+        self.lblValue.setText(msg)

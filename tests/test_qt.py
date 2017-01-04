@@ -35,6 +35,7 @@ from PyQt5 import QtWidgets
 from xanespy import QtFrameView, QtMapView, XanesFrameset, QtFramesetPresenter
 from xanespy.qt_frame_view import FrameChangeSource
 from xanespy import exceptions
+from xanespy.utilities import xycoord, Extent, shape
 
 
 # Define mocked views for the various Qt UI windows
@@ -58,6 +59,14 @@ class QtTestCase(unittest.TestCase):
         # Mock create_app method so it can run headless (eg travis-ci.org)
         p.create_app = mock.MagicMock(name="create_app")
         return p
+
+    def dummy_frame_data(self, shape):
+        """Create some dummy data with a given shape. It's pretty much just an
+        arange."""
+        length = np.prod(shape)
+        data = np.arange(length)
+        data = np.reshape(data, shape)
+        return data
 
 
 class FrameViewerTestcase(QtTestCase):
@@ -95,7 +104,8 @@ class FrameViewerTestcase(QtTestCase):
     def test_set_timestep(self):
         # Set up some fake data
         frameset = MockFrameset()
-        data = np.linspace(5, 105, num=1000)
+        data = np.linspace(5, 105, num=10 * 128 * 128)
+        data = data.reshape((10, 128, 128))
         frameset.frames = mock.Mock(return_value=data)
         presenter = self.create_presenter(frameset=frameset)
         presenter.active_representation = "absorbances"
@@ -322,6 +332,43 @@ class FrameViewerTestcase(QtTestCase):
         frameset.frames.assert_called_with(timeidx=0, representation='new_groupname')
         # Check that the data_name is set correctly
         self.assertEqual(frameset.data_name, 'aligned')
+        # Check that the statusbar text is updated
+        presenter.frame_view.set_status_shape.assert_called_with(
+            '(128, 128)')
+
+    def test_update_status_shape(self):
+        # Prepare a dummy frameset
+        frameset = MockFrameset()
+        data = np.random.rand(10, 128, 128)
+        frameset.frames = mock.Mock(return_value=data)
+        # Call the update status shape method
+        presenter = self.create_presenter(frameset=frameset)
+        presenter.update_status_shape()
+        # Assert that the right frame_view calls were made
+        presenter.frame_view.set_status_shape.assert_called_with(
+            '(128, 128)')
+        # Now make it invalid frame data
+        presenter.active_representation = None
+        def side_effect(*args, **kwargs):
+            raise exceptions.GroupKeyError()
+        frameset.frames = mock.Mock(side_effect=side_effect)
+        presenter.update_status_shape()
+        presenter.frame_view.set_status_shape.assert_called_with(
+            '---')
+
+    def test_update_status_frame(self):
+        # Prepare a dummy frameset
+        frameset = MockFrameset()
+        data = np.linspace(8250, 8640, 10)
+        frameset.energies = mock.Mock(return_value=data)
+        # Call the update status shape method
+        presenter = self.create_presenter(frameset=frameset)
+        presenter.update_status_frame(1)
+        # Check that the right things were called
+        presenter.frame_view.set_status_energy.assert_called_with(
+            '8293.33 eV')
+        presenter.frame_view.set_status_index.assert_called_with(
+            '1')
 
     def test_clear_hdf_group(self):
         """What happens when the user picks an HDF group that can't be
@@ -359,6 +406,34 @@ class FrameViewerTestcase(QtTestCase):
         presenter.play_frames(False)
         presenter.play_timer.stop.assert_called_with()
 
+    def test_hover_frame_pixel(self):
+        # Set some dummy data on the frameset
+        frameset = MockFrameset()
+        data = self.dummy_frame_data((10, 1024, 1024))
+        frameset.frames = mock.MagicMock(return_value=data)
+        frameset.frame_shape = mock.MagicMock(return_value=(1024, 1024))
+        # Set a fake extent on the frameset
+        extent = Extent(-10, 10, -10, 10)
+        frameset.extent = mock.MagicMock(return_value=extent)
+        # Get the presenter value and see how it responds to hover
+        presenter = self.create_presenter(frameset=frameset)
+        presenter.active_frame = 2  # To avoid confusion with active_timestep
+        presenter.hover_frame_pixel(xy=xycoord(3, 7))
+        presenter.frame_view.set_status_cursor.assert_called_with(
+            "(3.00, 7.00)")
+        presenter.frame_view.set_status_pixel.assert_called_with(
+            "[870, 666]")
+        self.assertEqual(presenter.frame_pixel, (870, 666))
+        presenter.frame_view.set_status_value.assert_called_with(
+            str(data[2][870, 666]))
+        # Now what happens when we leave the canvas
+        presenter.hover_frame_pixel(xy=None)
+        presenter.frame_view.set_status_cursor.assert_called_with(
+            "")
+        presenter.frame_view.set_status_pixel.assert_called_with(
+            "")
+        presenter.frame_view.set_status_value.assert_called_with(
+            "")
 
 class FrameSourceTestCase(unittest.TestCase):
 
