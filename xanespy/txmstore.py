@@ -40,16 +40,18 @@ class TXMStore():
         with TXMStore() as store:
             # Do stuff with store here
 
-    Arguments
-    ---------
-    - hdf_filename : String with the filename to be used.
-
-    - parent_name : String with the top-level HDF5 groupname.
-
-    - data_name : String wit the second level HDF5 groupname, used for
-      specific data iterations (eg. imported, aligned)
-
-    - mode : String, passed directly to h5py.File constructor.
+    Parameters
+    ----------
+    hdf_filename : str
+      Path to the HDF file to be used.
+    parent_name : str
+      Name of the top-level HDF5 group.
+    data_name : str
+      Name of the second level HDF5 group, used for specific data
+      iterations (eg. imported, aligned)
+    mode : str
+      Eg. 'r' for read-only, 'r+' for read-write. Passed directly to
+      h5py.File constructor.
 
     """
     VERSION = 1
@@ -197,7 +199,7 @@ class TXMStore():
 
     def get_frames(self, name):
         """Get a set of frames, specified by the value of `name`."""
-        return self.data_group()[name]
+        return self.get_map(name)
 
     def set_frames(self, name, val):
         """Set data for a set of frames, specificied by the value of `name`."""
@@ -205,18 +207,27 @@ class TXMStore():
 
     def get_map(self, name):
         """Get a map of the frames, specified by the value of `name`."""
-        if name in self.data_group().keys():
-            data = self.data_group()[name]
-        else:
+        # Check for some bad dataset names
+        if name is None:
+            msg = "dataset `None` not found in file '{}'"
+            msg = msg.format(self.hdf_filename)
+            raise exceptions.GroupKeyError(msg)
+        elif name not in self.data_group().keys():
             msg = "dataset '{}' not found in file '{}'"
             msg = msg.format(name, self.hdf_filename)
             raise exceptions.GroupKeyError(msg)
+        else:
+            data = self.data_group()[name]
         return data
 
     def has_dataset(self, name):
         """Return a boolean indicated whether this dataset exists in the HDF
         file."""
-        return (name in self.data_group().keys())
+        try:
+            result = name in self.data_group().keys()
+        except TypeError:
+            result = False
+        return result
 
     @property
     def timestep_names(self):

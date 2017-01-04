@@ -23,15 +23,18 @@
 """Tests for the Qt5 viewer."""
 import unittest
 from unittest import mock
+import time
 import os
 import sys
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir)))
 
 import numpy as np
 import pandas as pd
+from PyQt5 import QtWidgets
 
 from xanespy import QtFrameView, QtMapView, XanesFrameset, QtFramesetPresenter
 from xanespy.qt_frame_view import FrameChangeSource
+from xanespy import exceptions
 
 
 # Define mocked views for the various Qt UI windows
@@ -41,164 +44,320 @@ MockFrameset = mock.MagicMock(spec_set=XanesFrameset)
 
 class QtTestCase(unittest.TestCase):
 
-    def setUp(self):
-        self.frameview = MockFrameView()
-        self.frameset = MockFrameset()
-        self.frameset.frames.return_value = np.random.rand(10, 128, 128)
-        self.frameset.num_energies = 20
-        self.mapview = MockMapView()
-        p = QtFramesetPresenter(frameset=self.frameset,
-                                frame_view=self.frameview,
-                                map_view=self.mapview)
-        self.presenter = p
-        self.presenter.create_app = mock.MagicMock(name="create_app")
+    def create_presenter(self, frame_view=None, frameset=None, map_view=None):
+        if frame_view is None:
+            frame_view = MockFrameView()
+        if frameset is None:
+            frameset = MockFrameset()
+            frameset.num_energies = 20
+        if map_view is None:
+            map_view = MockMapView()
+        p = QtFramesetPresenter(frameset=frameset,
+                                frame_view=frame_view,
+                                map_view=map_view)
+        # Mock create_app method so it can run headless (eg travis-ci.org)
+        p.create_app = mock.MagicMock(name="create_app")
+        return p
 
 
 class FrameViewerTestcase(QtTestCase):
 
+    def test_init(self):
+        """Check that certain values are set properly during __init__."""
+        # Switch to "absorbances" representation if possible
+        frameset = MockFrameset()
+        frameset.has_representation.return_value = True
+        presenter = self.create_presenter(frameset=frameset)
+        self.assertEqual(presenter.active_representation, "absorbances")
+        # Don't switch to "absorbances" representation if it doesn't exist
+        frameset = MockFrameset()
+        frameset.has_representation.return_value = False
+        presenter = self.create_presenter(frameset=frameset)
+        self.assertEqual(presenter.active_representation, "intensities")
+
     def test_prepare_ui(self):
-        presenter = self.presenter
+        # Prepare a frameset object to test the presenter
+        frameset = MockFrameset()
+        data = np.random.rand(10, 128, 128)
+        frameset.frames = mock.Mock(return_value=data)
+        frameset.num_energies = 20
+        # Create the presenter
+        presenter = self.create_presenter(frameset=frameset)
         # Check that the number of energies is set properly
         self.assertEqual(presenter.num_frames, 20)
         # Run the actual code
         presenter.prepare_ui()
-        self.frameview.set_slider_max.assert_called_with(9)
-        self.assertTrue(self.frameview.set_cmap_list.called)
-        self.assertTrue(self.frameview.set_timestep_list.called)
-        self.frameview.set_timestep.assert_called_with(0)
+        presenter.frame_view.set_slider_max.assert_called_with(9)
+        self.assertTrue(presenter.frame_view.set_cmap_list.called)
+        self.assertTrue(presenter.frame_view.set_timestep_list.called)
+        presenter.frame_view.set_timestep.assert_called_with(0)
 
     def test_set_timestep(self):
-        presenter = self.presenter
         # Set up some fake data
+        frameset = MockFrameset()
         data = np.linspace(5, 105, num=1000)
-        self.frameset.frames.return_value = data
+        frameset.frames = mock.Mock(return_value=data)
+        presenter = self.create_presenter(frameset=frameset)
+        presenter.active_representation = "absorbances"
         # Now invoke to function to be tested
         presenter.set_timestep(5)
         # Check that all the view elements are updated
         self.assertEqual(presenter.active_timestep, 5)
-        self.frameset.frames.assert_called_with(timeidx=5)
-        self.assertTrue(self.frameview.draw_frames.emit.called)
-        self.assertTrue(self.frameview.draw_spectrum.called)
-        self.assertTrue(self.frameview.draw_histogram.emit.called)
+        frameset.frames.assert_called_with(timeidx=5,
+                                           representation='absorbances')
+        self.assertTrue(presenter.frame_view.draw_frames.emit.called)
+        self.assertTrue(presenter.frame_view.draw_spectrum.called)
+        self.assertTrue(presenter.frame_view.draw_histogram.emit.called)
         # Check that the frame range was reset
         self.assertAlmostEqual(presenter._frame_vmin, 6)
 
     def test_change_vmin_vmax(self):
-        presenter = self.presenter
+        presenter = self.create_presenter()
         # Check the vmax
         presenter.set_frame_vmax(5.0)
         self.assertEqual(presenter._frame_vmax, 5.0)
-        self.frameview.set_vmax_decimals.assert_called_with(1)
-        self.frameview.set_vmax_step.assert_called_with(0.1)
-        self.frameview.set_vmin_maximum.assert_called_with(5.0)
         # Check the vmin
         presenter.set_frame_vmin(2)
         self.assertEqual(presenter._frame_vmin, 2)
-        self.frameview.set_vmin_decimals.assert_called_with(1)
-        self.frameview.set_vmin_step.assert_called_with(0.1)
-        self.frameview.set_vmax_minimum.assert_called_with(2)
         # Check normalizer
         norm = presenter.frame_norm()
         self.assertEqual(norm.vmin, 2)
         self.assertEqual(norm.vmax, 5)
 
     def test_draw_frame_histogram(self):
-        presenter = self.presenter
+        presenter = self.create_presenter()
         presenter.draw_frame_histogram()
-        self.assertTrue(self.frameview.draw_histogram.emit.called)
+        self.assertTrue(presenter.frame_view.draw_histogram.emit.called)
 
     def test_draw_frame_spectra(self):
-        presenter = self.presenter
+        # Set some expected values on a frameset
+        frameset = MockFrameset()
+        spectrum = pd.Series()
+        frameset.spectrum = mock.Mock(return_value=spectrum)
+        frameset.edge.edge_range = (8353, 8359)
+        # Create the presenter and change the frame range
+        presenter = self.create_presenter(frameset=frameset)
         presenter.set_frame_vmax(5.7)
         presenter.set_frame_vmin(1.5)
-        # Set some expected values on the frameset
-        spectrum = pd.Series()
-        self.frameset.spectrum.return_value = spectrum
-        self.frameset.edge.edge_range = (8353, 8359)
         # Check that the spectrum was drawn
         presenter.draw_frame_spectra()
-        self.assertTrue(self.frameset.spectrum.called)
+        self.assertTrue(frameset.spectrum.called)
         # Check that the normalizer was correct
-        called_norm = self.frameview.draw_spectrum.call_args[1]['norm']
+        called_norm = presenter.frame_view.draw_spectrum.call_args[1]['norm']
         self.assertEqual(called_norm.vmin, 1.5)
         self.assertEqual(called_norm.vmax, 5.7)
         # Check that the edge range is provided
-        called_edge = self.frameview.draw_spectrum.call_args[1]['edge_range']
+        called_edge = presenter.frame_view.draw_spectrum.call_args[1]['edge_range']
         self.assertEqual(called_edge, (8353, 8359))
 
     def test_move_slider(self):
-        presenter = self.presenter
+        presenter = self.create_presenter()
         presenter.move_slider(5)
-        self.assertEqual(self.presenter.active_frame, 5)
+        self.assertEqual(presenter.active_frame, 5)
 
     def test_reset_limits(self):
-        presenter = self.presenter
-        frameset = self.frameset
-        frameset.frames.return_value = np.linspace(1.5, 5)
+        frameset = MockFrameset()
+
+        def frames(*args, **kwargs):
+            if kwargs.get('representation', '') is None:
+                raise exceptions.GroupKeyError()
+            else:
+                return np.linspace(1.5, 5)
+
+        frameset.frames.side_effect = frames
+        presenter = self.create_presenter(frameset=frameset)
         presenter.reset_frame_range()
         P_lower = np.percentile(frameset.frames(), 1)
         P_upper = np.percentile(frameset.frames(), 99)
         self.assertEqual(presenter._frame_vmin, P_lower)
         self.assertEqual(presenter._frame_vmax, P_upper)
-        self.frameview.set_vmin.assert_called_with(P_lower)
-        self.frameview.set_vmax.assert_called_with(P_upper)
+        presenter.frame_view.set_vmin.assert_called_with(P_lower)
+        presenter.frame_view.set_vmax.assert_called_with(P_upper)
+        # Check what happens in the representation is invalid
+        presenter.frame_view.set_vmin.reset_mock()
+        presenter.active_representation = None
+        presenter.reset_frame_range()
+        presenter.frame_view.set_vmin.assert_not_called()
+
+    def test_update_frame_range_limits(self):
+        presenter = self.create_presenter()
+        presenter.set_frame_vmin(1)
+        presenter.set_frame_vmax(1.5)
+        presenter.update_frame_range_limits()
+        # Check that the right things were updated on the view
+        presenter.frame_view.set_vmin_decimals.assert_called_with(2)
+        presenter.frame_view.set_vmax_decimals.assert_called_with(2)
+        presenter.frame_view.set_vmin_step.assert_called_with(10**-2)
+        presenter.frame_view.set_vmax_step.assert_called_with(10**-2)
+        presenter.frame_view.set_vmin_maximum.assert_called_with(1.5)
+        presenter.frame_view.set_vmax_minimum.assert_called_with(1)
 
     def test_refresh_frames(self):
-        presenter = self.presenter
+        presenter = self.create_presenter()
         presenter.refresh_frames()
-        self.assertTrue(self.frameview.draw_frames.emit.called)
-        self.assertTrue(self.frameview.draw_histogram.emit.called)
-        self.assertTrue(self.frameview.draw_spectrum.called)
+        self.assertTrue(presenter.frame_view.draw_frames.emit.called)
+        self.assertTrue(presenter.frame_view.draw_histogram.emit.called)
+        self.assertTrue(presenter.frame_view.draw_spectrum.called)
+        # Should just clear the axes if there's no data
+        presenter.active_representation = None
+        presenter.refresh_frames()
+        self.assertTrue(presenter.frame_view.clear_axes.called)
 
     def test_change_cmap(self):
-        presenter = self.presenter
+        presenter = self.create_presenter()
         presenter.frame_cmap = "viridis"
         # Check that it doesn't replot the frames if cmap stays the same
         presenter.change_cmap('viridis')
-        self.frameview.animate_frames.assert_not_called()
+        presenter.frame_view.animate_frames.assert_not_called()
         # now actually change the color map
         presenter.change_cmap('rainbow')
         self.assertEqual(presenter.frame_cmap, 'rainbow')
-        self.frameview.animate_frames.assert_not_called()
+        presenter.frame_view.animate_frames.assert_not_called()
 
     def test_next_frame(self):
-        presenter = self.presenter
+        presenter = self.create_presenter()
         self.assertEqual(presenter.active_frame, 0)
         # Move to next frame
         presenter.next_frame()
         self.assertEqual(presenter.active_frame, 1)
-        self.frameview.frame_changed.emit.assert_called_with(1)
+        presenter.frame_view.frame_changed.emit.assert_called_with(1)
         # Move to next frame by wrapping around
         presenter.active_frame = 19
         presenter.next_frame()
         self.assertEqual(presenter.active_frame, 0)
-        self.frameview.frame_changed.emit.assert_called_with(0)
+        presenter.frame_view.frame_changed.emit.assert_called_with(0)
 
     def test_previous_frame(self):
-        presenter = self.presenter
+        presenter = self.create_presenter()
         self.assertEqual(presenter.active_frame, 0)
         # Move to previous frame (with wrapping)
         presenter.previous_frame()
         self.assertEqual(presenter.active_frame, 19)
-        self.frameview.frame_changed.emit.assert_called_with(19)
+        presenter.frame_view.frame_changed.emit.assert_called_with(19)
         # Move to next frame by wrapping around
         presenter.previous_frame()
         self.assertEqual(presenter.active_frame, 18)
-        self.frameview.frame_changed.emit.assert_called_with(18)
+        presenter.frame_view.frame_changed.emit.assert_called_with(18)
 
     def test_first_frame(self):
-        presenter = self.presenter
+        presenter = self.create_presenter()
         presenter.active_frame = 10
         presenter.first_frame()
         self.assertEqual(presenter.active_frame, 0)
-        self.frameview.frame_changed.emit.assert_called_with(0)
+        presenter.frame_view.frame_changed.emit.assert_called_with(0)
 
     def test_last_frame(self):
-        presenter = self.presenter
+        presenter = self.create_presenter()
         presenter.active_frame = 10
         presenter.last_frame()
         self.assertEqual(presenter.active_frame, 19)
-        self.frameview.frame_changed.emit.assert_called_with(19)
+        presenter.frame_view.frame_changed.emit.assert_called_with(19)
+
+    def test_build_hdf_tree(self):
+        dummy_tree = [
+            {'ndim': 0,
+             'context': None,
+             'level': 0,
+             'name': "active_parent",
+             'path': "/test-dir",
+             'children': [
+                 {'ndim': 2,
+                  'context': 'frameset',
+                  'level': 1,
+                  'name': "Child",
+                  'path': "/test-dir/test-dataset",
+                  'children': [],
+                 }
+             ]},
+            {'ndim': 0,
+             'context': None,
+             'level': 0,
+             'name': "different_parent",
+             'path': "/test-dir",
+             'children': [],
+            }
+        ]
+        frameset = MockFrameset()
+        frameset.parent_name = "active_parent"
+        frameset.data_tree = mock.Mock(return_value=dummy_tree)
+        active_path = "/test-dir/test-dataset"
+        frameset.hdf_path = mock.Mock(return_value=active_path)
+        presenter = self.create_presenter(frameset=frameset)
+        presenter.build_hdf_tree()
+        # Check that the frame view was updated with the new items
+        self.assertTrue(presenter.frame_view.add_hdf_tree_item.called)
+        # Check that the tree items given are correct
+        item1 = presenter.frame_view.add_hdf_tree_item.call_args_list[0][0][0]
+        item2 = presenter.frame_view.add_hdf_tree_item.call_args_list[1][0][0]
+        self.assertFalse(item1.isDisabled())
+        self.assertTrue(item2.isDisabled())
+        # Check that the active item is setApplicationName
+        self.assertTrue(presenter.frame_view.select_active_hdf_item.called)
+        item = presenter.frame_view.select_active_hdf_item.call_args[0][0]
+        self.assertEqual(item.text(2), active_path)
+    
+    def test_change_hdf_group(self):
+        # Create a mocked frameset object to test the presenter
+        frameset = MockFrameset()
+        data = np.random.rand(10, 128, 128)
+        frameset.frames = mock.Mock(return_value=data)
+        # Create the presenter object
+        presenter = self.create_presenter(frameset=frameset)
+        # Make a mock tree item
+        new_item = mock.MagicMock(QtWidgets.QTreeWidgetItem)()
+        
+        def item_text(pos):
+            if pos == 0:
+                return 'new_groupname'
+            elif pos == 1:
+                return 'frameset'
+            elif pos == 2:
+                return '/test-sample/aligned/new_groupname'
+    
+        new_item.text.side_effect = item_text
+        # Call the actual method to change the active tree item
+        presenter.change_hdf_group(new_item, old_item=None)
+        # Check that the new representation is set and used
+        self.assertEqual(presenter.active_representation, 'new_groupname')
+        frameset.frames.assert_called_with(timeidx=0, representation='new_groupname')
+        # Check that the data_name is set correctly
+        self.assertEqual(frameset.data_name, 'aligned')
+
+    def test_clear_hdf_group(self):
+        """What happens when the user picks an HDF group that can't be
+        displayed?"""
+        presenter = self.create_presenter()
+        new_item = mock.MagicMock(QtWidgets.QTreeWidgetItem)()
+        
+        def item_text(pos):
+            if pos == 0:
+                return 'aligned'
+            elif pos == 1:
+                return ''
+            elif pos == 2:
+                return '/test-sample/aligned'
+        
+        new_item.text.side_effect = item_text
+        presenter.change_hdf_group(new_item, old_item=None)
+        presenter.frame_view.clear_axes.assert_called_with()
+
+    def test_dirty_flag(self):
+        """Check that the dirty flag gets set so the presenter knows when to refresh."""
+        # Check the accessor method
+        presenter = self.create_presenter()
+        presenter._dirty = 15
+        self.assertEqual(presenter.dirty, 15)
+
+    def test_play_frames(self):
+        presenter = self.create_presenter()
+        presenter.prepare_ui()
+        # Now start playing the frames
+        presenter.play_timer = mock.MagicMock()
+        presenter.play_frames(True)
+        presenter.play_timer.start.assert_called_with()
+        presenter.play_timer.stop.assert_not_called()
+        presenter.play_frames(False)
+        presenter.play_timer.stop.assert_called_with()
 
 
 class FrameSourceTestCase(unittest.TestCase):

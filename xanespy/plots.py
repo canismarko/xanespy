@@ -108,7 +108,7 @@ def dual_axes(fig=None, orientation='horizontal'):  # pragma: no cover
     return (ax1, ax2)
 
 
-def draw_histogram_colorbar(ax, *args, **kwargs):
+def draw_histogram_colorbar(ax, *args, **kwargs):  # pragma: no cover
     """Similar to `draw_colorbar()` with some special formatting options
     to put it along the X-axis of the axes."""
     cbar = draw_colorbar(ax=ax, pad=0, orientation="horizontal", energies=None, *args, **kwargs)

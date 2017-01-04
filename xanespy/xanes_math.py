@@ -621,12 +621,12 @@ def transform_images(data, transformations, out=None, mode='median'):
         def do_transform(a, transformation):
             """Helper function, takes one array and transforms it."""
             realrange = (np.min(a), np.max(a))
-            indata = exposure.rescale_intensity(a,
+            # Convert to float so the warp function is happy
+            if not np.iscomplexobj(a):
+                indata = a.astype(np.float64)
+            indata = exposure.rescale_intensity(indata,
                                                 in_range=realrange,
                                                 out_range=(0, 1))
-            # Convert to float so the warp function is happy
-            if not np.iscomplexobj(indata):
-                indata = indata.astype(np.float64)
             # Log the anticipated transformation
             msg = "Transforming {idx} by scl={scale}; trn={trans}; rot={rot:.2f} rad"
             msg = msg.format(idx=idx, scale=transformation.scale,

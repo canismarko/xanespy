@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>975</width>
+    <width>1324</width>
     <height>600</height>
    </rect>
   </property>
@@ -17,7 +17,11 @@
    </sizepolicy>
   </property>
   <property name="windowTitle">
-   <string>MainWindow</string>
+   <string>Frameset Viewer</string>
+  </property>
+  <property name="windowIcon">
+   <iconset>
+    <normaloff>frames-icon.png</normaloff>frames-icon.png</iconset>
   </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QGridLayout" name="gridLayout">
@@ -57,11 +61,8 @@
        <property name="columnCount">
         <number>2</number>
        </property>
-       <attribute name="headerCascadingSectionResizes">
-        <bool>false</bool>
-       </attribute>
-       <attribute name="headerShowSortIndicator" stdset="0">
-        <bool>false</bool>
+       <attribute name="headerDefaultSectionSize">
+        <number>150</number>
        </attribute>
        <column>
         <property name="text">
@@ -74,7 +75,7 @@
         </property>
        </column>
       </widget>
-      <widget class="QWidget" name="">
+      <widget class="QWidget" name="layoutWidget">
        <layout class="QVBoxLayout" name="mainLayout">
         <property name="sizeConstraint">
          <enum>QLayout::SetDefaultConstraint</enum>
@@ -269,7 +270,8 @@
              <string>First</string>
             </property>
             <property name="icon">
-             <iconset theme="go-first"/>
+             <iconset theme="go-first">
+              <normaloff>.</normaloff>.</iconset>
             </property>
            </widget>
           </item>
@@ -282,7 +284,8 @@
              <string>Back</string>
             </property>
             <property name="icon">
-             <iconset theme="go-previous"/>
+             <iconset theme="go-previous">
+              <normaloff>.</normaloff>.</iconset>
             </property>
            </widget>
           </item>
@@ -295,7 +298,8 @@
              <string>Play</string>
             </property>
             <property name="icon">
-             <iconset theme="media-playback-start"/>
+             <iconset theme="media-playback-start">
+              <normaloff>.</normaloff>.</iconset>
             </property>
             <property name="checkable">
              <bool>true</bool>
@@ -342,7 +346,8 @@
              <string>Refresh</string>
             </property>
             <property name="icon">
-             <iconset theme="view-refresh"/>
+             <iconset theme="view-refresh">
+              <normaloff>.</normaloff>.</iconset>
             </property>
             <property name="checkable">
              <bool>false</bool>
@@ -361,7 +366,8 @@
              <string>Forward</string>
             </property>
             <property name="icon">
-             <iconset theme="go-next"/>
+             <iconset theme="go-next">
+              <normaloff>.</normaloff>.</iconset>
             </property>
            </widget>
           </item>
@@ -374,7 +380,8 @@
              <string>Last</string>
             </property>
             <property name="icon">
-             <iconset theme="go-last"/>
+             <iconset theme="go-last">
+              <normaloff>.</normaloff>.</iconset>
             </property>
            </widget>
           </item>
@@ -419,7 +426,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>975</width>
+     <width>1324</width>
      <height>25</height>
     </rect>
    </property>

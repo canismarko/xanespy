@@ -4,7 +4,7 @@ import math
 from time import time
 import threading
 
-from PyQt5 import QtWidgets, uic, QtCore
+from PyQt5 import QtWidgets, uic, QtCore, QtGui
 from matplotlib import animation, cm
 from matplotlib.colors import Normalize
 from matplotlib.figure import Figure
@@ -97,9 +97,9 @@ class QtFrameView(QtCore.QObject):  # pragma: no cover
 
     # Signals
     frame_changed = QtCore.pyqtSignal(int)
-    draw_frames = QtCore.pyqtSignal(np.ndarray, np.ndarray, object, 'QString',
+    draw_frames = QtCore.pyqtSignal(object, np.ndarray, object, 'QString',
                                     arguments=('frames', 'energies', 'norm', 'cmap'))
-    draw_histogram = QtCore.pyqtSignal(np.ndarray, object, 'QString',
+    draw_histogram = QtCore.pyqtSignal(object, object, 'QString',
                                        arguments=('data', 'norm', 'cmap'))
 
     def setup(self):
@@ -111,11 +111,15 @@ class QtFrameView(QtCore.QObject):  # pragma: no cover
         self.window = QtWidgets.QMainWindow()
         self.ui = Ui_FrameWindow()
         self.ui.setupUi(self.window)
-        self.ui.hdfTree.setHeaderLabels(["Dataset", "Type"])
         # Add some labels to the statusbar
         self.lblStatus = QtWidgets.QLabel()
         self.lblStatus.setText("")
         self.ui.statusbar.addWidget(self.lblStatus)
+        # Add labels to the HDF Tree widget
+        self.ui.hdfTree.setHeaderLabels(['Name', 'Type'])
+        header = self.ui.hdfTree.header()
+        header.setSectionResizeMode(0, QtWidgets.QHeaderView.Stretch)
+        header.setStretchLastSection(False)
         # Connect the signal for drawing the frames, histogram, etc.
         self.create_canvas()
         # Create animations from the collected artists
@@ -161,6 +165,7 @@ class QtFrameView(QtCore.QObject):  # pragma: no cover
         self.ui.cmbCmap.currentTextChanged.connect(presenter.change_cmap)
         self.ui.sldFrameSlider.valueChanged.connect(presenter.move_slider)
         self.ui.btnRefresh.clicked.connect(presenter.refresh_frames)
+        self.ui.hdfTree.currentItemChanged.connect(presenter.change_hdf_group)
         # Use the media control stype buttons to change presenter frames
         self.ui.btnPlay.toggled.connect(presenter.play_frames)
         self.ui.btnForward.clicked.connect(presenter.next_frame)
@@ -258,6 +263,13 @@ class QtFrameView(QtCore.QObject):  # pragma: no cover
     def show(self):
         self.window.show()
 
+    def clear_axes(self):
+        self.img_ax.clear()
+        self.spectrum_ax.clear()
+        self.hist_ax.clear()
+        self.edge_ax.clear()
+        self.fig.canvas.draw()
+
     def set_slider_max(self, val):
         self.ui.sldFrameSlider.setRange(0, val)
 
@@ -291,6 +303,12 @@ class QtFrameView(QtCore.QObject):  # pragma: no cover
 
     def set_cmap(self, cmap):
         self.ui.cmbCmap.setCurrentText(cmap)
+
+    def add_hdf_tree_item(self, item):
+        self.ui.hdfTree.addTopLevelItem(item)
+
+    def select_active_hdf_item(self, item):
+        self.ui.hdfTree.setCurrentItem(item)
 
     def set_timestep_list(self, timestep_list):
         self.ui.cmbTimestep.clear()

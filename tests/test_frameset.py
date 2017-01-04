@@ -725,6 +725,10 @@ class TXMStoreTest(XanespyTestCase):
         # Raises exception for non-existent datasets
         with self.assertRaises(exceptions.GroupKeyError):
             store.get_map('madeup_data')
+        with self.assertRaises(exceptions.GroupKeyError):
+            store.get_frames('madeup_data')
+        with self.assertRaises(exceptions.GroupKeyError):
+            store.get_frames(None)
 
     def test_data_group(self):
         store = self.store()
@@ -893,6 +897,26 @@ class TXMFramesetTest(XanespyTestCase):
         # Delete temporary HDF5 files
         if os.path.exists(cls.originhdf):
             os.remove(cls.originhdf)
+
+    def test_active_path(self):
+        # Test the parent path
+        self.assertEqual(
+            self.frameset.hdf_path(),
+            '/ssrl-test-data/imported'
+        )
+        # Test a specific representation's path
+        self.assertEqual(
+            self.frameset.hdf_path('absorbances'),
+            '/ssrl-test-data/imported/absorbances'
+        )
+    
+    def test_has_representation(self):
+        self.assertTrue(
+            self.frameset.has_representation('intensities'))
+        self.assertFalse(
+            self.frameset.has_representation('not-real-data'))
+        self.assertFalse(
+            self.frameset.has_representation(None))
 
     def test_repr(self):
         expected = "<XanesFrameset: 'ssrl-test-data'>"
@@ -1312,6 +1336,7 @@ class XanesMathTest(XanespyTestCase):
     def test_transform_images(self):
         data = self.coins().astype('int')
         Ts = np.identity(3)
+        # Check that datatypes are handled properly
         Ts = np.broadcast_to(Ts, shape=(*data.shape[0:2], 3, 3))
         ret = transform_images(data, transformations=Ts)
         self.assertEqual(ret.dtype, np.float)

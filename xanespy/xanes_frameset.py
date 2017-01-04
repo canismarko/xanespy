@@ -89,6 +89,35 @@ class XanesFrameset():
         s = "<{cls}: '{name}'>"
         return s.format(cls=self.__class__.__name__, name=self.parent_name)
 
+    def hdf_path(self, representation=None):
+        """Return the hdf path for the active group.
+
+        Parameters
+        ----------
+        representation: str, optional
+          Name of third-level group to use. If omitted, the path to
+          the parent group will be given.
+
+        Returns
+        -------
+        path : str
+          The path to the current group in the HDF5 file. Returns an
+          empty string if the representation does not exists.
+
+        """
+        with self.store() as store:
+            if representation is None:
+                group = store.data_group()
+            else:
+                group = store.get_frames(representation)
+            path = group.name
+        return path
+
+    def has_representation(self, representation):
+        with self.store() as store:
+            result = store.has_dataset(representation)
+        return result
+
     @property
     def data_name(self):
         return self._data_name
@@ -98,6 +127,14 @@ class XanesFrameset():
         self._data_name = val
         with self.store() as store:
             store.data_name = val
+        # Clear any cached values since the data are probably different
+        self.clear_caches()
+
+    def data_tree(self):
+        """Wrapper around the TXMStore.data_tree() method."""
+        with self.store() as store:
+            tree = store.data_tree()
+        return tree
 
     def store(self, mode='r'):
         """Get a TXM Store object that saves and retrieves data from the HDF5
@@ -114,9 +151,11 @@ class XanesFrameset():
     def clear_caches(self):
         """Clear cached function values so they will be recomputed with fresh
         data"""
-        self.xanes_spectrum.cache_clear()
         self.image_normalizer.cache_clear()
-        self.edge_jump_filter.cache_clear()
+        self.edge_jump.cache_clear()
+        self.edge_mask.cache_clear()
+        self.frames.cache_clear()
+        self.energies.cache_clear()
 
     @property
     def active_labels_groupname(self):
@@ -1112,14 +1151,18 @@ class XanesFrameset():
             store.cluster_map = label_frame
 
     @functools.lru_cache(maxsize=2)
-    def frames(self, timeidx=0):
+    def frames(self, timeidx=0, representation="absorbances"):
         """Return the frames for the given time index.
 
-        Returns: A 3-dimensional array with the form (energy, row,
-        col).
+        Returns
+        -------
+        frames : np.ndarray
+          A 3-dimensional array with the form (energy, row, col).
+
         """
         with self.store() as store:
-            return store.absorbances[timeidx]
+            frames = store.get_frames(representation)[timeidx]
+        return frames
 
     @functools.lru_cache(maxsize=2)
     def energies(self, timeidx=0):
