@@ -100,7 +100,6 @@ def read_metadata(filenames, flavor):
         # Warn the user about dropped frames
         if bad_samples:
             msg = "Dropping incomplete framesets {}".format(bad_samples)
-            warnings.warn(UserWarning(msg))
             log.warning(msg)
         # Log summary of files read results
         msg = "Read metadata for %d files in %f sec"
@@ -158,7 +157,6 @@ def import_nanosurveyor_frameset(directory: str, quiet=False,
     # Create the group if necessary
     if hdf_groupname in h5file.keys() and not append:
         msg = 'Overwriting existing group "{}"'.format(hdf_groupname)
-        warnings.warn(RuntimeWarning(msg))
         log.warning(msg)
         del h5file[hdf_groupname]
     sam_group = h5file.require_group(hdf_groupname)
@@ -245,7 +243,6 @@ def import_nanosurveyor_frameset(directory: str, quiet=False,
         if np.any(overlap):
             msg = "Imported redundant energies from {directory}: {energies}"
             msg = msg.format(directory=directory, energies=energies[overlap])
-            warnings.warn(RuntimeWarning(msg))
             log.warning(msg)
         # Combine new data with previously imported data
         intensities = np.concatenate([intensities, imported['intensities'][0]])

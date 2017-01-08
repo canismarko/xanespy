@@ -55,15 +55,19 @@ class TXMStore():
 
     """
     VERSION = 1
+    _data_name = None
 
     def __init__(self, hdf_filename: str,
-                 parent_name: str, data_name: str,
+                 parent_name: str, data_name=None,
                  mode='r'):
         self.hdf_filename = hdf_filename
         self._file = h5py.File(self.hdf_filename, mode=mode)
         self.parent_name = parent_name
-        self._data_name = data_name
         self.mode = mode
+        # Use the latest_data_name if one isn't provided
+        if data_name is None:
+            data_name = self.latest_data_name
+        self._data_name = data_name
 
     def __enter__(self):
         return self
@@ -120,9 +124,10 @@ class TXMStore():
         current one.
         """
         # Check that the current and target groups are not the same
+        print(self.data_name)
         if new_name == self.data_name:
-            msg = "Refusing to fork myself to myself"
-            log.debug("Refusing to fork group %s to itself", new_name)
+            log.critical("Refusing to fork group %s to itself", new_name)
+            msg = "Refusing to fork myself to myself ({})".format(new_name)
             raise exceptions.CreateGroupError(msg)
         log.info('Forking data group "%s" to "%s"', self.data_name, new_name)
         # Delete the old group and overwrite it
@@ -199,7 +204,11 @@ class TXMStore():
 
     def get_frames(self, name):
         """Get a set of frames, specified by the value of `name`."""
-        return self.get_map(name)
+        frames = self.get_dataset(name)
+        # If it's a map, then return the source frames
+        if frames.attrs['context'] == 'map':
+            frames = self.get_dataset(frames.attrs['frame_source'])
+        return frames
 
     def set_frames(self, name, val):
         """Set data for a set of frames, specificied by the value of `name`."""
@@ -207,6 +216,29 @@ class TXMStore():
 
     def get_map(self, name):
         """Get a map of the frames, specified by the value of `name`."""
+        map_ds = self.get_dataset(name)
+        # If it's not a map, throw an exception
+        context = map_ds.attrs['context']
+        if context != "map":
+            msg = "Expected {name} to be a map, but was a {context}."
+            msg = msg.format(name=name, context=context)
+            raise exceptions.GroupKeyError(msg)
+        # Return the data
+        return map_ds
+
+    def get_dataset(self, name):
+        """Attempt to open the requested dataset.
+
+        Returns
+        -------
+        data : hyp5.Dataset
+          An open HDF5 dataset
+
+        Raises
+        ------
+        exceptions.GroupKeyError
+          If the dataset does not exist in the file.
+        """
         # Check for some bad dataset names
         if name is None:
             msg = "dataset `None` not found in file '{}'"
@@ -257,7 +289,7 @@ class TXMStore():
 
     @property
     def original_positions(self):
-        return self.get_map('original_positions')
+        return self.get_dataset('original_positions')
 
     @original_positions.setter
     def original_positions(self, val):

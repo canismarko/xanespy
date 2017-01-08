@@ -22,6 +22,7 @@
 
 import datetime as dt
 import unittest
+from unittest import TestCase, mock
 import math
 import os
 import shutil
@@ -598,11 +599,11 @@ class SSRLImportTest(XanespyTestCase):
         self.hdf = os.path.join(SSRL_DIR, 'testdata.h5')
         if os.path.exists(self.hdf):
             os.remove(self.hdf)
-
+    
     def tearDown(self):
         if os.path.exists(self.hdf):
             os.remove(self.hdf)
-
+    
     def test_imported_hdf(self):
         import_ssrl_frameset(SSRL_DIR, hdf_filename=self.hdf)
         # Check that the file was created
@@ -641,7 +642,7 @@ class SSRLImportTest(XanespyTestCase):
             self.assertIn('timestep_names', keys)
             self.assertEqual(group['relative_positions'].attrs['context'], 'metadata')
             self.assertEqual(group['timestep_names'][0], "rep01")
-
+    
     def test_params_from_ssrl(self):
         # First a reference frame
         ref_filename = "rep01_000001_ref_201511202114_NCA_INSITU_OCV_FOV01_Ni_08250.0_eV_001of010.xrm"
@@ -663,7 +664,7 @@ class SSRLImportTest(XanespyTestCase):
             'energy': 8250.0,
         }
         self.assertEqual(result, expected)
-
+    
     def test_magnification_correction(self):
         # Prepare some fake data
         img1 = [[1,1,1,1,1],
@@ -699,20 +700,20 @@ class TXMStoreTest(XanespyTestCase):
             os.remove(cls.hdfname)
         # Prepare an HDF5 file that these tests can use.
         import_ssrl_frameset(SSRL_DIR, hdf_filename=cls.hdfname)
-
+    
     @classmethod
     def tearDownClass(cls):
         # Delete temporary HDF5 files
         if os.path.exists(cls.hdfname):
             os.remove(cls.hdfname)
-
+    
     def store(self, mode='r'):
         store = TXMStore(hdf_filename=self.hdfname,
                          parent_name='ssrl-test-data',
                          data_name='imported',
                          mode=mode)
         return store
-
+    
     def test_getters(self):
         store = self.store()
         self.assertEqual(store.intensities.shape, (1, 2, 1024, 1024))
@@ -729,12 +730,13 @@ class TXMStoreTest(XanespyTestCase):
             store.get_frames('madeup_data')
         with self.assertRaises(exceptions.GroupKeyError):
             store.get_frames(None)
-
+        # Check that `get_frames()` returns the frames associated with a map
+    
     def test_data_group(self):
         store = self.store()
         self.assertEqual(store.parent_group().name, '/ssrl-test-data')
         self.assertEqual(store.data_group().name, '/ssrl-test-data/imported')
-
+    
     def test_fork_group(self):
         store = self.store('r+')
         with self.assertRaises(exceptions.CreateGroupError):
@@ -779,11 +781,12 @@ class TXMStoreTest(XanespyTestCase):
         # Check that the "type" attribute is set
         store.absorbances = np.zeros((2, 1024, 1024))
         self.assertEqual(store.absorbances.attrs['context'], 'frameset')
-
+    
     def test_get_frames(self):
         store = self.store()
         # Check that the method returns data
         self.assertEqual(store.get_frames('absorbances').shape, (1, 2, 1024, 1024))
+        
 
 
 class ZoneplateTest(XanespyTestCase):
@@ -867,8 +870,29 @@ class XrayEdgeTest(unittest.TestCase):
         X = self.edge._post_edge_xs(x)
         self.assertTrue(np.array_equal(X, [[5]]))
 
+class XanesFramesetTest(TestCase):
 
-class TXMFramesetTest(XanespyTestCase):
+    def test_get_frames(self):
+        frameset = XanesFrameset(filename="None", groupname="sam01",
+                                 edge=k_edges['Ni_NCA'])
+        Store = mock.MagicMock(TXMStore)
+        frameset.store = mock.Mock(side_effect=Store)
+        print(frameset.store())
+
+    def test_switch_groups(self):
+        """Test that switching between HDF5 groups works robustly."""
+        # Without the `src` argument
+        frameset = XanesFrameset()
+        old_group = self.frameset.data_name
+        print(old_group)
+        self.frameset.fork_data_group('new_group')
+        self.frameset.data_name = 'old_group'
+        self.assertEqual(self.frameset.data_name, old_group)
+        self.frameset.fork_data_group('new_group')
+        # With the `src` argument
+
+
+class OldXanesFramesetTest(XanespyTestCase):
     """Set of python tests that work on full framesets and require data
     from multiple frames to make sense."""
     originhdf = os.path.join(SSRL_DIR, 'txmstore-test.h5')
@@ -909,7 +933,7 @@ class TXMFramesetTest(XanespyTestCase):
             self.frameset.hdf_path('absorbances'),
             '/ssrl-test-data/imported/absorbances'
         )
-    
+
     def test_has_representation(self):
         self.assertTrue(
             self.frameset.has_representation('intensities'))
@@ -1028,16 +1052,6 @@ class TXMFramesetTest(XanespyTestCase):
         with self.frameset.store() as store:
             good_shape = (1, *self.frameset.frame_shape())
             self.assertEqual(store.cluster_map.shape, good_shape)
-
-    def test_switch_groups(self):
-        """Test that switching between HDF5 groups works robustly."""
-        # Without the `src` argument
-        old_group = self.frameset.data_name
-        self.frameset.fork_data_group('new_group')
-        self.frameset.data_name = old_group
-        self.assertEqual(self.frameset.data_name, old_group)
-        self.frameset.fork_data_group('new_group')
-        # With the `src` argument
 
 
 class XanesMathTest(XanespyTestCase):
@@ -1393,29 +1407,29 @@ class UtilitiesTest(XanespyTestCase):
             extent=extent,
             shape=(10, 10)
         )
-        self.assertEqual(result, Pixel(vertical=4, horizontal=2))
+        self.assertEqual(result, Pixel(vertical=6, horizontal=2))
         # Try an x-y value right on the edge of a pixel
         result = xy_to_pixel(
             xy=xycoord(x=-950, y=250),
             extent=extent,
             shape=(10, 10)
         )
-        self.assertEqual(result, Pixel(vertical=0, horizontal=5))
+        self.assertEqual(result, Pixel(vertical=9, horizontal=5))
         # Try an x-y value at the edge of the image
         result = xy_to_pixel(
-            xy=xycoord(x=-900, y=300),
+            xy=xycoord(x=-900, y=250),
             extent=extent,
             shape=(10, 10)
         )
         self.assertEqual(result, Pixel(vertical=9, horizontal=9))
         result = xy_to_pixel(
-            xy=xycoord(x=-1000, y=250),
+            xy=xycoord(x=-1000, y=300),
             extent=extent,
             shape=(10, 10)
         )
         self.assertEqual(result, Pixel(vertical=0, horizontal=0))
         
-
+    
     def test_pixel_to_xy(self):
         extent = Extent(
             left=-1000, right=-900,
@@ -1426,7 +1440,7 @@ class UtilitiesTest(XanespyTestCase):
             extent=extent,
             shape=(10, 10)
         )
-        self.assertEqual(result, xycoord(x=-955, y=297.5))
+        self.assertEqual(result, xycoord(x=-955., y=252.5))
 
 
 class XradiaTest(XanespyTestCase):

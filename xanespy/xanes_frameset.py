@@ -82,8 +82,8 @@ class XanesFrameset():
         self.edge = edge
         self.parent_name = groupname
         # Load cached value for latest data group
-        with self.store() as store:
-            self.data_name = store.latest_data_name
+        # with self.store() as store:
+        #     self.data_name = store.latest_data_name
 
     def __repr__(self):
         s = "<{cls}: '{name}'>"
@@ -121,12 +121,19 @@ class XanesFrameset():
     @property
     def data_name(self):
         return self._data_name
+        # if self._data_name is None:
+        #     # If no data name is set yet, use the latest supplied one
+        #     with self.store() as store:
+        #         name = store.latest_data_name
+        # else:
+        #     name = self._data_name
+        # return name
 
     @data_name.setter
     def data_name(self, val):
         self._data_name = val
-        with self.store() as store:
-            store.data_name = val
+        # with self.store() as store:
+        #     store.data_name = val
         # Clear any cached values since the data are probably different
         self.clear_caches()
 
@@ -681,13 +688,10 @@ class XanesFrameset():
             mean_A = np.mean(As, axis=0)
         return mean_A
 
-    def frame_shape(self):
+    def frame_shape(self, representation="absorbances"):
         """Return the shape of the individual energy frames."""
         with self.store() as store:
-            if store.has_dataset('absorbances'):
-                imshape = store.absorbances.shape[-2:]
-            else:
-                imshape = store.intensities.shape[-2:]
+            imshape = store.get_frames(representation).shape[-2:]
         return imshape
 
     def pixel_unit(self):
@@ -718,28 +722,37 @@ class XanesFrameset():
 
     def spectrum(self, pixel=None, edge_jump_filter=False,
                        representation="absorbances", index=0):
-        """Collapse the dataset down to a two-dimensional spectrum. Returns a
-        pandas series containing the resulting spectrum.
+        """Collapse the frameset down to an energy spectrum.
 
-        Arguments
-        ---------
-        pixel: A 2-tuple that causes the returned series to represent
-            the spectrum for only 1 pixel in the frameset. If None, a
-            larger part of the frame will be used, depending on the
-            other arguments.
+        Any dimensions (besides the energy dimension) that remain
+        after applying the arguments below, will be averaged to give
+        the final intensity at each energy.
 
-        edge_jump_filter (bool or str): If truthy, only pixels that
-            pass the edge jump filter are used to calculate the
-            spectrum. If "inverse" is given, then the edge jump filter
-            is logically not-ted and calculated with a more
-            conservative threshold.
+        Returns
+        -------
+        spectrum : pd.Series
+          A pandas Series with the spectrum.
 
-        representation: What kind of data to use for creating the
-        spectrum. This will be passed to TXMStore.get_map()
-
-        index: Which step in the frameset to use. When used to index
-            store().absorbances, this should return a 3D array like
-            (energy, rows, columns).
+        Parameters
+        ----------
+        pixel : tuple, optional
+          A 2-tuple that causes the returned series to represent
+          the spectrum for only 1 pixel in the frameset. If None, a
+          larger part of the frame will be used, depending on the
+          other arguments.
+        edge_jump_filter : bool or str, optional
+          If truthy, only pixels that
+          pass the edge jump filter are used to calculate the
+          spectrum. If "inverse" is given, then the edge jump filter
+          is logically not-ted and calculated with a more
+          conservative threshold.
+        representation : str, optional
+          What kind of data to use for creating the spectrum. This
+          will be passed to TXMStore.get_map()
+        index : int, optional
+          Which step in the frameset to use. When used to index
+          store().absorbances, this should return a 3D array like
+          (energy, rows, columns).
 
         """
         # Retrieve data
@@ -749,9 +762,9 @@ class XanesFrameset():
                 pixel = Pixel(*pixel)
                 # Get a spectrum for a single pixel
                 spectrum_idx = (index, ..., pixel.vertical, pixel.horizontal)
-                spectrum = store.get_map(representation)[spectrum_idx]
+                spectrum = store.get_frames(representation)[spectrum_idx]
             else:
-                frames = store.get_map(representation)[index]
+                frames = store.get_frames(representation)[index]
                 if edge_jump_filter:
                     # Filter out background pixels using edge mask
                     mask = self.edge_mask()
@@ -854,14 +867,17 @@ class XanesFrameset():
     def edge_mask(self, sensitivity: float=1, min_size=0):
         """Calculate a mask for what is likely active material at this
         edge.
-
-        Arguments
-        ---------
-        - sensitivity : A multiplier for the otsu value to determine
+        
+        Parameters
+        ----------
+        sensitivity : float
+          A multiplier for the otsu value to determine
           the actual threshold.
-
-        - min_size : Objects below this size (in pixels) will be
-          removed. Passing zero (default) will result in no effect.
+        
+        min_size : int
+          Objects below this size (in pixels) will be removed. Passing
+          zero (default) will result in no effect.
+        
         """
         with self.store() as store:
             As = store.absorbances.value
@@ -977,6 +993,7 @@ class XanesFrameset():
         # Save results to disk
         with self.store(mode='r+') as store:
             store.whiteline_map = whitelines
+            store.whiteline_map.attrs['frame_source'] = 'absorbances'
 
     def calculate_maps(self):
         """Generate a set of maps based on pixel-wise Xanes spectra: whiteline
@@ -1158,36 +1175,74 @@ class XanesFrameset():
             store.cluster_map = label_frame
 
     @functools.lru_cache(maxsize=2)
+    def map_data(self, timeidx=0, representation="absorbances"):
+        """Return map data for the given time index and representation.
+        
+        If `representation` is really mapping data, then the result
+        will have more dimensions than expected.
+        
+        Parameters
+        ----------
+        timeidx : int
+          Index for the first dimension of the combined data array.
+        representation : str
+          The group name for these data. Eg "absorbances",
+          "whiteline_map", "intensities"
+        
+        Returns
+        -------
+        map_data : np.ndarray
+          A 2-dimensional array with the form (row, col).
+        
+        """
+        with self.store() as store:
+            map_data = store.get_map(representation)[timeidx]
+        return map_data
+    
+    @functools.lru_cache(maxsize=2)
     def frames(self, timeidx=0, representation="absorbances"):
         """Return the frames for the given time index.
-
+        
+        If `representation` is really mapping data, then the source
+        frames will be returned.
+        
+        Parameters
+        ----------
+        timeidx : int
+          Index for the first dimension of the combined data array.
+        representation : str
+          The group name for these data. Eg "absorbances",
+          "whiteline_map", "intensities"
+        
+        
         Returns
         -------
         frames : np.ndarray
           A 3-dimensional array with the form (energy, row, col).
-
+        
         """
         with self.store() as store:
             frames = store.get_frames(representation)[timeidx]
         return frames
-
+    
     @functools.lru_cache(maxsize=2)
     def energies(self, timeidx=0):
         """Return the array of beam energies for the given time index.
-
+        
         Returns
         -------
         energies: np.ndarray
           A 1-dimensional array with the energy for each frame.
-
+        
         """
         with self.store() as store:
             return store.energies[timeidx]
-
+    
     def masked_map(self, goodness_filter=True):
         """Generate a map based on pixel-wise Xanes spectra and apply an
         edge-jump filter mask. Default is to compute X-ray whiteline
         position.
+        
         """
         raise DeprecationWarning()
         # Check for cached map of the whiteline position for each pixel
@@ -1198,7 +1253,7 @@ class XanesFrameset():
                 map_data = f[self.map_name].value
         masked_map = np.ma.array(map_data, mask=self.goodness_mask())
         return masked_map
-
+    
     def subtract_surroundings(self):
         """Use the edge mask to separate "surroundings" from "sample", then
         subtract the average surrounding absorbance from each
@@ -1212,7 +1267,7 @@ class XanesFrameset():
             bg = broadcast_reverse(bg, store.absorbances.shape)
             # Save the resultant data to disk
             store.absorbances = store.absorbances - bg
-
+    
     @functools.lru_cache(maxsize=64)
     def extent(self, representation, idx=(0, 0)):
         """Determine physical dimensions for axes values.
@@ -1482,10 +1537,11 @@ class XanesFrameset():
     def qt_viewer(self):
         from qt_frameset_presenter import QtFramesetPresenter
         from qt_frame_view import QtFrameView
-        log.debug("Launching Qt viewer")
+        from qt_map_view import QtMapView
+        log.debug("Launching Qt viewer from frameset")
         presenter = QtFramesetPresenter(frameset=self,
-                                      map_view=None,
-                                      frame_view=QtFrameView())
+                                        frame_view=QtFrameView())
+        presenter.add_map_view(QtMapView())
         presenter.prepare_ui()
         presenter.launch()
 

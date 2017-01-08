@@ -113,7 +113,7 @@ def xy_to_pixel(xy, extent, shape):
     suitable for numpy indexing."""
     ratio_x = (xy.x - extent.left) / (extent.right - extent.left)
     pixel_h = int(round(ratio_x * shape[1]))
-    ratio_y = (xy.y - extent.bottom) / (extent.top - extent.bottom)
+    ratio_y = (extent.top - xy.y) / (extent.top - extent.bottom)
     # (1 - ratio) for y because images are top indexed
     pixel_v = int(round(ratio_y * shape[0]))
     # Very right and top edges get set to the last pixel
@@ -125,15 +125,10 @@ def xy_to_pixel(xy, extent, shape):
 def pixel_to_xy(pixel, extent, shape):
     """Take an xy location on an image and convert it to a pixel location
     suitable for numpy indexing."""
-    # ratio_x = (xy.x-extent.left)/(extent.right-extent.left)
-    # pixel_h = int(round(ratio_x * shape[1]))
-    # ratio_y = (xy.y-extent.bottom)/(extent.top-extent.bottom)
-    # # (1 - ratio) for y because images are top indexed
-    # pixel_v = int(round((1 - ratio_y) * shape[0]))
     ratio_h = ((pixel.horizontal+0.5) / shape[1])
     x = extent.left + ratio_h * (extent.right - extent.left)
     ratio_v = ((pixel.vertical+0.5) / shape[0])
-    y = extent.bottom + ratio_v * (extent.top - extent.bottom)
+    y = extent.top - ratio_v * (extent.top - extent.bottom)
     return xycoord(x=x, y=y)
 
 

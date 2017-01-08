@@ -96,6 +96,7 @@ class QtFrameView(QtCore.QObject):  # pragma: no cover
     _frame_animation = None
 
     # Signals
+    expand_hdf_tree = QtCore.pyqtSignal()
     frame_changed = QtCore.pyqtSignal(int)
     draw_frames = QtCore.pyqtSignal(
         object, np.ndarray, object, 'QString', tuple,
@@ -105,15 +106,12 @@ class QtFrameView(QtCore.QObject):  # pragma: no cover
 
     def setup(self):
         # Load the Qt Designer .ui file
-        starttime = time()
         Ui_FrameWindow, QMainWindow = uic.loadUiType(UI_FILE)
-        log.debug("Built UI using uic in %d sec", time() - starttime) 
+        log.debug("Built frame window using uic") 
         # Create the UI elements
         self.window = QtWidgets.QMainWindow()
         self.ui = Ui_FrameWindow()
         self.ui.setupUi(self.window)
-        # Add some labels to the statusbar
-        # self.create_status_bar()
         # Add labels to the HDF Tree widget
         self.ui.hdfTree.setHeaderLabels(['Name', 'Type'])
         header = self.ui.hdfTree.header()
@@ -127,7 +125,6 @@ class QtFrameView(QtCore.QObject):  # pragma: no cover
         self.draw_histogram.connect(self._draw_histogram)
 
     def create_status_bar(self):
-        print(dir(self.ui.statusbar))
         self.status_layout = QtWidgets.QVboxLayout()
         self.ui.statusbar.layout().addItem(QtWidgets.QSpacerItem(100, 20))
         # Indicator for the current frame shape
@@ -190,6 +187,8 @@ class QtFrameView(QtCore.QObject):  # pragma: no cover
         self.fig.canvas.draw_idle()
 
     def connect_signals(self, presenter):
+        # Connect internal signals and slots
+        self.expand_hdf_tree.connect(self.ui.hdfTree.expandAll)
         # Inform the presenter of updates to the UI
         self.ui.spnVMin.valueChanged.connect(presenter.set_frame_vmin)
         self.ui.spnVMax.valueChanged.connect(presenter.set_frame_vmax)
@@ -210,15 +209,53 @@ class QtFrameView(QtCore.QObject):  # pragma: no cover
         # Update the UI from the presenter
         self.frame_changed.connect(self.ui.sldFrameSlider.setValue)
         # Connect a handler for when the user hovers over the frame
-        
         def hover_frame(event):
             if event.inaxes is self.img_ax:
                 xy = xycoord(x=event.xdata, y=event.ydata)
             else:
                 xy = None
             presenter.hover_frame_pixel(xy)
-                
         self.fig.canvas.mpl_connect('motion_notify_event', hover_frame)
+
+    @property
+    def frame_controls(self):
+        """Gives a list of all the UI buttons that are associated with
+        changing the currently active frame."""
+        widgets = [self.ui.btnFirst, self.ui.btnBack, self.ui.btnPlay,
+                   self.ui.btnRefresh, self.ui.btnForward, self.ui.btnLast,
+                   self.ui.sldPlaySpeed, self.ui.sldFrameSlider]
+        return widgets
+
+    @property
+    def plotting_controls(self):
+        """Gives a list of all the UI elements that are associated with
+        changing how the frameset is plotted."""
+        widgets = [self.ui.cmbTimestep, self.ui.cmbComponent, self.ui.cmbCmap,
+                   self.ui.spnVMin, self.ui.spnVMax,
+                   self.ui.btnApplyLimits, self.ui.btnResetLimits]
+        return widgets
+
+    def disable_frame_controls(self, status):
+        log.debug("Disabling frame controls: %s", status)
+        for ctrl in self.frame_controls:
+            ctrl.setDisabled(status)
+
+    def disable_plotting_controls(self, status):
+        log.debug("Disabling plotting: %s", status)
+        for ctrl in self.plotting_controls:
+            ctrl.setDisabled(status)
+
+    def use_busy_cursor(self, status):
+        if status:
+            self.window.setCursor(QtCore.Qt.WaitCursor)
+        else:
+            self.window.unsetCursor()
+
+    def set_drawing_status(self, status):
+        if status:
+            self.ui.statusbar.showMessage("Drawing...")
+        else:
+            self.ui.statusbar.clearMessage()
 
     def set_ui_enabled(self, enable=True):
         """

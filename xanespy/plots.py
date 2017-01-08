@@ -54,6 +54,7 @@ def set_axes_color(ax, color):  # pragma: no cover
     ax.yaxis.label.set_color(color)
     ax.xaxis.label.set_color(color)
 
+
 def set_outside_ticks(ax):  # pragma: no cover
     """Convert all the axes so that the ticks are on the outside and don't
     obscure data."""
@@ -392,33 +393,37 @@ def plot_txm_histogram(data, ax=None, norm=None, bins=None,
 
     Returns: The matplotlib axes object used for plotting.
 
-    Arguments
-    ---------
-    - data : An array of values to plot on the histogram.
-
-    - ax : Matplotlib axes to receive the plot. If None, a new axes
+    Parameters
+    ----------
+    data : np.ndarray
+      An array of values to plot on the histogram.
+    ax : optional
+      Matplotlib Axes instance to receive the plot. If None, a new axes
       will created.
-
-    - norm : Matplotlib Normalize instance with the colormap range.
-
-    - bins : Bins to pass to the matplotlib hist() routine. If None
+    norm : optional
+      Matplotlib Normalize instance with the colormap range.
+    bins : optional
+      Bins to pass to the matplotlib hist() routine. If None
       (default), we will choose based on dtype of the data: integers
       will yield 1-wide bins, anything else will give 256 bins.
-
-    - cmap : Matplotlib colormap for coloring the bars.
-
-    - add_cbar : Boolean to decide whether to add a colorbar along the
+    cmap : str, optional
+      Matplotlib colormap for coloring the bars.
+    add_cbar : bool, optional
+      Boolean to decide whether to add a colorbar along the
       bottom axis or not.
-
-    - *args : Positional arguments passed to matplotlib's `hist` method.
-
-    - *kwargs : Keyword arguments passed to matplotlib's `hist` method.
-
+    *args
+      Positional arguments passed to matplotlib's `hist` call.
+    *kwargs
+      Keyword arguments passed to matplotlib's `hist` call.
+    
     """
     if ax is None:
         ax = new_axes()
     # Flatten the data so it can be nicely plotted
-    data = data.flatten()
+    if hasattr(data, 'mask'):
+        data = data[~data.mask]
+    else:
+        data = data.flatten()
     # Remove any Not-a-number values
     data = data[~np.isnan(data)]
     # Set normalizer
@@ -427,12 +432,16 @@ def plot_txm_histogram(data, ax=None, norm=None, bins=None,
         norm.autoscale_None(data)
     # Clip the data so that it includes the end-members
     clip_data = np.clip(data, norm.vmin, norm.vmax)
+    unique_vals = np.unique(np.array(clip_data))
     # Determine a reasonable binning parameter based on data type
     if bins is not None:
         pass
     elif np.issubdtype(data.dtype, np.integer):
         # integers, so make the bins 1-wide
         bins = np.arange(norm.vmin, norm.vmax, step=1)
+    elif len(unique_vals) < 256:
+        # Not many values to choose from, so use the values as bins
+        bins = np.sort(unique_vals)
     else:
         bins = 256
     # Plot the histogram

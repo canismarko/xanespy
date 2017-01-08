@@ -890,110 +890,8 @@ metadata.</p>
 </dd></dl>
 
 </div>
-<div class="section" id="module-xanespy.particle">
-<span id="xanespy-particle-module"></span><h2>xanespy.particle module<a class="headerlink" href="#module-xanespy.particle" title="Permalink to this headline">¶</a></h2>
-<dl class="class">
-<dt id="xanespy.particle.BoundingBox">
-<em class="property">class </em><code class="descclassname">xanespy.particle.</code><code class="descname">BoundingBox</code><span class="sig-paren">(</span><em>bottom</em>, <em>left</em>, <em>top</em>, <em>right</em><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.particle.BoundingBox" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">tuple</span></code></p>
-<dl class="attribute">
-<dt id="xanespy.particle.BoundingBox.bottom">
-<code class="descname">bottom</code><a class="headerlink" href="#xanespy.particle.BoundingBox.bottom" title="Permalink to this definition">¶</a></dt>
-<dd><p>Alias for field number 0</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="xanespy.particle.BoundingBox.left">
-<code class="descname">left</code><a class="headerlink" href="#xanespy.particle.BoundingBox.left" title="Permalink to this definition">¶</a></dt>
-<dd><p>Alias for field number 1</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="xanespy.particle.BoundingBox.right">
-<code class="descname">right</code><a class="headerlink" href="#xanespy.particle.BoundingBox.right" title="Permalink to this definition">¶</a></dt>
-<dd><p>Alias for field number 3</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="xanespy.particle.BoundingBox.top">
-<code class="descname">top</code><a class="headerlink" href="#xanespy.particle.BoundingBox.top" title="Permalink to this definition">¶</a></dt>
-<dd><p>Alias for field number 2</p>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="class">
-<dt id="xanespy.particle.Particle">
-<em class="property">class </em><code class="descclassname">xanespy.particle.</code><code class="descname">Particle</code><span class="sig-paren">(</span><em>regionprops</em>, <em>frame</em><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.particle.Particle" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
-<p>A single secondary particle detected by image
-processing. Properties determine by regionprops routine from
-skimage.</p>
-<dl class="method">
-<dt id="xanespy.particle.Particle.area">
-<code class="descname">area</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.particle.Particle.area" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="xanespy.particle.Particle.bbox">
-<code class="descname">bbox</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.particle.Particle.bbox" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="xanespy.particle.Particle.centroid">
-<code class="descname">centroid</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.particle.Particle.centroid" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="xanespy.particle.Particle.convex_area">
-<code class="descname">convex_area</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.particle.Particle.convex_area" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="xanespy.particle.Particle.full_mask">
-<code class="descname">full_mask</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.particle.Particle.full_mask" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return a mask the same size as frame data with only this particle
-exposed.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="xanespy.particle.Particle.image">
-<code class="descname">image</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.particle.Particle.image" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="xanespy.particle.Particle.mask">
-<code class="descname">mask</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.particle.Particle.mask" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="xanespy.particle.Particle.masked_frame_image">
-<code class="descname">masked_frame_image</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.particle.Particle.masked_frame_image" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return a masked array for the whole frame with only this particle
-only marked as valid.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="xanespy.particle.Particle.plot_image">
-<code class="descname">plot_image</code><span class="sig-paren">(</span><em>show_particles=False</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.particle.Particle.plot_image" title="Permalink to this definition">¶</a></dt>
-<dd><p>Calls the regular plotting routine but with cropped data.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="xanespy.particle.Particle.relative_position">
-<code class="descname">relative_position</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.particle.Particle.relative_position" title="Permalink to this definition">¶</a></dt>
-<dd><p>Convert centroid in pixels to relative sample position in x, y
-(µm).</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="xanespy.particle.Particle.sample_position">
-<code class="descname">sample_position</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.particle.Particle.sample_position" title="Permalink to this definition">¶</a></dt>
-<dd><p>Convert centroid in pixels to sample position in x, y (µm).</p>
-</dd></dl>
-
-</dd></dl>
-
+<div class="section" id="xanespy-particle-module">
+<h2>xanespy.particle module<a class="headerlink" href="#xanespy-particle-module" title="Permalink to this headline">¶</a></h2>
 </div>
 <div class="section" id="module-xanespy.plots">
 <span id="xanespy-plots-module"></span><h2>xanespy.plots module<a class="headerlink" href="#module-xanespy.plots" title="Permalink to this headline">¶</a></h2>
@@ -1083,7 +981,7 @@ to be (row, column, energy).</li>
 
 <dl class="function">
 <dt id="xanespy.plots.plot_txm_histogram">
-<code class="descclassname">xanespy.plots.</code><code class="descname">plot_txm_histogram</code><span class="sig-paren">(</span><em>data</em>, <em>ax=None</em>, <em>norm=None</em>, <em>bins=100</em>, <em>cmap='plasma'</em>, <em>add_cbar=True</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.plots.plot_txm_histogram" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">xanespy.plots.</code><code class="descname">plot_txm_histogram</code><span class="sig-paren">(</span><em>data</em>, <em>ax=None</em>, <em>norm=None</em>, <em>bins=None</em>, <em>cmap='plasma'</em>, <em>add_cbar=True</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.plots.plot_txm_histogram" title="Permalink to this definition">¶</a></dt>
 <dd><p>Take an array of data values and show a histogram with some
 color-coding related to normalization value.</p>
 <p>Returns: The matplotlib axes object used for plotting.</p>
@@ -1092,14 +990,18 @@ color-coding related to normalization value.</p>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>data</strong> (<em>-</em>) &#8211; </li>
-<li><strong>ax</strong> (<em>-</em>) &#8211; will created.</li>
-<li><strong>norm</strong> (<em>-</em>) &#8211; </li>
-<li><strong>bins</strong> (<em>-</em>) &#8211; </li>
-<li><strong>cmap</strong> (<em>-</em>) &#8211; </li>
-<li><strong>add_cbar</strong> (<em>-</em>) &#8211; bottom axis or not.</li>
-<li><strong>*args</strong> (<em>-</em>) &#8211; </li>
-<li><strong>*kwargs</strong> (<em>-</em>) &#8211; </li>
+<li><strong>data</strong> (<em>np.ndarray</em>) &#8211; An array of values to plot on the histogram.</li>
+<li><strong>ax</strong> (<em>optional</em>) &#8211; Matplotlib Axes instance to receive the plot. If None, a new axes
+will created.</li>
+<li><strong>norm</strong> (<em>optional</em>) &#8211; Matplotlib Normalize instance with the colormap range.</li>
+<li><strong>bins</strong> (<em>optional</em>) &#8211; Bins to pass to the matplotlib hist() routine. If None
+(default), we will choose based on dtype of the data: integers
+will yield 1-wide bins, anything else will give 256 bins.</li>
+<li><strong>cmap</strong> (<em>str</em><em>, </em><em>optional</em>) &#8211; Matplotlib colormap for coloring the bars.</li>
+<li><strong>add_cbar</strong> (<em>bool</em><em>, </em><em>optional</em>) &#8211; Boolean to decide whether to add a colorbar along the
+bottom axis or not.</li>
+<li><strong>*args</strong> &#8211; Positional arguments passed to matplotlib&#8217;s <cite>hist</cite> call.</li>
+<li><strong>*kwargs</strong> &#8211; Keyword arguments passed to matplotlib&#8217;s <cite>hist</cite> call.</li>
 </ul>
 </td>
 </tr>
@@ -1221,6 +1123,16 @@ obscure data.</p>
 <em class="property">class </em><code class="descclassname">xanespy.qt_frame_view.</code><code class="descname">QtFrameView</code><a class="headerlink" href="#xanespy.qt_frame_view.QtFrameView" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">PyQt5.QtCore.QObject</span></code></p>
 <dl class="method">
+<dt id="xanespy.qt_frame_view.QtFrameView.add_hdf_tree_item">
+<code class="descname">add_hdf_tree_item</code><span class="sig-paren">(</span><em>item</em><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.qt_frame_view.QtFrameView.add_hdf_tree_item" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="xanespy.qt_frame_view.QtFrameView.clear_axes">
+<code class="descname">clear_axes</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.qt_frame_view.QtFrameView.clear_axes" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
 <dt id="xanespy.qt_frame_view.QtFrameView.connect_signals">
 <code class="descname">connect_signals</code><span class="sig-paren">(</span><em>presenter</em><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.qt_frame_view.QtFrameView.connect_signals" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
@@ -1228,6 +1140,21 @@ obscure data.</p>
 <dl class="method">
 <dt id="xanespy.qt_frame_view.QtFrameView.create_canvas">
 <code class="descname">create_canvas</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.qt_frame_view.QtFrameView.create_canvas" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="xanespy.qt_frame_view.QtFrameView.create_status_bar">
+<code class="descname">create_status_bar</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.qt_frame_view.QtFrameView.create_status_bar" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="xanespy.qt_frame_view.QtFrameView.disable_frame_controls">
+<code class="descname">disable_frame_controls</code><span class="sig-paren">(</span><em>status</em><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.qt_frame_view.QtFrameView.disable_frame_controls" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="xanespy.qt_frame_view.QtFrameView.disable_plotting_controls">
+<code class="descname">disable_plotting_controls</code><span class="sig-paren">(</span><em>status</em><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.qt_frame_view.QtFrameView.disable_plotting_controls" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="attribute">
@@ -1251,6 +1178,11 @@ obscure data.</p>
 <dd></dd></dl>
 
 <dl class="attribute">
+<dt id="xanespy.qt_frame_view.QtFrameView.expand_hdf_tree">
+<code class="descname">expand_hdf_tree</code><a class="headerlink" href="#xanespy.qt_frame_view.QtFrameView.expand_hdf_tree" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
 <dt id="xanespy.qt_frame_view.QtFrameView.fig">
 <code class="descname">fig</code><em class="property"> = None</em><a class="headerlink" href="#xanespy.qt_frame_view.QtFrameView.fig" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
@@ -1261,6 +1193,13 @@ obscure data.</p>
 <dd></dd></dl>
 
 <dl class="attribute">
+<dt id="xanespy.qt_frame_view.QtFrameView.frame_controls">
+<code class="descname">frame_controls</code><a class="headerlink" href="#xanespy.qt_frame_view.QtFrameView.frame_controls" title="Permalink to this definition">¶</a></dt>
+<dd><p>Gives a list of all the UI buttons that are associated with
+changing the currently active frame.</p>
+</dd></dl>
+
+<dl class="attribute">
 <dt id="xanespy.qt_frame_view.QtFrameView.hist_ax">
 <code class="descname">hist_ax</code><em class="property"> = None</em><a class="headerlink" href="#xanespy.qt_frame_view.QtFrameView.hist_ax" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
@@ -1268,6 +1207,18 @@ obscure data.</p>
 <dl class="attribute">
 <dt id="xanespy.qt_frame_view.QtFrameView.hist_cb">
 <code class="descname">hist_cb</code><em class="property"> = None</em><a class="headerlink" href="#xanespy.qt_frame_view.QtFrameView.hist_cb" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="xanespy.qt_frame_view.QtFrameView.plotting_controls">
+<code class="descname">plotting_controls</code><a class="headerlink" href="#xanespy.qt_frame_view.QtFrameView.plotting_controls" title="Permalink to this definition">¶</a></dt>
+<dd><p>Gives a list of all the UI elements that are associated with
+changing how the frameset is plotted.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="xanespy.qt_frame_view.QtFrameView.select_active_hdf_item">
+<code class="descname">select_active_hdf_item</code><span class="sig-paren">(</span><em>item</em><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.qt_frame_view.QtFrameView.select_active_hdf_item" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
@@ -1281,8 +1232,48 @@ obscure data.</p>
 <dd></dd></dl>
 
 <dl class="method">
+<dt id="xanespy.qt_frame_view.QtFrameView.set_drawing_status">
+<code class="descname">set_drawing_status</code><span class="sig-paren">(</span><em>status</em><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.qt_frame_view.QtFrameView.set_drawing_status" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
 <dt id="xanespy.qt_frame_view.QtFrameView.set_slider_max">
 <code class="descname">set_slider_max</code><span class="sig-paren">(</span><em>val</em><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.qt_frame_view.QtFrameView.set_slider_max" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="xanespy.qt_frame_view.QtFrameView.set_status_cursor">
+<code class="descname">set_status_cursor</code><span class="sig-paren">(</span><em>msg</em><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.qt_frame_view.QtFrameView.set_status_cursor" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="xanespy.qt_frame_view.QtFrameView.set_status_energy">
+<code class="descname">set_status_energy</code><span class="sig-paren">(</span><em>msg</em><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.qt_frame_view.QtFrameView.set_status_energy" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="xanespy.qt_frame_view.QtFrameView.set_status_index">
+<code class="descname">set_status_index</code><span class="sig-paren">(</span><em>msg</em><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.qt_frame_view.QtFrameView.set_status_index" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="xanespy.qt_frame_view.QtFrameView.set_status_pixel">
+<code class="descname">set_status_pixel</code><span class="sig-paren">(</span><em>msg</em><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.qt_frame_view.QtFrameView.set_status_pixel" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="xanespy.qt_frame_view.QtFrameView.set_status_shape">
+<code class="descname">set_status_shape</code><span class="sig-paren">(</span><em>msg</em><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.qt_frame_view.QtFrameView.set_status_shape" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="xanespy.qt_frame_view.QtFrameView.set_status_unit">
+<code class="descname">set_status_unit</code><span class="sig-paren">(</span><em>msg</em><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.qt_frame_view.QtFrameView.set_status_unit" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="xanespy.qt_frame_view.QtFrameView.set_status_value">
+<code class="descname">set_status_value</code><span class="sig-paren">(</span><em>msg</em><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.qt_frame_view.QtFrameView.set_status_value" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
@@ -1343,6 +1334,11 @@ frame window. Useful for indicating blocking operations.</p>
 <dd></dd></dl>
 
 <dl class="method">
+<dt id="xanespy.qt_frame_view.QtFrameView.set_window_title">
+<code class="descname">set_window_title</code><span class="sig-paren">(</span><em>title</em><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.qt_frame_view.QtFrameView.set_window_title" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
 <dt id="xanespy.qt_frame_view.QtFrameView.setup">
 <code class="descname">setup</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.qt_frame_view.QtFrameView.setup" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
@@ -1367,6 +1363,11 @@ frame window. Useful for indicating blocking operations.</p>
 <code class="descname">ui</code><em class="property"> = None</em><a class="headerlink" href="#xanespy.qt_frame_view.QtFrameView.ui" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
+<dl class="method">
+<dt id="xanespy.qt_frame_view.QtFrameView.use_busy_cursor">
+<code class="descname">use_busy_cursor</code><span class="sig-paren">(</span><em>status</em><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.qt_frame_view.QtFrameView.use_busy_cursor" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
 <dl class="attribute">
 <dt id="xanespy.qt_frame_view.QtFrameView.window">
 <code class="descname">window</code><em class="property"> = None</em><a class="headerlink" href="#xanespy.qt_frame_view.QtFrameView.window" title="Permalink to this definition">¶</a></dt>
@@ -1379,11 +1380,39 @@ frame window. Useful for indicating blocking operations.</p>
 <span id="xanespy-qt-frameset-presenter-module"></span><h2>xanespy.qt_frameset_presenter module<a class="headerlink" href="#module-xanespy.qt_frameset_presenter" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
 <dt id="xanespy.qt_frameset_presenter.QtFramesetPresenter">
-<em class="property">class </em><code class="descclassname">xanespy.qt_frameset_presenter.</code><code class="descname">QtFramesetPresenter</code><span class="sig-paren">(</span><em>frameset</em>, <em>map_view</em>, <em>frame_view</em><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.qt_frameset_presenter.QtFramesetPresenter" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<em class="property">class </em><code class="descclassname">xanespy.qt_frameset_presenter.</code><code class="descname">QtFramesetPresenter</code><span class="sig-paren">(</span><em>frameset</em>, <em>frame_view</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.qt_frameset_presenter.QtFramesetPresenter" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">PyQt5.QtCore.QObject</span></code></p>
+<p>Presenter for showing XanesFrameset frames and maps via Qt.</p>
+<dl class="docutils">
+<dt>app_ready</dt>
+<dd>Emitted when the application has been created and is ready for drawing.</dd>
+<dt>busy_status_changed</dt>
+<dd>Emitted when processing has started or ended.</dd>
+<dt>map_data_changed</dt>
+<dd>Emitted when the map data is different and should be re-plotted.</dd>
+<dt>map_data_cleared = QtCore.pyqtSignal()</dt>
+<dd>Emitted when no map data is available and plots can be cleared.</dd>
+</dl>
 <dl class="attribute">
 <dt id="xanespy.qt_frameset_presenter.QtFramesetPresenter.active_frame">
 <code class="descname">active_frame</code><em class="property"> = 0</em><a class="headerlink" href="#xanespy.qt_frameset_presenter.QtFramesetPresenter.active_frame" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="xanespy.qt_frameset_presenter.QtFramesetPresenter.active_frames">
+<code class="descname">active_frames</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.qt_frameset_presenter.QtFramesetPresenter.active_frames" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="xanespy.qt_frameset_presenter.QtFramesetPresenter.active_map">
+<code class="descname">active_map</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.qt_frameset_presenter.QtFramesetPresenter.active_map" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the active map array if possible. If it doesn&#8217;t exist,
+return None.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="xanespy.qt_frameset_presenter.QtFramesetPresenter.active_representation">
+<code class="descname">active_representation</code><em class="property"> = None</em><a class="headerlink" href="#xanespy.qt_frameset_presenter.QtFramesetPresenter.active_representation" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="attribute">
@@ -1392,8 +1421,66 @@ frame window. Useful for indicating blocking operations.</p>
 <dd></dd></dl>
 
 <dl class="method">
+<dt id="xanespy.qt_frameset_presenter.QtFramesetPresenter.add_frame_view">
+<code class="descname">add_frame_view</code><span class="sig-paren">(</span><em>view</em>, <em>threaded=True</em><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.qt_frameset_presenter.QtFramesetPresenter.add_frame_view" title="Permalink to this definition">¶</a></dt>
+<dd><p>Attach a view to this presenter.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>view</strong> (<em>QObject</em>) &#8211; The view will be connected to signals that describe changes in
+frame data.</li>
+<li><strong>threaded</strong> (<em>bool</em><em>, </em><em>optional</em>) &#8211; If true, this view will be added to its own thread before
+signals get connected</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="xanespy.qt_frameset_presenter.QtFramesetPresenter.add_map_view">
+<code class="descname">add_map_view</code><span class="sig-paren">(</span><em>view</em>, <em>threaded=True</em><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.qt_frameset_presenter.QtFramesetPresenter.add_map_view" title="Permalink to this definition">¶</a></dt>
+<dd><p>Attach a view to this presenter.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>view</strong> (<em>QObject</em>) &#8211; The view will be connected to signals that describe changes in
+map data.</li>
+<li><strong>threaded</strong> (<em>bool</em><em>, </em><em>optional</em>) &#8211; If true, this view will be added to its own thread before
+signals get connected, giving a snapier UI. Disabling makes
+testing more straightforward.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
 <dt id="xanespy.qt_frameset_presenter.QtFramesetPresenter.animate_frames">
 <code class="descname">animate_frames</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.qt_frameset_presenter.QtFramesetPresenter.animate_frames" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="xanespy.qt_frameset_presenter.QtFramesetPresenter.app_ready">
+<code class="descname">app_ready</code><a class="headerlink" href="#xanespy.qt_frameset_presenter.QtFramesetPresenter.app_ready" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="xanespy.qt_frameset_presenter.QtFramesetPresenter.build_hdf_tree">
+<code class="descname">build_hdf_tree</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.qt_frameset_presenter.QtFramesetPresenter.build_hdf_tree" title="Permalink to this definition">¶</a></dt>
+<dd><p>Build the items and insert them into the view&#8217;s HDF tree based on
+the structure of the frameset&#8217;s HDF file.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="xanespy.qt_frameset_presenter.QtFramesetPresenter.busy_status_changed">
+<code class="descname">busy_status_changed</code><a class="headerlink" href="#xanespy.qt_frameset_presenter.QtFramesetPresenter.busy_status_changed" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
@@ -1402,13 +1489,28 @@ frame window. Useful for indicating blocking operations.</p>
 <dd></dd></dl>
 
 <dl class="method">
-<dt id="xanespy.qt_frameset_presenter.QtFramesetPresenter.create_app">
-<code class="descname">create_app</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.qt_frameset_presenter.QtFramesetPresenter.create_app" title="Permalink to this definition">¶</a></dt>
+<dt id="xanespy.qt_frameset_presenter.QtFramesetPresenter.change_hdf_group">
+<code class="descname">change_hdf_group</code><span class="sig-paren">(</span><em>new_item</em>, <em>old_item</em><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.qt_frameset_presenter.QtFramesetPresenter.change_hdf_group" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="xanespy.qt_frameset_presenter.QtFramesetPresenter.change_map_cmap">
+<code class="descname">change_map_cmap</code><span class="sig-paren">(</span><em>new_cmap</em><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.qt_frameset_presenter.QtFramesetPresenter.change_map_cmap" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="attribute">
-<dt id="xanespy.qt_frameset_presenter.QtFramesetPresenter.dirty">
-<code class="descname">dirty</code><a class="headerlink" href="#xanespy.qt_frameset_presenter.QtFramesetPresenter.dirty" title="Permalink to this definition">¶</a></dt>
+<dt id="xanespy.qt_frameset_presenter.QtFramesetPresenter.cmap_list_changed">
+<code class="descname">cmap_list_changed</code><a class="headerlink" href="#xanespy.qt_frameset_presenter.QtFramesetPresenter.cmap_list_changed" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="xanespy.qt_frameset_presenter.QtFramesetPresenter.connect_signals">
+<code class="descname">connect_signals</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.qt_frameset_presenter.QtFramesetPresenter.connect_signals" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="xanespy.qt_frameset_presenter.QtFramesetPresenter.create_app">
+<code class="descname">create_app</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.qt_frameset_presenter.QtFramesetPresenter.create_app" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
@@ -1436,6 +1538,16 @@ frame window. Useful for indicating blocking operations.</p>
 <code class="descname">frame_norm</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.qt_frameset_presenter.QtFramesetPresenter.frame_norm" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
+<dl class="attribute">
+<dt id="xanespy.qt_frameset_presenter.QtFramesetPresenter.frame_pixel">
+<code class="descname">frame_pixel</code><em class="property"> = None</em><a class="headerlink" href="#xanespy.qt_frameset_presenter.QtFramesetPresenter.frame_pixel" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="xanespy.qt_frameset_presenter.QtFramesetPresenter.hover_frame_pixel">
+<code class="descname">hover_frame_pixel</code><span class="sig-paren">(</span><em>xy</em><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.qt_frameset_presenter.QtFramesetPresenter.hover_frame_pixel" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
 <dl class="method">
 <dt id="xanespy.qt_frameset_presenter.QtFramesetPresenter.last_frame">
 <code class="descname">last_frame</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.qt_frameset_presenter.QtFramesetPresenter.last_frame" title="Permalink to this definition">¶</a></dt>
@@ -1450,6 +1562,53 @@ frame window. Useful for indicating blocking operations.</p>
 <dt id="xanespy.qt_frameset_presenter.QtFramesetPresenter.map_cmap">
 <code class="descname">map_cmap</code><em class="property"> = 'plasma'</em><a class="headerlink" href="#xanespy.qt_frameset_presenter.QtFramesetPresenter.map_cmap" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
+
+<dl class="attribute">
+<dt id="xanespy.qt_frameset_presenter.QtFramesetPresenter.map_cursor_changed">
+<code class="descname">map_cursor_changed</code><a class="headerlink" href="#xanespy.qt_frameset_presenter.QtFramesetPresenter.map_cursor_changed" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="xanespy.qt_frameset_presenter.QtFramesetPresenter.map_data_changed">
+<code class="descname">map_data_changed</code><a class="headerlink" href="#xanespy.qt_frameset_presenter.QtFramesetPresenter.map_data_changed" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="xanespy.qt_frameset_presenter.QtFramesetPresenter.map_data_cleared">
+<code class="descname">map_data_cleared</code><a class="headerlink" href="#xanespy.qt_frameset_presenter.QtFramesetPresenter.map_data_cleared" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="xanespy.qt_frameset_presenter.QtFramesetPresenter.map_limits_changed">
+<code class="descname">map_limits_changed</code><a class="headerlink" href="#xanespy.qt_frameset_presenter.QtFramesetPresenter.map_limits_changed" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="xanespy.qt_frameset_presenter.QtFramesetPresenter.map_norm">
+<code class="descname">map_norm</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.qt_frameset_presenter.QtFramesetPresenter.map_norm" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="xanespy.qt_frameset_presenter.QtFramesetPresenter.map_pixel_changed">
+<code class="descname">map_pixel_changed</code><a class="headerlink" href="#xanespy.qt_frameset_presenter.QtFramesetPresenter.map_pixel_changed" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="xanespy.qt_frameset_presenter.QtFramesetPresenter.map_spectrum_changed">
+<code class="descname">map_spectrum_changed</code><a class="headerlink" href="#xanespy.qt_frameset_presenter.QtFramesetPresenter.map_spectrum_changed" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="xanespy.qt_frameset_presenter.QtFramesetPresenter.mean_spectrum_changed">
+<code class="descname">mean_spectrum_changed</code><a class="headerlink" href="#xanespy.qt_frameset_presenter.QtFramesetPresenter.mean_spectrum_changed" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="xanespy.qt_frameset_presenter.QtFramesetPresenter.move_map_pixel">
+<code class="descname">move_map_pixel</code><span class="sig-paren">(</span><em>vert</em>, <em>horiz</em><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.qt_frameset_presenter.QtFramesetPresenter.move_map_pixel" title="Permalink to this definition">¶</a></dt>
+<dd><p>Move the active pixel by the given amount in each direction.</p>
+<p>If the current pixel is not active, this is a no-op.</p>
+</dd></dl>
 
 <dl class="method">
 <dt id="xanespy.qt_frameset_presenter.QtFramesetPresenter.move_slider">
@@ -1481,6 +1640,11 @@ frame window. Useful for indicating blocking operations.</p>
 <code class="descname">previous_frame</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.qt_frameset_presenter.QtFramesetPresenter.previous_frame" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
+<dl class="attribute">
+<dt id="xanespy.qt_frameset_presenter.QtFramesetPresenter.process_events">
+<code class="descname">process_events</code><a class="headerlink" href="#xanespy.qt_frameset_presenter.QtFramesetPresenter.process_events" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
 <dl class="method">
 <dt id="xanespy.qt_frameset_presenter.QtFramesetPresenter.refresh_frames">
 <code class="descname">refresh_frames</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.qt_frameset_presenter.QtFramesetPresenter.refresh_frames" title="Permalink to this definition">¶</a></dt>
@@ -1490,8 +1654,43 @@ frame window. Useful for indicating blocking operations.</p>
 <dt id="xanespy.qt_frameset_presenter.QtFramesetPresenter.reset_frame_range">
 <code class="descname">reset_frame_range</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.qt_frameset_presenter.QtFramesetPresenter.reset_frame_range" title="Permalink to this definition">¶</a></dt>
 <dd><p>Reset the frame plotting vmin and vmax based on the currently
-selected data. VMin will be the 2nd percentile and VMax will
-be the 98th percentile.</p>
+selected data. VMin will be the 1nd percentile and VMax will
+be the 99th percentile. The results can be accessed by calling
+the <cite>frame_norm()</cite> method.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><ul class="simple">
+<li><strong>(vmin, vmax)</strong> (<em>(float, float)</em>) &#8211; A 2-tuple with the new min and max range.</li>
+<li><em>None</em> &#8211; If current representation is not a valid map, None will be
+returned.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="xanespy.qt_frameset_presenter.QtFramesetPresenter.reset_map_range">
+<code class="descname">reset_map_range</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.qt_frameset_presenter.QtFramesetPresenter.reset_map_range" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reset the map plotting vmin and vmax based on the currently
+selected data. VMin will be the 1st percentile and VMax will
+be the 99th percentile. This method also caches the values so
+they can be retrieved via the <cite>map_norm()</cite> method. If the
+current representation is not valid map data, then the cached
+vmin and vmax will be returned with no other changes.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><strong>(vmin, vmax)</strong> &#8211; A 2-tuple with the current min and max range.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">(float, float)</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="method">
@@ -1502,6 +1701,26 @@ be the 98th percentile.</p>
 <dl class="method">
 <dt id="xanespy.qt_frameset_presenter.QtFramesetPresenter.set_frame_vmin">
 <code class="descname">set_frame_vmin</code><span class="sig-paren">(</span><em>new_value</em><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.qt_frameset_presenter.QtFramesetPresenter.set_frame_vmin" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="xanespy.qt_frameset_presenter.QtFramesetPresenter.set_map_cursor">
+<code class="descname">set_map_cursor</code><span class="sig-paren">(</span><em>x</em>, <em>y</em><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.qt_frameset_presenter.QtFramesetPresenter.set_map_cursor" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="xanespy.qt_frameset_presenter.QtFramesetPresenter.set_map_pixel">
+<code class="descname">set_map_pixel</code><span class="sig-paren">(</span><em>x</em>, <em>y</em><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.qt_frameset_presenter.QtFramesetPresenter.set_map_pixel" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="xanespy.qt_frameset_presenter.QtFramesetPresenter.set_map_vmax">
+<code class="descname">set_map_vmax</code><span class="sig-paren">(</span><em>new_value</em><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.qt_frameset_presenter.QtFramesetPresenter.set_map_vmax" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="xanespy.qt_frameset_presenter.QtFramesetPresenter.set_map_vmin">
+<code class="descname">set_map_vmin</code><span class="sig-paren">(</span><em>new_value</em><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.qt_frameset_presenter.QtFramesetPresenter.set_map_vmin" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
@@ -1523,11 +1742,70 @@ intervals between 1ms and 1000ms on a exponential scale.</p>
 <dd></dd></dl>
 
 <dl class="method">
+<dt id="xanespy.qt_frameset_presenter.QtFramesetPresenter.toggle_edge_mask">
+<code class="descname">toggle_edge_mask</code><span class="sig-paren">(</span><em>state</em><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.qt_frameset_presenter.QtFramesetPresenter.toggle_edge_mask" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
 <dt id="xanespy.qt_frameset_presenter.QtFramesetPresenter.update_frame_range_limits">
 <code class="descname">update_frame_range_limits</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.qt_frameset_presenter.QtFramesetPresenter.update_frame_range_limits" title="Permalink to this definition">¶</a></dt>
 <dd><p>Check that the (min, max, step) of the frame spinboxes are
 reasonable. This should be called when the spinbox values change.</p>
 </dd></dl>
+
+<dl class="method">
+<dt id="xanespy.qt_frameset_presenter.QtFramesetPresenter.update_map_limits">
+<code class="descname">update_map_limits</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.qt_frameset_presenter.QtFramesetPresenter.update_map_limits" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="xanespy.qt_frameset_presenter.QtFramesetPresenter.update_maps">
+<code class="descname">update_maps</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.qt_frameset_presenter.QtFramesetPresenter.update_maps" title="Permalink to this definition">¶</a></dt>
+<dd><p>Send the current mapping data to the <cite>map_data_changed</cite> signal.</p>
+<p>This method should be called after anything changes the visual
+representation of the map. Examples:</p>
+<ul class="simple">
+<li>Changing the active representation</li>
+<li>Changing the colormap</li>
+<li>Changing the map normalization limits</li>
+<li>Changing whether the XAS edge mask is applied</li>
+</ul>
+</dd></dl>
+
+<dl class="method">
+<dt id="xanespy.qt_frameset_presenter.QtFramesetPresenter.update_spectra">
+<code class="descname">update_spectra</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.qt_frameset_presenter.QtFramesetPresenter.update_spectra" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the most recent data for mean and single-pixel spectra and send
+them out to the signals <cite>mean_spectrum_changed</cite> and
+<cite>pixel_sepctrum_changed</cite>.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="xanespy.qt_frameset_presenter.QtFramesetPresenter.update_status_frame">
+<code class="descname">update_status_frame</code><span class="sig-paren">(</span><em>new_frame</em><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.qt_frameset_presenter.QtFramesetPresenter.update_status_frame" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a string (and send it to the UI) that indicates the energy
+of the requested frame.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="xanespy.qt_frameset_presenter.QtFramesetPresenter.update_status_shape">
+<code class="descname">update_status_shape</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.qt_frameset_presenter.QtFramesetPresenter.update_status_shape" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="xanespy.qt_frameset_presenter.QtFramesetPresenter.update_status_unit">
+<code class="descname">update_status_unit</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.qt_frameset_presenter.QtFramesetPresenter.update_status_unit" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="xanespy.qt_frameset_presenter.QtFramesetPresenter.update_status_value">
+<code class="descname">update_status_value</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.qt_frameset_presenter.QtFramesetPresenter.update_status_value" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="xanespy.qt_frameset_presenter.QtFramesetPresenter.use_edge_mask">
+<code class="descname">use_edge_mask</code><em class="property"> = False</em><a class="headerlink" href="#xanespy.qt_frameset_presenter.QtFramesetPresenter.use_edge_mask" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
 
 </dd></dl>
 
@@ -1537,7 +1815,178 @@ reasonable. This should be called when the spinbox values change.</p>
 <dl class="class">
 <dt id="xanespy.qt_map_view.QtMapView">
 <em class="property">class </em><code class="descclassname">xanespy.qt_map_view.</code><code class="descname">QtMapView</code><a class="headerlink" href="#xanespy.qt_map_view.QtMapView" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">PyQt5.QtCore.QObject</span></code></p>
+<p>A Qt view for a frameset map. It should be controlled by a presenter.</p>
+<p>ui_required
+limits_applied</p>
+<blockquote>
+<div>Fires when the user requests that data be redrawn with new limits.</div></blockquote>
+<dl class="docutils">
+<dt>limits_reset</dt>
+<dd>Fires when the user asks that the norm limits be reset to the data.</dd>
+</dl>
+<dl class="method">
+<dt id="xanespy.qt_map_view.QtMapView.clear_axes">
+<code class="descname">clear_axes</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.qt_map_view.QtMapView.clear_axes" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="xanespy.qt_map_view.QtMapView.cmap_changed">
+<code class="descname">cmap_changed</code><a class="headerlink" href="#xanespy.qt_map_view.QtMapView.cmap_changed" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="xanespy.qt_map_view.QtMapView.connect_presenter">
+<code class="descname">connect_presenter</code><span class="sig-paren">(</span><em>presenter</em><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.qt_map_view.QtMapView.connect_presenter" title="Permalink to this definition">¶</a></dt>
+<dd><p>Connect to signals for changed presenter state.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="xanespy.qt_map_view.QtMapView.create_canvas">
+<code class="descname">create_canvas</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.qt_map_view.QtMapView.create_canvas" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="xanespy.qt_map_view.QtMapView.crosshairs">
+<code class="descname">crosshairs</code><em class="property"> = None</em><a class="headerlink" href="#xanespy.qt_map_view.QtMapView.crosshairs" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="xanespy.qt_map_view.QtMapView.edge_mask_toggled">
+<code class="descname">edge_mask_toggled</code><a class="headerlink" href="#xanespy.qt_map_view.QtMapView.edge_mask_toggled" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="xanespy.qt_map_view.QtMapView.fig">
+<code class="descname">fig</code><em class="property"> = None</em><a class="headerlink" href="#xanespy.qt_map_view.QtMapView.fig" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="xanespy.qt_map_view.QtMapView.hide">
+<code class="descname">hide</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.qt_map_view.QtMapView.hide" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="xanespy.qt_map_view.QtMapView.keyboard_nav">
+<code class="descname">keyboard_nav</code><span class="sig-paren">(</span><em>event</em><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.qt_map_view.QtMapView.keyboard_nav" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="xanespy.qt_map_view.QtMapView.latest_cmap">
+<code class="descname">latest_cmap</code><em class="property"> = 'plasma'</em><a class="headerlink" href="#xanespy.qt_map_view.QtMapView.latest_cmap" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="xanespy.qt_map_view.QtMapView.limits_applied">
+<code class="descname">limits_applied</code><a class="headerlink" href="#xanespy.qt_map_view.QtMapView.limits_applied" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="xanespy.qt_map_view.QtMapView.limits_reset">
+<code class="descname">limits_reset</code><a class="headerlink" href="#xanespy.qt_map_view.QtMapView.limits_reset" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="xanespy.qt_map_view.QtMapView.map_clicked">
+<code class="descname">map_clicked</code><a class="headerlink" href="#xanespy.qt_map_view.QtMapView.map_clicked" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="xanespy.qt_map_view.QtMapView.map_hovered">
+<code class="descname">map_hovered</code><a class="headerlink" href="#xanespy.qt_map_view.QtMapView.map_hovered" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="xanespy.qt_map_view.QtMapView.map_moved">
+<code class="descname">map_moved</code><a class="headerlink" href="#xanespy.qt_map_view.QtMapView.map_moved" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="xanespy.qt_map_view.QtMapView.map_vmax_changed">
+<code class="descname">map_vmax_changed</code><a class="headerlink" href="#xanespy.qt_map_view.QtMapView.map_vmax_changed" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="xanespy.qt_map_view.QtMapView.map_vmin_changed">
+<code class="descname">map_vmin_changed</code><a class="headerlink" href="#xanespy.qt_map_view.QtMapView.map_vmin_changed" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="xanespy.qt_map_view.QtMapView.mouse_clicked_canvas">
+<code class="descname">mouse_clicked_canvas</code><span class="sig-paren">(</span><em>mouse_event</em><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.qt_map_view.QtMapView.mouse_clicked_canvas" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="xanespy.qt_map_view.QtMapView.mouse_in_canvas">
+<code class="descname">mouse_in_canvas</code><span class="sig-paren">(</span><em>mouse_event</em><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.qt_map_view.QtMapView.mouse_in_canvas" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="xanespy.qt_map_view.QtMapView.plot_histogram_data">
+<code class="descname">plot_histogram_data</code><span class="sig-paren">(</span><em>map_data</em>, <em>norm</em>, <em>cmap</em>, <em>extent</em><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.qt_map_view.QtMapView.plot_histogram_data" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="xanespy.qt_map_view.QtMapView.plot_map_data">
+<code class="descname">plot_map_data</code><span class="sig-paren">(</span><em>map_data</em>, <em>norm</em>, <em>cmap</em>, <em>extent</em><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.qt_map_view.QtMapView.plot_map_data" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="xanespy.qt_map_view.QtMapView.plot_spectrum">
+<code class="descname">plot_spectrum</code><span class="sig-paren">(</span><em>spectrum</em>, <em>norm</em>, <em>cmap</em>, <em>edge_range</em><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.qt_map_view.QtMapView.plot_spectrum" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="xanespy.qt_map_view.QtMapView.redraw_canvas">
+<code class="descname">redraw_canvas</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.qt_map_view.QtMapView.redraw_canvas" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="xanespy.qt_map_view.QtMapView.redraw_crosshairs">
+<code class="descname">redraw_crosshairs</code><span class="sig-paren">(</span><em>xy</em><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.qt_map_view.QtMapView.redraw_crosshairs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Draw a set of crosshairs on the map at location given by <cite>xy</cite>.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="xanespy.qt_map_view.QtMapView.set_cmap_list">
+<code class="descname">set_cmap_list</code><span class="sig-paren">(</span><em>new_list</em><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.qt_map_view.QtMapView.set_cmap_list" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="xanespy.qt_map_view.QtMapView.set_map_limits">
+<code class="descname">set_map_limits</code><span class="sig-paren">(</span><em>vmin</em>, <em>vmax</em>, <em>step</em>, <em>decimals</em><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.qt_map_view.QtMapView.set_map_limits" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="xanespy.qt_map_view.QtMapView.setup_ui">
+<code class="descname">setup_ui</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.qt_map_view.QtMapView.setup_ui" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="xanespy.qt_map_view.QtMapView.show">
+<code class="descname">show</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.qt_map_view.QtMapView.show" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="xanespy.qt_map_view.QtMapView.ui">
+<code class="descname">ui</code><em class="property"> = None</em><a class="headerlink" href="#xanespy.qt_map_view.QtMapView.ui" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="xanespy.qt_map_view.QtMapView.update_crosshair_labels">
+<code class="descname">update_crosshair_labels</code><span class="sig-paren">(</span><em>xy</em>, <em>pixel</em>, <em>value</em><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.qt_map_view.QtMapView.update_crosshair_labels" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="xanespy.qt_map_view.QtMapView.update_cursor_labels">
+<code class="descname">update_cursor_labels</code><span class="sig-paren">(</span><em>xy</em>, <em>pixel</em>, <em>value</em><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.qt_map_view.QtMapView.update_cursor_labels" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="xanespy.qt_map_view.QtMapView.window">
+<code class="descname">window</code><em class="property"> = None</em><a class="headerlink" href="#xanespy.qt_map_view.QtMapView.window" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
 </dd></dl>
 
 </div>
@@ -1546,7 +1995,7 @@ reasonable. This should be called when the spinbox values change.</p>
 <p>Tools for accessing TXM data stored in an HDF5 file.</p>
 <dl class="class">
 <dt id="xanespy.txmstore.TXMStore">
-<em class="property">class </em><code class="descclassname">xanespy.txmstore.</code><code class="descname">TXMStore</code><span class="sig-paren">(</span><em>hdf_filename: str</em>, <em>parent_name: str</em>, <em>data_name: str</em>, <em>mode='r'</em><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.txmstore.TXMStore" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">xanespy.txmstore.</code><code class="descname">TXMStore</code><span class="sig-paren">(</span><em>hdf_filename: str</em>, <em>parent_name: str</em>, <em>data_name=None</em>, <em>mode='r'</em><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.txmstore.TXMStore" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
 <p>Wrapper around HDF5 file that stores TXM data. It has a series of
 properties that return the corresponding HDF5 dataset object; the
@@ -1564,10 +2013,12 @@ that the file is closed, especially if using a writing mode:</p>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>hdf_filename</strong> (<em>-</em>) &#8211; </li>
-<li><strong>parent_name</strong> (<em>-</em>) &#8211; </li>
-<li><strong>data_name</strong> (<em>-</em>) &#8211; specific data iterations (eg. imported, aligned)</li>
-<li><strong>mode</strong> (<em>-</em>) &#8211; </li>
+<li><strong>hdf_filename</strong> (<em>str</em>) &#8211; Path to the HDF file to be used.</li>
+<li><strong>parent_name</strong> (<em>str</em>) &#8211; Name of the top-level HDF5 group.</li>
+<li><strong>data_name</strong> (<em>str</em>) &#8211; Name of the second level HDF5 group, used for specific data
+iterations (eg. imported, aligned)</li>
+<li><strong>mode</strong> (<em>str</em>) &#8211; Eg. &#8216;r&#8217; for read-only, &#8216;r+&#8217; for read-write. Passed directly to
+h5py.File constructor.</li>
 </ul>
 </td>
 </tr>
@@ -1635,6 +2086,24 @@ included in this tree.</p>
 <dd><p>Turn on different active data group for this store. This method
 deletes the existing group and copies symlinks from the
 current one.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="xanespy.txmstore.TXMStore.get_dataset">
+<code class="descname">get_dataset</code><span class="sig-paren">(</span><em>name</em><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.txmstore.TXMStore.get_dataset" title="Permalink to this definition">¶</a></dt>
+<dd><p>Attempt to open the requested dataset.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><strong>data</strong> &#8211; An open HDF5 dataset</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">hyp5.Dataset</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Raises:</th><td class="field-body"><code class="xref py py-exc docutils literal"><span class="pre">exceptions.GroupKeyError</span></code> &#8211; If the dataset does not exist in the file.</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="method">
@@ -1907,7 +2376,7 @@ suitable for numpy indexing.</p>
 <code class="descclassname">xanespy.utilities.</code><code class="descname">prog</code><span class="sig-paren">(</span><em>*args</em>, <em>leave=False</em>, <em>dynamic_ncols=True</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.utilities.prog" title="Permalink to this definition">¶</a></dt>
 <dd><p>A progress bar for displaying how many iterations have been
 completed. This is mostly just a wrapper around the tqdm
-library. <a href="#id23"><span class="problematic" id="id24">*</span></a>args and <a href="#id25"><span class="problematic" id="id26">**</span></a>kwargs are passed directly to either
+library. <a href="#id15"><span class="problematic" id="id16">*</span></a>args and <a href="#id17"><span class="problematic" id="id18">**</span></a>kwargs are passed directly to either
 tqdm.tqdm or tqdm.tqdm_notebook.</p>
 </dd></dl>
 
@@ -2192,6 +2661,12 @@ data</p>
 <dd></dd></dl>
 
 <dl class="method">
+<dt id="xanespy.xanes_frameset.XanesFrameset.data_tree">
+<code class="descname">data_tree</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.xanes_frameset.XanesFrameset.data_tree" title="Permalink to this definition">¶</a></dt>
+<dd><p>Wrapper around the TXMStore.data_tree() method.</p>
+</dd></dl>
+
+<dl class="method">
 <dt id="xanespy.xanes_frameset.XanesFrameset.drop_frame">
 <code class="descname">drop_frame</code><span class="sig-paren">(</span><em>index</em><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.xanes_frameset.XanesFrameset.drop_frame" title="Permalink to this definition">¶</a></dt>
 <dd><p>Delete frame with the given index (int) or energy (float). This
@@ -2216,8 +2691,10 @@ edge.</p>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>sensitivity</strong> (<em>-</em>) &#8211; the actual threshold.</li>
-<li><strong>min_size</strong> (<em>-</em>) &#8211; removed. Passing zero (default) will result in no effect.</li>
+<li><strong>sensitivity</strong> (<em>float</em>) &#8211; A multiplier for the otsu value to determine
+the actual threshold.</li>
+<li><strong>min_size</strong> (<em>int</em>) &#8211; Objects below this size (in pixels) will be removed. Passing
+zero (default) will result in no effect.</li>
 </ul>
 </td>
 </tr>
@@ -2235,16 +2712,25 @@ edge.</p>
 <dt id="xanespy.xanes_frameset.XanesFrameset.energies">
 <code class="descname">energies</code><a class="headerlink" href="#xanespy.xanes_frameset.XanesFrameset.energies" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return the array of beam energies for the given time index.</p>
-<p>Returns: A 3-dimensional array with the form (energy, row,
-col).</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><strong>energies</strong> &#8211; A 1-dimensional array with the energy for each frame.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">np.ndarray</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
-<dl class="method">
+<dl class="attribute">
 <dt id="xanespy.xanes_frameset.XanesFrameset.extent">
-<code class="descname">extent</code><span class="sig-paren">(</span><em>representation</em>, <em>idx=(0</em>, <em>0)</em><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.xanes_frameset.XanesFrameset.extent" title="Permalink to this definition">¶</a></dt>
+<code class="descname">extent</code><a class="headerlink" href="#xanespy.xanes_frameset.XanesFrameset.extent" title="Permalink to this definition">¶</a></dt>
 <dd><p>Determine physical dimensions for axes values.</p>
 <p>Returns: If idx was given, a single tuple of (left, right,
-bottom, up), otherwise return an array of extents for each frame.</p>
+bottom, up), otherwise if idx is None it returns an array of
+extents for each frame.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -2294,7 +2780,7 @@ used.</li>
 
 <dl class="method">
 <dt id="xanespy.xanes_frameset.XanesFrameset.frame_shape">
-<code class="descname">frame_shape</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.xanes_frameset.XanesFrameset.frame_shape" title="Permalink to this definition">¶</a></dt>
+<code class="descname">frame_shape</code><span class="sig-paren">(</span><em>representation='absorbances'</em><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.xanes_frameset.XanesFrameset.frame_shape" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return the shape of the individual energy frames.</p>
 </dd></dl>
 
@@ -2302,8 +2788,27 @@ used.</li>
 <dt id="xanespy.xanes_frameset.XanesFrameset.frames">
 <code class="descname">frames</code><a class="headerlink" href="#xanespy.xanes_frameset.XanesFrameset.frames" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return the frames for the given time index.</p>
-<p>Returns: A 3-dimensional array with the form (energy, row,
-col).</p>
+<p>If <cite>representation</cite> is really mapping data, then the source
+frames will be returned.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>timeidx</strong> (<em>int</em>) &#8211; Index for the first dimension of the combined data array.</li>
+<li><strong>representation</strong> (<em>str</em>) &#8211; The group name for these data. Eg &#8220;absorbances&#8221;,
+&#8220;whiteline_map&#8221;, &#8220;intensities&#8221;</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>frames</strong> &#8211; A 3-dimensional array with the form (energy, row, col).</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">np.ndarray</p>
+</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="method">
@@ -2327,6 +2832,11 @@ to a binary map using (Otsu) threshold filtering.</p>
 <code class="descname">gtk_viewer</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.xanes_frameset.XanesFrameset.gtk_viewer" title="Permalink to this definition">¶</a></dt>
 <dd><p>Launch a GTK gui to view the data in the frameset.</p>
 </dd></dl>
+
+<dl class="method">
+<dt id="xanespy.xanes_frameset.XanesFrameset.has_representation">
+<code class="descname">has_representation</code><span class="sig-paren">(</span><em>representation</em><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.xanes_frameset.XanesFrameset.has_representation" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
 
 <dl class="method">
 <dt id="xanespy.xanes_frameset.XanesFrameset.hdf_file">
@@ -2353,6 +2863,26 @@ to a binary map using (Otsu) threshold filtering.</p>
 <dd><p>For use with HDFAttribute descriptor.</p>
 </dd></dl>
 
+<dl class="method">
+<dt id="xanespy.xanes_frameset.XanesFrameset.hdf_path">
+<code class="descname">hdf_path</code><span class="sig-paren">(</span><em>representation=None</em><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.xanes_frameset.XanesFrameset.hdf_path" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the hdf path for the active group.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>representation</strong> (<em>str</em><em>, </em><em>optional</em>) &#8211; Name of third-level group to use. If omitted, the path to
+the parent group will be given.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><strong>path</strong> &#8211; The path to the current group in the HDF5 file. Returns an
+empty string if the representation does not exists.</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">str</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
 <dl class="attribute">
 <dt id="xanespy.xanes_frameset.XanesFrameset.image_normalizer">
 <code class="descname">image_normalizer</code><a class="headerlink" href="#xanespy.xanes_frameset.XanesFrameset.image_normalizer" title="Permalink to this definition">¶</a></dt>
@@ -2373,6 +2903,33 @@ to a binary map using (Otsu) threshold filtering.</p>
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>min_distance</strong> (<em>-</em>) &#8211; grouping areas into particles. Lower numbers means more
 particles, but might split large particles into two.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="xanespy.xanes_frameset.XanesFrameset.map_data">
+<code class="descname">map_data</code><a class="headerlink" href="#xanespy.xanes_frameset.XanesFrameset.map_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return map data for the given time index and representation.</p>
+<p>If <cite>representation</cite> is really mapping data, then the result
+will have more dimensions than expected.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>timeidx</strong> (<em>int</em>) &#8211; Index for the first dimension of the combined data array.</li>
+<li><strong>representation</strong> (<em>str</em>) &#8211; The group name for these data. Eg &#8220;absorbances&#8221;,
+&#8220;whiteline_map&#8221;, &#8220;intensities&#8221;</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>map_data</strong> &#8211; A 2-dimensional array with the form (row, col).</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">np.ndarray</p>
+</td>
 </tr>
 </tbody>
 </table>
@@ -2482,6 +3039,12 @@ attribute of the TXM store will be used.</li>
 particle.</p>
 <p>Returns: A 2D array where the first dimension is particles and
 the second is the first dimension of the map dataset (usually time).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="xanespy.xanes_frameset.XanesFrameset.pixel_unit">
+<code class="descname">pixel_unit</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.xanes_frameset.XanesFrameset.pixel_unit" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the unit of measure for the size of a pixel.</p>
 </dd></dl>
 
 <dl class="method">
@@ -2640,23 +3203,34 @@ calculated with a more conservative threshold.</td>
 <dl class="method">
 <dt id="xanespy.xanes_frameset.XanesFrameset.spectrum">
 <code class="descname">spectrum</code><span class="sig-paren">(</span><em>pixel=None</em>, <em>edge_jump_filter=False</em>, <em>representation='absorbances'</em>, <em>index=0</em><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.xanes_frameset.XanesFrameset.spectrum" title="Permalink to this definition">¶</a></dt>
-<dd><p>Collapse the dataset down to a two-dimensional spectrum. Returns a
-pandas series containing the resulting spectrum.</p>
+<dd><p>Collapse the frameset down to an energy spectrum.</p>
+<p>Any dimensions (besides the energy dimension) that remain
+after applying the arguments below, will be averaged to give
+the final intensity at each energy.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>spectrum</strong> &#8211; A pandas Series with the spectrum.</p>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><p class="first">pd.Series</p>
+</td>
+</tr>
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>pixel</strong> (<em>A 2-tuple that causes the returned series to represent</em>) &#8211; the spectrum for only 1 pixel in the frameset. If None, a
+<li><strong>pixel</strong> (<em>tuple</em><em>, </em><em>optional</em>) &#8211; A 2-tuple that causes the returned series to represent
+the spectrum for only 1 pixel in the frameset. If None, a
 larger part of the frame will be used, depending on the
 other arguments.</li>
-<li><strong></strong><strong>(</strong><strong>bool</strong><strong> or </strong><strong>str</strong><strong>)</strong><strong></strong> (<em>edge_jump_filter</em>) &#8211; pass the edge jump filter are used to calculate the
+<li><strong>edge_jump_filter</strong> (<em>bool</em><em> or </em><em>str</em><em>, </em><em>optional</em>) &#8211; If truthy, only pixels that
+pass the edge jump filter are used to calculate the
 spectrum. If &#8220;inverse&#8221; is given, then the edge jump filter
 is logically not-ted and calculated with a more
 conservative threshold.</li>
-<li><strong>representation</strong> (<em>What kind of data to use for creating the</em>) &#8211; </li>
-<li><strong>This will be passed to TXMStore.get_map</strong><strong>(</strong><strong></strong><strong>)</strong><strong></strong> (<em>spectrum.</em>) &#8211; </li>
-<li><strong>index</strong> (<em>Which step in the frameset to use. When used to index</em>) &#8211; store().absorbances, this should return a 3D array like
+<li><strong>representation</strong> (<em>str</em><em>, </em><em>optional</em>) &#8211; What kind of data to use for creating the spectrum. This
+will be passed to TXMStore.get_map()</li>
+<li><strong>index</strong> (<em>int</em><em>, </em><em>optional</em>) &#8211; Which step in the frameset to use. When used to index
+store().absorbances, this should return a 3D array like
 (energy, rows, columns).</li>
 </ul>
 </td>
@@ -3390,7 +3964,7 @@ is uniform and assumes a 40µm field-of-view.</p>
 <li><a class="reference internal" href="#module-xanespy.gtk_plotter">xanespy.gtk_plotter module</a></li>
 <li><a class="reference internal" href="#xanespy-gtk-viewer-module">xanespy.gtk_viewer module</a></li>
 <li><a class="reference internal" href="#module-xanespy.importers">xanespy.importers module</a></li>
-<li><a class="reference internal" href="#module-xanespy.particle">xanespy.particle module</a></li>
+<li><a class="reference internal" href="#xanespy-particle-module">xanespy.particle module</a></li>
 <li><a class="reference internal" href="#module-xanespy.plots">xanespy.plots module</a></li>
 <li><a class="reference internal" href="#module-xanespy.qt_frame_view">xanespy.qt_frame_view module</a></li>
 <li><a class="reference internal" href="#module-xanespy.qt_frameset_presenter">xanespy.qt_frameset_presenter module</a></li>
