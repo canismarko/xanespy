@@ -1521,15 +1521,6 @@ class XanesFrameset():
             global_max = np.max(store.absorbances)
         return Normalize(global_min, global_max)
 
-    def gtk_viewer(self):
-        """Launch a GTK gui to view the data in the frameset."""
-        from gtk_viewer import GtkTxmViewer
-        viewer = GtkTxmViewer(edge=self.edge,
-                              hdf_filename=self.hdf_filename, parent_name=self.parent_name)
-        viewer.show()
-        # Close the current blank plot
-        pyplot.close()
-
     def qt_viewer(self):
         from qt_frameset_presenter import QtFramesetPresenter
         from qt_frame_view import QtFrameView

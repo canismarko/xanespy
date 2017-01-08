@@ -100,7 +100,7 @@ def read_metadata(filenames, flavor):
         # Warn the user about dropped frames
         if bad_samples:
             msg = "Dropping incomplete framesets {}".format(bad_samples)
-            log.warning(msg)
+            log.info(msg)
         # Log summary of files read results
         msg = "Read metadata for %d files in %f sec"
         log.info(msg, len(df), time() - logstart)

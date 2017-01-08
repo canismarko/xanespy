@@ -555,7 +555,12 @@ class XanesFramesetTest(TestCase):
 
 class OldXanesFramesetTest(XanespyTestCase):
     """Set of python tests that work on full framesets and require data
-    from multiple frames to make sense."""
+    from multiple frames to make sense. These "old" tests work
+    directly with imported HDF files. The newer tests above mock out
+    the TXMStore class so we can properly isolate the XanesFrameset
+    functionality.
+
+    """
     originhdf = os.path.join(SSRL_DIR, 'txmstore-test.h5')
     temphdf = os.path.join(SSRL_DIR, 'txmstore-test-tmp.h5')
 
