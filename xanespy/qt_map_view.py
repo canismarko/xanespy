@@ -36,7 +36,7 @@ CROSSHAIR_COLORS = {
 }
 
 
-class QtMapView(QtCore.QObject):
+class QtMapView(QtCore.QObject):  # pragma: no cover
     """A Qt view for a frameset map. It should be controlled by a presenter.
 
     Signals

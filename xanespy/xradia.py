@@ -107,7 +107,7 @@ class XRMFile():
             stream_value = stream_bytes
         return stream_value
 
-    def print_ole(self):
+    def print_ole(self):  # pragma: no cover
         for l in self.ole_file.listdir():
             if l[0] == 'ImageInfo':
                 try:
@@ -139,7 +139,7 @@ class XRMFile():
             timezone = pytz.timezone('US/Pacific')
         elif self.flavor in ['aps', 'aps-old1']:
             timezone = pytz.timezone('US/Central')
-        else:
+        else:  # pragma: no cover
             # Unknown flavor. Raising here instead of constructor
             # means you forgot to put in the proper timezone.
             msg = "Unknown timezone for flavor '{flavor}'. Assuming UTC"

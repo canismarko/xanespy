@@ -162,8 +162,7 @@ class SSRLScriptTest(unittest.TestCase):
             self.assertEqual(f.readline(), 'MOSAICCENTRALTILE   1\n')
             self.assertEqual(f.readline(), 'FILES\n')
             self.assertEqual(f.readline(), 'ref_Test0_08250.0_eV_000of015.xrm\n')
-
-
+    
     def test_script_generation(self):
         """Check that the script first moves to the first energy point and location."""
         ref_repetitions = 10
@@ -212,7 +211,7 @@ class SSRLScriptTest(unittest.TestCase):
 class ApsScriptTest(unittest.TestCase):
     """Verify that a script is created for running an operando
     TXM experiment at APS beamline 8-BM-B."""
-
+    
     def setUp(self):
         self.output_path = os.path.join(TEST_DIR, 'aps_script.txt')
         # Check to make sure the file doesn't already exists
@@ -228,11 +227,11 @@ class ApsScriptTest(unittest.TestCase):
             start=ZoneplatePoint(x=0, y=0, z=389.8, energy=8313),
             z_step=0.387465 / 2 # Original script assumed 2eV steps
         )
-
+    
     def tear_down(self):
         pass
     # os.remove(self.output_path)
-
+    
     def test_file_created(self):
         with open(self.output_path, 'w') as f:
             sector8_xanes_script(dest=f, edge=k_edges["Ni_NCA"](),
@@ -242,7 +241,7 @@ class ApsScriptTest(unittest.TestCase):
         self.assertTrue(
             os.path.exists(self.output_path)
         )
-
+    
     def test_binning(self):
         with open(self.output_path, 'w') as f:
             sector8_xanes_script(dest=f, edge=k_edges["Ni_NCA"](),
@@ -252,7 +251,7 @@ class ApsScriptTest(unittest.TestCase):
         with open(self.output_path, 'r') as f:
             firstline = f.readline().strip()
         self.assertEqual(firstline, "setbinning 2")
-
+    
     def test_exposure(self):
         with open(self.output_path, 'w') as f:
             sector8_xanes_script(dest=f, edge=k_edges["Ni_NCA"](),
@@ -263,7 +262,7 @@ class ApsScriptTest(unittest.TestCase):
             f.readline()
             secondline = f.readline().strip()
         self.assertEqual(secondline, "setexp 44")
-
+    
     def test_energy_approach(self):
         """This instrument can behave poorly unless the target energy is
         approached from underneath (apparently)."""
@@ -281,7 +280,7 @@ class ApsScriptTest(unittest.TestCase):
         # Check that the first zone plate is properly set
         self.assertEqual(lines[53], 'moveto zpz 2797.81\n')
         self.assertEqual(lines[54], 'moveto detz 377.59\n')
-        
+    
     def test_first_frame(self):
         with open(self.output_path, 'w') as f:
             sector8_xanes_script(
@@ -311,7 +310,7 @@ class ApsScriptTest(unittest.TestCase):
             lines[58].strip(),
             "collect test_sample_xanes0_8250_0eV.xrm"
         )
-
+    
     def test_second_location(self):
         with open(self.output_path, 'w') as f:
             sector8_xanes_script(
@@ -327,7 +326,7 @@ class ApsScriptTest(unittest.TestCase):
             lines = f.readlines()
         self.assertEqual(lines[242], "moveto x 1706.20\n")
         self.assertEqual(lines[243], "moveto y -1927.20\n")
-
+    
     def test_multiple_iterations(self):
         with open(self.output_path, 'w') as f:
             sector8_xanes_script(
@@ -438,30 +437,6 @@ class PtychographyImportTest(XanespyTestCase):
             group = parent['imported']
             self.assertEqual(group['intensities'].shape[0:2],
                              (1, 2))
-
-    def test_redundant_energies(self):
-        """Test that a warning is triggered when importing the same energy
-        multiple times."""
-        # Do it once the normal way
-        import_nanosurveyor_frameset(PTYCHO_DIR,
-                                     hdf_filename=self.hdf, quiet=True)
-        with warnings.catch_warnings(record=True) as w:
-            warnings.simplefilter('always')
-            self.assertEqual(len(w), 0)
-            import_nanosurveyor_frameset(PTYCHO_DIR,
-                                         hdf_filename=self.hdf, quiet=True,
-                                         append=False)
-            self.assertEqual(len(w), 1)
-            self.assertIn('Overwriting', str(w[0].message))
-        with warnings.catch_warnings(record=True) as w:
-            warnings.simplefilter('always')
-            self.assertEqual(len(w), 0)
-            # Import again to see if a warning is triggered
-            import_nanosurveyor_frameset(PTYCHO_DIR,
-                                         hdf_filename=self.hdf, quiet=True,
-                                         append=True)
-            self.assertEqual(len(w), 1)
-            self.assertIn('redundant energies', str(w[0].message))
 
     def test_multiple_import(self):
         """Check if we can import multiple different directories of different
@@ -872,6 +847,13 @@ class XrayEdgeTest(unittest.TestCase):
 
 class XanesFramesetTest(TestCase):
 
+    def create_frameset(self):
+        fs = XanesFrameset(filename="", edge=None)
+        # Mock out the `store` retrieval so we can control it
+        Store = mock.MagicMock(TXMStore)
+        fs.store = mock.Mock(side_effect=Store)
+        return fs
+
     def test_get_frames(self):
         frameset = XanesFrameset(filename="None", groupname="sam01",
                                  edge=k_edges['Ni_NCA'])
@@ -882,14 +864,9 @@ class XanesFramesetTest(TestCase):
     def test_switch_groups(self):
         """Test that switching between HDF5 groups works robustly."""
         # Without the `src` argument
-        frameset = XanesFrameset()
-        old_group = self.frameset.data_name
-        print(old_group)
-        self.frameset.fork_data_group('new_group')
-        self.frameset.data_name = 'old_group'
-        self.assertEqual(self.frameset.data_name, old_group)
-        self.frameset.fork_data_group('new_group')
-        # With the `src` argument
+        fs = self.create_frameset()
+        fs.fork_data_group('new_group')
+        self.assertEqual(fs.data_name, 'new_group')
 
 
 class OldXanesFramesetTest(XanespyTestCase):
@@ -1441,39 +1418,6 @@ class UtilitiesTest(XanespyTestCase):
             shape=(10, 10)
         )
         self.assertEqual(result, xycoord(x=-955., y=252.5))
-
-
-class XradiaTest(XanespyTestCase):
-    def test_pixel_size(self):
-        sample_filename = "rep01_20161456_ssrl-test-data_08324.0_eV_001of003.xrm"
-        xrm = XRMFile(os.path.join(SSRL_DIR, sample_filename), flavor="ssrl")
-        self.assertAlmostEqual(xrm.um_per_pixel(), 0.03287, places=4)
-
-    def test_timestamp_from_xrm(self):
-        sample_filename = "rep01_20161456_ssrl-test-data_08324.0_eV_001of003.xrm"
-        xrm = XRMFile(os.path.join(SSRL_DIR, sample_filename), flavor="ssrl")
-        # Check start time
-        start = dt.datetime(2016, 5, 29,
-                            15, 2, 37,
-                            tzinfo=pytz.timezone('US/Pacific'))
-        self.assertEqual(xrm.starttime(), start)
-        # Check end time (offset determined by exposure time)
-        end = dt.datetime(2016, 5, 29,
-                          15, 2, 37, 500000,
-                          tzinfo=pytz.timezone('US/Pacific'))
-        self.assertEqual(xrm.endtime(), end)
-        xrm.close()
-
-        # Test APS frame
-        sample_filename = "fov03_xanesocv_8353_0eV.xrm"
-        xrm = XRMFile(os.path.join(APS_DIR, sample_filename), flavor="aps")
-        # Check start time
-        start = dt.datetime(2016, 7, 2, 17, 50, 35, tzinfo=pytz.timezone('US/Central'))
-        self.assertEqual(xrm.starttime(), start)
-        # Check end time (offset determined by exposure time)
-        end = dt.datetime(2016, 7, 2, 17, 51, 25, tzinfo=pytz.timezone('US/Central'))
-        self.assertEqual(xrm.endtime(), end)
-        xrm.close()
 
 
 # Launch the tests if this is run as a script

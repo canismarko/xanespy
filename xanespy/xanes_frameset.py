@@ -57,19 +57,21 @@ log = logging.getLogger(__name__)
 class XanesFrameset():
     """A collection of TXM frames at different energies moving across an
     absorption edge. Iterating over this object gives the individual
-    Frame() objects. The class assumes that the data have
-    been imported into an HDF file.
+    Frame() objects. The class assumes that the data have been
+    imported into an HDF file.
 
-    Arguments
-    ---------
-    - filename : path to the HDF file that holds these data.
+    Parameters
+    ----------
+    filename : str, optional
+      Path to the HDF file that holds these data.
+    edge
+      An Edge object describing the meterial's X-ray energy response
+      characteristics.
+   groupname : str, optional
+      Top level HDF group corresponding to this frameset. This
+      argument is only required if there is more than one top-level
+      group.
 
-    - groupname : Top level HDF group corresponding to this
-      frameset. This argument is only required if there is more than
-      one top-level group.
-
-    - edge : An Edge object describing the meterial's X-ray energy
-      response characteristics.
     """
     active_group = ''
     cmap = 'plasma'
@@ -77,13 +79,10 @@ class XanesFrameset():
     # Places to store staged image transformations
     _transformations = None
 
-    def __init__(self, filename, groupname, edge):
+    def __init__(self, filename, edge, groupname=None):
         self.hdf_filename = filename
         self.edge = edge
         self.parent_name = groupname
-        # Load cached value for latest data group
-        # with self.store() as store:
-        #     self.data_name = store.latest_data_name
 
     def __repr__(self):
         s = "<{cls}: '{name}'>"
