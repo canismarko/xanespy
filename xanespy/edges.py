@@ -31,29 +31,29 @@ class Edge():
     L-edge, etc.
 
     Attributes
-    ---------
-    E_0: number - The energy of the absorption edge itself.
+    ----------
+    E_0 : float
+      The energy of the absorption edge itself.
+    regions: list of 3-tuples
+      All the energy regions. Each tuple is of the form (start, end,
+      step) and is inclusive at both ends.
+    name : string
+      A human-readable name for this edge (eg "Ni K-edge")
+    pre_edge: 2-tuple
+      Energy range (start, stop) that defines points below the edge
+      region, inclusive.
+    post_edge: 2-tuple
+      Energy range (start, stop) that defines points above the edge
+      region, inclusive.
+    post_edge_order : int
+      What degree polynomial to use for fitting the post_edge region.
+    map_range : 2-tuple
+      Energy range (start, stop) used for normalizing maps. If not
+      supplied, will be determine from pre- and post-edge arguments.
+    edge_range : 2-tuple
+      Energy range (start, stop) used to determine the official
+      beginning and edge of the edge itself.
 
-    *regions: 3-tuples - All the energy regions. Each tuple is of the
-      form (start, end, step) and is inclusive at both ends.
-
-    name: string - A human-readable name for this edge (eg "Ni K-edge")
-
-    pre_edge: 2-tuple (start, stop) - Energy range that defines points
-      below the edge region, inclusive.
-
-    post_edge: 2-tuple (start, stop) - Energy range that defines points
-      above the edge region, inclusive.
-
-    post_edge_order - What degree polynomial to use for fitting
-      the post_edge region.
-
-    map_range: 2-tuple (start, stop) - Energy range used for
-      normalizing maps. If not supplied, will be determine from pre-
-      and post-edge arguments.
-
-    edge_range: 2-tuple (start, stop) - Energy range used to determine
-      the official beginning and edge of the edge itself.
     """
     regions = []
     E_0 = None
@@ -85,7 +85,9 @@ class Edge():
 
     def _post_edge_xs(self, x):
         """Convert a set of x values to a power series up to an order
-        determined by self.post_edge_order."""
+        determined by self.post_edge_order.
+
+        """
         X = []
         for power in range(1, self.post_edge_order+1):
             X.append(x**power)
@@ -105,7 +107,9 @@ class Edge():
 
 class LEdge(Edge):
     """An X-ray absorption K-edge corresponding to a 2s or 2p
-    transition."""
+    transition.
+
+    """
 
     def annotate_spectrum(self, ax):
         ax.axvline(x=np.max(self.pre_edge), linestyle='-', color="0.55",
@@ -116,7 +120,9 @@ class LEdge(Edge):
 
     def mask(self, *args, **kwargs):
         """Return a numpy array mask for material that's active at this
-        edge. Calculations are done in `xanes_math.l_edge_mask()."""
+        edge. Calculations are done in `xanes_math.l_edge_mask()`.
+
+        """
         return l_edge_mask(*args, edge=self, **kwargs)
 
 
@@ -132,7 +138,9 @@ class KEdge(Edge):
 
     def mask(self, *args, **kwargs):
         """Return a numpy array mask for material that's active at this
-        edge. Calculations are done in `xanes_math.l_edge_mask()."""
+        edge. Calculations are done in `xanes_math.l_edge_mask()`.
+
+        """
         return k_edge_mask(*args, edge=self, **kwargs)
 
 

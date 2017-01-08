@@ -21,15 +21,15 @@ log = logging.getLogger(__name__)
 class QtFramesetPresenter(QtCore.QObject):
     """Presenter for showing XanesFrameset frames and maps via Qt.
     
-    Signals
-    -------
-    app_ready
+    Attributes
+    ----------
+    app_ready : pyqtSignal
       Emitted when the application has been created and is ready for drawing.
-    busy_status_changed
+    busy_status_changed : pyqtSignal
       Emitted when processing has started or ended.
-    map_data_changed
+    map_data_changed : pyqtSignal
       Emitted when the map data is different and should be re-plotted.
-    map_data_cleared = QtCore.pyqtSignal()
+    map_data_cleared : pyqtSignal
       Emitted when no map data is available and plots can be cleared.
     """
     frame_cmap = "copper"

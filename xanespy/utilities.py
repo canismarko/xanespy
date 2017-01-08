@@ -185,11 +185,23 @@ def is_kernel():
     return getattr(get_ipython(), 'kernel', None) is not None
 
 
-def  prog(*args, leave=False, dynamic_ncols=True, **kwargs):
+def  prog(leave=False, dynamic_ncols=True, *args, **kwargs):
     """A progress bar for displaying how many iterations have been
     completed. This is mostly just a wrapper around the tqdm
-    library. *args and **kwargs are passed directly to either
+    library. args and kwargs are passed directly to either
     tqdm.tqdm or tqdm.tqdm_notebook.
+
+    Parameters
+    ----------
+    leave : bool, optional
+      Whether to leave the progress bar in the stream after it's
+      completed.
+    dynamic_ncols : bool, optional
+      Whether to adapt dynamically to the width of the environment.
+    args
+      Positional arguments passed directly to ``tqdm`` or ``tqdm_notebook``.
+    kwargs
+      Keyword arguments passed directly to ``tqdm`` or ``tqdm_notebook``.
     """
     if is_kernel():
         # Use the IPython widgets version of tqdm

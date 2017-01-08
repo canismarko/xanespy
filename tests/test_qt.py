@@ -36,7 +36,7 @@ from PyQt5 import QtWidgets, QtTest
 from xanespy import QtFrameView, QtMapView, XanesFrameset, QtFramesetPresenter
 from xanespy.qt_frame_view import FrameChangeSource
 from xanespy import exceptions
-from xanespy.utilities import xycoord, Extent, shape
+from xanespy.utilities import xycoord, Extent, shape, Pixel
 
 
 pp = pprint.PrettyPrinter(indent=2)
@@ -88,7 +88,126 @@ class QtTestCase(unittest.TestCase):
         return data
 
 
-class MapViewerTestCase(QtTestCase):
+class MapViewTestCase(QtTestCase):
+
+    def test_keyboard_nav(self):
+        view = QtMapView()
+        event = mock.Mock()
+        # First test a non-navigation key
+        event.key = 'u'
+        spy = QtTest.QSignalSpy(view.map_moved)
+        view.keyboard_nav(event)
+        self.assertEqual(len(spy), 0)
+        # Now test a navigation key
+        event.key = 'ctrl+w'
+        view.keyboard_nav(event)
+        self.assertEqual(len(spy), 1)
+        self.assertEqual(spy[0], [-10, 0])
+
+    def test_mouse_in_canvas(self):
+        view = QtMapView()
+        view.map_ax = "fake_axis"
+        event = mock.Mock()
+        # Test hovering out of the axis
+        spy = QtTest.QSignalSpy(view.map_hovered)
+        view.mouse_in_canvas(event)
+        self.assertEqual(len(spy), 1)
+        self.assertEqual(spy[0], [None, None])
+        # Test hovering into the axis
+        event.inaxes = view.map_ax
+        event.xdata = 3.54
+        event.ydata = -12.98
+        view.mouse_in_canvas(event)
+        self.assertEqual(len(spy), 2)
+        self.assertEqual(spy[-1], [3.54, -12.98])
+
+    def test_mouse_clicked(self):
+        view = QtMapView()
+        view.map_ax = "fake_axis"
+        event = mock.Mock()
+        # Test hovering out of the axis
+        spy = QtTest.QSignalSpy(view.map_clicked)
+        view.mouse_clicked_canvas(event)
+        self.assertEqual(len(spy), 1)
+        self.assertEqual(spy[0], [None, None])
+        # Test hovering into the axis
+        event.inaxes = view.map_ax
+        event.xdata = 3.54
+        event.ydata = -12.98
+        view.mouse_clicked_canvas(event)
+        self.assertEqual(len(spy), 2)
+        self.assertEqual(spy[-1], [3.54, -12.98])
+
+    def test_update_crosshairs(self):
+        view = QtMapView()
+        view.ui = mock.Mock()
+        xy = xycoord(1.23, -5.87)
+        pixel = Pixel(348, 750)
+        value = 3.1415926
+        view.update_crosshair_labels(xy, pixel, value)
+        # Check that new label text was set
+        view.ui.lblCrosshairsXY.setText.assert_called_with(
+            "1.23, -5.87")
+        view.ui.lblCrosshairsPixel.setText.assert_called_with(
+            "[348, 750]")
+        view.ui.lblCrosshairsValue.setText.assert_called_with(
+            "3.1415926")
+        # Repeat the test with no pixel given
+        view.update_crosshair_labels(None, None, None)
+        view.ui.lblCrosshairsXY.setText.assert_called_with(
+            "")
+        view.ui.lblCrosshairsPixel.setText.assert_called_with(
+            "")
+        view.ui.lblCrosshairsValue.setText.assert_called_with(
+            "")
+
+    def test_update_cursor_labels(self):
+        view = QtMapView()
+        view.ui = mock.Mock()
+        xy = xycoord(1.23, -5.87)
+        pixel = Pixel(348, 750)
+        value = 3.1415926
+        view.update_cursor_labels(xy, pixel, value)
+        # Check that new label text was set
+        view.ui.lblCursorXY.setText.assert_called_with(
+            "1.23, -5.87")
+        view.ui.lblCursorPixel.setText.assert_called_with(
+            "[348, 750]")
+        view.ui.lblCursorValue.setText.assert_called_with(
+            "3.1415926")
+        # Repeat the test with no pixel given
+        view.update_cursor_labels(None, None, None)
+        view.ui.lblCursorXY.setText.assert_called_with(
+            "")
+        view.ui.lblCursorPixel.setText.assert_called_with(
+            "")
+        view.ui.lblCursorValue.setText.assert_called_with(
+            "")
+
+    def test_set_cmap_list(self):
+        view = QtMapView()
+        view.ui = mock.Mock()
+        view.set_cmap_list(['a', 'b'])
+        view.ui.cmbCmap.clear.assert_called_with()
+        view.ui.cmbCmap.addItems.assert_called_with(['a', 'b'])
+
+    def test_map_limits(self):
+        view = QtMapView()
+        view.ui = mock.Mock()
+        view.set_map_limits(0, 10, 0.1, 3)
+        # Check the vmin spin box
+        view.ui.spnVMin.setMaximum.assert_called_once_with(9.999)
+        view.ui.spnVMin.setSingleStep.assert_called_once_with(0.1)
+        view.ui.spnVMin.setDecimals.assert_called_once_with(3)
+        view.ui.spnVMin.setValue.assert_called_once_with(0)
+        # Check the vmax spin box
+        view.ui.spnVMax.setMinimum.assert_called_once_with(0.001)
+        view.ui.spnVMax.setSingleStep.assert_called_once_with(0.1)
+        view.ui.spnVMax.setDecimals.assert_called_once_with(3)
+        view.ui.spnVMax.setValue.assert_called_once_with(10)
+
+
+class PresenterTestCase(QtTestCase):
 
     def test_active_map(self):
         presenter = self.create_presenter()
@@ -313,7 +432,7 @@ class MapViewerTestCase(QtTestCase):
         self.assertEqual(presenter._map_vmax, 108)
 
 
-class FrameViewerTestcase(QtTestCase):
+class OldFrameViewerTestcase(QtTestCase):
     
     def test_init(self):
         """Check that certain values are set properly during __init__."""
@@ -682,20 +801,7 @@ class FrameViewerTestcase(QtTestCase):
             "")
         presenter.frame_view.set_status_value.assert_called_with(
             "")
-        # Now what happens if there's no valid dataset
-        # frameset = MockFrameset()
-        # # def key_error(obj):
-        # #     raise exceptions.GroupKeyError()
-        # # frameset.extent = mock.Mock(side_effect=key_error)
-        # presenter = self.create_presenter(frameset=frameset)
-        # presenter.frame_representation = 'invalid-name'
-        # presenter.hover_frame_pixel(xy=xycoord(3, 7))
-        # presenter.frame_view.set_status_value.assert_called_with(
-        #     "")
-        # presenter.frame_view.set_status_pixel.assert_called_with(
-        #     "")
-        # presenter.frame_view.set_status_value.assert_called_with(
-        #     "")
+
 
 class FrameSourceTestCase(unittest.TestCase):
     

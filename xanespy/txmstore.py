@@ -37,6 +37,7 @@ class TXMStore():
     TXMStore().attribute.value pattern can be used to get pure numpy
     arrays. These objects should be used as a context manager to ensure
     that the file is closed, especially if using a writing mode:
+
         with TXMStore() as store:
             # Do stuff with store here
 
@@ -124,7 +125,6 @@ class TXMStore():
         current one.
         """
         # Check that the current and target groups are not the same
-        print(self.data_name)
         if new_name == self.data_name:
             log.critical("Refusing to fork group %s to itself", new_name)
             msg = "Refusing to fork myself to myself ({})".format(new_name)
@@ -160,32 +160,27 @@ class TXMStore():
         """
         return self.parent_group()[self.data_name]
 
-    def group(self):
-        """Retrieve the top-level HDF5 group object for this file and
-        groupname."""
-        raise UserWarning('Using data_group() or parent_group() instead')
-
     def replace_dataset(self, name, data, context=None, attrs={},
                         compression=None, *args, **kwargs):
         """Wrapper for h5py.create_dataset that removes the existing dataset
         if it exists.
 
-        Arguments
-        ---------
-
-        - name : String with the HDF5 name to give this dataset.
-
-        - data : Numpy array of data to be saved.
-
-        - context : A string specifying what kind of data is
-          stored. Eg. "frameset", "metadata", "map".
-
-        - attrs : Dictionary containing HDF5 metadata attributes to be
-          set on the resulting dataset.
-
-        - *args, **kwargs : Will get passed to h5py's `create_dataset`
-           method.
-
+        Parameters
+        ----------
+        name : str
+          HDF5 groupname name to give this dataset.
+        data : np.ndarray
+          Numpy array of data to be saved.
+        context : str, optional
+          Specifies what kind of data is stored. Eg. "frameset",
+          "metadata", "map".
+        attrs : dict, optional
+          Dictionary containing HDF5 metadata attributes to be set on
+          the resulting dataset.
+        *args
+          Arguments to pass to h5py's ``create_dataset`` method.
+        **kwargs
+          Keyword arguments to pass to h5py's ``create_dataset`` method.
         """
         # Remove the existing dataset if possible
         try:
@@ -434,47 +429,3 @@ class TXMStore():
     @particle_labels.setter
     def particle_labels(self, val):
         self.replace_dataset('particle_labels', val, context='map')
-
-
-def prepare_txm_store(filename: str, parent_name: str, data_name='imported', dirname: str=None):
-    """Check the filenames and create an hdf file as needed. Will
-    overwrite the group if it already exists.
-
-    Returns: An opened TXMStore object ready to accept data (r+ mode).
-
-    Arguments
-    ---------
-
-    - filename : name of the requested hdf file, may be None if not
-      provided, in which case the filename will be generated
-      automatically based on `dirname`.
-
-    - parent_name : Requested groupname for this sample.
-
-    - data_name : Requested name for this data iteration.
-
-    - dirname : Used to derive a default filename if None is passed
-      for `filename` attribute.
-    """
-    # Get default filename and groupname if necessary
-    if filename is None:
-        real_name = os.path.abspath(dirname)
-        new_filename = os.path.split(real_name)[1]
-        hdf_filename = "{basename}-results.h5".format(basename=new_filename)
-    else:
-        hdf_filename = filename
-    if parent_name is None:
-        groupname = os.path.split(os.path.abspath(dirname))[1]
-    # Open actual file
-    hdf_file = h5py.File(hdf_filename, mode='a')
-    # Delete the group if it already exists
-    if parent_name in hdf_file.keys():
-        del hdf_file[parent_name]
-    new_group = hdf_file.create_group("{}/{}".format(parent_name, data_name))
-    # Prepare a new TXMStore object to accept data
-    store = TXMStore(hdf_filename=hdf_filename,
-                     parent_name=parent_name,
-                     data_name=data_name,
-                     mode="r+")
-    store.latest_data_name = 'imported'
-    return store

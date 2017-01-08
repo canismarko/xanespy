@@ -121,8 +121,6 @@ def draw_histogram_colorbar(ax, *args, **kwargs):  # pragma: no cover
         labelbottom='off',
         labeltop='off')
     ax.spines['bottom'].set_visible(False)
-    # print(dir(ax))
-    # ax.xaxis.labelpad += 35
     cbar.ax.set_xlabel(ax.get_xlabel())
     ax.xaxis.set_visible(False)
     cbar.ax.set_title("")

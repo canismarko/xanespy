@@ -21,6 +21,7 @@ Python library for analyzing **X-Ray absorbance spectroscopy** data.
    analysis
    visualization
    data_stores
+   modules
 
 
 Indices and tables

@@ -26,7 +26,8 @@
     <script type="text/javascript" src="_static/doctools.js"></script>
     <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <link rel="index" title="Index" href="genindex.html" />
-    <link rel="search" title="Search" href="search.html" /> 
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="xanespy" href="modules.html" /> 
   </head>
   <body role="document">
     <div class="related" role="navigation" aria-label="related navigation">
@@ -38,7 +39,11 @@
         <li class="right" >
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">Xanespy 0.1 documentation</a> &#187;</li> 
+        <li class="right" >
+          <a href="modules.html" title="xanespy"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Xanespy 0.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="modules.html" accesskey="U">xanespy</a> &#187;</li> 
       </ul>
     </div>  
 
@@ -230,50 +235,54 @@ L-edge, etc.</p>
 <dl class="attribute">
 <dt id="xanespy.edges.Edge.E_0">
 <code class="descname">E_0</code><a class="headerlink" href="#xanespy.edges.Edge.E_0" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>number - The energy of the absorption edge itself.</em></p>
+<dd><p><em>float</em> &#8211; The energy of the absorption edge itself.</p>
 </dd></dl>
 
 <dl class="attribute">
-<dt>
-<code class="descname">*regions</code></dt>
-<dd><p><em>3-tuples - All the energy regions. Each tuple is of the</em> &#8211; form (start, end, step) and is inclusive at both ends.</p>
+<dt id="xanespy.edges.Edge.regions">
+<code class="descname">regions</code><a class="headerlink" href="#xanespy.edges.Edge.regions" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>list of 3-tuples</em> &#8211; All the energy regions. Each tuple is of the form (start, end,
+step) and is inclusive at both ends.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="xanespy.edges.Edge.name">
 <code class="descname">name</code><a class="headerlink" href="#xanespy.edges.Edge.name" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>string - A human-readable name for this edge (eg &#8220;Ni K-edge&#8221;)</em></p>
+<dd><p><em>string</em> &#8211; A human-readable name for this edge (eg &#8220;Ni K-edge&#8221;)</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="xanespy.edges.Edge.pre_edge">
 <code class="descname">pre_edge</code><a class="headerlink" href="#xanespy.edges.Edge.pre_edge" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>2-tuple (start, stop) - Energy range that defines points</em> &#8211; below the edge region, inclusive.</p>
+<dd><p><em>2-tuple</em> &#8211; Energy range (start, stop) that defines points below the edge
+region, inclusive.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="xanespy.edges.Edge.post_edge">
 <code class="descname">post_edge</code><a class="headerlink" href="#xanespy.edges.Edge.post_edge" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>2-tuple (start, stop) - Energy range that defines points</em> &#8211; above the edge region, inclusive.</p>
+<dd><p><em>2-tuple</em> &#8211; Energy range (start, stop) that defines points above the edge
+region, inclusive.</p>
 </dd></dl>
 
 <dl class="attribute">
-<dt>
-<code class="descname">post_edge_order - What degree polynomial to use for fitting</code></dt>
-<dd><p>the post_edge region.</p>
+<dt id="xanespy.edges.Edge.post_edge_order">
+<code class="descname">post_edge_order</code><a class="headerlink" href="#xanespy.edges.Edge.post_edge_order" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>int</em> &#8211; What degree polynomial to use for fitting the post_edge region.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="xanespy.edges.Edge.map_range">
 <code class="descname">map_range</code><a class="headerlink" href="#xanespy.edges.Edge.map_range" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>2-tuple (start, stop) - Energy range used for</em> &#8211; normalizing maps. If not supplied, will be determine from pre-
-and post-edge arguments.</p>
+<dd><p><em>2-tuple</em> &#8211; Energy range (start, stop) used for normalizing maps. If not
+supplied, will be determine from pre- and post-edge arguments.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="xanespy.edges.Edge.edge_range">
 <code class="descname">edge_range</code><a class="headerlink" href="#xanespy.edges.Edge.edge_range" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>2-tuple (start, stop) - Energy range used to determine</em> &#8211; the official beginning and edge of the edge itself.</p>
+<dd><p><em>2-tuple</em> &#8211; Energy range (start, stop) used to determine the official
+beginning and edge of the edge itself.</p>
 </dd></dl>
 
 <dl class="attribute">
@@ -307,8 +316,8 @@ and post-edge arguments.</p>
 <dd></dd></dl>
 
 <dl class="attribute">
-<dt id="xanespy.edges.Edge.post_edge_order">
-<code class="descname">post_edge_order</code><em class="property"> = 2</em><a class="headerlink" href="#xanespy.edges.Edge.post_edge_order" title="Permalink to this definition">¶</a></dt>
+<dt>
+<code class="descname">post_edge_order</code><em class="property"> = 2</em></dt>
 <dd></dd></dl>
 
 <dl class="attribute">
@@ -322,8 +331,8 @@ and post-edge arguments.</p>
 <dd></dd></dl>
 
 <dl class="attribute">
-<dt id="xanespy.edges.Edge.regions">
-<code class="descname">regions</code><em class="property"> = []</em><a class="headerlink" href="#xanespy.edges.Edge.regions" title="Permalink to this definition">¶</a></dt>
+<dt>
+<code class="descname">regions</code><em class="property"> = []</em></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -342,7 +351,7 @@ and post-edge arguments.</p>
 <dt id="xanespy.edges.KEdge.mask">
 <code class="descname">mask</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.edges.KEdge.mask" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return a numpy array mask for material that&#8217;s active at this
-edge. Calculations are done in <a href="#id1"><span class="problematic" id="id2">`</span></a>xanes_math.l_edge_mask().</p>
+edge. Calculations are done in <cite>xanes_math.l_edge_mask()</cite>.</p>
 </dd></dl>
 
 </dd></dl>
@@ -362,7 +371,7 @@ transition.</p>
 <dt id="xanespy.edges.LEdge.mask">
 <code class="descname">mask</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.edges.LEdge.mask" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return a numpy array mask for material that&#8217;s active at this
-edge. Calculations are done in <a href="#id3"><span class="problematic" id="id4">`</span></a>xanes_math.l_edge_mask().</p>
+edge. Calculations are done in <cite>xanes_math.l_edge_mask()</cite>.</p>
 </dd></dl>
 
 </dd></dl>
@@ -798,7 +807,7 @@ microscope beamline.</p>
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
 <li><strong>directory</strong> (<em>str</em>) &#8211; A valid path to a directory containing the frame data to import.</li>
 <li><strong>flavor</strong> (<em>str</em>) &#8211; Indicates what type of naming conventions and data structure to
-assume. See documentation for <a href="#id5"><span class="problematic" id="id6">``</span></a>xanespy.xradia.XRMFile for
+assume. See documentation for <code class="docutils literal"><span class="pre">xanespy.xradia.XRMFile</span></code> for
 possible choice.</li>
 <li><strong>hdf_filename</strong> (<em>str</em>) &#8211; Where to save the output to. An exception is throw if this file
 already exists.</li>
@@ -889,9 +898,6 @@ each frame. Translations show how much to move each frame array by to re-center 
 metadata.</p>
 </dd></dl>
 
-</div>
-<div class="section" id="xanespy-particle-module">
-<h2>xanespy.particle module<a class="headerlink" href="#xanespy-particle-module" title="Permalink to this headline">¶</a></h2>
 </div>
 <div class="section" id="module-xanespy.plots">
 <span id="xanespy-plots-module"></span><h2>xanespy.plots module<a class="headerlink" href="#module-xanespy.plots" title="Permalink to this headline">¶</a></h2>
@@ -1383,16 +1389,30 @@ frame window. Useful for indicating blocking operations.</p>
 <em class="property">class </em><code class="descclassname">xanespy.qt_frameset_presenter.</code><code class="descname">QtFramesetPresenter</code><span class="sig-paren">(</span><em>frameset</em>, <em>frame_view</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.qt_frameset_presenter.QtFramesetPresenter" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">PyQt5.QtCore.QObject</span></code></p>
 <p>Presenter for showing XanesFrameset frames and maps via Qt.</p>
-<dl class="docutils">
-<dt>app_ready</dt>
-<dd>Emitted when the application has been created and is ready for drawing.</dd>
-<dt>busy_status_changed</dt>
-<dd>Emitted when processing has started or ended.</dd>
-<dt>map_data_changed</dt>
-<dd>Emitted when the map data is different and should be re-plotted.</dd>
-<dt>map_data_cleared = QtCore.pyqtSignal()</dt>
-<dd>Emitted when no map data is available and plots can be cleared.</dd>
-</dl>
+<dl class="attribute">
+<dt id="xanespy.qt_frameset_presenter.QtFramesetPresenter.app_ready">
+<code class="descname">app_ready</code><a class="headerlink" href="#xanespy.qt_frameset_presenter.QtFramesetPresenter.app_ready" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>pyqtSignal</em> &#8211; Emitted when the application has been created and is ready for drawing.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="xanespy.qt_frameset_presenter.QtFramesetPresenter.busy_status_changed">
+<code class="descname">busy_status_changed</code><a class="headerlink" href="#xanespy.qt_frameset_presenter.QtFramesetPresenter.busy_status_changed" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>pyqtSignal</em> &#8211; Emitted when processing has started or ended.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="xanespy.qt_frameset_presenter.QtFramesetPresenter.map_data_changed">
+<code class="descname">map_data_changed</code><a class="headerlink" href="#xanespy.qt_frameset_presenter.QtFramesetPresenter.map_data_changed" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>pyqtSignal</em> &#8211; Emitted when the map data is different and should be re-plotted.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="xanespy.qt_frameset_presenter.QtFramesetPresenter.map_data_cleared">
+<code class="descname">map_data_cleared</code><a class="headerlink" href="#xanespy.qt_frameset_presenter.QtFramesetPresenter.map_data_cleared" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>pyqtSignal</em> &#8211; Emitted when no map data is available and plots can be cleared.</p>
+</dd></dl>
+
 <dl class="attribute">
 <dt id="xanespy.qt_frameset_presenter.QtFramesetPresenter.active_frame">
 <code class="descname">active_frame</code><em class="property"> = 0</em><a class="headerlink" href="#xanespy.qt_frameset_presenter.QtFramesetPresenter.active_frame" title="Permalink to this definition">¶</a></dt>
@@ -1467,8 +1487,8 @@ testing more straightforward.</li>
 <dd></dd></dl>
 
 <dl class="attribute">
-<dt id="xanespy.qt_frameset_presenter.QtFramesetPresenter.app_ready">
-<code class="descname">app_ready</code><a class="headerlink" href="#xanespy.qt_frameset_presenter.QtFramesetPresenter.app_ready" title="Permalink to this definition">¶</a></dt>
+<dt>
+<code class="descname">app_ready</code></dt>
 <dd></dd></dl>
 
 <dl class="method">
@@ -1479,8 +1499,8 @@ the structure of the frameset&#8217;s HDF file.</p>
 </dd></dl>
 
 <dl class="attribute">
-<dt id="xanespy.qt_frameset_presenter.QtFramesetPresenter.busy_status_changed">
-<code class="descname">busy_status_changed</code><a class="headerlink" href="#xanespy.qt_frameset_presenter.QtFramesetPresenter.busy_status_changed" title="Permalink to this definition">¶</a></dt>
+<dt>
+<code class="descname">busy_status_changed</code></dt>
 <dd></dd></dl>
 
 <dl class="method">
@@ -1569,13 +1589,13 @@ the structure of the frameset&#8217;s HDF file.</p>
 <dd></dd></dl>
 
 <dl class="attribute">
-<dt id="xanespy.qt_frameset_presenter.QtFramesetPresenter.map_data_changed">
-<code class="descname">map_data_changed</code><a class="headerlink" href="#xanespy.qt_frameset_presenter.QtFramesetPresenter.map_data_changed" title="Permalink to this definition">¶</a></dt>
+<dt>
+<code class="descname">map_data_changed</code></dt>
 <dd></dd></dl>
 
 <dl class="attribute">
-<dt id="xanespy.qt_frameset_presenter.QtFramesetPresenter.map_data_cleared">
-<code class="descname">map_data_cleared</code><a class="headerlink" href="#xanespy.qt_frameset_presenter.QtFramesetPresenter.map_data_cleared" title="Permalink to this definition">¶</a></dt>
+<dt>
+<code class="descname">map_data_cleared</code></dt>
 <dd></dd></dl>
 
 <dl class="attribute">
@@ -1816,23 +1836,29 @@ of the requested frame.</p>
 <dt id="xanespy.qt_map_view.QtMapView">
 <em class="property">class </em><code class="descclassname">xanespy.qt_map_view.</code><code class="descname">QtMapView</code><a class="headerlink" href="#xanespy.qt_map_view.QtMapView" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">PyQt5.QtCore.QObject</span></code></p>
-<p>A Qt view for a frameset map. It should be controlled by a presenter.</p>
-<p>ui_required
-limits_applied</p>
-<blockquote>
-<div>Fires when the user requests that data be redrawn with new limits.</div></blockquote>
-<dl class="docutils">
-<dt>limits_reset</dt>
-<dd>Fires when the user asks that the norm limits be reset to the data.</dd>
-</dl>
-<dl class="method">
-<dt id="xanespy.qt_map_view.QtMapView.clear_axes">
-<code class="descname">clear_axes</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.qt_map_view.QtMapView.clear_axes" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
+<p>A Qt view for a frameset map. It should be controlled by a
+presenter.</p>
 <dl class="attribute">
 <dt id="xanespy.qt_map_view.QtMapView.cmap_changed">
 <code class="descname">cmap_changed</code><a class="headerlink" href="#xanespy.qt_map_view.QtMapView.cmap_changed" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>signal</em> &#8211; Fires when the user changes the colormap via the UI</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="xanespy.qt_map_view.QtMapView.limits_applied">
+<code class="descname">limits_applied</code><a class="headerlink" href="#xanespy.qt_map_view.QtMapView.limits_applied" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>signal</em> &#8211; Fires when the user requests that data be redrawn with new limits.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="xanespy.qt_map_view.QtMapView.limits_reset">
+<code class="descname">limits_reset</code><a class="headerlink" href="#xanespy.qt_map_view.QtMapView.limits_reset" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>signal</em> &#8211; Fires when the user asks that the norm limits be reset to the data.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt>
+<code class="descname">cmap_changed</code></dt>
 <dd></dd></dl>
 
 <dl class="method">
@@ -1877,13 +1903,13 @@ limits_applied</p>
 <dd></dd></dl>
 
 <dl class="attribute">
-<dt id="xanespy.qt_map_view.QtMapView.limits_applied">
-<code class="descname">limits_applied</code><a class="headerlink" href="#xanespy.qt_map_view.QtMapView.limits_applied" title="Permalink to this definition">¶</a></dt>
+<dt>
+<code class="descname">limits_applied</code></dt>
 <dd></dd></dl>
 
 <dl class="attribute">
-<dt id="xanespy.qt_map_view.QtMapView.limits_reset">
-<code class="descname">limits_reset</code><a class="headerlink" href="#xanespy.qt_map_view.QtMapView.limits_reset" title="Permalink to this definition">¶</a></dt>
+<dt>
+<code class="descname">limits_reset</code></dt>
 <dd></dd></dl>
 
 <dl class="attribute">
@@ -2119,13 +2145,6 @@ current one.</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="xanespy.txmstore.TXMStore.group">
-<code class="descname">group</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.txmstore.TXMStore.group" title="Permalink to this definition">¶</a></dt>
-<dd><p>Retrieve the top-level HDF5 group object for this file and
-groupname.</p>
-</dd></dl>
-
-<dl class="method">
 <dt id="xanespy.txmstore.TXMStore.has_dataset">
 <code class="descname">has_dataset</code><span class="sig-paren">(</span><em>name</em><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.txmstore.TXMStore.has_dataset" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return a boolean indicated whether this dataset exists in the HDF
@@ -2190,12 +2209,14 @@ if it exists.</p>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>name</strong> (<em>-</em>) &#8211; </li>
-<li><strong>data</strong> (<em>-</em>) &#8211; </li>
-<li><strong>context</strong> (<em>-</em>) &#8211; stored. Eg. &#8220;frameset&#8221;, &#8220;metadata&#8221;, &#8220;map&#8221;.</li>
-<li><strong>attrs</strong> (<em>-</em>) &#8211; set on the resulting dataset.</li>
-<li><strong>*args</strong><strong>, </strong><strong>**kwargs</strong> (<em>-</em>) &#8211; <p>method.</p>
-</li>
+<li><strong>name</strong> (<em>str</em>) &#8211; HDF5 groupname name to give this dataset.</li>
+<li><strong>data</strong> (<em>np.ndarray</em>) &#8211; Numpy array of data to be saved.</li>
+<li><strong>context</strong> (<em>str</em><em>, </em><em>optional</em>) &#8211; Specifies what kind of data is stored. Eg. &#8220;frameset&#8221;,
+&#8220;metadata&#8221;, &#8220;map&#8221;.</li>
+<li><strong>attrs</strong> (<em>dict</em><em>, </em><em>optional</em>) &#8211; Dictionary containing HDF5 metadata attributes to be set on
+the resulting dataset.</li>
+<li><strong>*args</strong> &#8211; Arguments to pass to h5py&#8217;s <code class="docutils literal"><span class="pre">create_dataset</span></code> method.</li>
+<li><strong>**kwargs</strong> &#8211; Keyword arguments to pass to h5py&#8217;s <code class="docutils literal"><span class="pre">create_dataset</span></code> method.</li>
 </ul>
 </td>
 </tr>
@@ -2251,29 +2272,6 @@ decomposition methods, saved as <cite>signal_method</cite>.</p>
 <code class="descname">whiteline_map</code><a class="headerlink" href="#xanespy.txmstore.TXMStore.whiteline_map" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-</dd></dl>
-
-<dl class="function">
-<dt id="xanespy.txmstore.prepare_txm_store">
-<code class="descclassname">xanespy.txmstore.</code><code class="descname">prepare_txm_store</code><span class="sig-paren">(</span><em>filename: str</em>, <em>parent_name: str</em>, <em>data_name='imported'</em>, <em>dirname: str = None</em><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.txmstore.prepare_txm_store" title="Permalink to this definition">¶</a></dt>
-<dd><p>Check the filenames and create an hdf file as needed. Will
-overwrite the group if it already exists.</p>
-<p>Returns: An opened TXMStore object ready to accept data (r+ mode).</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>filename</strong> (<em>-</em>) &#8211; provided, in which case the filename will be generated
-automatically based on <cite>dirname</cite>.</li>
-<li><strong>parent_name</strong> (<em>-</em>) &#8211; </li>
-<li><strong>data_name</strong> (<em>-</em>) &#8211; </li>
-<li><strong>dirname</strong> (<em>-</em>) &#8211; for <cite>filename</cite> attribute.</li>
-</ul>
-</td>
-</tr>
-</tbody>
-</table>
 </dd></dl>
 
 </div>
@@ -2373,11 +2371,26 @@ suitable for numpy indexing.</p>
 
 <dl class="function">
 <dt id="xanespy.utilities.prog">
-<code class="descclassname">xanespy.utilities.</code><code class="descname">prog</code><span class="sig-paren">(</span><em>*args</em>, <em>leave=False</em>, <em>dynamic_ncols=True</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.utilities.prog" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">xanespy.utilities.</code><code class="descname">prog</code><span class="sig-paren">(</span><em>leave=False</em>, <em>dynamic_ncols=True</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.utilities.prog" title="Permalink to this definition">¶</a></dt>
 <dd><p>A progress bar for displaying how many iterations have been
 completed. This is mostly just a wrapper around the tqdm
-library. <a href="#id15"><span class="problematic" id="id16">*</span></a>args and <a href="#id17"><span class="problematic" id="id18">**</span></a>kwargs are passed directly to either
+library. args and kwargs are passed directly to either
 tqdm.tqdm or tqdm.tqdm_notebook.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>leave</strong> (<em>bool</em><em>, </em><em>optional</em>) &#8211; Whether to leave the progress bar in the stream after it&#8217;s
+completed.</li>
+<li><strong>dynamic_ncols</strong> (<em>bool</em><em>, </em><em>optional</em>) &#8211; Whether to adapt dynamically to the width of the environment.</li>
+<li><strong>args</strong> &#8211; Positional arguments passed directly to <code class="docutils literal"><span class="pre">tqdm</span></code> or <code class="docutils literal"><span class="pre">tqdm_notebook</span></code>.</li>
+<li><strong>kwargs</strong> &#8211; Keyword arguments passed directly to <code class="docutils literal"><span class="pre">tqdm</span></code> or <code class="docutils literal"><span class="pre">tqdm_notebook</span></code>.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="class">
@@ -2432,7 +2445,7 @@ frameset then is a three-dimenional dataset with of dimenions (energy,
 row, column).</p>
 <dl class="class">
 <dt id="xanespy.xanes_frameset.PtychoFrameset">
-<em class="property">class </em><code class="descclassname">xanespy.xanes_frameset.</code><code class="descname">PtychoFrameset</code><span class="sig-paren">(</span><em>filename</em>, <em>groupname</em>, <em>edge</em><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.xanes_frameset.PtychoFrameset" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">xanespy.xanes_frameset.</code><code class="descname">PtychoFrameset</code><span class="sig-paren">(</span><em>filename</em>, <em>edge</em>, <em>groupname=None</em><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.xanes_frameset.PtychoFrameset" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#xanespy.xanes_frameset.XanesFrameset" title="xanespy.xanes_frameset.XanesFrameset"><code class="xref py py-class docutils literal"><span class="pre">xanespy.xanes_frameset.XanesFrameset</span></code></a></p>
 <p>A set of images (&#8220;frames&#8221;) at different energies moving across an
 absorption edge. The individual frames should be generated by
@@ -2473,26 +2486,12 @@ modulus or phase data for ptychography.</p>
 
 <dl class="class">
 <dt id="xanespy.xanes_frameset.XanesFrameset">
-<em class="property">class </em><code class="descclassname">xanespy.xanes_frameset.</code><code class="descname">XanesFrameset</code><span class="sig-paren">(</span><em>filename</em>, <em>groupname</em>, <em>edge</em><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.xanes_frameset.XanesFrameset" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">xanespy.xanes_frameset.</code><code class="descname">XanesFrameset</code><span class="sig-paren">(</span><em>filename</em>, <em>edge</em>, <em>groupname=None</em><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.xanes_frameset.XanesFrameset" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
 <p>A collection of TXM frames at different energies moving across an
 absorption edge. Iterating over this object gives the individual
-Frame() objects. The class assumes that the data have
-been imported into an HDF file.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>filename</strong> (<em>-</em>) &#8211; </li>
-<li><strong>groupname</strong> (<em>-</em>) &#8211; frameset. This argument is only required if there is more than
-one top-level group.</li>
-<li><strong>edge</strong> (<em>-</em>) &#8211; response characteristics.</li>
-</ul>
-</td>
-</tr>
-</tbody>
-</table>
+Frame() objects. The class assumes that the data have been
+imported into an HDF file.</p>
 <dl class="attribute">
 <dt id="xanespy.xanes_frameset.XanesFrameset.active_group">
 <code class="descname">active_group</code><em class="property"> = ''</em><a class="headerlink" href="#xanespy.xanes_frameset.XanesFrameset.active_group" title="Permalink to this definition">¶</a></dt>
@@ -2750,8 +2749,9 @@ returns the first frame.</td>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>edge_mask</strong> (<em>-</em>) &#8211; be fit and the remaning pixels will be set to a default
-value. This can help reduce computing time.</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>edge_mask</strong> (<em>bool</em><em>, </em><em>optional</em>) &#8211; If true, only pixels passing the edge_mask will be fit and
+the remaning pixels will be set to a default value. This can
+help reduce computing time.</td>
 </tr>
 </tbody>
 </table>
@@ -3313,7 +3313,11 @@ file. The mode argument is passed to h5py as is. This method
 should be used as a context manager, especially if mode is
 something writeable:</p>
 <blockquote>
-<div>with self.store() as store:</div></blockquote>
+<div><dl class="docutils">
+<dt>with self.store() as store:</dt>
+<dd># Do stuff with the store</dd>
+</dl>
+</div></blockquote>
 </dd></dl>
 
 <dl class="method">
@@ -3964,7 +3968,6 @@ is uniform and assumes a 40µm field-of-view.</p>
 <li><a class="reference internal" href="#module-xanespy.gtk_plotter">xanespy.gtk_plotter module</a></li>
 <li><a class="reference internal" href="#xanespy-gtk-viewer-module">xanespy.gtk_viewer module</a></li>
 <li><a class="reference internal" href="#module-xanespy.importers">xanespy.importers module</a></li>
-<li><a class="reference internal" href="#xanespy-particle-module">xanespy.particle module</a></li>
 <li><a class="reference internal" href="#module-xanespy.plots">xanespy.plots module</a></li>
 <li><a class="reference internal" href="#module-xanespy.qt_frame_view">xanespy.qt_frame_view module</a></li>
 <li><a class="reference internal" href="#module-xanespy.qt_frameset_presenter">xanespy.qt_frameset_presenter module</a></li>
@@ -3979,6 +3982,9 @@ is uniform and assumes a 40µm field-of-view.</p>
 </li>
 </ul>
 
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="modules.html"
+                        title="previous chapter">xanespy</a></p>
   <div role="note" aria-label="source link">
     <h3>This Page</h3>
     <ul class="this-page-menu">
@@ -4009,7 +4015,11 @@ is uniform and assumes a 40µm field-of-view.</p>
         <li class="right" >
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">Xanespy 0.1 documentation</a> &#187;</li> 
+        <li class="right" >
+          <a href="modules.html" title="xanespy"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Xanespy 0.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="modules.html" >xanespy</a> &#187;</li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">

@@ -52,14 +52,6 @@ xanespy.importers module
     :undoc-members:
     :show-inheritance:
 
-xanespy.particle module
------------------------
-
-.. automodule:: xanespy.particle
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 xanespy.plots module
 --------------------
 

@@ -36,17 +36,19 @@ CROSSHAIR_COLORS = {
 }
 
 
-class QtMapView(QtCore.QObject):  # pragma: no cover
-    """A Qt view for a frameset map. It should be controlled by a presenter.
-
-    Signals
-    -------
-    ui_required
-    limits_applied
+class QtMapView(QtCore.QObject):
+    """A Qt view for a frameset map. It should be controlled by a
+    presenter.
+    
+    Attributes
+    ----------
+    cmap_changed : signal
+      Fires when the user changes the colormap via the UI
+    limits_applied : signal
       Fires when the user requests that data be redrawn with new limits.
-    limits_reset
+    limits_reset : signal
       Fires when the user asks that the norm limits be reset to the data.
-
+    
     """
     window = None
     ui = None
@@ -55,8 +57,6 @@ class QtMapView(QtCore.QObject):  # pragma: no cover
     latest_cmap = "plasma"
 
     # Signals
-    show = QtCore.pyqtSignal()
-    hide = QtCore.pyqtSignal()
     cmap_changed = QtCore.pyqtSignal('QString')
     edge_mask_toggled = QtCore.pyqtSignal(bool)
     map_vmin_changed = QtCore.pyqtSignal(float)
@@ -67,7 +67,7 @@ class QtMapView(QtCore.QObject):  # pragma: no cover
     map_clicked = QtCore.pyqtSignal(object, object)
     map_moved = QtCore.pyqtSignal(int, int)
 
-    def setup_ui(self):
+    def setup_ui(self):  # pragma: no cover
         Ui_FrameWindow, QMainWindow = uic.loadUiType(UI_FILE)
         log.debug("Built map window using uic")
         # Create the UI elements
@@ -147,7 +147,7 @@ class QtMapView(QtCore.QObject):  # pragma: no cover
         self.ui.lblCrosshairsPixel.setText(pixel_s)
         self.ui.lblCrosshairsValue.setText(value_s)
 
-    def redraw_crosshairs(self, xy):
+    def redraw_crosshairs(self, xy):  # pragma: no cover
         """Draw a set of crosshairs on the map at location given by `xy`."""
         # Remove the old crosshairs first
         if self.crosshairs is not None:
@@ -163,16 +163,16 @@ class QtMapView(QtCore.QObject):  # pragma: no cover
             self.crosshairs = [xartist, yartist]
         
         
-    def show(self):
+    def show(self):  # pragma: no cover
         self.window.show()
 
-    def hide(self):
+    def hide(self):  # pragma: no cover
         self.window.hide()
 
-    def redraw_canvas(self):
+    def redraw_canvas(self):  # pragma: no cover
         self.fig.canvas.draw()
 
-    def plot_map_data(self, map_data, norm, cmap, extent):
+    def plot_map_data(self, map_data, norm, cmap, extent):  # pragma: no cover
         # First clear the currently selected cursor
         self.map_clicked.emit(None, None)
         # Now plot the new data
@@ -182,7 +182,7 @@ class QtMapView(QtCore.QObject):  # pragma: no cover
         plots.plot_txm_map(map_data, ax=self.map_ax, norm=norm,
                            cmap=cmap, extent=extent)
 
-    def plot_histogram_data(self, map_data, norm, cmap, extent):
+    def plot_histogram_data(self, map_data, norm, cmap, extent):  # pragma: no cover
         log.debug("Plotting new map histogram")
         self.hist_ax.clear()
         plots.plot_txm_histogram(map_data, ax=self.hist_ax, norm=norm,
@@ -190,7 +190,7 @@ class QtMapView(QtCore.QObject):  # pragma: no cover
         mappable = cm.ScalarMappable(norm=norm, cmap=cmap)
         self.cbar.on_mappable_changed(mappable)
 
-    def plot_spectrum(self, spectrum, norm, cmap, edge_range):
+    def plot_spectrum(self, spectrum, norm, cmap, edge_range):  # pragma: no cover
         log.debug("Plotting new map spectrum")
         # Clear the old axes
         self.spectrum_ax.clear()
@@ -216,10 +216,7 @@ class QtMapView(QtCore.QObject):  # pragma: no cover
         self.edge_ax.set_xlim(norm.vmin, norm.vmax)
         self.redraw_canvas()
 
-    def clear_axes(self):
-        pass
-
-    def connect_presenter(self, presenter):
+    def connect_presenter(self, presenter):  # pragma: no cover
         """Connect to signals for changed presenter state."""
         presenter.map_data_changed.connect(self.show)
         presenter.map_data_changed.connect(self.plot_map_data)
@@ -236,7 +233,7 @@ class QtMapView(QtCore.QObject):  # pragma: no cover
         presenter.app_ready.connect(self.setup_ui)
         # `map_view` signals received when data changes
 
-    def create_canvas(self):
+    def create_canvas(self):  # pragma: no cover
         self.fig = Figure()
         canvas = FigureCanvas(self.fig)
         self.ui.mainLayout.addWidget(canvas)

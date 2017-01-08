@@ -438,7 +438,7 @@ def import_frameset(directory, flavor, hdf_filename):
       A valid path to a directory containing the frame data to import.
     flavor : str 
       Indicates what type of naming conventions and data structure to
-      assume. See documentation for ``xanespy.xradia.XRMFile for
+      assume. See documentation for ``xanespy.xradia.XRMFile`` for
       possible choice.
     hdf_filename : str
       Where to save the output to. An exception is throw if this file

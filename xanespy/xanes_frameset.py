@@ -60,18 +60,6 @@ class XanesFrameset():
     Frame() objects. The class assumes that the data have been
     imported into an HDF file.
 
-    Parameters
-    ----------
-    filename : str, optional
-      Path to the HDF file that holds these data.
-    edge
-      An Edge object describing the meterial's X-ray energy response
-      characteristics.
-   groupname : str, optional
-      Top level HDF group corresponding to this frameset. This
-      argument is only required if there is more than one top-level
-      group.
-
     """
     active_group = ''
     cmap = 'plasma'
@@ -80,29 +68,43 @@ class XanesFrameset():
     _transformations = None
 
     def __init__(self, filename, edge, groupname=None):
+        """
+        Parameters
+        ----------
+        filename : str, optional
+          Path to the HDF file that holds these data.
+        edge
+          An Edge object describing the meterial's X-ray energy response
+          characteristics.
+       groupname : str, optional
+          Top level HDF group corresponding to this frameset. This
+          argument is only required if there is more than one top-level
+          group.
+        
+        """
         self.hdf_filename = filename
         self.edge = edge
         self.parent_name = groupname
-
+    
     def __repr__(self):
         s = "<{cls}: '{name}'>"
         return s.format(cls=self.__class__.__name__, name=self.parent_name)
-
+    
     def hdf_path(self, representation=None):
         """Return the hdf path for the active group.
-
+        
         Parameters
         ----------
         representation: str, optional
           Name of third-level group to use. If omitted, the path to
           the parent group will be given.
-
+        
         Returns
         -------
         path : str
           The path to the current group in the HDF5 file. Returns an
           empty string if the representation does not exists.
-
+        
         """
         with self.store() as store:
             if representation is None:
@@ -111,7 +113,7 @@ class XanesFrameset():
                 group = store.get_frames(representation)
             path = group.name
         return path
-
+    
     def has_representation(self, representation):
         with self.store() as store:
             result = store.has_dataset(representation)
@@ -147,7 +149,9 @@ class XanesFrameset():
         file. The mode argument is passed to h5py as is. This method
         should be used as a context manager, especially if mode is
         something writeable:
+        
             with self.store() as store:
+                # Do stuff with the store
         """
         return TXMStore(hdf_filename=self.hdf_filename,
                         parent_name=self.parent_name,
@@ -371,10 +375,9 @@ class XanesFrameset():
         registration to be performed in sequence, since uncommitted
         translations will be applied before the next round of
         registration.
-
-        Arguments
-        ---------
-
+        
+        Parameters
+        ----------
         reference_frame (int, str or None) : The index of the frame to
           which all other frames should be aligned. If None, the frame
           of highest intensity will be used. If "mean" (default) or
@@ -382,29 +385,23 @@ class XanesFrameset():
           used. If "max", the frame with highest absorbance is
           used. This attribute has no effect if template matching is
           used.
-
         blur : A type of filter to apply to each frame of the data
           before attempting registration. Choices are "median" or None
-
         method : Which technique to use to calculate the translation
           - "cross_correlation" (default)
           - "template_match"
+          
           (If "template_match" is used, the `template` argument should
           also be provided.)
-
         passes : How many times this alignment should be done. Default: 1.
-
         template : Image data that should be matched if the
           `template_match` method is used.
-
         commit : If truthy (default), the final translation will be
           applied to the data stored on disk by calling
           `self.apply_translations(crop=True)` after all passes have
           finished.
-
         component : What component of the data to use: 'modulus',
           'phase', 'imag' or 'real'.
-
         plot_results : If truthy (default), plot the root-mean-square of the
           translation distance for each pass.
 
@@ -544,7 +541,6 @@ class XanesFrameset():
     #     # Convert from (steps, particles) to (particles, steps)
     #     # steps = np.array(steps)
     #     # steps = np.transpose(steps)
-    #     # print(steps.shape)
     #     return ax
         
 
@@ -872,7 +868,6 @@ class XanesFrameset():
         sensitivity : float
           A multiplier for the otsu value to determine
           the actual threshold.
-        
         min_size : int
           Objects below this size (in pixels) will be removed. Passing
           zero (default) will result in no effect.
@@ -917,9 +912,11 @@ class XanesFrameset():
 
         Arguments
         ---------
-        - edge_mask : If true, only pixels passing the edge_mask will
-          be fit and the remaning pixels will be set to a default
-          value. This can help reduce computing time.
+        edge_mask : bool, optional
+          If true, only pixels passing the edge_mask will be fit and
+          the remaning pixels will be set to a default value. This can
+          help reduce computing time.
+
         """
         logstart = time()
         with self.store() as store:
@@ -1595,7 +1592,6 @@ class PtychoFrameset(XanesFrameset):
         # if plot_background:
         #     if ax is None:
         #         ax = plots.new_axes()
-        #     print(Es.shape, I_0.squeeze().dtype)
         #     ax.plot(Es, np.abs(I_0.squeeze()))
         #     ax.set_title("Background Intensity used for Reference Correction")
         #     ax.set_xlabel("Energy (eV)")
