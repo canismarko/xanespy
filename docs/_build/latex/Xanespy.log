@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.17 (TeX Live 2016/Arch Linux) (preloaded format=pdflatex 2016.11.21)  8 JAN 2017 01:30
+This is pdfTeX, Version 3.14159265-2.6-1.40.17 (TeX Live 2016/Arch Linux) (preloaded format=pdflatex 2016.11.21)  8 JAN 2017 12:46
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -1194,36 +1194,1447 @@ Chapter 5.
 
 ]
 Chapter 6.
-(./Xanespy.ind)
-Package atveryend Info: Empty hook `BeforeClearDocument' on input line 202.
- [13]
-Package atveryend Info: Empty hook `AfterLastShipout' on input line 202.
+LaTeX Font Info:    Font shape `T1/pcr/bx/n' in size <10> not available
+(Font)              Font shape `T1/pcr/b/n' tried instead on input line 1.
+LaTeX Font Info:    Font shape `T1/pcr/m/it' in size <10> not available
+(Font)              Font shape `T1/pcr/m/sl' tried instead on input line 1.
+[13]
+Underfull \hbox (badness 7030) in paragraph at lines 312--312
+[]\T1/ptm/m/it/10 dest, edge: edges.KEdge, zone-plate: xane-
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 312--312
+\T1/ptm/m/it/10 spy.beamlines.Zoneplate, de-tec-tor: xane-
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 312--312
+\T1/ptm/m/it/10 spy.beamlines.Detector, sam-ple_positions: typ-
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 359--359
+[]\T1/ptm/m/it/10 dest, edge: edges.KEdge, zone-plate: xane-
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 359--359
+\T1/ptm/m/it/10 spy.beamlines.Zoneplate, po-si-tions: typ-
+ []
+
+[14] [15] [16] [17]
+Underfull \hbox (badness 10000) in paragraph at lines 976--976
+[]\T1/ptm/m/it/10 directory: str\T1/ptm/m/n/10 , \T1/ptm/m/it/10 quiet=False\T1
+/ptm/m/n/10 ,
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 976--976
+\T1/ptm/m/it/10 hdf_filename=None\T1/ptm/m/n/10 ,
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 976--976
+\T1/ptm/m/it/10 hdf_groupname=None\T1/ptm/m/n/10 , \T1/ptm/m/it/10 en-
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 976--976
+\T1/ptm/m/it/10 ergy_range=None\T1/ptm/m/n/10 , \T1/ptm/m/it/10 ex-clude_re=Non
+e\T1/ptm/m/n/10 ,
+ []
+
+[18] [19] [20]
+Underfull \hbox (badness 10000) in paragraph at lines 1251--1251
+\T1/ptm/m/it/10 ob-ject>\T1/ptm/m/n/10 , \T1/ptm/m/it/10 show_fit=False\T1/ptm/
+m/n/10 , \T1/ptm/m/it/10 ax=None\T1/ptm/m/n/10 , \T1/ptm/m/it/10 ax2=None\T1/pt
+m/m/n/10 ,
+ []
+
+[21] [22] [23] [24] [25] [26]
+Underfull \hbox (badness 10000) in paragraph at lines 2465--2465
+[]\T1/ptm/m/it/10 hdf_filename: str\T1/ptm/m/n/10 , \T1/ptm/m/it/10 par-ent_nam
+e: str\T1/ptm/m/n/10 , \T1/ptm/m/it/10 data_name=None\T1/ptm/m/n/10 ,
+ []
+
+[27] [28] [29] [30] [31]
+Underfull \hbox (badness 5908) in paragraph at lines 1--3097
+[]\T1/pcr/b/n/10 blur \T1/ptm/m/n/10 (\T1/pcr/m/sl/10 A type of filter to apply
+ to each frame of the data\T1/ptm/m/n/10 ) --
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 1--3114
+[]\T1/pcr/b/n/10 passes \T1/ptm/m/n/10 (\T1/pcr/m/sl/10 How many times this ali
+gnment should be done.
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 1--3117
+[]\T1/pcr/b/n/10 template \T1/ptm/m/n/10 (\T1/pcr/m/sl/10 Image data that shoul
+d be matched if the\T1/ptm/m/n/10 ) -- \T1/ptm/m/it/10 tem-
+ []
+
+LaTeX Font Info:    Font shape `TS1/pcr/m/it' in size <10> not available
+(Font)              Font shape `TS1/pcr/m/sl' tried instead on input line 1.
+
+Underfull \hbox (badness 5908) in paragraph at lines 1--3125
+[]\T1/pcr/b/n/10 component \T1/ptm/m/n/10 (\T1/pcr/m/sl/10 What component of th
+e data to use: \TS1/pcr/m/sl/10 '\T1/pcr/m/sl/10 modulus\TS1/pcr/m/sl/10 '\T1/p
+cr/m/sl/10 ,\T1/ptm/m/n/10 ) --
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 1--3151
+[]\T1/pcr/b/n/10 so there are not edges. If falsy, the images will
+ []
+
+[32] [33]
+LaTeX Font Info:    Font shape `TS1/pcr/bx/n' in size <10> not available
+(Font)              Font shape `TS1/pcr/b/n' tried instead on input line 1.
+
+Underfull \hbox (badness 10000) in paragraph at lines 1--3464
+[]\T1/pcr/b/n/10 is recommended, especially with a mode other than \TS1/pcr/b/n
+/10 '\T1/pcr/b/n/10 r\TS1/pcr/b/n/10 '\T1/pcr/b/n/10 .
+ []
+
+[34] [35]
+Underfull \hbox (badness 7203) in paragraph at lines 3716--3716
+[]\T1/ptm/m/it/10 plotter=None\T1/ptm/m/n/10 , \T1/ptm/m/it/10 timeidx=None\T1/
+ptm/m/n/10 , \T1/ptm/m/it/10 ax=None\T1/ptm/m/n/10 , \T1/ptm/m/it/10 vmin=None\
+T1/ptm/m/n/10 , \T1/ptm/m/it/10 vmax=None\T1/ptm/m/n/10 , \T1/ptm/m/it/10 good-
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 3733--3733
+[]\T1/ptm/m/it/10 pixels\T1/ptm/m/n/10 , \T1/ptm/m/it/10 map_ax=None\T1/ptm/m/n
+/10 , \T1/ptm/m/it/10 spec-tra_ax=None\T1/ptm/m/n/10 ,
+ []
+
+[36]
+Underfull \hbox (badness 10000) in paragraph at lines 1--3823
+[]\T1/pcr/b/n/10 - Coordinates of a specific pixel on the image to plot.
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 1--3826
+[]\T1/pcr/b/n/10 - If truthy, will set the pre-edge at zero and the
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 1--3829
+[]\T1/pcr/b/n/10 - If truthy, will use the edge object to fit the data
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 1--3832
+[]\T1/pcr/b/n/10 - If truthy, will only include those values
+ []
+
+[37] [38] [39]
+Underfull \hbox (badness 10000) in paragraph at lines 4201--4201
+[]\T1/ptm/m/it/10 spectra\T1/ptm/m/n/10 , \T1/ptm/m/it/10 n_components\T1/ptm/m
+/n/10 , \T1/ptm/m/it/10 nmf_kwargs=None\T1/ptm/m/n/10 ,
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 1--4285
+[]\T1/pcr/b/n/10 Returns \T1/ptm/m/n/10 (\T1/pcr/m/sl/10 A named tuple with the
+ estimated parameters (see\T1/ptm/m/n/10 ) --
+ []
+
+[40] [41]
+Underfull \hbox (badness 10000) in paragraph at lines 4458--4458
+[]\T1/ptm/m/it/10 frames\T1/ptm/m/n/10 , \T1/ptm/m/it/10 ref-er-ence\T1/ptm/m/n
+/10 , \T1/ptm/m/it/10 up-sam-ple_factor=10\T1/ptm/m/n/10 ,
+ []
+
+[42]
+Underfull \hbox (badness 10000) in paragraph at lines 4583--4583
+[]\T1/ptm/m/it/10 translations=None\T1/ptm/m/n/10 , \T1/ptm/m/it/10 ro-ta-tions
+=None\T1/ptm/m/n/10 ,
+ []
+
+[43] [44]
+Chapter 7.
+[45
+
+] [46
+
+] [47
+
+
+] (./Xanespy.ind
+Overfull \hbox (36.34937pt too wide) in paragraph at lines 6--8
+[]\T1/ptm/m/n/10 active_frame (xane-spy.qt_frameset_presenter.QtFramesetPresent
+er
+ []
+
+
+Overfull \hbox (46.89917pt too wide) in paragraph at lines 8--10
+[]\T1/ptm/m/n/10 active_frames() (xane-spy.qt_frameset_presenter.QtFramesetPres
+enter
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 10--11
+[]\T1/ptm/m/n/10 active_group (xane-spy.xanes_frameset.XanesFrameset
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 11--12
+[]\T1/ptm/m/n/10 active_labels_groupname (xane-
+ []
+
+
+Underfull \hbox (badness 7869) in paragraph at lines 11--12
+\T1/ptm/m/n/10 spy.xanes_frameset.XanesFrameset at-tribute),
+ []
+
+
+Overfull \hbox (36.90942pt too wide) in paragraph at lines 12--13
+[]\T1/ptm/m/n/10 active_map() (xane-spy.qt_frameset_presenter.QtFramesetPresent
+er
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 13--15
+[]\T1/ptm/m/n/10 active_representation (xane-
+ []
+
+
+Overfull \hbox (46.91902pt too wide) in paragraph at lines 15--17
+[]\T1/ptm/m/n/10 active_timestep (xane-spy.qt_frameset_presenter.QtFramesetPres
+enter
+ []
+
+
+Overfull \hbox (15.30049pt too wide) in paragraph at lines 17--18
+[]\T1/ptm/m/n/10 add_callback() (xane-spy.qt_frame_view.FrameChangeSource
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 18--19
+[]\T1/ptm/m/n/10 add_frame() (xane-spy.xanes_frameset.XanesFrameset
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 19--21
+[]\T1/ptm/m/n/10 add_frame_view() (xane-
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 21--22
+[]\T1/ptm/m/n/10 add_hdf_tree_item() (xane-
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 21--22
+\T1/ptm/m/n/10 spy.qt_frame_view.QtFrameView method),
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 22--24
+[]\T1/ptm/m/n/10 add_map_view() (xane-
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 26--28
+[]\T1/ptm/m/n/10 animate_frames() (xane-
+ []
+
+
+Overfull \hbox (26.19975pt too wide) in paragraph at lines 30--32
+[]\T1/ptm/m/n/10 app_ready (xane-spy.qt_frameset_presenter.QtFramesetPresenter
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 32--33
+[]\T1/ptm/m/n/10 apply_internal_reference() (in mod-ule xane-
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 33--35
+[]\T1/ptm/m/n/10 apply_internal_reference() (xane-
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 33--35
+\T1/ptm/m/n/10 spy.xanes_frameset.PtychoFrameset method),
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 36--37
+[]\T1/ptm/m/n/10 apply_transformations() (xane-
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 36--37
+\T1/ptm/m/n/10 spy.xanes_frameset.XanesFrameset method),
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 41--42
+[]\T1/ptm/m/n/10 background_group() (xane-
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 41--42
+\T1/ptm/m/n/10 spy.xanes_frameset.XanesFrameset method),
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 42--43
+[]\T1/ptm/m/n/10 background_normalizer() (xane-
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 42--43
+\T1/ptm/m/n/10 spy.xanes_frameset.XanesFrameset method),
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 46--48
+[]\T1/ptm/m/n/10 build_hdf_tree() (xane-
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 48--50
+[]\T1/ptm/m/n/10 busy_status_changed (xane-
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 53--54
+[]\T1/ptm/m/n/10 calculate_maps() (xane-
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 53--54
+\T1/ptm/m/n/10 spy.xanes_frameset.XanesFrameset method),
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 54--55
+[]\T1/ptm/m/n/10 calculate_signals() (xane-
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 54--55
+\T1/ptm/m/n/10 spy.xanes_frameset.XanesFrameset method),
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 55--56
+[]\T1/ptm/m/n/10 calculate_whitelines() (xane-
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 55--56
+\T1/ptm/m/n/10 spy.xanes_frameset.XanesFrameset method),
+ []
+
+
+Underfull \hbox (badness 7433) in paragraph at lines 56--57
+[]\T1/ptm/m/n/10 callbacks (xane-spy.qt_frame_view.FrameChangeSource
+ []
+
+
+Overfull \hbox (46.18948pt too wide) in paragraph at lines 57--58
+[]\T1/ptm/m/n/10 change_cmap() (xane-spy.qt_frameset_presenter.QtFramesetPresen
+ter
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 58--60
+[]\T1/ptm/m/n/10 change_hdf_group() (xane-
+ []
+
+[48
+
+
+]
+Underfull \hbox (badness 10000) in paragraph at lines 60--62
+[]\T1/ptm/m/n/10 change_map_cmap() (xane-
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 62--63
+[]\T1/ptm/m/n/10 clear_axes() (xane-spy.qt_frame_view.QtFrameView
+ []
+
+
+Underfull \hbox (badness 5359) in paragraph at lines 68--69
+[]\T1/ptm/m/n/10 cmap_changed (xane-spy.qt_map_view.QtMapView at-
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 69--71
+[]\T1/ptm/m/n/10 cmap_list_changed (xane-
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 74--76
+[]\T1/ptm/m/n/10 connect_signals() (xane-
+ []
+
+
+Overfull \hbox (34.51944pt too wide) in paragraph at lines 76--77
+[]\T1/ptm/m/n/10 create_app() (xane-spy.qt_frameset_presenter.QtFramesetPresent
+er
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 77--78
+[]\T1/ptm/m/n/10 create_canvas() (xane-spy.qt_frame_view.QtFrameView
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 78--79
+[]\T1/ptm/m/n/10 create_canvas() (xane-spy.qt_map_view.QtMapView
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 79--80
+[]\T1/ptm/m/n/10 create_status_bar() (xane-
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 79--80
+\T1/ptm/m/n/10 spy.qt_frame_view.QtFrameView method),
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 89--90
+[]\T1/ptm/m/n/10 data_tree() (xane-spy.xanes_frameset.XanesFrameset
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 98--99
+[]\T1/ptm/m/n/10 disable_frame_controls() (xane-
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 98--99
+\T1/ptm/m/n/10 spy.qt_frame_view.QtFrameView method),
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 99--100
+[]\T1/ptm/m/n/10 disable_plotting_controls() (xane-
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 99--100
+\T1/ptm/m/n/10 spy.qt_frame_view.QtFrameView method),
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 101--103
+[]\T1/ptm/m/n/10 draw_frame_histogram() (xane-
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 103--105
+[]\T1/ptm/m/n/10 draw_frame_spectra() (xane-
+ []
+
+
+Underfull \hbox (badness 7012) in paragraph at lines 106--107
+[]\T1/ptm/m/n/10 draw_histogram (xane-spy.qt_frame_view.QtFrameView
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 109--110
+[]\T1/ptm/m/n/10 drop_frame() (xane-spy.xanes_frameset.XanesFrameset
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 120--121
+[]\T1/ptm/m/n/10 edge_ax (xane-spy.qt_frame_view.QtFrameView at-
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 126--127
+[]\T1/ptm/m/n/10 endtime() (xane-spy.xanes_frameset.XanesFrameset
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 129--130
+[]\T1/ptm/m/n/10 energies (xane-spy.xanes_frameset.XanesFrameset at-
+ []
+
+[49]
+Underfull \hbox (badness 10000) in paragraph at lines 136--137
+[]\T1/ptm/m/n/10 extent (xane-spy.xanes_frameset.XanesFrameset at-
+ []
+
+
+Overfull \hbox (35.08925pt too wide) in paragraph at lines 146--147
+[]\T1/ptm/m/n/10 first_frame() (xane-spy.qt_frameset_presenter.QtFramesetPresen
+ter
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 149--150
+[]\T1/ptm/m/n/10 fit_spectra() (xane-spy.xanes_frameset.XanesFrameset
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 151--152
+[]\T1/ptm/m/n/10 fork_data_group() (xane-spy.txmstore.TXMStore
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 152--153
+[]\T1/ptm/m/n/10 fork_data_group() (xane-
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 152--153
+\T1/ptm/m/n/10 spy.xanes_frameset.XanesFrameset method),
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 153--154
+[]\T1/ptm/m/n/10 frame_changed (xane-spy.qt_frame_view.QtFrameView
+ []
+
+
+Overfull \hbox (34.52943pt too wide) in paragraph at lines 154--155
+[]\T1/ptm/m/n/10 frame_cmap (xane-spy.qt_frameset_presenter.QtFramesetPresenter
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 155--156
+[]\T1/ptm/m/n/10 frame_controls (xane-spy.qt_frame_view.QtFrameView
+ []
+
+
+Overfull \hbox (40.63942pt too wide) in paragraph at lines 156--157
+[]\T1/ptm/m/n/10 frame_norm() (xane-spy.qt_frameset_presenter.QtFramesetPresent
+er
+ []
+
+
+Overfull \hbox (32.71948pt too wide) in paragraph at lines 157--159
+[]\T1/ptm/m/n/10 frame_pixel (xane-spy.qt_frameset_presenter.QtFramesetPresente
+r
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 163--164
+[]\T1/ptm/m/n/10 frames (xane-spy.xanes_frameset.XanesFrameset at-
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 174--175
+[]\T1/ptm/m/n/10 goodness_mask() (xane-
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 174--175
+\T1/ptm/m/n/10 spy.xanes_frameset.XanesFrameset method),
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 176--177
+[]\T1/ptm/m/n/10 gtk_viewer() (xane-spy.xanes_frameset.XanesFrameset
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 182--183
+[]\T1/ptm/m/n/10 has_representation() (xane-
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 182--183
+\T1/ptm/m/n/10 spy.xanes_frameset.XanesFrameset method),
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 183--184
+[]\T1/ptm/m/n/10 hdf_file() (xane-spy.xanes_frameset.XanesFrameset
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 184--185
+[]\T1/ptm/m/n/10 hdf_node() (xane-spy.xanes_frameset.XanesFrameset
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 185--186
+[]\T1/ptm/m/n/10 hdf_path() (xane-spy.xanes_frameset.XanesFrameset
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 191--193
+[]\T1/ptm/m/n/10 hover_frame_pixel() (xane-
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 198--199
+[]\T1/ptm/m/n/10 image_normalizer (xane-
+ []
+
+
+Underfull \hbox (badness 7869) in paragraph at lines 198--199
+\T1/ptm/m/n/10 spy.xanes_frameset.XanesFrameset at-tribute),
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 200--201
+[]\T1/ptm/m/n/10 import_aps_8BM_frameset() (in mod-ule xane-
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 202--203
+[]\T1/ptm/m/n/10 import_nanosurveyor_frameset() (in mod-ule xane-
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 205--206
+[]\T1/ptm/m/n/10 is_background() (xane-
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 205--206
+\T1/ptm/m/n/10 spy.xanes_frameset.XanesFrameset method),
+ []
+
+[50]
+Underfull \hbox (badness 10000) in paragraph at lines 215--216
+[]\T1/ptm/m/n/10 keyboard_nav() (xane-spy.qt_map_view.QtMapView
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 220--221
+[]\T1/ptm/m/n/10 label_particles() (xane-
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 220--221
+\T1/ptm/m/n/10 spy.xanes_frameset.XanesFrameset method),
+ []
+
+
+Overfull \hbox (33.41919pt too wide) in paragraph at lines 221--222
+[]\T1/ptm/m/n/10 last_frame() (xane-spy.qt_frameset_presenter.QtFramesetPresent
+er
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 222--223
+[]\T1/ptm/m/n/10 latest_cmap (xane-spy.qt_map_view.QtMapView at-
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 223--224
+[]\T1/ptm/m/n/10 latest_data_name (xane-spy.txmstore.TXMStore at-
+ []
+
+
+Overfull \hbox (17.86966pt too wide) in paragraph at lines 224--225
+[]\T1/ptm/m/n/10 launch() (xane-spy.qt_frameset_presenter.QtFramesetPresenter
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 226--227
+[]\T1/ptm/m/n/10 limits_applied (xane-spy.qt_map_view.QtMapView
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 227--228
+[]\T1/ptm/m/n/10 limits_reset (xane-spy.qt_map_view.QtMapView at-
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 232--233
+[]\T1/ptm/m/n/10 magnification_correction() (in mod-ule xane-
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 233--234
+[]\T1/ptm/m/n/10 map_clicked (xane-spy.qt_map_view.QtMapView at-
+ []
+
+
+Overfull \hbox (28.42958pt too wide) in paragraph at lines 234--235
+[]\T1/ptm/m/n/10 map_cmap (xane-spy.qt_frameset_presenter.QtFramesetPresenter
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 235--237
+[]\T1/ptm/m/n/10 map_cursor_changed (xane-
+ []
+
+
+Underfull \hbox (badness 5260) in paragraph at lines 237--238
+[]\T1/ptm/m/n/10 map_data (xane-spy.xanes_frameset.XanesFrameset at-
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 238--240
+[]\T1/ptm/m/n/10 map_data_changed (xane-
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 240--242
+[]\T1/ptm/m/n/10 map_data_cleared (xane-
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 242--243
+[]\T1/ptm/m/n/10 map_hovered (xane-spy.qt_map_view.QtMapView at-
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 243--245
+[]\T1/ptm/m/n/10 map_limits_changed (xane-
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 245--246
+[]\T1/ptm/m/n/10 map_moved (xane-spy.qt_map_view.QtMapView at-
+ []
+
+
+Overfull \hbox (34.53957pt too wide) in paragraph at lines 246--247
+[]\T1/ptm/m/n/10 map_norm() (xane-spy.qt_frameset_presenter.QtFramesetPresenter
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 247--249
+[]\T1/ptm/m/n/10 map_pixel_changed (xane-
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 253--255
+[]\T1/ptm/m/n/10 map_spectrum_changed (xane-
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 260--261
+[]\T1/ptm/m/n/10 mean_frame() (xane-spy.xanes_frameset.XanesFrameset
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 261--263
+[]\T1/ptm/m/n/10 mean_spectrum_changed (xane-
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 263--264
+[]\T1/ptm/m/n/10 mouse_clicked_canvas() (xane-
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 263--264
+\T1/ptm/m/n/10 spy.qt_map_view.QtMapView method),
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 264--265
+[]\T1/ptm/m/n/10 mouse_in_canvas() (xane-spy.qt_map_view.QtMapView
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 265--267
+[]\T1/ptm/m/n/10 move_map_pixel() (xane-
+ []
+
+
+Overfull \hbox (40.34949pt too wide) in paragraph at lines 267--268
+[]\T1/ptm/m/n/10 move_slider() (xane-spy.qt_frameset_presenter.QtFramesetPresen
+ter
+ []
+
+
+Overfull \hbox (36.5995pt too wide) in paragraph at lines 280--281
+[]\T1/ptm/m/n/10 next_frame() (xane-spy.qt_frameset_presenter.QtFramesetPresent
+er
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 282--283
+[]\T1/ptm/m/n/10 normalize() (xane-spy.xanes_frameset.XanesFrameset
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 283--284
+[]\T1/ptm/m/n/10 num_energies (xane-spy.xanes_frameset.XanesFrameset
+ []
+
+
+Overfull \hbox (34.53944pt too wide) in paragraph at lines 284--285
+[]\T1/ptm/m/n/10 num_frames (xane-spy.qt_frameset_presenter.QtFramesetPresenter
+
+ []
+
+[51]
+Underfull \hbox (badness 10000) in paragraph at lines 290--291
+[]\T1/ptm/m/n/10 original_positions (xane-spy.txmstore.TXMStore at-
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 296--297
+[]\T1/ptm/m/n/10 particle() (xane-spy.xanes_frameset.XanesFrameset
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 297--298
+[]\T1/ptm/m/n/10 particle_area_spectrum() (xane-
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 297--298
+\T1/ptm/m/n/10 spy.xanes_frameset.XanesFrameset method),
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 298--300
+[]\T1/ptm/m/n/10 particle_centroid_spectrum() (xane-
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 298--300
+\T1/ptm/m/n/10 spy.xanes_frameset.XanesFrameset method),
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 302--303
+[]\T1/ptm/m/n/10 particle_regions() (xane-
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 302--303
+\T1/ptm/m/n/10 spy.xanes_frameset.XanesFrameset method),
+ []
+
+
+Overfull \hbox (0.63957pt too wide) in paragraph at lines 303--304
+[]\T1/ptm/m/n/10 particle_series() (xane-spy.xanes_frameset.XanesFrameset
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 308--309
+[]\T1/ptm/m/n/10 pixel_unit() (xane-spy.xanes_frameset.XanesFrameset
+ []
+
+
+Overfull \hbox (40.6393pt too wide) in paragraph at lines 309--310
+[]\T1/ptm/m/n/10 play_frames() (xane-spy.qt_frameset_presenter.QtFramesetPresen
+ter
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 311--312
+[]\T1/ptm/m/n/10 plot_edge_jump() (xane-
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 311--312
+\T1/ptm/m/n/10 spy.xanes_frameset.XanesFrameset method),
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 312--313
+[]\T1/ptm/m/n/10 plot_frame() (xane-spy.xanes_frameset.XanesFrameset
+ []
+
+
+Overfull \hbox (0.66011pt too wide) in paragraph at lines 313--314
+[]\T1/ptm/m/n/10 plot_goodness() (xane-spy.xanes_frameset.XanesFrameset
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 314--315
+[]\T1/ptm/m/n/10 plot_histogram() (xane-
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 314--315
+\T1/ptm/m/n/10 spy.xanes_frameset.XanesFrameset method),
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 315--316
+[]\T1/ptm/m/n/10 plot_histogram_data() (xane-
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 315--316
+\T1/ptm/m/n/10 spy.qt_map_view.QtMapView method),
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 316--317
+[]\T1/ptm/m/n/10 plot_map() (xane-spy.xanes_frameset.XanesFrameset
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 317--318
+[]\T1/ptm/m/n/10 plot_map_data() (xane-spy.qt_map_view.QtMapView
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 318--319
+[]\T1/ptm/m/n/10 plot_map_pixel_spectra() (xane-
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 318--319
+\T1/ptm/m/n/10 spy.xanes_frameset.XanesFrameset method),
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 319--320
+[]\T1/ptm/m/n/10 plot_mean_image() (xane-
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 319--320
+\T1/ptm/m/n/10 spy.xanes_frameset.XanesFrameset method),
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 321--322
+[]\T1/ptm/m/n/10 plot_signal_map() (xane-
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 321--322
+\T1/ptm/m/n/10 spy.xanes_frameset.XanesFrameset method),
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 322--323
+[]\T1/ptm/m/n/10 plot_signals() (xane-spy.xanes_frameset.XanesFrameset
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 323--324
+[]\T1/ptm/m/n/10 plot_spectrum() (xane-spy.qt_map_view.QtMapView
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 327--328
+[]\T1/ptm/m/n/10 plot_xanes_edge() (xane-
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 327--328
+\T1/ptm/m/n/10 spy.xanes_frameset.XanesFrameset method),
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 329--330
+[]\T1/ptm/m/n/10 plot_xanes_spectrum() (xane-
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 329--330
+\T1/ptm/m/n/10 spy.xanes_frameset.XanesFrameset method),
+ []
+
+
+Overfull \hbox (33.96951pt too wide) in paragraph at lines 346--347
+[]\T1/ptm/m/n/10 prepare_ui() (xane-spy.qt_frameset_presenter.QtFramesetPresent
+er
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 347--349
+[]\T1/ptm/m/n/10 previous_frame() (xane-
+ []
+
+
+Overfull \hbox (44.68936pt too wide) in paragraph at lines 350--352
+[]\T1/ptm/m/n/10 process_events (xane-spy.qt_frameset_presenter.QtFramesetPrese
+nter
+ []
+
+[52]
+Underfull \hbox (badness 10000) in paragraph at lines 357--358
+[]\T1/ptm/m/n/10 qt_viewer() (xane-spy.xanes_frameset.XanesFrameset
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 358--359
+[]\T1/ptm/m/n/10 QtFramesetPresenter (class in xane-
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 365--366
+[]\T1/ptm/m/n/10 redraw_canvas() (xane-spy.qt_map_view.QtMapView
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 369--371
+[]\T1/ptm/m/n/10 refresh_frames() (xane-
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 380--381
+[]\T1/ptm/m/n/10 relative_positions (xane-spy.txmstore.TXMStore at-
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 381--382
+[]\T1/ptm/m/n/10 remove_callback() (xane-
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 381--382
+\T1/ptm/m/n/10 spy.qt_frame_view.FrameChangeSource
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 384--385
+[]\T1/ptm/m/n/10 representations() (xane-
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 384--385
+\T1/ptm/m/n/10 spy.xanes_frameset.PtychoFrameset method),
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 385--386
+[]\T1/ptm/m/n/10 representations() (xane-
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 385--386
+\T1/ptm/m/n/10 spy.xanes_frameset.XanesFrameset method),
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 386--388
+[]\T1/ptm/m/n/10 reset_frame_range() (xane-
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 388--390
+[]\T1/ptm/m/n/10 reset_map_range() (xane-
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 395--396
+[]\T1/ptm/m/n/10 save_movie() (xane-spy.xanes_frameset.XanesFrameset
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 398--399
+[]\T1/ptm/m/n/10 select_active_hdf_item() (xane-
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 398--399
+\T1/ptm/m/n/10 spy.qt_frame_view.QtFrameView method),
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 400--401
+[]\T1/ptm/m/n/10 set_cmap() (xane-spy.qt_frame_view.QtFrameView
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 401--402
+[]\T1/ptm/m/n/10 set_cmap_list() (xane-spy.qt_frame_view.QtFrameView
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 402--403
+[]\T1/ptm/m/n/10 set_cmap_list() (xane-spy.qt_map_view.QtMapView
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 403--404
+[]\T1/ptm/m/n/10 set_drawing_status() (xane-
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 403--404
+\T1/ptm/m/n/10 spy.qt_frame_view.QtFrameView method),
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 404--406
+[]\T1/ptm/m/n/10 set_frame_vmax() (xane-
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 406--408
+[]\T1/ptm/m/n/10 set_frame_vmin() (xane-
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 409--411
+[]\T1/ptm/m/n/10 set_map_cursor() (xane-
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 411--412
+[]\T1/ptm/m/n/10 set_map_limits() (xane-spy.qt_map_view.QtMapView
+ []
+
+
+Overfull \hbox (49.38927pt too wide) in paragraph at lines 412--414
+[]\T1/ptm/m/n/10 set_map_pixel() (xane-spy.qt_frameset_presenter.QtFramesetPres
+enter
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 414--416
+[]\T1/ptm/m/n/10 set_map_vmax() (xane-
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 416--418
+[]\T1/ptm/m/n/10 set_map_vmin() (xane-
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 419--421
+[]\T1/ptm/m/n/10 set_play_speed() (xane-
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 422--423
+[]\T1/ptm/m/n/10 set_status_cursor() (xane-
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 422--423
+\T1/ptm/m/n/10 spy.qt_frame_view.QtFrameView method),
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 423--424
+[]\T1/ptm/m/n/10 set_status_energy() (xane-
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 423--424
+\T1/ptm/m/n/10 spy.qt_frame_view.QtFrameView method),
+ []
+
+[53]
+Underfull \hbox (badness 10000) in paragraph at lines 424--425
+[]\T1/ptm/m/n/10 set_status_index() (xane-
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 424--425
+\T1/ptm/m/n/10 spy.qt_frame_view.QtFrameView method),
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 426--427
+[]\T1/ptm/m/n/10 set_status_shape() (xane-
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 426--427
+\T1/ptm/m/n/10 spy.qt_frame_view.QtFrameView method),
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 428--429
+[]\T1/ptm/m/n/10 set_status_value() (xane-
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 428--429
+\T1/ptm/m/n/10 spy.qt_frame_view.QtFrameView method),
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 429--430
+[]\T1/ptm/m/n/10 set_timestep() (xane-spy.qt_frame_view.QtFrameView
+ []
+
+
+Overfull \hbox (41.20895pt too wide) in paragraph at lines 430--432
+[]\T1/ptm/m/n/10 set_timestep() (xane-spy.qt_frameset_presenter.QtFramesetPrese
+nter
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 432--433
+[]\T1/ptm/m/n/10 set_timestep_list() (xane-
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 432--433
+\T1/ptm/m/n/10 spy.qt_frame_view.QtFrameView method),
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 434--435
+[]\T1/ptm/m/n/10 set_vmax() (xane-spy.qt_frame_view.QtFrameView
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 435--436
+[]\T1/ptm/m/n/10 set_vmax_decimals() (xane-
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 435--436
+\T1/ptm/m/n/10 spy.qt_frame_view.QtFrameView method),
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 436--437
+[]\T1/ptm/m/n/10 set_vmax_minimum() (xane-
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 436--437
+\T1/ptm/m/n/10 spy.qt_frame_view.QtFrameView method),
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 438--439
+[]\T1/ptm/m/n/10 set_vmin() (xane-spy.qt_frame_view.QtFrameView
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 439--440
+[]\T1/ptm/m/n/10 set_vmin_decimals() (xane-
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 439--440
+\T1/ptm/m/n/10 spy.qt_frame_view.QtFrameView method),
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 440--441
+[]\T1/ptm/m/n/10 set_vmin_maximum() (xane-
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 440--441
+\T1/ptm/m/n/10 spy.qt_frame_view.QtFrameView method),
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 441--442
+[]\T1/ptm/m/n/10 set_vmin_step() (xane-spy.qt_frame_view.QtFrameView
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 442--443
+[]\T1/ptm/m/n/10 set_window_title() (xane-
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 442--443
+\T1/ptm/m/n/10 spy.qt_frame_view.QtFrameView method),
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 449--450
+[]\T1/ptm/m/n/10 show_status_message() (xane-
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 449--450
+\T1/ptm/m/n/10 spy.qt_frame_view.QtFrameView method),
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 455--456
+[]\T1/ptm/m/n/10 spectra() (xane-spy.xanes_frameset.XanesFrameset
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 456--457
+[]\T1/ptm/m/n/10 spectrum() (xane-spy.xanes_frameset.XanesFrameset
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 459--460
+[]\T1/ptm/m/n/10 stage_transformations() (xane-
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 459--460
+\T1/ptm/m/n/10 spy.xanes_frameset.XanesFrameset method),
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 460--461
+[]\T1/ptm/m/n/10 start() (xane-spy.qt_frame_view.FrameChangeSource
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 461--462
+[]\T1/ptm/m/n/10 starttime() (xane-spy.xanes_frameset.XanesFrameset
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 463--464
+[]\T1/ptm/m/n/10 stop() (xane-spy.qt_frame_view.FrameAnimation
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 464--465
+[]\T1/ptm/m/n/10 stop() (xane-spy.qt_frame_view.FrameChangeSource
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 465--466
+[]\T1/ptm/m/n/10 store() (xane-spy.xanes_frameset.XanesFrameset
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 466--467
+[]\T1/ptm/m/n/10 subtract_surroundings() (xane-
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 466--467
+\T1/ptm/m/n/10 spy.xanes_frameset.XanesFrameset method),
+ []
+
+
+Overfull \hbox (5.65955pt too wide) in paragraph at lines 470--471
+[]\T1/ptm/m/n/10 timer (xane-spy.qt_frameset_presenter.QtFramesetPresenter
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 473--475
+[]\T1/ptm/m/n/10 toggle_edge_mask() (xane-
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 476--477
+[]\T1/ptm/m/n/10 transformation_matrices() (in mod-ule xane-
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 484--485
+[]\T1/ptm/m/n/10 update_crosshair_labels() (xane-
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 484--485
+\T1/ptm/m/n/10 spy.qt_map_view.QtMapView method),
+ []
+
+[54]
+Underfull \hbox (badness 10000) in paragraph at lines 485--486
+[]\T1/ptm/m/n/10 update_cursor_labels() (xane-
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 485--486
+\T1/ptm/m/n/10 spy.qt_map_view.QtMapView method),
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 486--488
+[]\T1/ptm/m/n/10 update_frame_range_limits() (xane-
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 488--490
+[]\T1/ptm/m/n/10 update_map_limits() (xane-
+ []
+
+
+Overfull \hbox (43.97939pt too wide) in paragraph at lines 490--491
+[]\T1/ptm/m/n/10 update_maps() (xane-spy.qt_frameset_presenter.QtFramesetPresen
+ter
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 491--493
+[]\T1/ptm/m/n/10 update_spectra() (xane-
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 493--495
+[]\T1/ptm/m/n/10 update_status_frame() (xane-
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 495--497
+[]\T1/ptm/m/n/10 update_status_shape() (xane-
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 497--499
+[]\T1/ptm/m/n/10 update_status_unit() (xane-
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 499--501
+[]\T1/ptm/m/n/10 update_status_value() (xane-
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 501--502
+[]\T1/ptm/m/n/10 use_busy_cursor() (xane-
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 501--502
+\T1/ptm/m/n/10 spy.qt_frame_view.QtFrameView method),
+ []
+
+
+Overfull \hbox (47.86942pt too wide) in paragraph at lines 502--504
+[]\T1/ptm/m/n/10 use_edge_mask (xane-spy.qt_frameset_presenter.QtFramesetPresen
+ter
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 514--515
+[]\T1/ptm/m/n/10 window (xane-spy.qt_frame_view.QtFrameView at-
+ []
+
+[55])
+Package atveryend Info: Empty hook `BeforeClearDocument' on input line 4825.
+Package atveryend Info: Empty hook `AfterLastShipout' on input line 4825.
  (./Xanespy.aux)
-Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 202.
-Package atveryend Info: Executing hook `AtEndAfterFileList' on input line 202.
+Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 4825.
+Package atveryend Info: Executing hook `AtEndAfterFileList' on input line 4825.
+
 Package rerunfilecheck Info: File `Xanespy.out' has not changed.
-(rerunfilecheck)             Checksum: 79F228EA7F0FD86EE6CD01D38C8B1F75;2686.
-Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 202.
+(rerunfilecheck)             Checksum: 6CEA6880DA197ADDC4753500906B744F;3046.
+Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 4825.
  ) 
 Here is how much of TeX's memory you used:
- 13756 strings out of 493013
- 187054 string characters out of 6139316
- 296131 words of memory out of 5000000
- 16947 multiletter control sequences out of 15000+600000
- 46057 words of font info for 69 fonts, out of 8000000 for 9000
+ 14728 strings out of 493013
+ 216157 string characters out of 6139316
+ 322059 words of memory out of 5000000
+ 17434 multiletter control sequences out of 15000+600000
+ 53708 words of font info for 79 fonts, out of 8000000 for 9000
  1142 hyphenation exceptions out of 8191
- 37i,11n,45p,408b,435s stack positions out of 5000i,500n,10000p,200000b,80000s
+ 37i,12n,45p,595b,641s stack positions out of 5000i,500n,10000p,200000b,80000s
 {/usr/share/texmf-dist/fonts/enc/dvips/base/8r.enc}</usr/share/texmf-dist/fon
-ts/type1/urw/courier/ucrb8a.pfb></usr/share/texmf-dist/fonts/type1/urw/courier/
-ucrr8a.pfb></usr/share/texmf-dist/fonts/type1/urw/courier/ucrro8a.pfb></usr/sha
-re/texmf-dist/fonts/type1/urw/helvetic/uhvb8a.pfb></usr/share/texmf-dist/fonts/
-type1/urw/helvetic/uhvbo8a.pfb></usr/share/texmf-dist/fonts/type1/urw/times/utm
+ts/type1/public/amsfonts/cm/cmmi10.pfb></usr/share/texmf-dist/fonts/type1/publi
+c/amsfonts/cm/cmmi7.pfb></usr/share/texmf-dist/fonts/type1/public/amsfonts/cm/c
+mr7.pfb></usr/share/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy10.pfb></usr/
+share/texmf-dist/fonts/type1/urw/courier/ucrb8a.pfb></usr/share/texmf-dist/font
+s/type1/urw/courier/ucrr8a.pfb></usr/share/texmf-dist/fonts/type1/urw/courier/u
+crro8a.pfb></usr/share/texmf-dist/fonts/type1/urw/helvetic/uhvb8a.pfb></usr/sha
+re/texmf-dist/fonts/type1/urw/helvetic/uhvbo8a.pfb></usr/share/texmf-dist/fonts
+/type1/urw/helvetic/uhvr8a.pfb></usr/share/texmf-dist/fonts/type1/urw/times/utm
 b8a.pfb></usr/share/texmf-dist/fonts/type1/urw/times/utmr8a.pfb></usr/share/tex
 mf-dist/fonts/type1/urw/times/utmri8a.pfb>
-Output written on Xanespy.pdf (17 pages, 107833 bytes).
+Output written on Xanespy.pdf (59 pages, 281229 bytes).
 PDF statistics:
- 206 PDF objects out of 1000 (max. 8388607)
- 172 compressed objects within 2 object streams
- 34 named destinations out of 1000 (max. 500000)
- 149 words of extra memory for PDF output out of 10000 (max. 10000000)
+ 1422 PDF objects out of 1440 (max. 8388607)
+ 1329 compressed objects within 14 object streams
+ 509 named destinations out of 1000 (max. 500000)
+ 173 words of extra memory for PDF output out of 10000 (max. 10000000)
 

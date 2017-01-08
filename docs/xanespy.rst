@@ -28,22 +28,6 @@ xanespy.exceptions module
     :undoc-members:
     :show-inheritance:
 
-xanespy.gtk_plotter module
---------------------------
-
-.. automodule:: xanespy.gtk_plotter
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-xanespy.gtk_viewer module
--------------------------
-
-.. automodule:: xanespy.gtk_viewer
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 xanespy.importers module
 ------------------------
 

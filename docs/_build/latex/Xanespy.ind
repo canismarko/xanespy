@@ -1,0 +1,557 @@
+\begin{theindex}
+\def\bigletter#1{{\Large\sffamily#1}\nopagebreak\vspace{1mm}}
+
+  \bigletter A
+  \item absorbances (xanespy.txmstore.TXMStore attribute), \hyperpage{28}
+  \item active\_frame (xanespy.qt\_frameset\_presenter.QtFramesetPresenter attribute), 
+		\hyperpage{23}
+  \item active\_frames() (xanespy.qt\_frameset\_presenter.QtFramesetPresenter method), 
+		\hyperpage{23}
+  \item active\_group (xanespy.xanes\_frameset.XanesFrameset attribute), \hyperpage{31}
+  \item active\_labels\_groupname (xanespy.xanes\_frameset.XanesFrameset attribute), \hyperpage{31}
+  \item active\_map() (xanespy.qt\_frameset\_presenter.QtFramesetPresenter method), \hyperpage{23}
+  \item active\_representation (xanespy.qt\_frameset\_presenter.QtFramesetPresenter attribute), 
+		\hyperpage{23}
+  \item active\_timestep (xanespy.qt\_frameset\_presenter.QtFramesetPresenter attribute), 
+		\hyperpage{23}
+  \item add\_callback() (xanespy.qt\_frame\_view.FrameChangeSource method), \hyperpage{21}
+  \item add\_frame() (xanespy.xanes\_frameset.XanesFrameset method), \hyperpage{31}
+  \item add\_frame\_view() (xanespy.qt\_frameset\_presenter.QtFramesetPresenter method), 
+		\hyperpage{23}
+  \item add\_hdf\_tree\_item() (xanespy.qt\_frame\_view.QtFrameView method), \hyperpage{22}
+  \item add\_map\_view() (xanespy.qt\_frameset\_presenter.QtFramesetPresenter method), 
+		\hyperpage{24}
+  \item align\_frames() (xanespy.xanes\_frameset.XanesFrameset method), \hyperpage{31}
+  \item all\_energies() (xanespy.edges.Edge method), \hyperpage{15}
+  \item animate\_frames() (xanespy.qt\_frameset\_presenter.QtFramesetPresenter method), 
+		\hyperpage{24}
+  \item annotate\_spectrum() (xanespy.edges.KEdge method), \hyperpage{16}
+  \item annotate\_spectrum() (xanespy.edges.LEdge method), \hyperpage{16}
+  \item app\_ready (xanespy.qt\_frameset\_presenter.QtFramesetPresenter attribute), 
+		\hyperpage{23, 24}
+  \item apply\_internal\_reference() (in module xanespy.xanes\_math), \hyperpage{39}
+  \item apply\_internal\_reference() (xanespy.xanes\_frameset.PtychoFrameset method), 
+		\hyperpage{31}
+  \item apply\_references() (in module xanespy.xanes\_math), \hyperpage{39}
+  \item apply\_transformations() (xanespy.xanes\_frameset.XanesFrameset method), \hyperpage{32}
+  \item aps\_old1\_regex (xanespy.xradia.XRMFile attribute), \hyperpage{44}
+
+  \indexspace
+  \bigletter B
+  \item background\_group() (xanespy.xanes\_frameset.XanesFrameset method), \hyperpage{32}
+  \item background\_normalizer() (xanespy.xanes\_frameset.XanesFrameset method), \hyperpage{32}
+  \item big\_axes() (in module xanespy.plots), \hyperpage{19}
+  \item binning() (xanespy.xradia.XRMFile method), \hyperpage{44}
+  \item broadcast\_reverse() (in module xanespy.utilities), \hyperpage{30}
+  \item build\_hdf\_tree() (xanespy.qt\_frameset\_presenter.QtFramesetPresenter method), 
+		\hyperpage{24}
+  \item busy\_status\_changed (xanespy.qt\_frameset\_presenter.QtFramesetPresenter attribute), 
+		\hyperpage{23, 24}
+
+  \indexspace
+  \bigletter C
+  \item calculate\_maps() (xanespy.xanes\_frameset.XanesFrameset method), \hyperpage{32}
+  \item calculate\_signals() (xanespy.xanes\_frameset.XanesFrameset method), \hyperpage{32}
+  \item calculate\_whitelines() (xanespy.xanes\_frameset.XanesFrameset method), \hyperpage{33}
+  \item callbacks (xanespy.qt\_frame\_view.FrameChangeSource attribute), \hyperpage{21}
+  \item change\_cmap() (xanespy.qt\_frameset\_presenter.QtFramesetPresenter method), \hyperpage{24}
+  \item change\_hdf\_group() (xanespy.qt\_frameset\_presenter.QtFramesetPresenter method), 
+		\hyperpage{24}
+  \item change\_map\_cmap() (xanespy.qt\_frameset\_presenter.QtFramesetPresenter method), 
+		\hyperpage{24}
+  \item clear\_axes() (xanespy.qt\_frame\_view.QtFrameView method), \hyperpage{22}
+  \item clear\_caches() (xanespy.xanes\_frameset.XanesFrameset method), \hyperpage{33}
+  \item close() (xanespy.txmstore.TXMStore method), \hyperpage{28}
+  \item close() (xanespy.xradia.XRMFile method), \hyperpage{44}
+  \item cluster\_map (xanespy.txmstore.TXMStore attribute), \hyperpage{28}
+  \item cmap (xanespy.xanes\_frameset.XanesFrameset attribute), \hyperpage{33}
+  \item cmap\_changed (xanespy.qt\_map\_view.QtMapView attribute), \hyperpage{26}
+  \item cmap\_list\_changed (xanespy.qt\_frameset\_presenter.QtFramesetPresenter attribute), 
+		\hyperpage{24}
+  \item columns (xanespy.utilities.shape attribute), \hyperpage{30}
+  \item connect\_presenter() (xanespy.qt\_map\_view.QtMapView method), \hyperpage{26}
+  \item connect\_signals() (xanespy.qt\_frame\_view.QtFrameView method), \hyperpage{22}
+  \item connect\_signals() (xanespy.qt\_frameset\_presenter.QtFramesetPresenter method), 
+		\hyperpage{24}
+  \item create\_app() (xanespy.qt\_frameset\_presenter.QtFramesetPresenter method), \hyperpage{24}
+  \item create\_canvas() (xanespy.qt\_frame\_view.QtFrameView method), \hyperpage{22}
+  \item create\_canvas() (xanespy.qt\_map\_view.QtMapView method), \hyperpage{26}
+  \item create\_status\_bar() (xanespy.qt\_frame\_view.QtFrameView method), \hyperpage{22}
+  \item CreateGroupError, \hyperpage{17}
+  \item crosshairs (xanespy.qt\_map\_view.QtMapView attribute), \hyperpage{26}
+
+  \indexspace
+  \bigletter D
+  \item data\_group() (xanespy.txmstore.TXMStore method), \hyperpage{28}
+  \item data\_name (xanespy.txmstore.TXMStore attribute), \hyperpage{28}
+  \item data\_name (xanespy.xanes\_frameset.XanesFrameset attribute), \hyperpage{33}
+  \item data\_tree() (xanespy.txmstore.TXMStore method), \hyperpage{28}
+  \item data\_tree() (xanespy.xanes\_frameset.XanesFrameset method), \hyperpage{33}
+  \item DataFormatError, \hyperpage{17}
+  \item DataNotFoundError, \hyperpage{17}
+  \item DatasetExistsError, \hyperpage{17}
+  \item decode\_aps\_params() (in module xanespy.importers), \hyperpage{18}
+  \item decode\_ssrl\_params() (in module xanespy.importers), \hyperpage{18}
+  \item Detector (class in xanespy.beamlines), \hyperpage{13}
+  \item DetectorPoint (class in xanespy.beamlines), \hyperpage{13}
+  \item direct\_whitelines() (in module xanespy.xanes\_math), \hyperpage{39}
+  \item disable\_frame\_controls() (xanespy.qt\_frame\_view.QtFrameView method), \hyperpage{22}
+  \item disable\_plotting\_controls() (xanespy.qt\_frame\_view.QtFrameView method), \hyperpage{22}
+  \item draw\_colorbar() (in module xanespy.plots), \hyperpage{19}
+  \item draw\_frame\_histogram() (xanespy.qt\_frameset\_presenter.QtFramesetPresenter method), 
+		\hyperpage{24}
+  \item draw\_frame\_spectra() (xanespy.qt\_frameset\_presenter.QtFramesetPresenter method), 
+		\hyperpage{24}
+  \item draw\_frames (xanespy.qt\_frame\_view.QtFrameView attribute), \hyperpage{22}
+  \item draw\_histogram (xanespy.qt\_frame\_view.QtFrameView attribute), \hyperpage{22}
+  \item draw\_histogram\_colorbar() (in module xanespy.plots), \hyperpage{19}
+  \item draw\_spectrum() (xanespy.qt\_frame\_view.QtFrameView method), \hyperpage{22}
+  \item drop\_frame() (xanespy.xanes\_frameset.XanesFrameset method), \hyperpage{33}
+  \item dual\_axes() (in module xanespy.plots), \hyperpage{20}
+
+  \indexspace
+  \bigletter E
+  \item E0 (xanespy.xanes\_math.KEdgeParams attribute), \hyperpage{39}
+  \item E\_0 (xanespy.edges.Edge attribute), \hyperpage{15}
+  \item E\_0 (xanespy.edges.NCACobaltLEdge attribute), \hyperpage{16}
+  \item E\_0 (xanespy.edges.NCANickelKEdge attribute), \hyperpage{16}
+  \item E\_0 (xanespy.edges.NCANickelLEdge attribute), \hyperpage{17}
+  \item Edge (class in xanespy.edges), \hyperpage{15}
+  \item edge\_ax (xanespy.qt\_frame\_view.QtFrameView attribute), \hyperpage{22}
+  \item edge\_jump (xanespy.xanes\_frameset.XanesFrameset attribute), \hyperpage{33}
+  \item edge\_mask (xanespy.xanes\_frameset.XanesFrameset attribute), \hyperpage{33}
+  \item edge\_mask\_toggled (xanespy.qt\_map\_view.QtMapView attribute), \hyperpage{26}
+  \item edge\_range (xanespy.edges.Edge attribute), \hyperpage{15}
+  \item edge\_range (xanespy.edges.NCANickelKEdge attribute), \hyperpage{16}
+  \item endtime() (xanespy.xanes\_frameset.XanesFrameset method), \hyperpage{33}
+  \item endtime() (xanespy.xradia.XRMFile method), \hyperpage{44}
+  \item energies (xanespy.txmstore.TXMStore attribute), \hyperpage{28}
+  \item energies (xanespy.xanes\_frameset.XanesFrameset attribute), \hyperpage{33}
+  \item energies\_in\_range() (xanespy.edges.Edge method), \hyperpage{16}
+  \item energy (xanespy.beamlines.DetectorPoint attribute), \hyperpage{13}
+  \item energy (xanespy.beamlines.ZoneplatePoint attribute), \hyperpage{13}
+  \item energy() (xanespy.xradia.XRMFile method), \hyperpage{44}
+  \item expand\_hdf\_tree (xanespy.qt\_frame\_view.QtFrameView attribute), \hyperpage{22}
+  \item Extent (in module xanespy.utilities), \hyperpage{29}
+  \item extent (xanespy.xanes\_frameset.XanesFrameset attribute), \hyperpage{33}
+  \item extract\_signals\_nmf() (in module xanespy.xanes\_math), \hyperpage{40}
+
+  \indexspace
+  \bigletter F
+  \item fig (xanespy.qt\_frame\_view.QtFrameView attribute), \hyperpage{22}
+  \item fig (xanespy.qt\_map\_view.QtMapView attribute), \hyperpage{27}
+  \item FileExistsError, \hyperpage{17}
+  \item FilenameParseError, \hyperpage{17}
+  \item filenames (xanespy.txmstore.TXMStore attribute), \hyperpage{28}
+  \item first\_frame() (xanespy.qt\_frameset\_presenter.QtFramesetPresenter method), \hyperpage{24}
+  \item fit\_kedge() (in module xanespy.xanes\_math), \hyperpage{40}
+  \item fit\_parameters (xanespy.txmstore.TXMStore attribute), \hyperpage{28}
+  \item fit\_spectra() (xanespy.xanes\_frameset.XanesFrameset method), \hyperpage{33}
+  \item foreach() (in module xanespy.utilities), \hyperpage{30}
+  \item fork\_data\_group() (xanespy.txmstore.TXMStore method), \hyperpage{28}
+  \item fork\_data\_group() (xanespy.xanes\_frameset.XanesFrameset method), \hyperpage{34}
+  \item frame\_changed (xanespy.qt\_frame\_view.QtFrameView attribute), \hyperpage{22}
+  \item frame\_cmap (xanespy.qt\_frameset\_presenter.QtFramesetPresenter attribute), \hyperpage{24}
+  \item frame\_controls (xanespy.qt\_frame\_view.QtFrameView attribute), \hyperpage{22}
+  \item frame\_norm() (xanespy.qt\_frameset\_presenter.QtFramesetPresenter method), \hyperpage{24}
+  \item frame\_pixel (xanespy.qt\_frameset\_presenter.QtFramesetPresenter attribute), 
+		\hyperpage{24}
+  \item frame\_shape() (xanespy.xanes\_frameset.XanesFrameset method), \hyperpage{34}
+  \item FrameAnimation (class in xanespy.qt\_frame\_view), \hyperpage{21}
+  \item FrameChangeSource (class in xanespy.qt\_frame\_view), \hyperpage{21}
+  \item FrameFileNotFound, \hyperpage{17}
+  \item frames (xanespy.xanes\_frameset.XanesFrameset attribute), \hyperpage{34}
+
+  \indexspace
+  \bigletter G
+  \item ga (xanespy.xanes\_math.KEdgeParams attribute), \hyperpage{39}
+  \item gb (xanespy.xanes\_math.KEdgeParams attribute), \hyperpage{39}
+  \item gc (xanespy.xanes\_math.KEdgeParams attribute), \hyperpage{39}
+  \item get\_component() (in module xanespy.utilities), \hyperpage{30}
+  \item get\_dataset() (xanespy.txmstore.TXMStore method), \hyperpage{28}
+  \item get\_frames() (xanespy.txmstore.TXMStore method), \hyperpage{28}
+  \item get\_map() (xanespy.txmstore.TXMStore method), \hyperpage{28}
+  \item goodness\_mask() (xanespy.xanes\_frameset.XanesFrameset method), \hyperpage{34}
+  \item GroupKeyError, \hyperpage{17}
+  \item gtk\_viewer() (xanespy.xanes\_frameset.XanesFrameset method), \hyperpage{34}
+  \item guess\_kedge() (in module xanespy.xanes\_math), \hyperpage{40}
+
+  \indexspace
+  \bigletter H
+  \item has\_dataset() (xanespy.txmstore.TXMStore method), \hyperpage{28}
+  \item has\_representation() (xanespy.xanes\_frameset.XanesFrameset method), \hyperpage{34}
+  \item hdf\_file() (xanespy.xanes\_frameset.XanesFrameset method), \hyperpage{34}
+  \item hdf\_node() (xanespy.xanes\_frameset.XanesFrameset method), \hyperpage{34}
+  \item hdf\_path() (xanespy.xanes\_frameset.XanesFrameset method), \hyperpage{34}
+  \item HDFScopeError, \hyperpage{18}
+  \item hide() (xanespy.qt\_map\_view.QtMapView method), \hyperpage{27}
+  \item hist\_ax (xanespy.qt\_frame\_view.QtFrameView attribute), \hyperpage{22}
+  \item hist\_cb (xanespy.qt\_frame\_view.QtFrameView attribute), \hyperpage{22}
+  \item horizontal (xanespy.utilities.Pixel attribute), \hyperpage{29}
+  \item hover\_frame\_pixel() (xanespy.qt\_frameset\_presenter.QtFramesetPresenter method), 
+		\hyperpage{24}
+
+  \indexspace
+  \bigletter I
+  \item image\_data() (xanespy.xradia.XRMFile method), \hyperpage{44}
+  \item image\_dtype() (xanespy.xradia.XRMFile method), \hyperpage{44}
+  \item image\_normalizer (xanespy.xanes\_frameset.XanesFrameset attribute), \hyperpage{35}
+  \item image\_shape() (xanespy.xradia.XRMFile method), \hyperpage{44}
+  \item import\_aps\_8BM\_frameset() (in module xanespy.importers), \hyperpage{18}
+  \item import\_frameset() (in module xanespy.importers), \hyperpage{18}
+  \item import\_nanosurveyor\_frameset() (in module xanespy.importers), \hyperpage{18}
+  \item import\_ssrl\_frameset() (in module xanespy.importers), \hyperpage{19}
+  \item intensities (xanespy.txmstore.TXMStore attribute), \hyperpage{28}
+  \item is\_background() (xanespy.xanes\_frameset.XanesFrameset method), \hyperpage{35}
+  \item is\_kernel() (in module xanespy.utilities), \hyperpage{30}
+  \item iter\_indices() (in module xanespy.xanes\_math), \hyperpage{40}
+
+  \indexspace
+  \bigletter K
+  \item k\_edge\_jump() (in module xanespy.xanes\_math), \hyperpage{40}
+  \item k\_edge\_mask() (in module xanespy.xanes\_math), \hyperpage{40}
+  \item KEdge (class in xanespy.edges), \hyperpage{16}
+  \item KEdgeParams (class in xanespy.xanes\_math), \hyperpage{38}
+  \item keyboard\_nav() (xanespy.qt\_map\_view.QtMapView method), \hyperpage{27}
+
+  \indexspace
+  \bigletter L
+  \item l\_edge\_mask() (in module xanespy.xanes\_math), \hyperpage{41}
+  \item label\_particles() (xanespy.xanes\_frameset.XanesFrameset method), \hyperpage{35}
+  \item last\_frame() (xanespy.qt\_frameset\_presenter.QtFramesetPresenter method), \hyperpage{24}
+  \item latest\_cmap (xanespy.qt\_map\_view.QtMapView attribute), \hyperpage{27}
+  \item latest\_data\_name (xanespy.txmstore.TXMStore attribute), \hyperpage{28}
+  \item launch() (xanespy.qt\_frameset\_presenter.QtFramesetPresenter method), \hyperpage{24}
+  \item LEdge (class in xanespy.edges), \hyperpage{16}
+  \item limits\_applied (xanespy.qt\_map\_view.QtMapView attribute), \hyperpage{26, 27}
+  \item limits\_reset (xanespy.qt\_map\_view.QtMapView attribute), \hyperpage{26, 27}
+  \item LMOMnKEdge (class in xanespy.edges), \hyperpage{16}
+
+  \indexspace
+  \bigletter M
+  \item magnification\_correction() (in module xanespy.importers), \hyperpage{19}
+  \item map\_clicked (xanespy.qt\_map\_view.QtMapView attribute), \hyperpage{27}
+  \item map\_cmap (xanespy.qt\_frameset\_presenter.QtFramesetPresenter attribute), \hyperpage{24}
+  \item map\_cursor\_changed (xanespy.qt\_frameset\_presenter.QtFramesetPresenter attribute), 
+		\hyperpage{24}
+  \item map\_data (xanespy.xanes\_frameset.XanesFrameset attribute), \hyperpage{35}
+  \item map\_data\_changed (xanespy.qt\_frameset\_presenter.QtFramesetPresenter attribute), 
+		\hyperpage{23, 24}
+  \item map\_data\_cleared (xanespy.qt\_frameset\_presenter.QtFramesetPresenter attribute), 
+		\hyperpage{23, 24}
+  \item map\_hovered (xanespy.qt\_map\_view.QtMapView attribute), \hyperpage{27}
+  \item map\_limits\_changed (xanespy.qt\_frameset\_presenter.QtFramesetPresenter attribute), 
+		\hyperpage{24}
+  \item map\_moved (xanespy.qt\_map\_view.QtMapView attribute), \hyperpage{27}
+  \item map\_norm() (xanespy.qt\_frameset\_presenter.QtFramesetPresenter method), \hyperpage{25}
+  \item map\_pixel\_changed (xanespy.qt\_frameset\_presenter.QtFramesetPresenter attribute), 
+		\hyperpage{25}
+  \item map\_range (xanespy.edges.Edge attribute), \hyperpage{15, 16}
+  \item map\_range (xanespy.edges.NCACobaltLEdge attribute), \hyperpage{16}
+  \item map\_range (xanespy.edges.NCANickelKEdge attribute), \hyperpage{16}
+  \item map\_range (xanespy.edges.NCANickelLEdge attribute), \hyperpage{17}
+  \item map\_spectrum\_changed (xanespy.qt\_frameset\_presenter.QtFramesetPresenter attribute), 
+		\hyperpage{25}
+  \item map\_vmax\_changed (xanespy.qt\_map\_view.QtMapView attribute), \hyperpage{27}
+  \item map\_vmin\_changed (xanespy.qt\_map\_view.QtMapView attribute), \hyperpage{27}
+  \item mask() (xanespy.edges.KEdge method), \hyperpage{16}
+  \item mask() (xanespy.edges.LEdge method), \hyperpage{16}
+  \item masked\_map() (xanespy.xanes\_frameset.XanesFrameset method), \hyperpage{35}
+  \item mean\_frame() (xanespy.xanes\_frameset.XanesFrameset method), \hyperpage{35}
+  \item mean\_spectrum\_changed (xanespy.qt\_frameset\_presenter.QtFramesetPresenter attribute), 
+		\hyperpage{25}
+  \item mouse\_clicked\_canvas() (xanespy.qt\_map\_view.QtMapView method), \hyperpage{27}
+  \item mouse\_in\_canvas() (xanespy.qt\_map\_view.QtMapView method), \hyperpage{27}
+  \item move\_map\_pixel() (xanespy.qt\_frameset\_presenter.QtFramesetPresenter method), 
+		\hyperpage{25}
+  \item move\_slider() (xanespy.qt\_frameset\_presenter.QtFramesetPresenter method), \hyperpage{25}
+  \item movie\_plotter() (xanespy.xanes\_frameset.XanesFrameset method), \hyperpage{35}
+
+  \indexspace
+  \bigletter N
+  \item name (xanespy.edges.Edge attribute), \hyperpage{15}
+  \item NCACobaltLEdge (class in xanespy.edges), \hyperpage{16}
+  \item NCANickelKEdge (class in xanespy.edges), \hyperpage{16}
+  \item NCANickelKEdge61 (class in xanespy.edges), \hyperpage{17}
+  \item NCANickelKEdge62 (class in xanespy.edges), \hyperpage{17}
+  \item NCANickelLEdge (class in xanespy.edges), \hyperpage{17}
+  \item new\_axes() (in module xanespy.plots), \hyperpage{20}
+  \item new\_image\_axes() (in module xanespy.plots), \hyperpage{20}
+  \item next\_frame() (xanespy.qt\_frameset\_presenter.QtFramesetPresenter method), \hyperpage{25}
+  \item NoParticleError, \hyperpage{18}
+  \item normalize() (xanespy.xanes\_frameset.XanesFrameset method), \hyperpage{35}
+  \item num\_energies (xanespy.xanes\_frameset.XanesFrameset attribute), \hyperpage{35}
+  \item num\_frames (xanespy.qt\_frameset\_presenter.QtFramesetPresenter attribute), \hyperpage{25}
+  \item num\_timesteps (xanespy.xanes\_frameset.XanesFrameset attribute), \hyperpage{35}
+
+  \indexspace
+  \bigletter O
+  \item ole\_value() (xanespy.xradia.XRMFile method), \hyperpage{44}
+  \item original\_positions (xanespy.txmstore.TXMStore attribute), \hyperpage{28}
+
+  \indexspace
+  \bigletter P
+  \item parallel\_map() (in module xanespy.utilities), \hyperpage{30}
+  \item parent\_group() (xanespy.txmstore.TXMStore method), \hyperpage{28}
+  \item particle() (xanespy.xanes\_frameset.XanesFrameset method), \hyperpage{35}
+  \item particle\_area\_spectrum() (xanespy.xanes\_frameset.XanesFrameset method), \hyperpage{35}
+  \item particle\_centroid\_spectrum() (xanespy.xanes\_frameset.XanesFrameset method), 
+		\hyperpage{35}
+  \item particle\_labels (xanespy.txmstore.TXMStore attribute), \hyperpage{28}
+  \item particle\_labels() (in module xanespy.xanes\_math), \hyperpage{41}
+  \item particle\_regions() (xanespy.xanes\_frameset.XanesFrameset method), \hyperpage{36}
+  \item particle\_series() (xanespy.xanes\_frameset.XanesFrameset method), \hyperpage{36}
+  \item Pixel (class in xanespy.utilities), \hyperpage{29}
+  \item pixel\_sizes (xanespy.txmstore.TXMStore attribute), \hyperpage{29}
+  \item pixel\_to\_xy() (in module xanespy.utilities), \hyperpage{30}
+  \item pixel\_unit (xanespy.txmstore.TXMStore attribute), \hyperpage{29}
+  \item pixel\_unit() (xanespy.xanes\_frameset.XanesFrameset method), \hyperpage{36}
+  \item play\_frames() (xanespy.qt\_frameset\_presenter.QtFramesetPresenter method), \hyperpage{25}
+  \item plot\_composite\_map() (in module xanespy.plots), \hyperpage{20}
+  \item plot\_edge\_jump() (xanespy.xanes\_frameset.XanesFrameset method), \hyperpage{36}
+  \item plot\_frame() (xanespy.xanes\_frameset.XanesFrameset method), \hyperpage{36}
+  \item plot\_goodness() (xanespy.xanes\_frameset.XanesFrameset method), \hyperpage{36}
+  \item plot\_histogram() (xanespy.xanes\_frameset.XanesFrameset method), \hyperpage{36}
+  \item plot\_histogram\_data() (xanespy.qt\_map\_view.QtMapView method), \hyperpage{27}
+  \item plot\_map() (xanespy.xanes\_frameset.XanesFrameset method), \hyperpage{36}
+  \item plot\_map\_data() (xanespy.qt\_map\_view.QtMapView method), \hyperpage{27}
+  \item plot\_map\_pixel\_spectra() (xanespy.xanes\_frameset.XanesFrameset method), \hyperpage{36}
+  \item plot\_mean\_image() (xanespy.xanes\_frameset.XanesFrameset method), \hyperpage{36}
+  \item plot\_pixel\_spectra() (in module xanespy.plots), \hyperpage{20}
+  \item plot\_signal\_map() (xanespy.xanes\_frameset.XanesFrameset method), \hyperpage{36}
+  \item plot\_signals() (xanespy.xanes\_frameset.XanesFrameset method), \hyperpage{37}
+  \item plot\_spectrum() (xanespy.qt\_map\_view.QtMapView method), \hyperpage{27}
+  \item plot\_txm\_histogram() (in module xanespy.plots), \hyperpage{20}
+  \item plot\_txm\_intermediates() (in module xanespy.plots), \hyperpage{20}
+  \item plot\_txm\_map() (in module xanespy.plots), \hyperpage{21}
+  \item plot\_xanes\_edge() (xanespy.xanes\_frameset.XanesFrameset method), \hyperpage{37}
+  \item plot\_xanes\_spectrum() (in module xanespy.plots), \hyperpage{21}
+  \item plot\_xanes\_spectrum() (xanespy.xanes\_frameset.XanesFrameset method), \hyperpage{37}
+  \item plotting\_controls (xanespy.qt\_frame\_view.QtFrameView attribute), \hyperpage{22}
+  \item position (class in xanespy.utilities), \hyperpage{30}
+  \item position() (xanespy.beamlines.Zoneplate method), \hyperpage{13}
+  \item post\_edge (xanespy.edges.Edge attribute), \hyperpage{15, 16}
+  \item post\_edge (xanespy.edges.NCACobaltLEdge attribute), \hyperpage{16}
+  \item post\_edge (xanespy.edges.NCANickelKEdge attribute), \hyperpage{16}
+  \item post\_edge (xanespy.edges.NCANickelLEdge attribute), \hyperpage{17}
+  \item post\_edge\_order (xanespy.edges.Edge attribute), \hyperpage{15, 16}
+  \item pre\_b (xanespy.xanes\_math.KEdgeParams attribute), \hyperpage{39}
+  \item pre\_edge (xanespy.edges.Edge attribute), \hyperpage{15, 16}
+  \item pre\_edge (xanespy.edges.NCACobaltLEdge attribute), \hyperpage{16}
+  \item pre\_edge (xanespy.edges.NCANickelKEdge attribute), \hyperpage{16}
+  \item pre\_edge (xanespy.edges.NCANickelLEdge attribute), \hyperpage{17}
+  \item pre\_edge\_fit (xanespy.edges.Edge attribute), \hyperpage{16}
+  \item pre\_m (xanespy.xanes\_math.KEdgeParams attribute), \hyperpage{39}
+  \item predict\_edge() (in module xanespy.xanes\_math), \hyperpage{41}
+  \item prepare\_ui() (xanespy.qt\_frameset\_presenter.QtFramesetPresenter method), \hyperpage{25}
+  \item previous\_frame() (xanespy.qt\_frameset\_presenter.QtFramesetPresenter method), 
+		\hyperpage{25}
+  \item print\_ole() (xanespy.xradia.XRMFile method), \hyperpage{44}
+  \item process\_events (xanespy.qt\_frameset\_presenter.QtFramesetPresenter attribute), 
+		\hyperpage{25}
+  \item prog() (in module xanespy.utilities), \hyperpage{30}
+  \item PtychoFrameset (class in xanespy.xanes\_frameset), \hyperpage{31}
+
+  \indexspace
+  \bigletter Q
+  \item qt\_viewer() (xanespy.xanes\_frameset.XanesFrameset method), \hyperpage{37}
+  \item QtFramesetPresenter (class in xanespy.qt\_frameset\_presenter), \hyperpage{23}
+  \item QtFrameView (class in xanespy.qt\_frame\_view), \hyperpage{21}
+  \item QtMapView (class in xanespy.qt\_map\_view), \hyperpage{26}
+
+  \indexspace
+  \bigletter R
+  \item read\_metadata() (in module xanespy.importers), \hyperpage{19}
+  \item redraw\_canvas() (xanespy.qt\_map\_view.QtMapView method), \hyperpage{27}
+  \item redraw\_crosshairs() (xanespy.qt\_map\_view.QtMapView method), \hyperpage{27}
+  \item references (xanespy.txmstore.TXMStore attribute), \hyperpage{29}
+  \item RefinementError, \hyperpage{18}
+  \item refresh\_frames() (xanespy.qt\_frameset\_presenter.QtFramesetPresenter method), 
+		\hyperpage{25}
+  \item regions (xanespy.edges.Edge attribute), \hyperpage{15, 16}
+  \item regions (xanespy.edges.LMOMnKEdge attribute), \hyperpage{16}
+  \item regions (xanespy.edges.NCACobaltLEdge attribute), \hyperpage{16}
+  \item regions (xanespy.edges.NCANickelKEdge attribute), \hyperpage{16}
+  \item regions (xanespy.edges.NCANickelKEdge61 attribute), \hyperpage{17}
+  \item regions (xanespy.edges.NCANickelKEdge62 attribute), \hyperpage{17}
+  \item regions (xanespy.edges.NCANickelLEdge attribute), \hyperpage{17}
+  \item register\_correlations() (in module xanespy.xanes\_math), \hyperpage{42}
+  \item register\_template() (in module xanespy.xanes\_math), \hyperpage{42}
+  \item relative\_positions (xanespy.txmstore.TXMStore attribute), \hyperpage{29}
+  \item remove\_callback() (xanespy.qt\_frame\_view.FrameChangeSource method), \hyperpage{21}
+  \item remove\_extra\_spines() (in module xanespy.plots), \hyperpage{21}
+  \item replace\_dataset() (xanespy.txmstore.TXMStore method), \hyperpage{29}
+  \item representations() (xanespy.xanes\_frameset.PtychoFrameset method), \hyperpage{31}
+  \item representations() (xanespy.xanes\_frameset.XanesFrameset method), \hyperpage{37}
+  \item reset\_frame\_range() (xanespy.qt\_frameset\_presenter.QtFramesetPresenter method), 
+		\hyperpage{25}
+  \item reset\_map\_range() (xanespy.qt\_frameset\_presenter.QtFramesetPresenter method), 
+		\hyperpage{25}
+  \item rows (xanespy.utilities.shape attribute), \hyperpage{30}
+
+  \indexspace
+  \bigletter S
+  \item sample\_position() (xanespy.xradia.XRMFile method), \hyperpage{44}
+  \item save\_movie() (xanespy.xanes\_frameset.XanesFrameset method), \hyperpage{37}
+  \item scale (xanespy.xanes\_math.KEdgeParams attribute), \hyperpage{39}
+  \item sector8\_xanes\_script() (in module xanespy.beamlines), \hyperpage{14}
+  \item select\_active\_hdf\_item() (xanespy.qt\_frame\_view.QtFrameView method), \hyperpage{22}
+  \item set\_axes\_color() (in module xanespy.plots), \hyperpage{21}
+  \item set\_cmap() (xanespy.qt\_frame\_view.QtFrameView method), \hyperpage{22}
+  \item set\_cmap\_list() (xanespy.qt\_frame\_view.QtFrameView method), \hyperpage{22}
+  \item set\_cmap\_list() (xanespy.qt\_map\_view.QtMapView method), \hyperpage{27}
+  \item set\_drawing\_status() (xanespy.qt\_frame\_view.QtFrameView method), \hyperpage{22}
+  \item set\_frame\_vmax() (xanespy.qt\_frameset\_presenter.QtFramesetPresenter method), 
+		\hyperpage{25}
+  \item set\_frame\_vmin() (xanespy.qt\_frameset\_presenter.QtFramesetPresenter method), 
+		\hyperpage{25}
+  \item set\_frames() (xanespy.txmstore.TXMStore method), \hyperpage{29}
+  \item set\_map\_cursor() (xanespy.qt\_frameset\_presenter.QtFramesetPresenter method), 
+		\hyperpage{25}
+  \item set\_map\_limits() (xanespy.qt\_map\_view.QtMapView method), \hyperpage{27}
+  \item set\_map\_pixel() (xanespy.qt\_frameset\_presenter.QtFramesetPresenter method), 
+		\hyperpage{25}
+  \item set\_map\_vmax() (xanespy.qt\_frameset\_presenter.QtFramesetPresenter method), 
+		\hyperpage{25}
+  \item set\_map\_vmin() (xanespy.qt\_frameset\_presenter.QtFramesetPresenter method), 
+		\hyperpage{25}
+  \item set\_outside\_ticks() (in module xanespy.plots), \hyperpage{21}
+  \item set\_play\_speed() (xanespy.qt\_frameset\_presenter.QtFramesetPresenter method), 
+		\hyperpage{25}
+  \item set\_slider\_max() (xanespy.qt\_frame\_view.QtFrameView method), \hyperpage{22}
+  \item set\_status\_cursor() (xanespy.qt\_frame\_view.QtFrameView method), \hyperpage{22}
+  \item set\_status\_energy() (xanespy.qt\_frame\_view.QtFrameView method), \hyperpage{22}
+  \item set\_status\_index() (xanespy.qt\_frame\_view.QtFrameView method), \hyperpage{22}
+  \item set\_status\_pixel() (xanespy.qt\_frame\_view.QtFrameView method), \hyperpage{22}
+  \item set\_status\_shape() (xanespy.qt\_frame\_view.QtFrameView method), \hyperpage{22}
+  \item set\_status\_unit() (xanespy.qt\_frame\_view.QtFrameView method), \hyperpage{22}
+  \item set\_status\_value() (xanespy.qt\_frame\_view.QtFrameView method), \hyperpage{22}
+  \item set\_timestep() (xanespy.qt\_frame\_view.QtFrameView method), \hyperpage{22}
+  \item set\_timestep() (xanespy.qt\_frameset\_presenter.QtFramesetPresenter method), 
+		\hyperpage{25}
+  \item set\_timestep\_list() (xanespy.qt\_frame\_view.QtFrameView method), \hyperpage{22}
+  \item set\_ui\_enabled() (xanespy.qt\_frame\_view.QtFrameView method), \hyperpage{22}
+  \item set\_vmax() (xanespy.qt\_frame\_view.QtFrameView method), \hyperpage{23}
+  \item set\_vmax\_decimals() (xanespy.qt\_frame\_view.QtFrameView method), \hyperpage{23}
+  \item set\_vmax\_minimum() (xanespy.qt\_frame\_view.QtFrameView method), \hyperpage{23}
+  \item set\_vmax\_step() (xanespy.qt\_frame\_view.QtFrameView method), \hyperpage{23}
+  \item set\_vmin() (xanespy.qt\_frame\_view.QtFrameView method), \hyperpage{23}
+  \item set\_vmin\_decimals() (xanespy.qt\_frame\_view.QtFrameView method), \hyperpage{23}
+  \item set\_vmin\_maximum() (xanespy.qt\_frame\_view.QtFrameView method), \hyperpage{23}
+  \item set\_vmin\_step() (xanespy.qt\_frame\_view.QtFrameView method), \hyperpage{23}
+  \item set\_window\_title() (xanespy.qt\_frame\_view.QtFrameView method), \hyperpage{23}
+  \item setup() (xanespy.qt\_frame\_view.QtFrameView method), \hyperpage{23}
+  \item setup\_ui() (xanespy.qt\_map\_view.QtMapView method), \hyperpage{27}
+  \item shape (class in xanespy.utilities), \hyperpage{30}
+  \item shell (xanespy.edges.NCANickelKEdge attribute), \hyperpage{16}
+  \item show() (xanespy.qt\_frame\_view.QtFrameView method), \hyperpage{23}
+  \item show() (xanespy.qt\_map\_view.QtMapView method), \hyperpage{27}
+  \item show\_status\_message() (xanespy.qt\_frame\_view.QtFrameView method), \hyperpage{23}
+  \item signal\_map (xanespy.txmstore.TXMStore attribute), \hyperpage{29}
+  \item signal\_method (xanespy.txmstore.TXMStore attribute), \hyperpage{29}
+  \item signal\_weights (xanespy.txmstore.TXMStore attribute), \hyperpage{29}
+  \item signals (xanespy.txmstore.TXMStore attribute), \hyperpage{29}
+  \item sigw (xanespy.xanes\_math.KEdgeParams attribute), \hyperpage{39}
+  \item spectra() (xanespy.xanes\_frameset.XanesFrameset method), \hyperpage{37}
+  \item spectrum() (xanespy.xanes\_frameset.XanesFrameset method), \hyperpage{37}
+  \item spectrum\_ax (xanespy.qt\_frame\_view.QtFrameView attribute), \hyperpage{23}
+  \item ssrl6\_xanes\_script() (in module xanespy.beamlines), \hyperpage{14}
+  \item stage\_transformations() (xanespy.xanes\_frameset.XanesFrameset method), \hyperpage{38}
+  \item start() (xanespy.qt\_frame\_view.FrameChangeSource method), \hyperpage{21}
+  \item starttime() (xanespy.xanes\_frameset.XanesFrameset method), \hyperpage{38}
+  \item starttime() (xanespy.xradia.XRMFile method), \hyperpage{44}
+  \item stop() (xanespy.qt\_frame\_view.FrameAnimation method), \hyperpage{21}
+  \item stop() (xanespy.qt\_frame\_view.FrameChangeSource method), \hyperpage{21}
+  \item store() (xanespy.xanes\_frameset.XanesFrameset method), \hyperpage{38}
+  \item subtract\_surroundings() (xanespy.xanes\_frameset.XanesFrameset method), \hyperpage{38}
+
+  \indexspace
+  \bigletter T
+  \item timer (xanespy.qt\_frameset\_presenter.QtFramesetPresenter attribute), \hyperpage{26}
+  \item timestamps (xanespy.txmstore.TXMStore attribute), \hyperpage{29}
+  \item timestep\_names (xanespy.txmstore.TXMStore attribute), \hyperpage{29}
+  \item toggle\_edge\_mask() (xanespy.qt\_frameset\_presenter.QtFramesetPresenter method), 
+		\hyperpage{26}
+  \item transform\_images() (in module xanespy.xanes\_math), \hyperpage{42}
+  \item transformation\_matrices() (in module xanespy.xanes\_math), \hyperpage{43}
+  \item TXMStore (class in xanespy.txmstore), \hyperpage{27}
+
+  \indexspace
+  \bigletter U
+  \item ui (xanespy.qt\_frame\_view.QtFrameView attribute), \hyperpage{23}
+  \item ui (xanespy.qt\_map\_view.QtMapView attribute), \hyperpage{27}
+  \item um\_per\_pixel() (xanespy.xradia.XRMFile method), \hyperpage{44}
+  \item update\_crosshair\_labels() (xanespy.qt\_map\_view.QtMapView method), \hyperpage{27}
+  \item update\_cursor\_labels() (xanespy.qt\_map\_view.QtMapView method), \hyperpage{27}
+  \item update\_frame\_range\_limits() (xanespy.qt\_frameset\_presenter.QtFramesetPresenter method), 
+		\hyperpage{26}
+  \item update\_map\_limits() (xanespy.qt\_frameset\_presenter.QtFramesetPresenter method), 
+		\hyperpage{26}
+  \item update\_maps() (xanespy.qt\_frameset\_presenter.QtFramesetPresenter method), \hyperpage{26}
+  \item update\_spectra() (xanespy.qt\_frameset\_presenter.QtFramesetPresenter method), 
+		\hyperpage{26}
+  \item update\_status\_frame() (xanespy.qt\_frameset\_presenter.QtFramesetPresenter method), 
+		\hyperpage{26}
+  \item update\_status\_shape() (xanespy.qt\_frameset\_presenter.QtFramesetPresenter method), 
+		\hyperpage{26}
+  \item update\_status\_unit() (xanespy.qt\_frameset\_presenter.QtFramesetPresenter method), 
+		\hyperpage{26}
+  \item update\_status\_value() (xanespy.qt\_frameset\_presenter.QtFramesetPresenter method), 
+		\hyperpage{26}
+  \item use\_busy\_cursor() (xanespy.qt\_frame\_view.QtFrameView method), \hyperpage{23}
+  \item use\_edge\_mask (xanespy.qt\_frameset\_presenter.QtFramesetPresenter attribute), 
+		\hyperpage{26}
+
+  \indexspace
+  \bigletter V
+  \item VERSION (xanespy.txmstore.TXMStore attribute), \hyperpage{28}
+  \item vertical (xanespy.utilities.Pixel attribute), \hyperpage{29}
+  \item voffset (xanespy.xanes\_math.KEdgeParams attribute), \hyperpage{39}
+
+  \indexspace
+  \bigletter W
+  \item whiteline\_map (xanespy.txmstore.TXMStore attribute), \hyperpage{29}
+  \item window (xanespy.qt\_frame\_view.QtFrameView attribute), \hyperpage{23}
+  \item window (xanespy.qt\_map\_view.QtMapView attribute), \hyperpage{27}
+  \item write\_scaninfo\_header() (in module xanespy.beamlines), \hyperpage{15}
+
+  \indexspace
+  \bigletter X
+  \item x (xanespy.beamlines.ZoneplatePoint attribute), \hyperpage{14}
+  \item x (xanespy.utilities.position attribute), \hyperpage{30}
+  \item x (xanespy.utilities.xycoord attribute), \hyperpage{31}
+  \item XanesFrameset (class in xanespy.xanes\_frameset), \hyperpage{31}
+  \item XanesMathError, \hyperpage{18}
+  \item xanespy (module), \hyperpage{44}
+  \item xanespy.beamlines (module), \hyperpage{13}
+  \item xanespy.edges (module), \hyperpage{15}
+  \item xanespy.exceptions (module), \hyperpage{17}
+  \item xanespy.importers (module), \hyperpage{18}
+  \item xanespy.plots (module), \hyperpage{19}
+  \item xanespy.qt\_frame\_view (module), \hyperpage{21}
+  \item xanespy.qt\_frameset\_presenter (module), \hyperpage{23}
+  \item xanespy.qt\_map\_view (module), \hyperpage{26}
+  \item xanespy.txmstore (module), \hyperpage{27}
+  \item xanespy.utilities (module), \hyperpage{29}
+  \item xanespy.xanes\_frameset (module), \hyperpage{31}
+  \item xanespy.xanes\_math (module), \hyperpage{38}
+  \item xanespy.xradia (module), \hyperpage{43}
+  \item XRMFile (class in xanespy.xradia), \hyperpage{43}
+  \item xy\_to\_pixel() (in module xanespy.utilities), \hyperpage{30}
+  \item xycoord (class in xanespy.utilities), \hyperpage{30}
+
+  \indexspace
+  \bigletter Y
+  \item y (xanespy.beamlines.ZoneplatePoint attribute), \hyperpage{14}
+  \item y (xanespy.utilities.position attribute), \hyperpage{30}
+  \item y (xanespy.utilities.xycoord attribute), \hyperpage{31}
+
+  \indexspace
+  \bigletter Z
+  \item z (xanespy.beamlines.DetectorPoint attribute), \hyperpage{13}
+  \item z (xanespy.beamlines.ZoneplatePoint attribute), \hyperpage{14}
+  \item z (xanespy.utilities.position attribute), \hyperpage{30}
+  \item Zoneplate (class in xanespy.beamlines), \hyperpage{13}
+  \item ZoneplatePoint (class in xanespy.beamlines), \hyperpage{13}
+
+\end{theindex}

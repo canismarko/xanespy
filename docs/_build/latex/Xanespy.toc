@@ -14,4 +14,22 @@
 \contentsline {section}{\numberline {4.1}Plotting}{9}{section.4.1}
 \contentsline {section}{\numberline {4.2}Interactive Viewer (Qt)}{9}{section.4.2}
 \contentsline {chapter}{\numberline {5}Accessing the Data Directly}{11}{chapter.5}
-\contentsline {chapter}{\numberline {6}Indices and tables}{13}{chapter.6}
+\contentsline {chapter}{\numberline {6}xanespy}{13}{chapter.6}
+\contentsline {section}{\numberline {6.1}xanespy package}{13}{section.6.1}
+\contentsline {subsection}{\numberline {6.1.1}Submodules}{13}{subsection.6.1.1}
+\contentsline {subsection}{\numberline {6.1.2}xanespy.beamlines module}{13}{subsection.6.1.2}
+\contentsline {subsection}{\numberline {6.1.3}xanespy.edges module}{15}{subsection.6.1.3}
+\contentsline {subsection}{\numberline {6.1.4}xanespy.exceptions module}{17}{subsection.6.1.4}
+\contentsline {subsection}{\numberline {6.1.5}xanespy.importers module}{18}{subsection.6.1.5}
+\contentsline {subsection}{\numberline {6.1.6}xanespy.plots module}{19}{subsection.6.1.6}
+\contentsline {subsection}{\numberline {6.1.7}xanespy.qt\_frame\_view module}{21}{subsection.6.1.7}
+\contentsline {subsection}{\numberline {6.1.8}xanespy.qt\_frameset\_presenter module}{23}{subsection.6.1.8}
+\contentsline {subsection}{\numberline {6.1.9}xanespy.qt\_map\_view module}{26}{subsection.6.1.9}
+\contentsline {subsection}{\numberline {6.1.10}xanespy.txmstore module}{27}{subsection.6.1.10}
+\contentsline {subsection}{\numberline {6.1.11}xanespy.utilities module}{29}{subsection.6.1.11}
+\contentsline {subsection}{\numberline {6.1.12}xanespy.xanes\_frameset module}{31}{subsection.6.1.12}
+\contentsline {subsection}{\numberline {6.1.13}xanespy.xanes\_math module}{38}{subsection.6.1.13}
+\contentsline {subsection}{\numberline {6.1.14}xanespy.xradia module}{43}{subsection.6.1.14}
+\contentsline {subsection}{\numberline {6.1.15}Module contents}{44}{subsection.6.1.15}
+\contentsline {chapter}{\numberline {7}Indices and tables}{45}{chapter.7}
+\contentsline {chapter}{Python Module Index}{47}{section*.418}
