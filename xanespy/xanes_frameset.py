@@ -24,7 +24,7 @@ row, column).
 
 """
 
-
+import datetime as dt
 import functools
 from typing import Callable
 import os
@@ -110,7 +110,7 @@ class XanesFrameset():
             if representation is None:
                 group = store.data_group()
             else:
-                group = store.get_frames(representation)
+                group = store.get_frames(representation=representation)
             path = group.name
         return path
     
@@ -122,19 +122,10 @@ class XanesFrameset():
     @property
     def data_name(self):
         return self._data_name
-        # if self._data_name is None:
-        #     # If no data name is set yet, use the latest supplied one
-        #     with self.store() as store:
-        #         name = store.latest_data_name
-        # else:
-        #     name = self._data_name
-        # return name
 
     @data_name.setter
     def data_name(self, val):
         self._data_name = val
-        # with self.store() as store:
-        #     store.data_name = val
         # Clear any cached values since the data are probably different
         self.clear_caches()
 
@@ -157,81 +148,97 @@ class XanesFrameset():
                         parent_name=self.parent_name,
                         data_name=self.data_name,
                         mode=mode)
-
+    
     def clear_caches(self):
         """Clear cached function values so they will be recomputed with fresh
-        data"""
-        self.image_normalizer.cache_clear()
-        self.edge_jump.cache_clear()
+        data
+        
+        """
         self.edge_mask.cache_clear()
         self.frames.cache_clear()
+        self.map_data.cache_clear()
         self.energies.cache_clear()
         self.extent.cache_clear()
-
-    @property
-    def active_labels_groupname(self):
-        """The group name for the latest frameset of detected particle labels."""
-        # Save as an HDF5 attribute
-        return None
-        group = self.active_group()
-        return group.attrs.get('active_labels', None)
-
-    @active_labels_groupname.setter
-    def active_labels_groupname(self, value):
-        group = self.active_group()
-        group.attrs['active_labels'] = value
-
-    @active_labels_groupname.deleter
-    def active_labels_groupname(self):
-        group = self.active_group()
-        del group.attrs['active_labels']
-
-    def starttime(self):
-        """Determine the earliest timestamp amongst all of the frames."""
-        all_times = [f.starttime for f in self]
-        return min(all_times)
-
-    def endtime(self):
-        """Determine the latest timestamp amongst all of the frames."""
-        all_times = [f.endtime for f in self]
-        # Check background frames as well
-        old_groupname = self.active_group
-        self.switch_group('background_frames')
-        all_times += [f.endtime for f in self]
-        self.switch_group(old_groupname)
-        return max(all_times)
-
-    def particle(self, particle_idx=0):
-        """Prepare a particle frameset for the given particle index."""
-        fs = ParticleFrameset(parent=self, particle_idx=particle_idx)
-        return fs
-
-    def representations(self):
+    
+    def starttime(self, timeidx=None):
+        """Determine the earliest timestamp amongst all of the frames.
+        
+        Parameters
+        ----------
+        timeidx : int, optional
+          Which timestep to use for finding the start time. If
+          omitted or None (default), all timesteps will be checked.
+        
+        Returns
+        -------
+        start_time : np.datetime64
+          Naive datetime representing the earliest known frame for
+          this timeidx. Timezone will always be UTC no matter where
+          the data were collected.
+        
+        """
+        now = np.datetime64(dt.datetime.now())
+        with self.store() as store:
+            Ts = store.timestamps
+            # Get only the requested time index
+            if timeidx is not None:
+                Ts = Ts[timeidx]
+            # Figure out which timestamp is the earliest
+            Ts = Ts.astype('datetime64').flatten()
+            start_idx = np.argmax(now - Ts)
+            start_time = Ts[start_idx]
+        # Return the earliest timestamp
+        return start_time
+    
+    def endtime(self, timeidx=None):
+        """Determine the latest timestamp amongst all of the frames.
+        
+        Parameters
+        ----------
+        timeidx : int, optional
+          Which timestep to use for finding the end time. If
+          omitted or None (default), all timesteps will be checked.
+        
+        Returns
+        -------
+        start_time : np.datetime64
+          Naive datetime representing the latest known frame for
+          this time index. Timezone will always be UTC no matter where
+          the data were collected.
+        
+        """
+        now = np.datetime64(dt.datetime.now())
+        with self.store() as store:
+            Ts = store.timestamps
+            if timeidx is not None:
+                Ts = Ts[timeidx]
+            Ts = Ts.astype('datetime64').flatten()
+            end_idx = np.argmin(now - Ts)
+            end_time = Ts[end_idx]
+        return end_time
+    
+    def components(self):
         """Retrieve a list of valid representations for these data."""
-        reps = ['modulus']
-        return reps
-
-    def fork_data_group(self, new_name, src=None):
+        comps = ['modulus']
+        return comps
+    
+    def fork_data_group(self, dest, src=None):
         """Turn on different active data for this frameset's store
         object. Similar to `switch_data_group` except that this method
         deletes the existing group and copies symlinks from the current one.
-
+        
         Arguments
         ---------
-
-        - new_name : A string with the new name for the data group.
-
-        - src : String with the name of the data group to copy
-          from. If None (default), the current data group will be
-          used.
+        dest : str
+          Name for the data group.
+        src : str
+          String with the name of the data group to copy from. If None
+          (default), the current data group will be used.
         """
-        # Change the currently active group if necessary
-        if src is not None:
-            self.data_name = src
         # Fork the current group to the new one
         with self.store(mode='r+') as store:
-            store.fork_data_group(new_name=new_name)
-        self.data_name = new_name
+            store.fork_data_group(dest=dest, src=src)
+        self.data_name = dest
 
     def apply_transformations(self, crop=True, commit=True):
         """Take any transformations staged with `self.stage_transformations()`
@@ -413,9 +420,9 @@ class XanesFrameset():
         # Check for valid attributes
         valid_filters = ["median", None]
         if blur not in valid_filters:
-            msg = "Invalid blur filter {}. Choices are {}"
+            msg = 'Invalid blur filter "{}". Choices are {}'
             msg = msg.format(blur, valid_filters)
-            raise AttributeError(msg) from None
+            raise ValueError(msg)
         # Sanity check on `method` argument
         valid_methods = ['cross_correlation', 'template_match']
         if method not in valid_methods:
@@ -497,60 +504,23 @@ class XanesFrameset():
         """
         with self.store('r+') as store:
             frames = store.absorbances.value
-            Es = store.energies
+            # Average across all timesteps
+            frames = np.median(frames, axis=0)
+            Es = np.median(store.energies, axis=0)
             particles = xm.particle_labels(frames=frames, energies=Es,
-                                           edge=self.edge(),
+                                           edge=self.edge,
                                            min_distance=min_distance)
             store.particle_labels = particles
-
-    # def boxplot(self, particle_idx=0, ax=None, map_name="whiteline_map"):
-    #     """Draw a box-whisker plot for the given particle in the given data map.
-
-    #     Arguments
-    #     ---------
-
-    #     - particle_idx : Selector for which particle to select from
-    #       the data source.
-
-    #     - ax : Matplot Axes instance on which to draw the plot.
-
-    #     - map_name : Data store name to use as the data source.
-
-    #     """
-    #     # Get the data for this particle
-    #     pixels = []
-    #     with self.store() as store:
-    #         data = store.get_map(map_name).value
-    #         for stepdata in data:
-    #             particles = self.particle_regions(intensity_image=stepdata)
-    #             particle = particles[particle_idx]
-    #             pixels.append(particle.intensity_image)
-    #     # Reshape the array to be in (timstep, pixel) order
-    #     pixels = np.array(pixels)
-    #     old_shape = pixels.shape
-    #     # ax.imshow(pixels[6], cmap="viridis")
-    #     pixels = pixels.reshape((pixels.shape[0],-1))
-    #     # Create a new set of axes if necessary
-    #     if ax is None:
-    #         ax = plots.new_axes()
-    #     # Do the plotting
-    #     ax.boxplot(pixels)
-    #             # imgs = [p.intensity_image for p in particles]
-    #             # vals = [np.median(im[im > 0]) for im in imgs]
-    #             # steps.append(vals)
-    #     # Convert from (steps, particles) to (particles, steps)
-    #     # steps = np.array(steps)
-    #     # steps = np.transpose(steps)
-    #     return ax
-        
-
+            if hasattr(store.particle_labels, 'attrs'):
+                store.particle_labels.attrs['frame_source'] = 'absorbances'
+    
     def particle_series(self, map_name="whiteline_map"):
         """Generate an array of values from map_name averaged across each
         particle.
-
+        
         Returns: A 2D array where the first dimension is particles and
         the second is the first dimension of the map dataset (usually time).
-
+        
         """
         steps = []
         with self.store() as store:
@@ -564,7 +534,7 @@ class XanesFrameset():
         steps = np.array(steps)
         steps = np.transpose(steps)
         return steps
-
+    
     def normalize(self, plot_fit=False, new_name='normalized'):
         """Correct for background material not absorbing at this edge. Uses
         method described in DOI 10.1038/ncomms7883: fit line against
@@ -629,35 +599,6 @@ class XanesFrameset():
         regions.sort(key=lambda p: p.area, reverse=True)
         return regions
 
-    def particle_area_spectrum(self, loc=xycoord(20, 20)):
-        """Calculate a spectrum based on the area of the particle closest to
-        the given location in the frame. This may be useful for assessing
-        magnification across multiple frames.
-        """
-        energies = [f.energy for f in self]
-        areas = []
-        for frame in self:
-            particle_idx = frame.closest_particle_idx(loc)
-            particle = frame.particles()[particle_idx]
-            areas.append(particle.area())
-        return pd.Series(areas, index=energies)
-
-    def particle_centroid_spectrum(self, loc=xycoord(20, 20)):
-        """Calculate a spectrum based on the image centroid of the particle
-        closest to the given location in the frame. This may be useful
-        for assessing systematic drift across multiple frames.
-        """
-        energies = [f.energy for f in self]
-        vs = []
-        hs = []
-        for frame in self:
-            particle_idx = frame.closest_particle_idx(loc)
-            particle = frame.particles()[particle_idx]
-            centroid = particle.centroid()
-            vs.append(centroid.vertical)
-            hs.append(centroid.horizontal)
-        return pd.DataFrame({'vertical': vs, 'horizontal': hs}, index=energies)
-
     def plot_mean_image(self, ax=None, component="modulus"):
         if ax is None:
             ax = plots.new_image_axes()
@@ -674,14 +615,17 @@ class XanesFrameset():
         ax.set_ylabel(ax_unit)
         return artist
 
-    def mean_frame(self):
-        """Return the mean absorbance with the same shape as an individual
-        frame."""
+    def mean_frame(self, representation="absorbances"):
+        """Return the mean value with the same shape as an individual
+        frame.
+
+        """
         with self.store() as store:
-            As = store.absorbances
-            As = np.reshape(As, (-1, *self.frame_shape()))
-            mean_A = np.mean(As, axis=0)
-        return mean_A
+            Is = store.get_frames(representation)
+            frame_shape = self.frame_shape(representation)
+            Is = np.reshape(Is, (-1, *frame_shape))
+            mean = np.mean(Is, axis=0)
+        return mean
 
     def frame_shape(self, representation="absorbances"):
         """Return the shape of the individual energy frames."""
@@ -825,39 +769,7 @@ class XanesFrameset():
         # Plot lines at edge of normalization range or indicate peak positions
         edge.annotate_spectrum(ax=scatter.axes)
         return scatter
-
-    def plot_xanes_edge(self, *args, **kwargs):
-        """Call self.plots.plot_xanes_spectrum() but zoomed in on the edge."""
-        scatter = self.plot_xanes_spectrum(*args, **kwargs)
-        ax = scatter.axes
-        # Determine plotting limits
-        start = self.edge.map_range[0] - 5
-        stop = self.edge.map_range[1] + 5
-        ax.set_xlim(start, stop)
-        return scatter
-
-    def plot_edge_jump(self, ax=None, alpha=1):
-        """Plot the results of the edge jump filter."""
-        if ax is None:
-            ax = plots.new_image_axes()
-        ej = self.edge_jump()
-        artist = ax.imshow(ej, extent=self.extent('absorbances'),
-                           cmap=self.cmap, origin="lower",
-                           alpha=alpha)
-        ax.set_xlabel('µm')
-        ax.set_ylabel('µm')
-        return artist
-
-    @functools.lru_cache()
-    def edge_jump(self):
-        """Calculate a image showing the difference in
-        signal across the X-ray edge."""
-        with self.store() as store:
-            ej = xm.edge_jump(frames=store.absorbances.value,
-                              energies=store.energies.value,
-                              edge=self.edge)
-        return ej
-
+    
     @functools.lru_cache()
     def edge_mask(self, sensitivity: float=1, min_size=0):
         """Calculate a mask for what is likely active material at this
@@ -878,45 +790,22 @@ class XanesFrameset():
             # Check for complex values and convert to absorbances only
             if np.iscomplexobj(As):
                 As = np.imag(As)
-            mask = self.edge().mask(frames=As,
+            mask = self.edge.mask(frames=As,
                                     energies=store.energies.value,
                                     sensitivity=sensitivity,
                                     min_size=min_size)
         return mask
-
-    def goodness_mask(self, sensitivity: float=0.5):
-        """Calculate an image based on the goodness of fit. `calculate_map`
-        must have been called previously. Goodness filter is converted
-        to a binary map using (Otsu) threshold filtering.
-
-        Arguments
-        ---------
-        - sensitivity: A multiplier for the otsu value to determine
-          the actual threshold.
-        """
-        goodness = self.goodness_filter()
-        try:
-            threshold = filters.threshold_otsu(goodness)
-        except TypeError:
-            mask = np.zeros_like(goodness)
-            # If thresholding failed, just show everything
-        else:
-            # If thresholding succeeded make a mask
-            mask = goodness > (sensitivity * threshold)
-            mask = morphology.dilation(mask)
-            mask = np.logical_not(mask)
-        return mask
-
+    
     def fit_spectra(self, edge_mask=True):
         """Fit a series of curves to the spectrum at each pixel.
-
+        
         Arguments
         ---------
         edge_mask : bool, optional
           If true, only pixels passing the edge_mask will be fit and
           the remaning pixels will be set to a default value. This can
           help reduce computing time.
-
+        
         """
         logstart = time()
         with self.store() as store:
@@ -936,7 +825,6 @@ class XanesFrameset():
             map_shape = (*spectra.shape[:-1], len(xm.kedge_params))
             fit_maps = np.empty(map_shape)  # To hold output
             # Make sure spectra and energies have the same shape
-            # import pdb; pdb.set_trace()
             energies = broadcast_reverse(energies, frames.shape)
             spectra = spectra[~frames_mask].reshape((-1, spectra.shape[-1]))
             energies = np.moveaxis(energies, 1, -1)
@@ -962,6 +850,7 @@ class XanesFrameset():
         with self.store(mode='r+') as store:
             store.fit_parameters = fit_maps
             store.whiteline_map = wl_maps
+            store.whiteline_map.attrs['frame_source'] = 'absorbances'
         log.info('fit %d spectra in %d seconds',
                  spectra.shape[0], time() - logstart)
 
@@ -1035,7 +924,7 @@ class XanesFrameset():
             ax1, ax2 = ax_list[idx]
             plots.remove_extra_spines(ax2)
             plots.plot_txm_map(data=weights[0, ..., idx], ax=ax1,
-                               norm=norm, edge=self.edge(),
+                               norm=norm, edge=self.edge,
                                extent=extent)
             ax1.set_xlabel(px_unit)
             ax1.set_ylabel(px_unit)
@@ -1180,7 +1069,9 @@ class XanesFrameset():
         Parameters
         ----------
         timeidx : int
-          Index for the first dimension of the combined data array.
+          Index for the first dimension of the combined data array. If
+          the underlying map data has only 2 dimensions, this
+          parameter is ignored.
         representation : str
           The group name for these data. Eg "absorbances",
           "whiteline_map", "intensities"
@@ -1189,10 +1080,14 @@ class XanesFrameset():
         -------
         map_data : np.ndarray
           A 2-dimensional array with the form (row, col).
-        
+
         """
         with self.store() as store:
-            map_data = store.get_map(representation)[timeidx]
+            map_data = store.get_map(representation)
+            if map_data.ndim > 2:
+                map_data = map_data[timeidx]
+            else:
+                map_data = np.array(map_data)
         return map_data
     
     @functools.lru_cache(maxsize=2)
@@ -1218,7 +1113,7 @@ class XanesFrameset():
         
         """
         with self.store() as store:
-            frames = store.get_frames(representation)[timeidx]
+            frames = store.get_frames(representation=representation)[timeidx]
         return frames
     
     @functools.lru_cache(maxsize=2)
@@ -1232,23 +1127,8 @@ class XanesFrameset():
         
         """
         with self.store() as store:
-            return store.energies[timeidx]
-    
-    def masked_map(self, goodness_filter=True):
-        """Generate a map based on pixel-wise Xanes spectra and apply an
-        edge-jump filter mask. Default is to compute X-ray whiteline
-        position.
-        
-        """
-        raise DeprecationWarning()
-        # Check for cached map of the whiteline position for each pixel
-        if not self.map_name:
-            map_data, goodness = self.calculate_map()
-        else:
-            with self.hdf_file() as f:
-                map_data = f[self.map_name].value
-        masked_map = np.ma.array(map_data, mask=self.goodness_mask())
-        return masked_map
+            energies = store.energies[timeidx]
+        return energies
     
     def subtract_surroundings(self):
         """Use the edge mask to separate "surroundings" from "sample", then
@@ -1265,20 +1145,22 @@ class XanesFrameset():
             store.absorbances = store.absorbances - bg
     
     @functools.lru_cache(maxsize=64)
-    def extent(self, representation, idx=(0, 0)):
+    def extent(self, representation='intensities', idx=(0, 0)):
         """Determine physical dimensions for axes values.
-
+        
         Returns: If idx was given, a single tuple of (left, right,
         bottom, up), otherwise if idx is None it returns an array of
         extents for each frame.
-
+        
         Arguments
         ---------
-
-        -idx : Index for a given frame. This allows for faster
-         calculation if only a single frame is required. By default,
-         returns the first frame.
-
+        representation : str, optional
+          Name for which dataset to use.
+        idx : int, optional
+          Index for a given frame. This allows for faster calculation
+          if only a single frame is required. By default, returns the
+          first frame.
+        
         """
         with self.store() as store:
             frames = store.get_frames(representation)
@@ -1309,7 +1191,7 @@ class XanesFrameset():
             top = (center[:, -2] + height) / 2
             ret = np.array((left, right, bottom, top)).T
         return ret
-
+    
     def plot_frame(self, idx, ax=None, cmap="gray", *args, **kwargs):
         """Plot the frame with given index as an image."""
         if ax is None:
@@ -1326,13 +1208,13 @@ class XanesFrameset():
         ax.set_ylabel(unit)
         ax.set_xlabel(unit)
         return artist
-
+    
     @property
     def num_timesteps(self):
         with self.store() as store:
             val = store.absorbances.shape[0]
         return val
-
+    
     @property
     def num_energies(self):
         with self.store() as store:
@@ -1361,26 +1243,26 @@ class XanesFrameset():
                                step_size=0):
         """Plot the frameset's map and highlight some pixels on it then plot
         those pixel's spectra on another set of axes.
-
+        
         Arguments
         ---------
-
+        
         - pixels : An iterable of 2-tuples indicating which (row,
           column) pixels to highlight.
-
+        
         - map_ax : A matplotlib axes object to put the map onto. If
           None, a new 2-wide subplot will be created for both map_ax
           and spectra_ax.
-
+        
         - spectra_ax : A matplotlib axes to be used for plotting
           spectra. Will only be used if `map_ax` is not None.
-
+        
         - map_name : Name of the map to use for plotting. It will be
           passed to the TXM store object and retrieved from the hdf5
           file. If falsy, no map will be plotted.
-
+        
         - timeidx : Index of which timestep to use.
-
+        
         """
         # Create some axes if necessary
         if map_ax is None:
@@ -1401,17 +1283,7 @@ class XanesFrameset():
                                  map_ax=map_ax,
                                  spectra_ax=spectra_ax,
                                  step_size=step_size)
-
-    def plot_goodness(self, plotter=None, ax=None, norm_range=None,
-                      *args, **kwargs):
-
-        """Use a default frameset plotter to draw a map of the goodness of fit
-        as determined by the Edge object."""
-        if plotter is None:
-            plotter = FramesetPlotter(frameset=self, goodness_ax=ax)
-        plotter.draw_goodness(norm_range=norm_range, *args, **kwargs)
-        return plotter
-
+    
     def plot_histogram(self, plotter=None, timeidx=None, ax=None,
                        vmin=None, vmax=None, goodness_filter=False,
                        active_pixel=None, bins="energies", *args, **kwargs):
@@ -1434,93 +1306,7 @@ class XanesFrameset():
                                            norm=norm,
                                            cmap=self.cmap, bins=bins)
         return artists
-
-    def movie_plotter(self):
-        """Creates an animation of all the frames in ascending energy, but
-        does not display it anywhere, that's up to you."""
-        pl = FramesetMoviePlotter(frameset=self)
-        pl.create_axes(figsize=(10, 6))
-        pl.connect_animation(repeat=False)
-        return pl
-
-    def save_movie(self, filename, *args, **kwargs):
-        """Save an animation of all the frames and XANES to the specified
-        filename."""
-        pl = FramesetMoviePlotter(frameset=self)
-        pl.create_axes()
-        pl.connect_animation()
-        pl.save_movie(filename=filename, *args, **kwargs)
-
-    def hdf_file(self, mode='r'):
-        """Return an open h5py.File object for this (any maybe other) frameset.
-
-        Arguments
-        ---------
-        mode : A mode string, see h5py documentation for options. To
-        avoid file corruption, calling this method as a context
-        manager is recommended, especially with a mode other than 'r'.
-        """
-        if self.hdf_filename is not None:
-            file = h5py.File(self.hdf_filename, mode)
-        else:
-            file = None
-        return file
-
-    def background_group(self):
-        return self.hdf_file()[self.background_groupname]
-
-    def hdf_node(self):
-        """For use with HDFAttribute descriptor."""
-        return self.hdf_group()
-
-    def is_background(self):
-        return self.active_group == self.background_group
-
-    def add_frame(self, frame):
-        setname_template = "{energy}_eV"
-        frames_group = self.active_group()
-        # Find a unique frame dataset name
-        setname = setname_template.format(
-            energy=frame.approximate_energy,
-        )
-        # Name found, so create the actual dataset
-        frame.create_dataset(setname=setname,
-                             hdf_group=frames_group,
-                             compression="gzip")
-        return setname
-
-    def drop_frame(self, index):
-        """Delete frame with the given index (int) or energy (float). This
-        destructively removes the data from the HDF5 file, so use with
-        caution.
-        """
-        frame = self[index]
-        with self.hdf_file(mode="a") as f:
-            # Delete group
-            del f[frame.frame_group]
-
-    def background_normalizer(self):
-        # Find global limits
-        global_min = 0
-        global_max = 99999999999
-        bg_group = self.background_group()
-        for key in bg_group.keys():
-            data = bg_group[key].value
-            local_min = np.min(data)
-            if local_min < global_min:
-                global_min = local_min
-            local_max = np.max(data)
-            if local_max < global_max:
-                global_max = local_max
-        return Normalize(global_min, global_max)
-
-    @functools.lru_cache()
-    def image_normalizer(self, representation):
-        with self.store() as store:
-            global_min = np.min(store.absorbances)
-            global_max = np.max(store.absorbances)
-        return Normalize(global_min, global_max)
-
+   
     def qt_viewer(self):
         from qt_frameset_presenter import QtFramesetPresenter
         from qt_frame_view import QtFrameView
@@ -1541,7 +1327,7 @@ class PtychoFrameset(XanesFrameset):
     values. This class does *not* include any code responsible for the
     collection and reconstruction of such data, only for the analysis
     in the context of X-ray absorption near edge spectroscopy."""
-
+    
     def representations(self):
         """Retrieve a list of valid representations for these data, such as
         modulus or phase data for ptychography."""
@@ -1551,22 +1337,22 @@ class PtychoFrameset(XanesFrameset):
         if 'image_data' in reps:
             reps.remove('image_data')
         return reps
-
+    
     def apply_internal_reference(self, plot_background=True, ax=None):
         """Use a portion of each frame for internal reference correction. The
         result is the complex refraction for each pixel: the real
         component describes the phase shift, and the imaginary
         component is exponential decay, ie. absorbance.
-
+        
         Arguments
         ---------
-
+        
         plot_background : If truthy, the values of I_0 are plotted as
           a function of energy.
-
+        
         ax : The axes to use for plotting if `plot_background` is
           truthy.
-
+        
         """
         # Array for holding background correction for plotting
         if plot_background:
@@ -1588,7 +1374,6 @@ class PtychoFrameset(XanesFrameset):
         #     ax.set_xlabel("Energy (eV)")
         #     ax.set_ylabel("$I_0$")
         return
-
 
         # Step through each frame and apply reference correction
         for frame in prog(self, "Reference correction"):

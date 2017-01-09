@@ -119,25 +119,29 @@ class TXMStore():
         tree = walk_groups(self._file, level=0)
         return tree
 
-    def fork_data_group(self, new_name):
+    def fork_data_group(self, dest, src=None):
         """Turn on different active data group for this store. This method
         deletes the existing group and copies symlinks from the
         current one.
+
         """
+        # Switch to the group given by `src`
+        if src is not None:
+            self.data_name = src
         # Check that the current and target groups are not the same
-        if new_name == self.data_name:
-            log.critical("Refusing to fork group %s to itself", new_name)
-            msg = "Refusing to fork myself to myself ({})".format(new_name)
+        if dest == self.data_name:
+            log.critical('Refusing to fork group "%s" to itself', dest)
+            msg = 'Refusing to fork myself to myself ({})'.format(dest)
             raise exceptions.CreateGroupError(msg)
-        log.info('Forking data group "%s" to "%s"', self.data_name, new_name)
+        log.info('Forking data group "%s" to "%s"', src, dest)
         # Delete the old group and overwrite it
         parent = self.parent_group()
-        if new_name in parent.keys():
-            del parent[new_name]
+        if dest in parent.keys():
+            del parent[dest]
         # Copy the old one with symlinks
-        new_group = parent.copy(self.data_group(), new_name, shallow=True)
-        self.latest_data_name = new_name
-        self.data_name = new_name
+        new_group = parent.copy(self.data_group(), dest, shallow=True)
+        self.latest_data_name = dest
+        self.data_name = dest
         return new_group
 
     @property
@@ -381,7 +385,8 @@ class TXMStore():
     def timestamps(self, val):
         # S32 is the 32-character ACSII string type for numpy
         val = np.array(val, dtype="S32")
-        self.replace_dataset('timestamps', val, dtype="S32", context='metadata')
+        self.replace_dataset('timestamps', val, dtype="S32", context='metadata',
+                             attrs={'timezone', "UTC"})
 
     @property
     def filenames(self):

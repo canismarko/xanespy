@@ -400,19 +400,19 @@ class TXMStoreTest(XanespyTestCase):
     def test_fork_group(self):
         store = self.store('r+')
         with self.assertRaises(exceptions.CreateGroupError):
-            store.fork_data_group(store.data_name)
+            store.fork_data_group(dest=store.data_name, src=store.data_name)
         # Set a marker to see if it changes
         store.parent_group().create_group('new_group')
         store.data_name = 'new_group'
         store.data_group().attrs['test_val'] = 'Hello'
         # Now verify that the previous group was overwritten
         store.data_name = 'imported'
-        store.fork_data_group('new_group')
+        store.fork_data_group(dest='new_group')
         self.assertNotIn('test_val', list(store.data_group().attrs.keys()))
         # Check that the new group is registered as the "latest"
         self.assertEqual(store.latest_data_name, 'new_group')
         # Check that we can easily fork a non-existent group
-        store.fork_data_group('brand_new')
+        store.fork_data_group(dest='brand_new')
         store.close()
 
     def test_data_tree(self):
@@ -530,27 +530,202 @@ class XrayEdgeTest(unittest.TestCase):
         X = self.edge._post_edge_xs(x)
         self.assertTrue(np.array_equal(X, [[5]]))
 
+
+MockStore = mock.MagicMock(TXMStore)
+
 class XanesFramesetTest(TestCase):
+    """Set of python tests that work on full framesets and require data
+    from multiple frames to make sense."""
 
-    def create_frameset(self):
-        fs = XanesFrameset(filename="", edge=None)
+    def dummy_frame_data(self, shape=(5, 5, 128, 128)):
+        """Create some dummy data with a given shape. It's pretty much just an
+        arange with reshaping."""
+        length = np.prod(shape)
+        data = np.arange(length)
+        data = np.reshape(data, shape)
+        return data
+
+    def create_frameset(self, store=None, edge=None):
+        if edge is None:
+            edge = k_edges['Ni_NCA']()
+        # Create new frameset object
+        fs = XanesFrameset(filename="", edge=edge)
         # Mock out the `store` retrieval so we can control it
-        Store = mock.MagicMock(TXMStore)
-        fs.store = mock.Mock(side_effect=Store)
+        if store is None:
+            store = MockStore()
+            store.get_frames.return_value = self.dummy_frame_data()
+        store.__enter__ = mock.Mock(return_value=store)
+        fs.store = mock.Mock(return_value=store)
+        self.store = store
         return fs
+    
+    def test_fork_group(self):
+        """Tests that the XanesFrameset.fork_group properly hands off to
+        TXMStore.fork_data_group.
+        
+        """
+        store = MockStore()
+        fs = self.create_frameset(store=store)
+        # Call the fork_group method
+        fs.fork_data_group(dest="new_group", src="old_group")
+        store.fork_data_group.assert_called_once_with(
+            dest='new_group', src='old_group'
+        )
 
-    def test_get_frames(self):
-        frameset = XanesFrameset(filename="None", groupname="sam01",
-                                 edge=k_edges['Ni_NCA'])
-        Store = mock.MagicMock(TXMStore)
-        frameset.store = mock.Mock(side_effect=Store)
+    def test_align_frames_invalid(self):
+        """Check that the `align_frames` method throws the right exceptions on
+        bad inputs.
+        
+        """
+        fs = self.create_frameset()
+        # Bad blur value
+        with self.assertRaises(ValueError):
+            fs.align_frames(blur="bad-blur")
+        # Bad method
+        with self.assertRaises(ValueError):
+            fs.align_frames(method="bad-method")
 
+    def test_label_particle(self):
+        store = MockStore()
+        fs = self.create_frameset()
+        # Prepare dummy frame data
+        num_E = 10
+        E_step = 50
+        frames = np.random.rand(5, num_E, 128, 128)
+        store.absorbances.value = frames
+        store.get_frames = mock.Mock(return_value=frames)
+        # Prepare fake range of energies
+        energies = np.arange(8250, 8250 + E_step * num_E, step=E_step)
+        energies = np.broadcast_to(energies, (5, 10))
+        store.energies = energies
+        # Call the `label_particles` method
+        fs.label_particles()
+    
+    def test_store_accessors(self):
+        """Tests the almost-trivial methods the follow the following pattern:
+        
+        - open the txmstore
+        - do something to/with the store
+        - close the store
+        - return the result.
+        
+        """
+        # Prepare the mocked store
+        store = MockStore()
+        # Create the frameset
+        fs = self.create_frameset(store=store)
+        # Test `data_tree()` method
+        data_tree = ['1', '2']
+        store.data_tree = mock.Mock(return_value=data_tree)
+        self.assertEqual(fs.data_tree(), data_tree)
+        # Test `has_representation()` method
+        store.has_dataset = mock.Mock(return_value=True)
+        self.assertTrue(fs.has_representation("absorbances"))
+        store.has_dataset.assert_called_with('absorbances')
+        # Test `starttime()` and `endtime()` methods
+        timestamps = np.array([
+            # Index-0 timstep is the *fake* timestamps
+            [['2015-02-21 10:47:19', '2015-02-25 10:47:26.500000'],
+             ['2015-02-21 10:55:48', '2015-02-25 10:55:55.500000']],
+            # Index-1 timestep is the *real* timestamps
+            [['2015-02-22 10:47:19', '2015-02-22 10:47:26.500000'],
+             ['2015-02-22 10:55:48', '2015-02-22 10:55:55.500000']]
+        ])
+        store.timestamps = timestamps
+        starttime = fs.starttime(timeidx=1)
+        self.assertEqual(starttime, np.datetime64('2015-02-22 10:47:19'))
+        endtime = fs.endtime(timeidx=1)
+        self.assertEqual(endtime, np.datetime64('2015-02-22 10:55:55.500000'))
+    
+    def test_components(self):
+        fs = self.create_frameset()
+        self.assertEqual(fs.components(), ['modulus'])
+    
+    def test_mean_frame(self):
+        # Prepare frameset and mock store
+        frames = self.dummy_frame_data()
+        store = MockStore()
+        store.get_frames.return_value = frames
+        fs = self.create_frameset(store=store)
+        # Call the `mean_frames` method
+        result = fs.mean_frame(representation="intensities")
+        # Check that the result is correct
+        self.assertEqual(result.ndim, 2)
+        store.get_frames.assert_called_with('intensities')
+        expected = np.mean(frames, axis=(0, 1))
+        np.testing.assert_equal(result, expected)
+    
+    def test_map_data(self):
+        store = MockStore()
+        frameset = self.create_frameset(store=store)
+        # Check on getting data by timeidx
+        data = self.dummy_frame_data((10, 128, 128))
+        store.get_map.return_value = data
+        result = frameset.map_data(timeidx=5)
+        np.testing.assert_equal(result, data[5])
+        # Check on getting and already 2D map
+        data = self.dummy_frame_data((128, 128))
+        store.get_map.return_value = data
+        frameset.clear_caches()
+        result = frameset.map_data(timeidx=5)
+        np.testing.assert_equal(result, data)
+
+    def test_frames(self):
+        # Make mocked data
+        store = MockStore
+        data = self.dummy_frame_data()
+        store.get_frames.return_value = data
+        fs = self.create_frameset(store=store)
+        # Check that the method returns the right data
+        result = fs.frames(timeidx=3, representation='marbles')
+        store.get_frames.assert_called_once_with(representation='marbles')
+        np.testing.assert_equal(result, data[3])
+
+    def test_energies(self):
+        # Make mocked data
+        store = MockStore
+        data = self.dummy_frame_data((10, 61))
+        store.energies = data
+        fs = self.create_frameset(store=store)
+        # Check that the method returns the right data
+        result = fs.energies(timeidx=3)
+        np.testing.assert_equal(result, data[3])
+    
+    def test_active_path(self):
+        store = MockStore()
+        class DummyDataGroup():
+            name = '/ssrl-test-data/imported'
+        store.data_group.return_value = DummyDataGroup()
+        fs = self.create_frameset(store=store)
+        # Test the parent path
+        self.assertEqual(
+            fs.hdf_path(),
+            '/ssrl-test-data/imported'
+        )
+        store.data_group.assert_called_with()
+        store.frames.assert_not_called()
+        # Test a specific representation's path
+        class DummyDataGroup():
+            name = '/ssrl-test-data/imported/absorbances'
+        store.get_frames.return_value = DummyDataGroup()
+        self.assertEqual(
+            fs.hdf_path('absorbances'),
+            '/ssrl-test-data/imported/absorbances'
+        )
+        store.get_frames.assert_called_with(representation="absorbances")
+    
     def test_switch_groups(self):
         """Test that switching between HDF5 groups works robustly."""
         # Without the `src` argument
         fs = self.create_frameset()
         fs.fork_data_group('new_group')
         self.assertEqual(fs.data_name, 'new_group')
+
+    def test_repr(self):
+        fs = XanesFrameset(filename=None, edge=None,
+                           groupname="ssrl-test-data")
+        expected = "<XanesFrameset: 'ssrl-test-data'>"
+        self.assertEqual(fs.__repr__(), expected)
 
 
 class OldXanesFramesetTest(XanespyTestCase):
@@ -576,7 +751,7 @@ class OldXanesFramesetTest(XanespyTestCase):
         shutil.copy(self.originhdf, self.temphdf)
         self.frameset = XanesFrameset(filename=self.temphdf,
                                       groupname='ssrl-test-data',
-                                      edge=k_edges['Ni_NCA'])
+                                      edge=k_edges['Ni_NCA']())
 
     def tearDown(self):
         if os.path.exists(self.temphdf):
@@ -587,19 +762,7 @@ class OldXanesFramesetTest(XanespyTestCase):
         # Delete temporary HDF5 files
         if os.path.exists(cls.originhdf):
             os.remove(cls.originhdf)
-
-    def test_active_path(self):
-        # Test the parent path
-        self.assertEqual(
-            self.frameset.hdf_path(),
-            '/ssrl-test-data/imported'
-        )
-        # Test a specific representation's path
-        self.assertEqual(
-            self.frameset.hdf_path('absorbances'),
-            '/ssrl-test-data/imported/absorbances'
-        )
-
+    
     def test_has_representation(self):
         self.assertTrue(
             self.frameset.has_representation('intensities'))
@@ -607,10 +770,6 @@ class OldXanesFramesetTest(XanespyTestCase):
             self.frameset.has_representation('not-real-data'))
         self.assertFalse(
             self.frameset.has_representation(None))
-
-    def test_repr(self):
-        expected = "<XanesFrameset: 'ssrl-test-data'>"
-        self.assertEqual(self.frameset.__repr__(), expected)
 
     def test_align_frames(self):
         # Perform an excessive translation to ensure data are correctable
@@ -639,11 +798,11 @@ class OldXanesFramesetTest(XanespyTestCase):
         # Test for inequality by checking shapes
         self.assertEqual(old_imgs.shape[:-2], new_shape[:-2])
         self.assertNotEqual(old_imgs.shape[-2:], new_shape[-2:])
-
+    
     def test_extent(self):
         expected = (-16.828125, 16.828125, -16.828125, 16.828125)
         self.assertEqual(self.frameset.extent('absorbances'), expected)
-
+    
     def test_deferred_transformations(self):
         """Test that the system properly stores data transformations for later
         processing."""
@@ -698,7 +857,7 @@ class OldXanesFramesetTest(XanespyTestCase):
         k-means clustering."""
         N_COMPONENTS = 3
         self.frameset.calculate_signals(n_components=N_COMPONENTS,
-                                         method="nmf")
+                                        method="nmf")
         # Check that nmf signals and weights are saved
         with self.frameset.store() as store:
             n_energies = store.absorbances.shape[1]  # Expecting: 2

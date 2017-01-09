@@ -84,8 +84,8 @@ def read_metadata(filenames, flavor):
         # Fetch metadata from the file itself
         with format_classes[ext](filename, flavor=flavor) as f:
             metadata['shape'] = f.image_shape()
-            # Get total seconds since unix epoch
-            metadata['starttime'] = f.starttime().timestamp()
+            # Get time in utc
+            metadata['starttime'] = f.starttime()
         df.loc[filename] = metadata
     # Remove any incomplete framesets
     if len(df) > 0:
@@ -536,6 +536,7 @@ def import_frameset(directory, flavor, hdf_filename):
                                                shape=(num_samples, num_energies, 2),
                                                dtype="S32")
         timestamp_ds.attrs['context'] = 'metadata'
+        timestamp_ds.attrs['timezone'] = 'UTC'
         filename_ds = h5group.require_dataset('filenames',
                                               shape=(num_samples, num_energies),
                                               dtype="S100",

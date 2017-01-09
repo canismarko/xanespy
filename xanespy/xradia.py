@@ -149,6 +149,8 @@ class XRMFile():
         fmt = "%m/%d/%y %H:%M:%S"
         timestamp = dt.datetime.strptime(dt_string, fmt)
         timestamp = timestamp.replace(tzinfo=timezone)
+        # Now convert to datetime naive UTC format
+        timestamp = timestamp.astimezone(pytz.utc).replace(tzinfo=None)
         return timestamp
 
     def energy(self):

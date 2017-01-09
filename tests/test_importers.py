@@ -61,11 +61,14 @@ class XradiaTest(TestCase):
         start = dt.datetime(2016, 5, 29,
                             15, 2, 37,
                             tzinfo=pytz.timezone('US/Pacific'))
+        start = start.astimezone(pytz.utc).replace(tzinfo=None)
         self.assertEqual(xrm.starttime(), start)
+        self.assertEqual(xrm.starttime().tzinfo, None)
         # Check end time (offset determined by exposure time)
         end = dt.datetime(2016, 5, 29,
                           15, 2, 37, 500000,
                           tzinfo=pytz.timezone('US/Pacific'))
+        end = end.astimezone(pytz.utc).replace(tzinfo=None)
         self.assertEqual(xrm.endtime(), end)
         xrm.close()
         
@@ -74,9 +77,11 @@ class XradiaTest(TestCase):
         xrm = XRMFile(os.path.join(APS_DIR, sample_filename), flavor="aps")
         # Check start time
         start = dt.datetime(2016, 7, 2, 17, 50, 35, tzinfo=pytz.timezone('US/Central'))
+        start = start.astimezone(pytz.utc).replace(tzinfo=None)
         self.assertEqual(xrm.starttime(), start)
         # Check end time (offset determined by exposure time)
         end = dt.datetime(2016, 7, 2, 17, 51, 25, tzinfo=pytz.timezone('US/Central'))
+        end = end.astimezone(pytz.utc).replace(tzinfo=None)
         self.assertEqual(xrm.endtime(), end)
         xrm.close()
 
@@ -271,13 +276,13 @@ class APSImportTest(TestCase):
             self.assertTrue(np.array_equal(group['energies'].value, expected_Es))
             self.assertIn('timestamps', keys)
             expected_timestamp = np.array([
-                [[b'2016-07-02 16:31:36-05:51', b'2016-07-02 16:32:26-05:51'],
-                 [b'2016-07-02 17:50:35-05:51', b'2016-07-02 17:51:25-05:51']],
-                [[b'2016-07-02 22:19:23-05:51', b'2016-07-02 22:19:58-05:51'],
-                 [b'2016-07-02 23:21:21-05:51', b'2016-07-02 23:21:56-05:51']],
+                [[b'2016-07-02 22:22:36', b'2016-07-02 22:23:26'],
+                 [b'2016-07-02 23:41:35', b'2016-07-02 23:42:25']],
+                [[b'2016-07-03 04:10:23', b'2016-07-03 04:10:58'],
+                 [b'2016-07-03 05:12:21', b'2016-07-03 05:12:56']],
             ], dtype="S32")
-            self.assertTrue(np.array_equal(group['timestamps'].value,
-                                           expected_timestamp))
+            np.testing.assert_equal(group['timestamps'].value,
+                                    expected_timestamp)
             self.assertIn('filenames', keys)
             self.assertIn('original_positions', keys)
             # self.assertIn('relative_positions', keys)
@@ -307,8 +312,7 @@ class APSImportTest(TestCase):
                                tzinfo=pytz.timezone('US/Central'))
         realtime = realtime.astimezone(pytz.utc).replace(tzinfo=None)
         # Convert to unix timestamp
-        realtime = (realtime - dt.datetime(1970, 1, 1)) / dt.timedelta(seconds=1)
-        self.assertIsInstance(row['starttime'], float)
+        self.assertIsInstance(row['starttime'], pd.tslib.Timestamp)
         self.assertEqual(row['starttime'], realtime)
 
 
