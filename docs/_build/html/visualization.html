@@ -59,9 +59,48 @@
 <h1>Visualization of Results<a class="headerlink" href="#visualization-of-results" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="plotting">
 <h2>Plotting<a class="headerlink" href="#plotting" title="Permalink to this headline">¶</a></h2>
+<p>The <code class="docutils literal"><span class="pre">XanesFrameset</span></code> object has a number of methods for plotting.</p>
 </div>
-<div class="section" id="interactive-viewer-qt">
-<h2>Interactive Viewer (Qt)<a class="headerlink" href="#interactive-viewer-qt" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="interactive-qt-viewer">
+<h2>Interactive (Qt) Viewer<a class="headerlink" href="#interactive-qt-viewer" title="Permalink to this headline">¶</a></h2>
+<p>Xanespy includes a graphical user interface that allows for
+interactive visualization of X-ray frames and maps. To launch the
+viewer, prepare a <code class="docutils literal"><span class="pre">XanesFrameset</span></code> object and run the <code class="docutils literal"><span class="pre">qt_viewer()</span></code>
+method:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">fs</span> <span class="o">=</span> <span class="n">XanesFrameset</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
+<span class="n">fs</span><span class="o">.</span><span class="n">qt_viewer</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>The data tree on the left of the window shows the possible datasets
+than be viewed. Choosing an entry with type &#8220;frameset&#8221; will load and
+plot the frames, spectra and histograms in the frame window. If a
+&#8220;map&#8221; entry is selected, the map window will be launchedx and the
+frames that went into making the map will be shown in the frame
+window.</p>
+<p>In the interest of encouraging reproducibility, the <strong>ability to
+export plots has been intentionally left out</strong>. Any options selected
+in the GUI can be passed into the <code class="docutils literal"><span class="pre">plot_map</span></code>, <code class="docutils literal"><span class="pre">plot_histogram</span></code> or
+<code class="docutils literal"><span class="pre">plot_spectrum</span></code> methods of the frameset object. The name of the
+entry in the data tree is given as the keyword argument
+<code class="docutils literal"><span class="pre">representation</span></code>.</p>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p class="last">The interactive viewer has no effect on the underlying
+frameset or accompanying data, with one exception:
+changing to a different top-level branch in the data tree
+will change the <code class="docutils literal"><span class="pre">XanesFrameset.data_name</span></code>
+attribute. Before proceeding with analysis, either revert
+the <code class="docutils literal"><span class="pre">data_name</span></code> attribute manually or create a new
+<code class="docutils literal"><span class="pre">XanesFrameset</span></code> object.</p>
+</div>
+<div class="figure">
+<img alt="Qt View screenshot 1" src="_images/qt_viewer_screenshot-1.png" />
+</div>
+<div class="figure" id="id1">
+<img alt="Qt View screenshot 1" src="_images/qt_viewer_screenshot-2.png" />
+<p class="caption"><span class="caption-text">Screenshots of the Qt viewer. Frame window (top) and map window
+(bottom).</span></p>
+</div>
 </div>
 </div>
 
@@ -78,7 +117,7 @@
   <ul>
 <li><a class="reference internal" href="#">Visualization of Results</a><ul>
 <li><a class="reference internal" href="#plotting">Plotting</a></li>
-<li><a class="reference internal" href="#interactive-viewer-qt">Interactive Viewer (Qt)</a></li>
+<li><a class="reference internal" href="#interactive-qt-viewer">Interactive (Qt) Viewer</a></li>
 </ul>
 </li>
 </ul>

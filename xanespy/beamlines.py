@@ -43,12 +43,13 @@ class Zoneplate():
 
     Arguments
     ---------
-    - start : The first zoneplate position-energy pair.
-
-    - z_step : Adjustment in z-position for every positive change of 1 eV
+    start : tuple
+      The first zoneplate position-energy pair.
+    z_step : int, optional
+      Adjustment in z-position for every positive change of 1 eV
       of beam energy.
-
-    - end : The second zoneplate position-energy pair.
+    end : tuple, optional
+      The second zoneplate position-energy pair.
 
     """
     def __init__(self,
@@ -74,7 +75,8 @@ class Zoneplate():
         self.start = start
 
     def position(self, energy: float):
-        """Predict the x, y and z position of the zonplate for the given energy."""
+        """Predict the x, y and z position of the zonplate for the given
+        energy."""
         pos = position(
             x=self.start.x + self.step.x * (energy - self.start.energy),
             y=self.start.y + self.step.y * (energy - self.start.energy),
@@ -119,7 +121,7 @@ def ssrl6_xanes_script(dest,
                        iteration_rest: int=0,
                        frame_rest: int=0,
                        binning: int=2,
-                       exposure: int=0.5,
+                       exposure=0.5,
                        repetitions: int=5,
                        ref_repetitions: int=10,
                        abba_mode: bool=True):
@@ -131,44 +133,42 @@ def ssrl6_xanes_script(dest,
 
     Arguments
     ---------
-    - dest : file-like object that will hold the resulting script
-
-    - edge : Description of the absorption edge.
-
-    - binning : how many CCD pixels to combine into one image pixel
-      (eg. 2 means 2x2 CCD pixels become 1 image pixel.
-
-    - exposure : How many seconds to collect for per frame
-
-    - positions : Locations to move the x, y (and z) axes to in
-      order to capture the image.
-
-    - reference_position : Single x, y, z location to capture a
-      reference frame.
-
-    - iteration_rest : Time (in seconds) to wait between
-      iterations. Beam will wait at reference location before starting
-      next XANES set.
-
-    - frame_rest : Time (in seconds) to wait between frames. Beam will
-      wait at reference location before starting next energy frame.
-
-    - zoneplate : Calibration details for the Fresnel zone-plate.
-
-    - detector : Like zoneplate, but for detector.
-
-    - iterations : iterable that contains an identifier for each XANES dataset.
-
-    - repetitions : How many images to collect for each
-      location/energy. These frames will then be averaged during
-      analysis.
-
-    - ref_repetitions : Same as `repetitions` but for reference frames.
-
-    - abba_mode : If True, script will alternate sample and reference
-      locations first to save time. Eg: reference, sample,
-      change-energy, sample, reference, change-energy, etc. Not
-      compatible with `frame_rest` argument.
+    dest
+      A file-like object that will hold the resulting script
+    edge : Edge
+      Description of the absorption edge.
+    binning : int, optional
+      how many CCD pixels to combine into one image pixel (eg. 2 means
+      2x2 CCD pixels become 1 image pixel.
+    exposure : float, optional
+      How many seconds to collect for per frame
+    positions
+      Locations to move the x, y (and z) axes to in order to capture
+      the image.
+    reference_position : tuple
+      Single x, y, z location to capture a reference frame.
+    iteration_rest : int, optional
+      Time (in seconds) to wait between iterations. Beam will wait at
+      reference location before starting next XANES set.
+    frame_rest : int, optional
+      Time (in seconds) to wait between frames. Beam will wait at
+      reference location before starting next energy frame.
+    zoneplate : Zoneplate
+      Calibration details for the Fresnel zone-plate.
+    detector : Detector
+      Like zoneplate, but for detector.
+    iterations : Iterable
+      Contains an identifier for each XANES dataset.
+    repetitions : int, optional
+      How many images to collect for each location/energy. These
+      frames will then be averaged during analysis.
+    ref_repetitions : int, optional
+      Same as `repetitions` but for reference frames.
+    abba_mode : bool, optional
+      If True, script will alternate sample and reference locations
+      first to save time. Eg: reference, sample, change-energy,
+      sample, reference, change-energy, etc. Not compatible with
+      `frame_rest` argument.
 
     """
     # Sanity checks for arguments
@@ -281,31 +281,31 @@ def sector8_xanes_script(dest,
 
     Arguments
     ---------
-    - dest : file-like object that will hold the resulting script
-
-    - edge : Description of the absorption edge.
-
-    - binning : how many CCD pixels to combine into one image pixel
+    dest
+      file-like object that will hold the resulting script
+    edge : KEdge
+      Description of the absorption edge.
+    binning : int, optional
+      how many CCD pixels to combine into one image pixel
       (eg. 2 means 2x2 CCD pixels become 1 image pixel.
-
-    - exposure : How many seconds to collect for per frame
-
-    - sample_positions : Locations to move the x, y (and z) axes to in
-      order to capture the image.
-
-    - zoneplate : Calibration details for the Fresnel zone-plate.
-
-    - detector : Like zoneplate, but for detector.
-
-    - names : sample name to use in file names.
-
-    - iterations : iterable to contains an identifier for each full
-      set of xanes location with reference.
-
-    - abba_mode : If True, script will locations forward and backwards
-      to save time. Eg: reference, sample, change-energy, sample,
-      reference, change-energy, etc. Not compatible with `frame_rest`
-      argument.
+    exposure : float
+      How many seconds to collect for per frame
+    sample_positions
+      Locations to move the x, y (and z) axes to in order to capture
+      the image.
+    zoneplate : Zoneplate
+      Calibration details for the Fresnel zone-plate.
+    detector : Detector
+      Like zoneplate, but for detector.
+    names
+      sample name to use in file names.
+    iterations : iterable
+      contains an identifier for each full set of xanes location with
+      reference.
+    abba_mode : str, optional
+      If True, script will locations forward and backwards to save
+      time. Eg: reference, sample, change-energy, sample, reference,
+      change-energy, etc. Not compatible with `frame_rest` argument.
 
     """
     dest.write("setbinning {}\n".format(binning))

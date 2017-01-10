@@ -59,9 +59,64 @@
 <h1>Analyzing the Data<a class="headerlink" href="#analyzing-the-data" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="frame-alignment">
 <h2>Frame Alignment<a class="headerlink" href="#frame-alignment" title="Permalink to this headline">¶</a></h2>
+<p>In order to acquire reliable spectra, <strong>it is important that the
+frames be aligned properly</strong>. Thermal expansion, motor slop, sample
+damage and imperfect microscope alignment can all cause frames to be
+misaligned. <strong>It is often necessary to align the frames before
+performing any of the subsequent steps.</strong></p>
+<p>This is done with the <code class="docutils literal"><span class="pre">xanespy.XanesFrameset().align_frames()</span></code> method:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">xanespy</span>
+<span class="c1"># Select an imported hdf file to use</span>
+<span class="n">frameset</span> <span class="o">=</span> <span class="n">xanespy</span><span class="o">.</span><span class="n">XanesFrameset</span><span class="p">(</span><span class="n">hdf_filename</span><span class="o">=</span><span class="s2">&quot;...&quot;</span><span class="p">)</span>
+<span class="n">frameset</span><span class="o">.</span><span class="n">fork_data_group</span><span class="p">(</span><span class="s1">&#39;aligned&#39;</span><span class="p">)</span>
+<span class="c1"># Run through five passes of the default phase correlation</span>
+<span class="n">frameset</span><span class="o">.</span><span class="n">align_frames</span><span class="p">(</span><span class="n">passes</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">plot_results</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="figure" id="id1">
+<img alt="Box and whisker plot of translations." src="_images/alignment-boxplot.svg" /><p class="caption"><span class="caption-text">With the <code class="docutils literal"><span class="pre">plot_results</span></code> argument, a box and whisker plot is
+generated showing the distribution of corrections needed for
+aligning each frame. Several passes help reduce the error.</span></p>
+</div>
+<p>The alignments are generally done with subpixel resolution, which
+gives improved accuracy, but requires interpolation. To avoid problems
+with accumulated error, a cumulative translation matrix is kept and
+applied at the end to the original data. You can add your own
+translation manually using the <code class="docutils literal"><span class="pre">stage_transformations()</span></code> method. If
+<code class="docutils literal"><span class="pre">align_frames()</span></code> is called with <code class="docutils literal"><span class="pre">commit=False</span></code>, then the alignment
+parameters are added to <code class="docutils literal"><span class="pre">stage_transformations</span></code> but not
+applied. Once all transformations are staged, the
+<code class="docutils literal"><span class="pre">apply_transformations()</span></code> method will apply the cumulative
+transformation matrix and (by default) save the result to disk.</p>
+<p>If the starting alignment is particularly sporadic, a false minimum
+can result in an exception or a very small image that doesn&#8217;t provide
+useful information. In these cases, it may be necessary to first stage
+a template registration then perform several passes of phase
+correlation:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">fs</span> <span class="o">=</span> <span class="n">XanesFrameset</span><span class="p">(</span><span class="n">hdf_filename</span><span class="o">=</span><span class="s2">&quot;...&quot;</span><span class="p">)</span>
+<span class="c1"># Eg. use the 22nd energy and a range of the image as the template</span>
+<span class="n">template</span> <span class="o">=</span> <span class="n">fs</span><span class="o">.</span><span class="n">frames</span><span class="p">()[</span><span class="mi">21</span><span class="p">,</span> <span class="mi">110</span><span class="p">:</span><span class="mi">425</span><span class="p">,</span> <span class="mi">150</span><span class="p">:</span><span class="mi">450</span><span class="p">]</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">template</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="s2">&quot;gray&quot;</span><span class="p">)</span>
+
+<span class="n">fs</span><span class="o">.</span><span class="n">fork_data_group</span><span class="p">(</span><span class="s1">&#39;aligned&#39;</span><span class="p">)</span>
+
+<span class="n">fs</span><span class="o">.</span><span class="n">align_frames</span><span class="p">(</span><span class="n">method</span><span class="o">=</span><span class="s2">&quot;template_match&quot;</span><span class="p">,</span> <span class="n">template</span><span class="o">=</span><span class="n">template</span><span class="p">,</span> <span class="n">commit</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="n">fs</span><span class="o">.</span><span class="n">align_frames</span><span class="p">(</span><span class="n">passes</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">commit</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+</div>
 </div>
 <div class="section" id="subtracting-surroundings">
 <h2>Subtracting Surroundings<a class="headerlink" href="#subtracting-surroundings" title="Permalink to this headline">¶</a></h2>
+<p>Some microscopes show differences in the absorbance of the whole
+frame, including background material. This can be removed from each
+frame, giving a better spectrum:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">fs</span> <span class="o">=</span> <span class="n">XanesFrameset</span><span class="p">(</span><span class="n">hdf_filename</span><span class="o">=</span><span class="s2">&quot;...&quot;</span><span class="p">)</span>
+<span class="n">fs</span><span class="o">.</span><span class="n">subtract_surroundings</span><span class="p">()</span>
+</pre></div>
+</div>
+<div class="figure" id="id2">
+<img alt="Spectrum showing before and after subtract_surroundings" src="_images/subtract-surroundings.svg" /><p class="caption"><span class="caption-text">The effect of the <code class="docutils literal"><span class="pre">subtract_surroundings()</span></code> method.</span></p>
+</div>
 </div>
 <div class="section" id="spectrum-fitting-k-edge">
 <h2>Spectrum Fitting - K-Edge<a class="headerlink" href="#spectrum-fitting-k-edge" title="Permalink to this headline">¶</a></h2>

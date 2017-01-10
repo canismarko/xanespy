@@ -678,7 +678,7 @@ class XanesFramesetTest(TestCase):
         fs = self.create_frameset(store=store)
         # Check that the method returns the right data
         result = fs.frames(timeidx=3, representation='marbles')
-        store.get_frames.assert_called_once_with(representation='marbles')
+        store.get_frames.assert_called_once_with(name='marbles')
         np.testing.assert_equal(result, data[3])
 
     def test_energies(self):
