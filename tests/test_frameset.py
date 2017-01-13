@@ -678,7 +678,7 @@ class XanesFramesetTest(TestCase):
         fs = self.create_frameset(store=store)
         # Check that the method returns the right data
         result = fs.frames(timeidx=3, representation='marbles')
-        store.get_frames.assert_called_once_with(representation='marbles')
+        store.get_frames.assert_called_once_with(name='marbles')
         np.testing.assert_equal(result, data[3])
 
     def test_energies(self):
@@ -690,6 +690,46 @@ class XanesFramesetTest(TestCase):
         # Check that the method returns the right data
         result = fs.energies(timeidx=3)
         np.testing.assert_equal(result, data[3])
+
+    def test_all_extents(self):
+        pass
+        
+    def test_extent(self):
+        # Create mock data source
+        store = MockStore()
+        data = self.dummy_frame_data((5, 8, 128, 128))
+        store.get_frames.return_value = data
+        px_sizes = np.linspace(0.0315783 * 8, 0.0335783 * 8, num=8)
+        px_sizes = np.broadcast_to(px_sizes, (5, 8))
+        store.pixel_sizes = px_sizes
+        fs = self.create_frameset(store=store)        
+        # Check that passing multi-frame index gives the median
+        actual = fs.extent('absorbances')
+        expected = (-16.6800896, 16.6800896, -16.6800896, 16.6800896)
+        np.testing.assert_almost_equal(actual, expected)
+        # Check that passing an index gives that frame
+        actual = fs.extent('absorbances', idx=(0, 0))
+        expected = (-16.1680896, 16.1680896, -16.1680896, 16.1680896)
+        np.testing.assert_almost_equal(actual, expected)
+
+    def test_extent_array(self):
+        # Create mock data source
+        store = MockStore()
+        data = self.dummy_frame_data((5, 8, 128, 128))
+        store.get_frames.return_value = data
+        px_sizes = np.linspace(0.0315783 * 8, 0.0335783 * 8, num=8)
+        px_sizes = np.broadcast_to(px_sizes, (5, 2, 8))
+        px_sizes = np.moveaxis(px_sizes, 1, 2)
+        store.pixel_sizes = px_sizes
+        fs = self.create_frameset(store=store)        
+        # Check that passing multi-frame index gives the median
+        actual = fs.extent('absorbances')
+        expected = (-16.6800896, 16.6800896, -16.6800896, 16.6800896)
+        np.testing.assert_almost_equal(actual, expected)
+        # Check that passing an index gives that frame
+        actual = fs.extent('absorbances', idx=(0, 0))
+        expected = (-16.1680896, 16.1680896, -16.1680896, 16.1680896)
+        np.testing.assert_almost_equal(actual, expected)
     
     def test_active_path(self):
         store = MockStore()
@@ -798,11 +838,7 @@ class OldXanesFramesetTest(XanespyTestCase):
         # Test for inequality by checking shapes
         self.assertEqual(old_imgs.shape[:-2], new_shape[:-2])
         self.assertNotEqual(old_imgs.shape[-2:], new_shape[-2:])
-    
-    def test_extent(self):
-        expected = (-16.828125, 16.828125, -16.828125, 16.828125)
-        self.assertEqual(self.frameset.extent('absorbances'), expected)
-    
+   
     def test_deferred_transformations(self):
         """Test that the system properly stores data transformations for later
         processing."""

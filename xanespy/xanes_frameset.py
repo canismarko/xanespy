@@ -1113,7 +1113,7 @@ class XanesFrameset():
         
         """
         with self.store() as store:
-            frames = store.get_frames(representation=representation)[timeidx]
+            frames = store.get_frames(name=representation)[timeidx]
         return frames
     
     @functools.lru_cache(maxsize=2)
@@ -1143,54 +1143,59 @@ class XanesFrameset():
             bg = broadcast_reverse(bg, store.absorbances.shape)
             # Save the resultant data to disk
             store.absorbances = store.absorbances - bg
+
+    def extent_array(self, representation='intensities'):
+        raise NotImplementedError()
+        #     # Include all frames
+        #     imshape = np.array(frames.shape)[-2:]  # ((rows, cols))
+        #     pixel_size = store.pixel_sizes.value
+        #     center = store.relative_positions.value
+        # left = (center[:, -1] - width) / 2
+        # right = (center[:, -1] + width) / 2
+        # bottom = (center[:, -2] - height) / 2
+        # top = (center[:, -2] + height) / 2
+        # ret = np.array((left, right, bottom, top)).T
     
     @functools.lru_cache(maxsize=64)
-    def extent(self, representation='intensities', idx=(0, 0)):
+    def extent(self, representation='intensities', idx=...):
         """Determine physical dimensions for axes values.
-        
-        Returns: If idx was given, a single tuple of (left, right,
-        bottom, up), otherwise if idx is None it returns an array of
-        extents for each frame.
+    
+        If an index is given, it will first be applied to the frames
+        array. For any remaining dimensions besides the last two, the
+        median will be taken. For an array of extents for each frame,
+        use the ``extent_array`` method.
         
         Arguments
         ---------
         representation : str, optional
           Name for which dataset to use.
         idx : int, optional
-          Index for a given frame. This allows for faster calculation
-          if only a single frame is required. By default, returns the
-          first frame.
+          Index for choosing a frame. Any valid numpy index is
+          allowed, eg. ``...`` (default) uses all frame.
         
+        Returns
+        -------
+        extent : tuple
+          The spatial extent for the frame with order specified by
+          ``utilities.Extent``
+
         """
         with self.store() as store:
-            frames = store.get_frames(representation)
-            if idx is not None:
-                # Filter to only the requested frame
-                imshape = self.frame_shape()
-                pixel_size = store.pixel_sizes[idx]
-                center = store.relative_positions[idx]
-            else:
-                # Include all frames
-                imshape = np.array(frames.shape)[-2:]  # ((rows, cols))
-                pixel_size = store.pixel_sizes.value
-                center = store.relative_positions.value
-        width = imshape[-1] * pixel_size
-        height = imshape[-2] * pixel_size
+            imshape = self.frame_shape()
+            # Filter to only the requested frame
+            pixel_size = store.pixel_sizes[idx]
+            # Take the median across all pixel sizes (except the xy dim)
+            pixel_size = np.median(pixel_size)
+        height = imshape[0] * pixel_size
+        width = imshape[1] * pixel_size
         # Calculate boundaries from image shapes
-        if idx is not None:
-            left = (center[-1] - width) / 2
-            right = (center[-1] + width) / 2
-            bottom = (center[-2] - height) / 2
-            top = (center[-2] + height) / 2
-            ret = Extent(left=left, right=right,
-                         bottom=bottom, top=top)
-        else:
-            left = (center[:, -1] - width) / 2
-            right = (center[:, -1] + width) / 2
-            bottom = (center[:, -2] - height) / 2
-            top = (center[:, -2] + height) / 2
-            ret = np.array((left, right, bottom, top)).T
-        return ret
+        left = -width / 2
+        right = +width / 2
+        bottom = -height / 2
+        top = +height / 2
+        extent = Extent(left=left, right=right,
+                        bottom=bottom, top=top)
+        return extent
     
     def plot_frame(self, idx, ax=None, cmap="gray", *args, **kwargs):
         """Plot the frame with given index as an image."""
