@@ -64,6 +64,19 @@ provide chemical insight. Multiple framesets can be collected
 sequentially as part of an <em>operando</em> experiment and analyzed
 simultaneously in python. Slow operations take advantage of multiple
 cores when available.</p>
+<p>This project has the following design goals:</p>
+<ul class="simple">
+<li>Provide a python toolkit for analysis of X-ray absorbance frames.</li>
+<li>Store data in an open format for easy distribution.</li>
+</ul>
+<p>GUI tools (eg. TXM-Wizard) exist for performing this type of
+analysis. While convenient, the downside to this approach is the
+potential inability to exactly reproduce a given set of steps. Xanespy
+does provide an interactive GUI for visualizing the data, but this GUI
+does not alter the data or export results. This way, the analysis
+steps are caputed either in an IPython notebook or conventional python
+script. These steps, together with the original data, should then be
+sufficient to reproduce the results exactly (provided the .</p>
 <div class="section" id="x-ray-absorbance-basics">
 <h2>X-Ray Absorbance Basics<a class="headerlink" href="#x-ray-absorbance-basics" title="Permalink to this headline">¶</a></h2>
 </div>

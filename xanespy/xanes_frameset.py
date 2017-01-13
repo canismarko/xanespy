@@ -486,7 +486,8 @@ class XanesFrameset():
             # ax.plot(x, pass_distances, marker='o', linestyle=":")
             ax.boxplot(pass_distances.swapaxes(0, 1))
             ax.set_xlabel('Pass')
-            ax.set_ylabel("RMS Translation")
+            ax.set_ylabel("Distance (µm)")
+            ax.set_title("$L^2$ Norms of Calculated Translations")
         # Apply result of calculations to disk (if requested)
         if commit:
             log.info("Committing final translations to disk")

@@ -9,6 +9,20 @@ sequentially as part of an *operando* experiment and analyzed
 simultaneously in python. Slow operations take advantage of multiple
 cores when available.
 
+This project has the following design goals:
+
+- Provide a python toolkit for analysis of X-ray absorbance frames.
+- Store data in an open format for easy distribution.
+
+GUI tools (eg. TXM-Wizard) exist for performing this type of
+analysis. While convenient, the downside to this approach is the
+potential inability to exactly reproduce a given set of steps. Xanespy
+does provide an interactive GUI for visualizing the data, but this GUI
+does not alter the data or export results. This way, the analysis
+steps are caputed either in an IPython notebook or conventional python
+script. These steps, together with the original data, should then be
+sufficient to reproduce the results exactly (provided the .
+
 X-Ray Absorbance Basics
 -----------------------
 

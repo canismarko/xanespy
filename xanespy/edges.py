@@ -45,8 +45,6 @@ class Edge():
     post_edge: 2-tuple
       Energy range (start, stop) that defines points above the edge
       region, inclusive.
-    post_edge_order : int
-      What degree polynomial to use for fitting the post_edge region.
     map_range : 2-tuple
       Energy range (start, stop) used for normalizing maps. If not
       supplied, will be determine from pre- and post-edge arguments.
@@ -61,10 +59,16 @@ class Edge():
     post_edge = None
     map_range = None
     edge_range = None
-    post_edge_order = 2
     pre_edge_fit = None
 
     def all_energies(self):
+        """Combine all the regions into one array.
+        
+        Returns
+        -------
+        energies : list
+          Flat array with the energies for this edge.
+        """
         energies = []
         for region in self.regions:
             start = region[0]
@@ -73,7 +77,8 @@ class Edge():
             num = int(stop - start) / step + 1
             energies.append(np.linspace(region[0], region[1], num))
         energies = np.concatenate(energies)
-        return sorted(list(set(energies)))
+        energies = sorted(list(set(energies)))
+        return energies
 
     def energies_in_range(self, norm_range=None):
         if norm_range is None:
@@ -83,27 +88,6 @@ class Edge():
                     if norm_range[0] <= e <= norm_range[1]]
         return energies
 
-    def _post_edge_xs(self, x):
-        """Convert a set of x values to a power series up to an order
-        determined by self.post_edge_order.
-
-        """
-        X = []
-        for power in range(1, self.post_edge_order+1):
-            X.append(x**power)
-        # Reshape data for make sklearn regression happy
-        X = np.array(X)
-        if X.shape == (1,):
-            # Single value for x
-            X = X.reshape(-1, 1)
-        elif X.ndim == 1:
-            # Single feature (eg [x, x^2])
-            X = X.reshape(1, -1)
-        elif X.ndim > 1:
-            # Multiple values for x
-            X = X.swapaxes(0, 1)
-        return X
-
 
 class LEdge(Edge):
     """An X-ray absorption K-edge corresponding to a 2s or 2p
@@ -112,6 +96,7 @@ class LEdge(Edge):
     """
 
     def annotate_spectrum(self, ax):
+        """Draw lines on the axes to indicate the position of the edge."""
         ax.axvline(x=np.max(self.pre_edge), linestyle='-', color="0.55",
                    alpha=0.4)
         ax.axvline(x=np.min(self.post_edge), linestyle='-', color="0.55",
@@ -130,6 +115,7 @@ class KEdge(Edge):
     """An X-ray absorption K-edge corresponding to a 1s transition."""
 
     def annotate_spectrum(self, ax):
+        """Draw lines on the axes to indicate the position of the edge."""
         ax.axvline(x=self.edge_range[0], linestyle='-', color="0.55",
                    alpha=0.4)
         ax.axvline(x=self.edge_range[1], linestyle='-', color="0.55",
@@ -138,7 +124,7 @@ class KEdge(Edge):
 
     def mask(self, *args, **kwargs):
         """Return a numpy array mask for material that's active at this
-        edge. Calculations are done in `xanes_math.l_edge_mask()`.
+        edge. Calculations are done in ``xanes_math.l_edge_mask()``.
 
         """
         return k_edge_mask(*args, edge=self, **kwargs)

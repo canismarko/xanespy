@@ -65,7 +65,16 @@ def _average_frames(*frames):
 
 def read_metadata(filenames, flavor):
     """Take a list of filenames and return a pandas dataframe with all the
-    metadata."""
+    metadata.
+    
+    Arguments
+    ---------
+    filenames : iterable
+      Iterable of filenames to use for extracting metadata.
+    flavor : str
+      Same as in ``import_frameset``.
+    
+    """
     log.info("Importing metadata with flavor %s", flavor)
     logstart = time()
     columns = ('timestep_name', 'position_name', 'is_background',
@@ -222,7 +231,7 @@ def import_nanosurveyor_frameset(directory: str, quiet=False,
             px_size = float(f['/entry_1/process_1/Param/pixnm'].value)
             log.debug("Scan %s has pixel size %f", filename, px_size)
             pixel_sizes.append(px_size)
-
+    
     # Helper function to save image data to the HDF file
     def replace_ds(name, parent, *args, **kwargs):
         if name in parent.keys():
@@ -344,12 +353,18 @@ def magnification_correction(frames, pixel_sizes):
     return (scales2D, translations)
 
 
-def import_ssrl_frameset(directory, hdf_filename=None):
+def import_ssrl_frameset(directory, hdf_filename):
     """Import all files in the given directory collected at SSRL beamline
     6-2c and process into framesets. Images are assumed to full-field
     transmission X-ray micrographs and repetitions will be
     averaged. Passed on to ``xanespy.importers.import_frameset``
-    
+
+    Arguments
+    ---------
+    directory : str
+      Where to look for files to import.
+    hdf_filename : str
+      Path to an HDF5 to receive the data.
     """
     imp_group = import_frameset(directory, hdf_filename=hdf_filename,
                                 flavor='ssrl')
