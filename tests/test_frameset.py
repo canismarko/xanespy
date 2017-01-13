@@ -515,21 +515,6 @@ class XrayEdgeTest(unittest.TestCase):
             [8291, 8292, 8293]
         )
 
-    def test_post_edge_xs(self):
-        x = np.array([1, 2, 3])
-        X = self.edge._post_edge_xs(x)
-        expected = np.array([[1, 1], [2, 4], [3, 9]])
-        self.assertTrue(np.array_equal(X, expected))
-        # Test it with a single value
-        x = 5
-        X = self.edge._post_edge_xs(x)
-        self.assertTrue(np.array_equal(X, [[5, 25]]))
-        # Test with a single value but first order
-        x = 5
-        self.edge.post_edge_order = 1
-        X = self.edge._post_edge_xs(x)
-        self.assertTrue(np.array_equal(X, [[5]]))
-
 
 MockStore = mock.MagicMock(TXMStore)
 
