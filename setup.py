@@ -9,4 +9,7 @@ setup(name="xanespy",
       author_email="mark.wolf.music@gmail.com",
       url="https://github.com/m3wolf/xanespy",
       packages=['xanespy',],
+      package_data={
+          'xanespy': ['qt_map_window.ui', 'qt_frame_window.ui']
+      },
 )

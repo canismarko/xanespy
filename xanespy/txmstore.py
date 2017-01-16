@@ -412,12 +412,20 @@ class TXMStore():
                                     dtype=np.float64)
 
     @property
-    def whiteline_map(self):
-        return self.get_map('whiteline_map')
+    def whiteline_max(self):
+        return self.get_map('whiteline_max')
 
-    @whiteline_map.setter
-    def whiteline_map(self, val):
-        self.replace_dataset('whiteline_map', val, context='map')
+    @whiteline_max.setter
+    def whiteline_max(self, val):
+        self.replace_dataset('whiteline_max', val, context='map')
+
+    @property
+    def whiteline_fit(self):
+        return self.get_map('whiteline_fit')
+
+    @whiteline_fit.setter
+    def whiteline_fit(self, val):
+        self.replace_dataset('whiteline_fit', val, context='map')
 
     @property
     def cluster_map(self):

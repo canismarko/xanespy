@@ -25,12 +25,14 @@ sys.path.append(os.path.dirname(__file__))
 
 import exceptions
 import xradia
-from importers import (import_ssrl_frameset, import_aps_8BM_frameset,
+from importers import (import_frameset, import_ssrl_frameset,
+                       import_aps_8BM_frameset,
                        import_nanosurveyor_frameset)
 from xanes_frameset import XanesFrameset, PtychoFrameset
 from edges import k_edges, l_edges
 from plots import (dual_axes, new_axes, new_image_axes, plot_txm_map,
-                   set_axes_color, plot_pixel_spectra, plot_txm_histogram)
+                   set_axes_color, plot_pixel_spectra, plot_txm_histogram,
+                   plot_xanes_spectrum)
 import plots
 import xanes_math as xanes_math
 import utilities

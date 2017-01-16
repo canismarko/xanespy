@@ -361,16 +361,18 @@ def plot_composite_map(data, ax=None, origin="lower", *args, **kwargs):  # pragm
 
 
 def plot_txm_map(data, edge=None, norm=None, ax=None, cmap='plasma',
-                 origin="upper", *args, **kwargs):  # pragma: no cover
+                 origin="upper", vmin=None, vmax=None, *args, **kwargs):  # pragma: no cover
     # Get a default normalizer
     if norm is None:
-        norm = Normalize()
+        norm = Normalize(vmin, vmax)
     norm.autoscale_None(data[~np.isnan(data)])
     # Create axes if necessary
     if ax is None:
         ax = new_image_axes()
         if edge is None:
-            energies = np.linspace(norm.vmin, norm.vmax, num=10)
+            # No specific edge is given, so use up to 10 evenly space energies
+            num_Es = round(min(abs(norm.vmax - norm.vmin + 1), 10))
+            energies = np.linspace(norm.vmin, norm.vmax, num=num_Es)
         else:
             energies = edge.energies_in_range(norm_range=(norm.vmin, norm.vmax))
         draw_colorbar(ax=ax, cmap=cmap, norm=norm, energies=energies)

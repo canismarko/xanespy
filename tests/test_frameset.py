@@ -43,7 +43,7 @@ import pytz
 from skimage import data, transform
 
 from cases import XanespyTestCase
-from xanespy import exceptions
+from xanespy import exceptions, edges
 from xanespy.utilities import (xycoord, prog, position, Extent,
                                xy_to_pixel, pixel_to_xy,
                                get_component, Pixel, broadcast_reverse)
@@ -57,7 +57,7 @@ from xanespy.xanes_math import (transform_images, direct_whitelines,
                                 guess_kedge, transformation_matrices,
                                 apply_internal_reference,
                                 register_template, _fit_spectrum)
-from xanespy.edges import KEdge, k_edges, l_edges
+# from xanespy.edges import KEdge, k_edges, l_edges
 from xanespy.importers import (import_ssrl_frameset,
                                import_aps_8BM_frameset,
                                import_nanosurveyor_frameset,
@@ -111,7 +111,7 @@ class SSRLScriptTest(unittest.TestCase):
         # Abba_mode and frame_rest are incompatible
         with self.assertRaisesRegex(ValueError, "frame_rest.+abba_mode"):
             ssrl6_xanes_script(dest=None,
-                               edge=k_edges["Ni_NCA"](),
+                               edge=edges.k_edges["Ni_NCA"],
                                binning=2,
                                zoneplate=self.zp,
                                iterations=["Test0", "Snorlax"],
@@ -127,7 +127,7 @@ class SSRLScriptTest(unittest.TestCase):
         for TXM Wizard."""
         with open(self.output_path, 'w') as f:
             ssrl6_xanes_script(dest=f,
-                               edge=k_edges["Ni_NCA"](),
+                               edge=edges.k_edges["Ni_NCA"],
                                binning=2,
                                zoneplate=self.zp,
                                iterations=["Test0", "Snorlax"],
@@ -168,7 +168,7 @@ class SSRLScriptTest(unittest.TestCase):
         ref_repetitions = 10
         with open(self.output_path, 'w') as f:
             ssrl6_xanes_script(dest=f,
-                               edge=k_edges["Ni_NCA"](),
+                               edge=edges.k_edges["Ni_NCA"],
                                binning=2,
                                zoneplate=self.zp,
                                iterations=["Test0", "Snorlax"],
@@ -234,7 +234,7 @@ class ApsScriptTest(unittest.TestCase):
     
     def test_file_created(self):
         with open(self.output_path, 'w') as f:
-            sector8_xanes_script(dest=f, edge=k_edges["Ni_NCA"](),
+            sector8_xanes_script(dest=f, edge=edges.k_edges["Ni_NCA"],
                                  zoneplate=self.zp, detector=self.det,
                                  names=["test_sample"], sample_positions=[])
         # Check that a file was created
@@ -244,7 +244,7 @@ class ApsScriptTest(unittest.TestCase):
     
     def test_binning(self):
         with open(self.output_path, 'w') as f:
-            sector8_xanes_script(dest=f, edge=k_edges["Ni_NCA"](),
+            sector8_xanes_script(dest=f, edge=edges.k_edges["Ni_NCA"],
                                  binning=2, zoneplate=self.zp,
                                  detector=self.det, names=[],
                                  sample_positions=[])
@@ -254,7 +254,7 @@ class ApsScriptTest(unittest.TestCase):
     
     def test_exposure(self):
         with open(self.output_path, 'w') as f:
-            sector8_xanes_script(dest=f, edge=k_edges["Ni_NCA"](),
+            sector8_xanes_script(dest=f, edge=edges.k_edges["Ni_NCA"],
                                  exposure=44, zoneplate=self.zp,
                                  detector=self.det, names=["test_sample"],
                                  sample_positions=[])
@@ -267,7 +267,7 @@ class ApsScriptTest(unittest.TestCase):
         """This instrument can behave poorly unless the target energy is
         approached from underneath (apparently)."""
         with open(self.output_path, 'w') as f:
-            sector8_xanes_script(dest=f, edge=k_edges['Ni_NCA'](),
+            sector8_xanes_script(dest=f, edge=edges.k_edges['Ni_NCA'],
                                  zoneplate=self.zp, detector=self.det,
                                  names=[], sample_positions=[])
         with open(self.output_path, 'r') as f:
@@ -285,7 +285,7 @@ class ApsScriptTest(unittest.TestCase):
         with open(self.output_path, 'w') as f:
             sector8_xanes_script(
                 dest=f,
-                edge=k_edges['Ni_NCA'](),
+                edge=edges.k_edges['Ni_NCA'],
                 sample_positions=[position(x=1653, y=-1727, z=0)],
                 zoneplate=self.zp,
                 detector=self.det,
@@ -315,7 +315,7 @@ class ApsScriptTest(unittest.TestCase):
         with open(self.output_path, 'w') as f:
             sector8_xanes_script(
                 dest=f,
-                edge=k_edges['Ni_NCA'](),
+                edge=edges.k_edges['Ni_NCA'],
                 sample_positions=[position(x=1653, y=-1727, z=0),
                                   position(x=1706.20, y=-1927.20, z=0)],
                 zoneplate=self.zp,
@@ -331,7 +331,7 @@ class ApsScriptTest(unittest.TestCase):
         with open(self.output_path, 'w') as f:
             sector8_xanes_script(
                 dest=f,
-                edge=k_edges['Ni_NCA'](),
+                edge=edges.k_edges['Ni_NCA'],
                 sample_positions=[position(x=1653, y=-1727, z=0),
                                   position(x=1706.20, y=-1927.20, z=0)],
                 zoneplate=self.zp,
@@ -492,7 +492,7 @@ class ZoneplateTest(XanespyTestCase):
 
 class XrayEdgeTest(unittest.TestCase):
     def setUp(self):
-        class DummyEdge(KEdge):
+        class DummyEdge(edges.KEdge):
             regions = [
                 (8250, 8290, 20),
                 (8290, 8295, 1),
@@ -532,7 +532,7 @@ class XanesFramesetTest(TestCase):
 
     def create_frameset(self, store=None, edge=None):
         if edge is None:
-            edge = k_edges['Ni_NCA']()
+            edge = edges.k_edges['Ni_NCA']
         # Create new frameset object
         fs = XanesFrameset(filename="", edge=edge)
         # Mock out the `store` retrieval so we can control it
@@ -747,7 +747,7 @@ class XanesFramesetTest(TestCase):
         self.assertEqual(fs.data_name, 'new_group')
 
     def test_repr(self):
-        fs = XanesFrameset(filename=None, edge=None,
+        fs = XanesFrameset(filename=None, edge=edges.k_edges['Ni_NCA'],
                            groupname="ssrl-test-data")
         expected = "<XanesFrameset: 'ssrl-test-data'>"
         self.assertEqual(fs.__repr__(), expected)
@@ -776,7 +776,7 @@ class OldXanesFramesetTest(XanespyTestCase):
         shutil.copy(self.originhdf, self.temphdf)
         self.frameset = XanesFrameset(filename=self.temphdf,
                                       groupname='ssrl-test-data',
-                                      edge=k_edges['Ni_NCA']())
+                                      edge=edges.k_edges['Ni_NCA'])
 
     def tearDown(self):
         if os.path.exists(self.temphdf):
@@ -904,12 +904,12 @@ class XanesMathTest(XanespyTestCase):
 
     def setUp(self):
         # Prepare energies of the right dimensions
-        self.KEdge = k_edges['Ni_NCA']
+        self.KEdge = edges.NCANickelKEdge
         K_Es = np.linspace(8250, 8640, num=61)
         K_Es = np.repeat(K_Es.reshape(1, 61), repeats=3, axis=0)
         self.K_Es = K_Es
         # Prepare L-edge energies of the right dimensions
-        self.LEdge = l_edges['Ni_NCA']
+        self.LEdge = edges.NCANickelLEdge
         L_Es = np.linspace(844, 862, num=61)
         L_Es = np.repeat(L_Es.reshape(1, 61), repeats=3, axis=0)
         self.L_Es = L_Es
@@ -1079,7 +1079,7 @@ class XanesMathTest(XanespyTestCase):
                                index_col=0, sep=' ', names=['Absorbance'])
         Es = np.array(spectrum.index)
         As = np.array(spectrum.values)[:,0]
-        edge = k_edges['Ni_NCA']
+        edge = edges.NCANickelKEdge()
         # Do the guessing
         result = guess_kedge(spectrum=As, energies=Es, edge=edge)
         # Check resultant guessed parameters
@@ -1120,7 +1120,7 @@ class XanesMathTest(XanespyTestCase):
         intensities = np.array([[spectrum['Absorbance'].values]])
         results = direct_whitelines(spectra=intensities,
                                     energies=np.array([spectrum.index]),
-                                    edge=k_edges['Ni_NCA'])
+                                    edge=edges.k_edges['Ni_NCA'])
         self.assertEqual(results, [8350.])
 
     def test_fit_kedge(self):

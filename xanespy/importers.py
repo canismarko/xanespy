@@ -367,11 +367,12 @@ def import_ssrl_frameset(directory, hdf_filename):
       Path to an HDF5 to receive the data.
     """
     imp_group = import_frameset(directory, hdf_filename=hdf_filename,
-                                flavor='ssrl')
+                                flavor='ssrl', return_val="group")
     # Set some beamline specific metadata
     imp_group.parent.attrs['technique'] = 'Full-field TXM'
     imp_group.parent.attrs['beamline'] = 'SSRL 6-2c'
     # Cleanup and exit
+    imp_group.file.close()
     return imp_group
 
 
@@ -432,7 +433,7 @@ def decode_aps_params(filename):
 
 def import_aps_8BM_frameset(directory, hdf_filename, quiet=False):
     imp_group = import_frameset(directory=directory, flavor="aps",
-                          hdf_filename=hdf_filename)
+                                hdf_filename=hdf_filename, return_val="group")
     # Set some beamline specific metadata
     imp_group.parent.attrs['technique'] = 'Full-field TXM'
     imp_group.parent.attrs['beamline'] = 'APS 8-BM-B'
@@ -441,12 +442,17 @@ def import_aps_8BM_frameset(directory, hdf_filename, quiet=False):
     return imp_group
 
 
-def import_frameset(directory, flavor, hdf_filename):
+def import_frameset(directory, flavor, hdf_filename, return_val=None):
     """Import all files in the given directory collected at an X-ray
     microscope beamline.
-
+    
     Images are assumed to full-field transmission X-ray micrographs.
-
+    
+    If ``return_val`` is "group", the return value for this function
+    will be a data group in an **open** HDF5 file. The underlying file
+    should be explicitly closed to avoid corruption. This is done
+    automatically if ``return_val`` is None (default).
+    
     Parameters
     ----------
     directory : str
@@ -458,8 +464,16 @@ def import_frameset(directory, flavor, hdf_filename):
     hdf_filename : str
       Where to save the output to. An exception is throw if this file
       already exists.
-
+    return_val : str
+      Request a specific return value.
+      - None: No return value
+      - "group": The open HDF5 group for this experiment.
+    
     """
+    # Check arguments for sanity
+    valid_return_vals = ["group", None]
+    if return_val not in valid_return_vals:
+        raise ValueError("Invalid `return_val`: {}. Choices are {}".format(return_val, valid_return_vals))
     # Check that file does not exist
     if os.path.exists(hdf_filename):
         raise OSError("File {} exists".format(hdf_filename))
@@ -638,4 +652,10 @@ def import_frameset(directory, flavor, hdf_filename):
         # Write logging output
         log.info("Imported %s (%d files) in %f sec",
                  pos_name, len(pos_df), time() - logstart)
-    return imp_group
+    # Clean up and sort out the return value
+    if return_val == "group":
+        ret = imp_group
+    else:
+        h5file.close()
+        ret = None
+    return ret

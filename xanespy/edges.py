@@ -209,12 +209,12 @@ class NCANickelKEdge62(NCANickelKEdge):
 
 # Dictionaries make it more intuitive to access these edges by element
 k_edges = {
-    'Ni_NCA': NCANickelKEdge,
-    'Ni_NMC': NCANickelKEdge, # They're pretty much the same
-    'Mn_LMO': LMOMnKEdge,
+    'Ni_NCA': NCANickelKEdge(),
+    'Ni_NMC': NCANickelKEdge(), # They're pretty much the same
+    'Mn_LMO': LMOMnKEdge(),
 }
 
 
 l_edges = {
-    'Ni_NCA': NCANickelLEdge,
+    'Ni_NCA': NCANickelLEdge(),
 }

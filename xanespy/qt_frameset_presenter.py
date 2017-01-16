@@ -188,10 +188,10 @@ class QtFramesetPresenter(QtCore.QObject):
     
     def set_timestep(self, new_timestep):
         self.active_timestep = new_timestep
-        self.reset_frame_range()
         self.draw_frame_histogram()
         self.draw_frame_spectra()
         self.refresh_frames()
+        self.update_maps()
     
     def move_slider(self, new_value):
         new_frame = new_value
@@ -294,6 +294,8 @@ class QtFramesetPresenter(QtCore.QObject):
         """
         data = self.active_map()
         if data is not None:
+            # Remove any np.nan values
+            data = data[~np.isnan(data)]
             # Calculate the relevant perctile intervals
             p_lower = np.percentile(data, 1)
             p_upper = np.percentile(data, 99)

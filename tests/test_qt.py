@@ -417,17 +417,26 @@ class PresenterTestCase(QtTestCase):
     
     def test_reset_map_range(self):
         fs = MockFrameset()
-        map_data = np.linspace(9, 109)
+        map_data = np.linspace(9, 109, num=101)
         fs.map_data = mock.Mock(return_value=map_data)
         presenter = self.create_presenter(frameset=fs)
         # Check that the initial state is its default
         self.assertEqual(presenter._map_vmin, 0)
-        self.assertEqual(presenter._map_vmin, 0)
+        self.assertEqual(presenter._map_vmax, 1)
         # Now change the limits and check again
         vmin, vmax = presenter.reset_map_range()
         self.assertEqual(vmin, 10)
         self.assertEqual(vmax, 108)
         # Check that the cached values were updated
+        self.assertEqual(presenter._map_vmin, 10)
+        self.assertEqual(presenter._map_vmax, 108)
+        # Check what happens if some values are nan
+        map_data = np.linspace(8, 109, num=102)
+        map_data[0] = np.nan
+        fs.map_data = mock.Mock(return_value=map_data)
+        vmin, vmax = presenter.reset_map_range()
+        self.assertEqual(vmin, 10)
+        self.assertEqual(vmax, 108)
         self.assertEqual(presenter._map_vmin, 10)
         self.assertEqual(presenter._map_vmax, 108)
 
@@ -462,22 +471,26 @@ class OldFrameViewerTestcase(QtTestCase):
     def test_set_timestep(self):
         # Set up some fake data
         frameset = MockFrameset()
-        data = np.linspace(5, 105, num=10 * 128 * 128)
-        data = data.reshape((10, 128, 128))
-        frameset.frames = mock.Mock(return_value=data)
+        frames = self.dummy_frame_data()
+        frameset.frames = mock.Mock(return_value=frames)
+        maps = self.dummy_map_data()
+        frameset.map_data = mock.Mock(return_value=maps)
         presenter = self.create_presenter(frameset=frameset)
         presenter.active_representation = "absorbances"
+        map_spy = QtTest.QSignalSpy(presenter.map_data_changed)
         # Now invoke to function to be tested
         presenter.set_timestep(5)
         # Check that all the view elements are updated
         self.assertEqual(presenter.active_timestep, 5)
         frameset.frames.assert_called_with(timeidx=5,
                                            representation='absorbances')
+        frameset.map_data.assert_called_with(timeidx=5,
+                                           representation='absorbances')
         self.assertTrue(presenter.frame_view.draw_frames.emit.called)
         self.assertTrue(presenter.frame_view.draw_spectrum.called)
         self.assertTrue(presenter.frame_view.draw_histogram.emit.called)
-        # Check that the frame range was reset
-        self.assertAlmostEqual(presenter._frame_vmin, 6)
+        # Check that map data are updated
+        self.assertEqual(len(map_spy), 1)
     
     def test_change_vmin_vmax(self):
         presenter = self.create_presenter()

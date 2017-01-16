@@ -47,6 +47,7 @@ from txmstore import TXMStore
 import plots
 import exceptions
 import xanes_math as xm
+from edges import Edge
 
 predefined.define_units()
 
@@ -529,7 +530,7 @@ class XanesFrameset():
             for stepdata in data:
                 particles = self.particle_regions(intensity_image=stepdata)
                 imgs = [p.intensity_image for p in particles]
-                vals = [np.median(im[im > 0]) for im in imgs]
+                vals = [np.median(im[~np.isnan(im)]) for im in imgs]
                 steps.append(vals)
         # Convert from (steps, particles) to (particles, steps)
         steps = np.array(steps)
@@ -792,9 +793,9 @@ class XanesFrameset():
             if np.iscomplexobj(As):
                 As = np.imag(As)
             mask = self.edge.mask(frames=As,
-                                    energies=store.energies.value,
-                                    sensitivity=sensitivity,
-                                    min_size=min_size)
+                                  energies=store.energies.value,
+                                  sensitivity=sensitivity,
+                                  min_size=min_size)
         return mask
     
     def fit_spectra(self, edge_mask=True):
@@ -850,8 +851,8 @@ class XanesFrameset():
         # Save results to disk
         with self.store(mode='r+') as store:
             store.fit_parameters = fit_maps
-            store.whiteline_map = wl_maps
-            store.whiteline_map.attrs['frame_source'] = 'absorbances'
+            store.whiteline_fit = wl_maps
+            store.whiteline_fit.attrs['frame_source'] = 'absorbances'
         log.info('fit %d spectra in %d seconds',
                  spectra.shape[0], time() - logstart)
 
@@ -878,21 +879,23 @@ class XanesFrameset():
                                               edge=self.edge)
         # Save results to disk
         with self.store(mode='r+') as store:
-            store.whiteline_map = whitelines
-            store.whiteline_map.attrs['frame_source'] = 'absorbances'
+            store.whiteline_max = whitelines
+            store.whiteline_max.attrs['frame_source'] = 'absorbances'
 
-    def calculate_maps(self):
+    def calculate_maps(self, fit_spectra=False):
         """Generate a set of maps based on pixel-wise Xanes spectra: whiteline
         position, particle labels.
 
         Arguments
         ---------
-
         -fit_spectra : If truthy, the whiteline will be found by
          fitting curves, instead of the default of taking the direct
-         maximum.
+         maximum. This is likely to be very slow.
         """
-        self.calculate_whitelines()
+        if fit_spectra:
+            self.fit_spectra()
+        else:
+            self.calculate_whitelines()
         # Calculate particle_labels
         self.label_particles()
 
@@ -1138,9 +1141,12 @@ class XanesFrameset():
         is brighter from one energy to the next.
         """
         with self.store(mode='r+') as store:
+            log.debug('Subtracting surroundings')
             mask = np.broadcast_to(self.edge_mask(), store.absorbances.shape)
             bg = store.absorbances[mask].reshape((*store.absorbances.shape[0:2], -1))
             bg = bg.mean(axis=-1)
+            msg = "Background intensities calculated: {}"
+            log.debug(msg.format(bg))
             bg = broadcast_reverse(bg, store.absorbances.shape)
             # Save the resultant data to disk
             store.absorbances = store.absorbances - bg
