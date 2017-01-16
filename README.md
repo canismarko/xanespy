@@ -78,3 +78,11 @@ License
 -------
 
 This project is released under the [GNU General Public License version 3](https://www.gnu.org/licenses/gpl-3.0.en.html "GPLv3 information").
+
+Acknowledgement
+---------------
+
+This work was supported as part of the NorthEast Center for Chemical
+Energy Storage (NECCES), an Energy Frontier Research Center funded by
+the U.S. Department of Energy, Office of Science, Basic Energy
+Sciences under Award # DE-SC0012583.
