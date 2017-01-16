@@ -19,7 +19,7 @@ install:
   - conda info -a
 
   # Create the test environment and install the dependencies
-  - conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION pip numpy scipy mkl mkl-service
+  - conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION pip numpy scipy nomkl
   - source activate test-environment
   - pip install -r requirements.txt
   - pip install coveralls
