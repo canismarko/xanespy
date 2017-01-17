@@ -937,6 +937,8 @@ class XanesMathTest(XanespyTestCase):
         # Adjust each frame to mimic an X-ray edge with a sigmoid
         S = 1/(1+np.exp(-(self.K_Es-8353))) + 0.1*np.sin(4*self.K_Es-4*8353)
         coins = (coins * S.reshape(3, 61,1,1))
+        # Add some noise otherwise some functions div by zero.
+        coins = coins * (0.975 + np.random.rand(*coins.shape)/20)
         return coins
 
     def test_predict_edge(self):
@@ -1173,6 +1175,7 @@ class XanesMathTest(XanespyTestCase):
         self.assertEqual(result.dtype, np.int)
 
     def test_edge_jump(self):
+
         """Check image masking based on the difference between the pre-edge
         and post-edge."""
         frames = self.coins()
@@ -1215,8 +1218,9 @@ class XanesMathTest(XanespyTestCase):
         ret = transform_images(data, transformations=Ts)
         self.assertEqual(ret.dtype, np.float)
         # Test complex images
-        data = self.coins().astype(np.complex)
-        ret = transform_images(data, transformations=Ts)
+        coins = self.coins()
+        data_imag = coins + coins * complex(0, 1)
+        ret = transform_images(data_imag, transformations=Ts)
         self.assertEqual(ret.dtype, np.complex)
 
     # def test_extract_signals(self):

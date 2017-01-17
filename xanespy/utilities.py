@@ -185,7 +185,7 @@ def is_kernel():
     return getattr(get_ipython(), 'kernel', None) is not None
 
 
-def prog(iterable=None, leave=False, dynamic_ncols=True, *args, **kwargs):
+def prog(iterable=None, leave=None, dynamic_ncols=True, *args, **kwargs):
     """A progress bar for displaying how many iterations have been
     completed.
 
@@ -202,7 +202,7 @@ def prog(iterable=None, leave=False, dynamic_ncols=True, *args, **kwargs):
       documentation for more details.
     leave : bool, optional
       Whether to leave the progress bar in the stream after it's
-      completed.
+      completed. If omitted, will depend on terminal used.
     dynamic_ncols : bool, optional
       Whether to adapt dynamically to the width of the environment.
     args
@@ -214,9 +214,11 @@ def prog(iterable=None, leave=False, dynamic_ncols=True, *args, **kwargs):
     if is_kernel():
         # Use the IPython widgets version of tqdm
         wrapper = tqdm_notebook
+        leave = True if leave is None else leave
     else:
         # Use the text-version of tqdm
         wrapper = tqdm
+        leave = False if leave is None else leave
     # Create and return the progress bar iterable
     prog_iter = wrapper(iterable, leave=leave,
                         dynamic_ncols=dynamic_ncols, *args, **kwargs)

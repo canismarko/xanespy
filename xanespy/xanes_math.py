@@ -624,6 +624,7 @@ def transform_images(data, transformations, out=None, mode='median'):
             # Convert to float so the warp function is happy
             if not np.iscomplexobj(a):
                 indata = a.astype(np.float64)
+            assert realrange[0] != realrange[1], realrange
             indata = exposure.rescale_intensity(indata,
                                                 in_range=realrange,
                                                 out_range=(0, 1))
