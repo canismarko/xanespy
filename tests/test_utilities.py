@@ -24,13 +24,14 @@ from unittest import TestCase, mock
 import math
 import sys
 import os
+from time import sleep
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir)))
 
 import numpy as np
 
 from xanespy.utilities import (Extent, xy_to_pixel, xycoord, Pixel,
                                pixel_to_xy, get_component,
-                               broadcast_reverse, is_kernel)
+                               broadcast_reverse, is_kernel, prog)
 
 
 class UtilitiesTest(TestCase):
@@ -102,7 +103,6 @@ class UtilitiesTest(TestCase):
         )
         self.assertEqual(result, Pixel(vertical=0, horizontal=0))
         
-    
     def test_pixel_to_xy(self):
         extent = Extent(
             left=-1000, right=-900,

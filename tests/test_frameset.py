@@ -23,6 +23,7 @@
 import datetime as dt
 import unittest
 from unittest import TestCase, mock
+import logging
 import math
 import os
 import shutil
@@ -399,7 +400,9 @@ class TXMStoreTest(XanespyTestCase):
     
     def test_fork_group(self):
         store = self.store('r+')
-        with self.assertRaises(exceptions.CreateGroupError):
+        raises = self.assertRaises(exceptions.CreateGroupError)
+        logs = self.assertLogs(level=logging.CRITICAL)
+        with raises, logs:
             store.fork_data_group(dest=store.data_name, src=store.data_name)
         # Set a marker to see if it changes
         store.parent_group().create_group('new_group')
@@ -543,7 +546,28 @@ class XanesFramesetTest(TestCase):
         fs.store = mock.Mock(return_value=store)
         self.store = store
         return fs
-    
+
+    def test_spectrum(self):
+        store = MockStore()
+        # Prepare fake energy data
+        energies = np.linspace(8300, 8400, num=51)
+        store.energies = np.broadcast_to(energies, (10, 51))
+        # Prepare fake spectrum (absorbance) data
+        spectrum = np.sin((energies-8300)*4*np.pi/100)
+        frames = np.broadcast_to(spectrum, (10, 128, 128, 51))
+        frames = np.swapaxes(frames, 3, 1)
+        store.get_frames = mock.Mock(return_value=frames)
+        fs = self.create_frameset(store=store)
+        # Check that the return value is correct
+        result = fs.spectrum()
+        np.testing.assert_equal(result.index, energies)
+        np.testing.assert_almost_equal(result.values, spectrum)
+
+    def test_has_representation(self):
+        fs = self.create_frameset()
+        fs.has_representation('some data')
+        self.store.has_dataset.assert_called_once_with('some data')
+
     def test_fork_group(self):
         """Tests that the XanesFrameset.fork_group properly hands off to
         TXMStore.fork_data_group.
@@ -788,14 +812,6 @@ class OldXanesFramesetTest(XanespyTestCase):
         if os.path.exists(cls.originhdf):
             os.remove(cls.originhdf)
     
-    def test_has_representation(self):
-        self.assertTrue(
-            self.frameset.has_representation('intensities'))
-        self.assertFalse(
-            self.frameset.has_representation('not-real-data'))
-        self.assertFalse(
-            self.frameset.has_representation(None))
-
     def test_align_frames(self):
         # Perform an excessive translation to ensure data are correctable
         with self.frameset.store(mode='r+') as store:
@@ -869,16 +885,14 @@ class OldXanesFramesetTest(XanespyTestCase):
             new_shape = store.absorbances.shape
         self.assertEqual(new_shape, (1, 2, 1023, 1023))
 
-    def test_spectrum(self):
-        spectrum = self.frameset.spectrum()
-        self.assertEqual(spectrum.shape, (2,))
-
     def test_calculate_clusters(self):
         """Check the the data are separated into signals and discretized by
         k-means clustering."""
         N_COMPONENTS = 3
-        self.frameset.calculate_signals(n_components=N_COMPONENTS,
-                                        method="nmf")
+        with self.assertLogs(level=logging.WARNING):
+            # Post/pre-edge identification is known to fail
+            self.frameset.calculate_signals(n_components=N_COMPONENTS,
+                                            method="nmf")
         # Check that nmf signals and weights are saved
         with self.frameset.store() as store:
             n_energies = store.absorbances.shape[1]  # Expecting: 2

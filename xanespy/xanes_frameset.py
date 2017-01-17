@@ -698,7 +698,7 @@ class XanesFrameset():
         """
         # Retrieve data
         with self.store() as store:
-            energies = store.energies.value[index]
+            energies = store.energies[index]
             if pixel is not None:
                 pixel = Pixel(*pixel)
                 # Get a spectrum for a single pixel
