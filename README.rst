@@ -68,12 +68,6 @@ Beamlines
 
 We currently have importers for data from the following beamlines. If
 you would like support a beamline that is not listed and are willing
-to share some test data publicly, please [open an
-issue](https://github.com/m3wolf/xanespy/issues "Xanespy issue
-tracker").
-
-We currently have importers for data from the following beamlines. If
-you would like support a beamline that is not listed and are willing
 to share some test data publicly, please `open an
 issue`_.
 
