@@ -39,7 +39,6 @@ import h5py
 import numpy as np
 from skimage import morphology, filters, transform,  measure
 from sklearn import linear_model, cluster
-from units import unit, predefined
 
 from utilities import (prog, xycoord, Pixel, Extent, pixel_to_xy,
                        get_component, broadcast_reverse)
@@ -48,8 +47,6 @@ import plots
 import exceptions
 import xanes_math as xm
 from edges import Edge
-
-predefined.define_units()
 
 
 log = logging.getLogger(__name__)

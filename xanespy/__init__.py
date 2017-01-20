@@ -17,6 +17,8 @@
 # You should have received a copy of the GNU General Public License
 # along with Xanespy.  If not, see <http://www.gnu.org/licenses/>.
 
+__version__ = "0.1.0"
+
 import sys
 import os
 
@@ -36,6 +38,6 @@ from plots import (dual_axes, new_axes, new_image_axes, plot_txm_map,
 import plots
 import xanes_math as xanes_math
 import utilities
-from qt_frameset_presenter import QtFramesetPresenter
-from qt_frame_view import QtFrameView
-from qt_map_view import QtMapView
+# from qt_frameset_presenter import QtFramesetPresenter
+# from qt_frame_view import QtFrameView
+# from qt_map_view import QtMapView

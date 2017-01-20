@@ -22,7 +22,7 @@
 
 """Tests for the Qt5 viewer."""
 import unittest
-from unittest import mock
+from unittest import mock, skip, skipUnless
 import time
 import os
 import sys
@@ -31,20 +31,27 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardi
 
 import numpy as np
 import pandas as pd
-from PyQt5 import QtWidgets, QtTest
+try:
+    from PyQt5 import QtWidgets, QtTest
+except ImportError:
+    HAS_PYQT = False
+else:
+    HAS_PYQT = True
+    from xanespy.qt_map_view import QtMapView
+    from xanespy.qt_frameset_presenter import QtFramesetPresenter
+    from xanespy.qt_frame_view import FrameChangeSource, QtFrameView
 
-from xanespy import QtFrameView, QtMapView, XanesFrameset, QtFramesetPresenter
-from xanespy.qt_frame_view import FrameChangeSource
-from xanespy import exceptions
+from xanespy import XanesFrameset
 from xanespy.utilities import xycoord, Extent, shape, Pixel
-
+from xanespy import exceptions
 
 pp = pprint.PrettyPrinter(indent=2)
 
-# Define mocked views for the various Qt UI windows
-MockFrameView = mock.MagicMock(spec_set=QtFrameView)
-MockMapView = mock.MagicMock(spec_set=QtMapView)
-MockFrameset = mock.MagicMock(spec_set=XanesFrameset)
+if HAS_PYQT:
+    # Define mocked views for the various Qt UI windows
+    MockFrameView = mock.MagicMock(spec_set=QtFrameView)
+    MockMapView = mock.MagicMock(spec_set=QtMapView)
+    MockFrameset = mock.MagicMock(spec_set=XanesFrameset)
 
 class QtTestCase(unittest.TestCase):
 
@@ -87,7 +94,7 @@ class QtTestCase(unittest.TestCase):
         data = np.reshape(data, shape)
         return data
 
-
+@skipUnless(HAS_PYQT, "PyQt5 required")
 class MapViewTestCase(QtTestCase):
 
     def test_keyboard_nav(self):
@@ -206,7 +213,7 @@ class MapViewTestCase(QtTestCase):
         view.ui.spnVMax.setDecimals.assert_called_once_with(3)
         view.ui.spnVMax.setValue.assert_called_once_with(10)
 
-
+@skipUnless(HAS_PYQT, "PyQt5 required")
 class PresenterTestCase(QtTestCase):
 
     def test_active_map(self):
@@ -440,7 +447,7 @@ class PresenterTestCase(QtTestCase):
         self.assertEqual(presenter._map_vmin, 10)
         self.assertEqual(presenter._map_vmax, 108)
 
-
+@skipUnless(HAS_PYQT, "PyQt5 required")
 class OldFrameViewerTestcase(QtTestCase):
     
     def test_init(self):
@@ -815,7 +822,7 @@ class OldFrameViewerTestcase(QtTestCase):
         presenter.frame_view.set_status_value.assert_called_with(
             "")
 
-
+@skipUnless(HAS_PYQT, "PyQt5 required")
 class FrameSourceTestCase(unittest.TestCase):
     
     def test_add_callback(self):

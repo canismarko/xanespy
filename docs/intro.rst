@@ -21,7 +21,16 @@ does provide an interactive GUI for visualizing the data, but this GUI
 does not alter the data or export results. This way, the analysis
 steps are caputed either in an IPython notebook or conventional python
 script. These steps, together with the original data, should then be
-sufficient to reproduce the results exactly (provided the .
+sufficient to reproduce the results exactly.
+
+Installation
+------------
+
+Xanespy can be installed from the **python package index (PyPI) using pip**
+
+.. code:: bash
+
+   $ pip install xanespy
 
 X-Ray Absorbance Basics
 -----------------------
