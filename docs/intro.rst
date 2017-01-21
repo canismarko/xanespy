@@ -32,6 +32,7 @@ Xanespy can be installed from the **python package index (PyPI) using pip**
 
    $ pip install xanespy
 
+
 or from anaconda.org using **conda**
 
 .. code:: bash
