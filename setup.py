@@ -9,8 +9,8 @@ setup(name="xanespy",
       author_email="mark.wolf.music@gmail.com",
       url="https://github.com/m3wolf/xanespy",
       keywords="XANES X-ray microscopy operando",
-      install_requires=['pytz>=2013b', 'tqdm', 'h5py', 'pandas',
-                        'matplotlib', 'scikit-image'],
+      install_requires=['pytz>=2013b', 'h5py', 'pandas', 'olefile',
+                        'matplotlib', 'scikit-image', 'scikit-learn'],
       packages=['xanespy',],
       package_data={
           'xanespy': ['qt_map_window.ui', 'qt_frame_window.ui']

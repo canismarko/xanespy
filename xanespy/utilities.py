@@ -29,9 +29,17 @@ import sys
 import logging
 import math
 
-from tqdm import tqdm, tqdm_notebook
 import numpy as np
 import h5py
+
+# Check if the tqdm package is installed for showing progress bars
+try:
+    from tqdm import tqdm, tqdm_notebook
+except (ImportError, ModuleNotFoundError):
+    HAS_TQDM = False
+else:
+    HAS_TQDM = True
+
 
 position = namedtuple('position', ('x', 'y', 'z'))
 xycoord = namedtuple('xycoord', ('x', 'y'))
@@ -192,8 +200,8 @@ def prog(iterable=None, leave=None, dynamic_ncols=True, *args, **kwargs):
     This is mostly just a wrapper around the tqdm library. args and
     kwargs are passed directly to either tqdm.tqdm or
     tqdm.tqdm_notebook. This function also takes into account the
-    value of ``USE_PROG`` defined in this module. If ``USE_PROG`` is
-    falsy, no progress bar will be displayed.
+    value of ``USE_PROG`` defined in this module. If tqdm is no
+    installed, then calls to prog will just return the iterable again.
 
     Parameters
     ----------
@@ -211,15 +219,19 @@ def prog(iterable=None, leave=None, dynamic_ncols=True, *args, **kwargs):
       Keyword arguments passed directly to ``tqdm`` or ``tqdm_notebook``.
 
     """
-    if is_kernel():
+    if not HAS_TQDM:
+        # No progress bar will be displayed
+        prog_iter = iterable
+    elif is_kernel():
         # Use the IPython widgets version of tqdm
-        wrapper = tqdm_notebook
         leave = True if leave is None else leave
+        prog_iter = tqdm_notebook(iterable, leave=leave,
+                                  dynamic_ncols=dynamic_ncols, *args,
+                                  **kwargs)
     else:
         # Use the text-version of tqdm
-        wrapper = tqdm
         leave = False if leave is None else leave
-    # Create and return the progress bar iterable
-    prog_iter = wrapper(iterable, leave=leave,
-                        dynamic_ncols=dynamic_ncols, *args, **kwargs)
+        prog_iter = tqdm(iterable, leave=leave,
+                         dynamic_ncols=dynamic_ncols, *args,
+                         **kwargs)
     return prog_iter
