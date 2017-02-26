@@ -60,7 +60,32 @@ def iter_indices(data, leftover_dims=1, desc=None):
     return prog(indices, desc=desc, total=np.product(fs_shape))
 
 
+def apply_mosaic_reference(intensity, reference):
+    """Use a single reference frame to calculate the reference for a
+    mosaic of intensity frames.
+    
+    Returns
+    -------
+    - out : ndarray
+      Same shape as ``intensity`` (I) but with optical depth: ln(I/I0)
+      where I0 is the reference frame.
+    
+    Parameters
+    ----------
+    - intensity : ndarray
+      Intensity data image of the sample. It's shape must be a whole
+      multiple of the shape of ``reference``.
+    - reference : ndarray
+      A reference image with no sample that will be applied.
+    
+    """
+    reps = np.divide(intensity.shape, reference.shape).astype(int)
+    mosaic_ref = np.tile(reference, reps)
+    od = np.log(mosaic_ref / intensity)
+    return od
+
 def apply_internal_reference(intensities, out=None):
+
     """Apply a reference correction to complex data to convert intensities
     into refractive index. :math:`I_0` is determined by separating the pixels
     into background and foreground using Otsu's method.

@@ -179,6 +179,7 @@ class QtFramesetPresenter(QtCore.QObject):
     def create_app(self):  # pragma: no cover
         self.app = QtWidgets.QApplication([])
         self.app.setApplicationName("Xanespy")
+        self.app.setStyle("cleanlooks")
         self.process_events.connect(self.app.processEvents)
     
     def launch(self):  # pragma: no cover

@@ -502,6 +502,7 @@ class XanesFrameset():
           particles, but might split large particles into two.
         """
         with self.store('r+') as store:
+            logstart = time()
             frames = store.absorbances.value
             # Average across all timesteps
             frames = np.median(frames, axis=0)
@@ -512,6 +513,8 @@ class XanesFrameset():
             store.particle_labels = particles
             if hasattr(store.particle_labels, 'attrs'):
                 store.particle_labels.attrs['frame_source'] = 'absorbances'
+        # Logging
+        log.info("Calculated particle labels in %d sec", time() - logstart)
     
     def particle_series(self, map_name="whiteline_map"):
         """Generate an array of values from map_name averaged across each
@@ -1230,7 +1233,7 @@ class XanesFrameset():
             val = store.energies.shape[-1]
         return val
 
-    def plot_map(self, ax=None, map_name="whiteline_map", timeidx=0, vmin=None, vmax=None):
+    def plot_map(self, ax=None, map_name="whiteline_fit", timeidx=0, vmin=None, vmax=None):
         """Prepare data and plot a map of whiteline positions."""
         # Do the plotting
         with self.store() as store:
@@ -1243,7 +1246,7 @@ class XanesFrameset():
             plots.plot_txm_map(data=data,
                                ax=ax,
                                norm=norm,
-                               edge=self.edge(),
+                               edge=self.edge,
                                extent=self.extent(representation='absorbances'))
 
     def plot_map_pixel_spectra(self, pixels, map_ax=None,
@@ -1295,20 +1298,22 @@ class XanesFrameset():
     
     def plot_histogram(self, plotter=None, timeidx=None, ax=None,
                        vmin=None, vmax=None, goodness_filter=False,
+                       representation="whiteline_fit",
                        active_pixel=None, bins="energies", *args, **kwargs):
         """Use a default frameset plotter to draw a map of the chemical
         data."""
         with self.store() as store:
+            map_ds = store.get_map(representation)
             if timeidx is None:
-                data = store.whiteline_map.value
+                data = map_ds.value
             else:
-                data = store.whiteline_map[timeidx]
-        # Add bounds for the colormap `if given
+                data = map_ds[timeidx]
+        # Add bounds for the colormap if given
         vmin = self.edge.map_range[0] if vmin is None else vmin
         vmax = self.edge.map_range[1] if vmax is None else vmax
         norm = Normalize(vmin=vmin, vmax=vmax)
         # Get bins for the energy steps
-        edge = self.edge()
+        edge = self.edge
         if str(bins) == "energies":
             bins = edge.energies_in_range(edge.map_range)
         artists = plots.plot_txm_histogram(data=data, ax=ax,
