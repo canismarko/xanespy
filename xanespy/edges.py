@@ -207,6 +207,17 @@ class NCANickelKEdge62(NCANickelKEdge):
     ]
 
 
+class NMCNickelKEdge29(NCANickelKEdge):
+    regions = [
+        (8250, 8310, 20),
+        (8324, 8346, 6),
+        (8346, 8358, 1),
+        (8360, 8400, 10),
+        (8400, 8440, 15),
+        (8440, 8640, 100),
+    ]
+
+
 # Dictionaries make it more intuitive to access these edges by element
 k_edges = {
     'Ni_NCA': NCANickelKEdge(),

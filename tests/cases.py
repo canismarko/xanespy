@@ -7,11 +7,11 @@ from xanespy.utilities import prog
 
 
 class XanespyTestCase(unittest.TestCase):
-
+    
     def run(self, *args, **kwargs):
         prog.quiet = True
         return super().run(*args, **kwargs)
-
+    
     def assertApproximatelyEqual(self, actual, expected,
                                  tolerance=0.01, msg=None):
         """Assert that 'actual' is within relative 'tolerance' of

@@ -25,12 +25,13 @@ from collections import namedtuple
 import os
 
 import numpy as np
+import pandas as pd
 
 from edges import KEdge
 from utilities import position
 
 ZoneplatePoint = namedtuple('ZoneplatePoint', ('x', 'y', 'z', 'energy'))
-DetectorPoint = namedtuple('DetectorPoint', ('z', 'energy'))
+DetectorPoint = namedtuple('DetectorPoint', ('x', 'y', 'z', 'energy'))
 
 
 class Zoneplate():
@@ -54,16 +55,19 @@ class Zoneplate():
     """
     def __init__(self,
                  start: ZoneplatePoint,
+                 x_step: int=None,
+                 y_step: int=None,
                  z_step: int=None,
                  end: ZoneplatePoint=None):
+        self.start = start
         # Check sanity of arguments
-        if z_step is None and end is None:
-            msg = "Either `step` or `end` is required."
+        if None in [x_step, y_step, z_step] and end is None:
+            msg = "Either x, y and z steps or `end` is required."
             raise ValueError(msg)
         elif z_step is not None and end is not None:
             msg = "Passing both `step` or `end` is confusing."
             raise ValueError(msg)
-        elif z_step is None:
+        elif None in [x_step, y_step, z_step]:
             # Calculate the step from start and end points
             self.step = position(
                 x=(end.x - start.x) / (end.energy - start.energy),
@@ -71,8 +75,8 @@ class Zoneplate():
                 z=(end.z - start.z) / (end.energy - start.energy),
             )
         else:
-            self.step = position(x=0, y=0, z=z_step)
-        self.start = start
+            # Use the steps given given by the user
+            self.step = position(x=x_step, y=y_step, z=z_step)
 
     def position(self, energy: float):
         """Predict the x, y and z position of the zonplate for the given
@@ -277,8 +281,11 @@ def sector8_xanes_script(dest,
                          abba_mode: bool=True):
     """Prepare an script file for running multiple consecutive XANES
     framesets on the transmission x-ray micrscope at the Advanced
-    Photon Source beamline 8-BM-B.
-
+    Photon Source beamline 8-BM-B. This function also creates a
+    tab-separated-values (tsv) file which contains each sample
+    filename and its associated meta-data. This can then be used for
+    real-time processing.
+    
     Arguments
     ---------
     dest
@@ -298,7 +305,7 @@ def sector8_xanes_script(dest,
     detector : Detector
       Like zoneplate, but for detector.
     names
-      sample name to use in file names.
+      sample name to use in file names. Should match `sample_positions` in length.
     iterations : iterable
       contains an identifier for each full set of xanes location with
       reference.
@@ -306,8 +313,11 @@ def sector8_xanes_script(dest,
       If True, script will locations forward and backwards to save
       time. Eg: reference, sample, change-energy, sample, reference,
       change-energy, etc. Not compatible with `frame_rest` argument.
-
+    
     """
+    # Prepare a blank pandas dataframe for keeping track of files
+    df = pd.DataFrame(columns=['filename', 'eV', 'iteration', 'reference'])
+    # Set the binning and exposure for the experiment
     dest.write("setbinning {}\n".format(binning))
     dest.write("setexp {}\n".format(exposure))
     energies = edge.all_energies()
@@ -322,9 +332,13 @@ def sector8_xanes_script(dest,
             # Set energy
             dest.write("moveto energy {:.2f}\n".format(energy))
             # Set zoneplate
+            zp_pos = zoneplate.position(energy)
             dest.write("moveto zpz {:.2f}\n".format(zoneplate.position(energy).z))
             # Set detector
-            dest.write("moveto detz {:.2f}\n".format(detector.position(energy).z))
+            det_pos = detector.position(energy)
+            dest.write("moveto detx {:.2f}\n".format(det_pos.x))
+            dest.write("moveto dety {:.2f}\n".format(det_pos.y))
+            dest.write("moveto detz {:.2f}\n".format(det_pos.z))
             # Prepare range of sample positions
             if reverse_positions and abba_mode:
                 position_indexes = range(len(sample_positions)-1, -1, -1)
@@ -332,6 +346,8 @@ def sector8_xanes_script(dest,
                 position_indexes = range(0, len(sample_positions))
             reverse_positions = not reverse_positions
             # Cycle through sample positions and collect data
+            fnames = []
+            ref_name = ""
             for idx in position_indexes:
                 position = sample_positions[idx]
                 name = names[idx]
@@ -339,10 +355,41 @@ def sector8_xanes_script(dest,
                 dest.write("moveto x {:.2f}\n".format(position.x))
                 dest.write("moveto y {:.2f}\n".format(position.y))
                 dest.write("moveto z {:.2f}\n".format(position.z))
+                # Turn energy float into "8250_0eV" string form
+                energy_str = "{:.1f}eV".format(energy).replace('.', '_')
                 # Collect frame
-                filename = "{name}_xanes{iter}_{energy}eV.xrm"
-                energy_str = "{}_{}".format(*str(float(energy)).split('.'))
+                filename = "{name}_xanes{iter}_{energy}.xrm"
                 filename = filename.format(name=name,
                                            iter=iteration,
                                            energy=energy_str)
+                # Check if we're on a sample or reference frame
+                if "ref" in name:
+                    ref_name = filename
+                else:
+                    fnames.append(filename)
                 dest.write("collect {filename}\n".format(filename=filename))
+            # Add the collected files to the pandas dataframe
+            for fname in fnames:
+                row = {'filename': fname, 'eV': energy, 'iteration':
+                       iteration, 'reference': ref_name}
+                df = df.append(row, ignore_index=True)
+    # Save the dataframe as a tab-separated value file
+    tsv_filename = os.path.splitext(dest.name)[0] + '.tsv'
+    df.to_csv(tsv_filename, sep='\t')
+
+
+def monitor_sector8(tsv_filename):
+    """Monitors a list of files and displays them as they are collected
+    from the instrument. A matplotlib axes is displayed and is updated
+    with each new frame that is detected. This function will block
+    until all files in the file list are accounted for.
+    
+    Parameters
+    ----------
+    tsv_filename : string
+      The name of the file that contains a tab-separated-values list
+      of filenames. This file is automatically generated by the
+      ``sector8_xanes_script`` function.
+    
+    """
+    pass

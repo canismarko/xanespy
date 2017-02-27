@@ -748,7 +748,7 @@ class XanesFrameset():
         spectrum = self.spectrum(pixel=pixel,
                                  edge_jump_filter=edge_jump_filter,
                                  representation=representation)
-        edge = self.edge()
+        edge = self.edge
         if ax is None:
             ax = plots.new_axes()
         if normalize:

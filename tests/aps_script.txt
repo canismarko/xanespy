@@ -52,6 +52,8 @@ moveto energy 8246.00
 moveto energy 8248.00
 moveto energy 8250.00
 moveto zpz 2797.81
+moveto detx -63.00
+moveto dety -63.00
 moveto detz 377.59
 moveto x 1653.00
 moveto y -1727.00
@@ -63,6 +65,8 @@ moveto z 0.00
 collect test_reference_xanes0_8250_0eV.xrm
 moveto energy 8270.00
 moveto zpz 2897.14
+moveto detx -43.00
+moveto dety -43.00
 moveto detz 381.47
 moveto x 1706.20
 moveto y -1927.20
@@ -74,6 +78,8 @@ moveto z 0.00
 collect test_sample_xanes0_8270_0eV.xrm
 moveto energy 8290.00
 moveto zpz 2996.47
+moveto detx -23.00
+moveto dety -23.00
 moveto detz 385.34
 moveto x 1653.00
 moveto y -1727.00
@@ -85,6 +91,8 @@ moveto z 0.00
 collect test_reference_xanes0_8290_0eV.xrm
 moveto energy 8310.00
 moveto zpz 3095.80
+moveto detx -3.00
+moveto dety -3.00
 moveto detz 389.22
 moveto x 1706.20
 moveto y -1927.20
@@ -96,6 +104,8 @@ moveto z 0.00
 collect test_sample_xanes0_8310_0eV.xrm
 moveto energy 8324.00
 moveto zpz 3165.33
+moveto detx 11.00
+moveto dety 11.00
 moveto detz 391.93
 moveto x 1653.00
 moveto y -1727.00
@@ -107,6 +117,8 @@ moveto z 0.00
 collect test_reference_xanes0_8324_0eV.xrm
 moveto energy 8326.00
 moveto zpz 3175.26
+moveto detx 13.00
+moveto dety 13.00
 moveto detz 392.32
 moveto x 1706.20
 moveto y -1927.20
@@ -118,6 +130,8 @@ moveto z 0.00
 collect test_sample_xanes0_8326_0eV.xrm
 moveto energy 8328.00
 moveto zpz 3185.20
+moveto detx 15.00
+moveto dety 15.00
 moveto detz 392.71
 moveto x 1653.00
 moveto y -1727.00
@@ -129,6 +143,8 @@ moveto z 0.00
 collect test_reference_xanes0_8328_0eV.xrm
 moveto energy 8330.00
 moveto zpz 3195.13
+moveto detx 17.00
+moveto dety 17.00
 moveto detz 393.09
 moveto x 1706.20
 moveto y -1927.20
@@ -140,6 +156,8 @@ moveto z 0.00
 collect test_sample_xanes0_8330_0eV.xrm
 moveto energy 8332.00
 moveto zpz 3205.06
+moveto detx 19.00
+moveto dety 19.00
 moveto detz 393.48
 moveto x 1653.00
 moveto y -1727.00
@@ -151,6 +169,8 @@ moveto z 0.00
 collect test_reference_xanes0_8332_0eV.xrm
 moveto energy 8334.00
 moveto zpz 3215.00
+moveto detx 21.00
+moveto dety 21.00
 moveto detz 393.87
 moveto x 1706.20
 moveto y -1927.20
@@ -162,6 +182,8 @@ moveto z 0.00
 collect test_sample_xanes0_8334_0eV.xrm
 moveto energy 8336.00
 moveto zpz 3224.93
+moveto detx 23.00
+moveto dety 23.00
 moveto detz 394.26
 moveto x 1653.00
 moveto y -1727.00
@@ -173,6 +195,8 @@ moveto z 0.00
 collect test_reference_xanes0_8336_0eV.xrm
 moveto energy 8338.00
 moveto zpz 3234.86
+moveto detx 25.00
+moveto dety 25.00
 moveto detz 394.64
 moveto x 1706.20
 moveto y -1927.20
@@ -184,6 +208,8 @@ moveto z 0.00
 collect test_sample_xanes0_8338_0eV.xrm
 moveto energy 8340.00
 moveto zpz 3244.79
+moveto detx 27.00
+moveto dety 27.00
 moveto detz 395.03
 moveto x 1653.00
 moveto y -1727.00
@@ -195,6 +221,8 @@ moveto z 0.00
 collect test_reference_xanes0_8340_0eV.xrm
 moveto energy 8342.00
 moveto zpz 3254.73
+moveto detx 29.00
+moveto dety 29.00
 moveto detz 395.42
 moveto x 1706.20
 moveto y -1927.20
@@ -206,6 +234,8 @@ moveto z 0.00
 collect test_sample_xanes0_8342_0eV.xrm
 moveto energy 8344.00
 moveto zpz 3264.66
+moveto detx 31.00
+moveto dety 31.00
 moveto detz 395.81
 moveto x 1653.00
 moveto y -1727.00
@@ -217,6 +247,8 @@ moveto z 0.00
 collect test_reference_xanes0_8344_0eV.xrm
 moveto energy 8345.00
 moveto zpz 3269.63
+moveto detx 32.00
+moveto dety 32.00
 moveto detz 396.00
 moveto x 1706.20
 moveto y -1927.20
@@ -228,6 +260,8 @@ moveto z 0.00
 collect test_sample_xanes0_8345_0eV.xrm
 moveto energy 8346.00
 moveto zpz 3274.59
+moveto detx 33.00
+moveto dety 33.00
 moveto detz 396.19
 moveto x 1653.00
 moveto y -1727.00
@@ -239,6 +273,8 @@ moveto z 0.00
 collect test_reference_xanes0_8346_0eV.xrm
 moveto energy 8347.00
 moveto zpz 3279.56
+moveto detx 34.00
+moveto dety 34.00
 moveto detz 396.39
 moveto x 1706.20
 moveto y -1927.20
@@ -250,6 +286,8 @@ moveto z 0.00
 collect test_sample_xanes0_8347_0eV.xrm
 moveto energy 8348.00
 moveto zpz 3284.53
+moveto detx 35.00
+moveto dety 35.00
 moveto detz 396.58
 moveto x 1653.00
 moveto y -1727.00
@@ -261,6 +299,8 @@ moveto z 0.00
 collect test_reference_xanes0_8348_0eV.xrm
 moveto energy 8349.00
 moveto zpz 3289.49
+moveto detx 36.00
+moveto dety 36.00
 moveto detz 396.77
 moveto x 1706.20
 moveto y -1927.20
@@ -272,6 +312,8 @@ moveto z 0.00
 collect test_sample_xanes0_8349_0eV.xrm
 moveto energy 8350.00
 moveto zpz 3294.46
+moveto detx 37.00
+moveto dety 37.00
 moveto detz 396.97
 moveto x 1653.00
 moveto y -1727.00
@@ -283,6 +325,8 @@ moveto z 0.00
 collect test_reference_xanes0_8350_0eV.xrm
 moveto energy 8351.00
 moveto zpz 3299.43
+moveto detx 38.00
+moveto dety 38.00
 moveto detz 397.16
 moveto x 1706.20
 moveto y -1927.20
@@ -294,6 +338,8 @@ moveto z 0.00
 collect test_sample_xanes0_8351_0eV.xrm
 moveto energy 8352.00
 moveto zpz 3304.39
+moveto detx 39.00
+moveto dety 39.00
 moveto detz 397.36
 moveto x 1653.00
 moveto y -1727.00
@@ -305,6 +351,8 @@ moveto z 0.00
 collect test_reference_xanes0_8352_0eV.xrm
 moveto energy 8353.00
 moveto zpz 3309.36
+moveto detx 40.00
+moveto dety 40.00
 moveto detz 397.55
 moveto x 1706.20
 moveto y -1927.20
@@ -316,6 +364,8 @@ moveto z 0.00
 collect test_sample_xanes0_8353_0eV.xrm
 moveto energy 8354.00
 moveto zpz 3314.32
+moveto detx 41.00
+moveto dety 41.00
 moveto detz 397.74
 moveto x 1653.00
 moveto y -1727.00
@@ -327,6 +377,8 @@ moveto z 0.00
 collect test_reference_xanes0_8354_0eV.xrm
 moveto energy 8355.00
 moveto zpz 3319.29
+moveto detx 42.00
+moveto dety 42.00
 moveto detz 397.94
 moveto x 1706.20
 moveto y -1927.20
@@ -338,6 +390,8 @@ moveto z 0.00
 collect test_sample_xanes0_8355_0eV.xrm
 moveto energy 8356.00
 moveto zpz 3324.26
+moveto detx 43.00
+moveto dety 43.00
 moveto detz 398.13
 moveto x 1653.00
 moveto y -1727.00
@@ -349,6 +403,8 @@ moveto z 0.00
 collect test_reference_xanes0_8356_0eV.xrm
 moveto energy 8358.00
 moveto zpz 3334.19
+moveto detx 45.00
+moveto dety 45.00
 moveto detz 398.52
 moveto x 1706.20
 moveto y -1927.20
@@ -360,6 +416,8 @@ moveto z 0.00
 collect test_sample_xanes0_8358_0eV.xrm
 moveto energy 8360.00
 moveto zpz 3344.12
+moveto detx 47.00
+moveto dety 47.00
 moveto detz 398.91
 moveto x 1653.00
 moveto y -1727.00
@@ -371,6 +429,8 @@ moveto z 0.00
 collect test_reference_xanes0_8360_0eV.xrm
 moveto energy 8364.00
 moveto zpz 3363.99
+moveto detx 51.00
+moveto dety 51.00
 moveto detz 399.68
 moveto x 1706.20
 moveto y -1927.20
@@ -382,6 +442,8 @@ moveto z 0.00
 collect test_sample_xanes0_8364_0eV.xrm
 moveto energy 8368.00
 moveto zpz 3383.85
+moveto detx 55.00
+moveto dety 55.00
 moveto detz 400.46
 moveto x 1653.00
 moveto y -1727.00
@@ -393,6 +455,8 @@ moveto z 0.00
 collect test_reference_xanes0_8368_0eV.xrm
 moveto energy 8372.00
 moveto zpz 3403.72
+moveto detx 59.00
+moveto dety 59.00
 moveto detz 401.23
 moveto x 1706.20
 moveto y -1927.20
@@ -404,6 +468,8 @@ moveto z 0.00
 collect test_sample_xanes0_8372_0eV.xrm
 moveto energy 8376.00
 moveto zpz 3423.59
+moveto detx 63.00
+moveto dety 63.00
 moveto detz 402.01
 moveto x 1653.00
 moveto y -1727.00
@@ -415,6 +481,8 @@ moveto z 0.00
 collect test_reference_xanes0_8376_0eV.xrm
 moveto energy 8380.00
 moveto zpz 3443.45
+moveto detx 67.00
+moveto dety 67.00
 moveto detz 402.78
 moveto x 1706.20
 moveto y -1927.20
@@ -426,6 +494,8 @@ moveto z 0.00
 collect test_sample_xanes0_8380_0eV.xrm
 moveto energy 8384.00
 moveto zpz 3463.32
+moveto detx 71.00
+moveto dety 71.00
 moveto detz 403.56
 moveto x 1653.00
 moveto y -1727.00
@@ -437,6 +507,8 @@ moveto z 0.00
 collect test_reference_xanes0_8384_0eV.xrm
 moveto energy 8388.00
 moveto zpz 3483.18
+moveto detx 75.00
+moveto dety 75.00
 moveto detz 404.33
 moveto x 1706.20
 moveto y -1927.20
@@ -448,6 +520,8 @@ moveto z 0.00
 collect test_sample_xanes0_8388_0eV.xrm
 moveto energy 8392.00
 moveto zpz 3503.05
+moveto detx 79.00
+moveto dety 79.00
 moveto detz 405.10
 moveto x 1653.00
 moveto y -1727.00
@@ -459,6 +533,8 @@ moveto z 0.00
 collect test_reference_xanes0_8392_0eV.xrm
 moveto energy 8396.00
 moveto zpz 3522.92
+moveto detx 83.00
+moveto dety 83.00
 moveto detz 405.88
 moveto x 1706.20
 moveto y -1927.20
@@ -470,6 +546,8 @@ moveto z 0.00
 collect test_sample_xanes0_8396_0eV.xrm
 moveto energy 8400.00
 moveto zpz 3542.78
+moveto detx 87.00
+moveto dety 87.00
 moveto detz 406.65
 moveto x 1653.00
 moveto y -1727.00
@@ -481,6 +559,8 @@ moveto z 0.00
 collect test_reference_xanes0_8400_0eV.xrm
 moveto energy 8408.00
 moveto zpz 3582.51
+moveto detx 95.00
+moveto dety 95.00
 moveto detz 408.20
 moveto x 1706.20
 moveto y -1927.20
@@ -492,6 +572,8 @@ moveto z 0.00
 collect test_sample_xanes0_8408_0eV.xrm
 moveto energy 8416.00
 moveto zpz 3622.24
+moveto detx 103.00
+moveto dety 103.00
 moveto detz 409.75
 moveto x 1653.00
 moveto y -1727.00
@@ -503,6 +585,8 @@ moveto z 0.00
 collect test_reference_xanes0_8416_0eV.xrm
 moveto energy 8424.00
 moveto zpz 3661.98
+moveto detx 111.00
+moveto dety 111.00
 moveto detz 411.30
 moveto x 1706.20
 moveto y -1927.20
@@ -514,6 +598,8 @@ moveto z 0.00
 collect test_sample_xanes0_8424_0eV.xrm
 moveto energy 8432.00
 moveto zpz 3701.71
+moveto detx 119.00
+moveto dety 119.00
 moveto detz 412.85
 moveto x 1653.00
 moveto y -1727.00
@@ -525,6 +611,8 @@ moveto z 0.00
 collect test_reference_xanes0_8432_0eV.xrm
 moveto energy 8440.00
 moveto zpz 3741.44
+moveto detx 127.00
+moveto dety 127.00
 moveto detz 414.40
 moveto x 1706.20
 moveto y -1927.20
@@ -536,6 +624,8 @@ moveto z 0.00
 collect test_sample_xanes0_8440_0eV.xrm
 moveto energy 8490.00
 moveto zpz 3989.76
+moveto detx 177.00
+moveto dety 177.00
 moveto detz 424.09
 moveto x 1653.00
 moveto y -1727.00
@@ -547,6 +637,8 @@ moveto z 0.00
 collect test_reference_xanes0_8490_0eV.xrm
 moveto energy 8540.00
 moveto zpz 4238.08
+moveto detx 227.00
+moveto dety 227.00
 moveto detz 433.78
 moveto x 1706.20
 moveto y -1927.20
@@ -558,6 +650,8 @@ moveto z 0.00
 collect test_sample_xanes0_8540_0eV.xrm
 moveto energy 8590.00
 moveto zpz 4486.41
+moveto detx 277.00
+moveto dety 277.00
 moveto detz 443.46
 moveto x 1653.00
 moveto y -1727.00
@@ -569,6 +663,8 @@ moveto z 0.00
 collect test_reference_xanes0_8590_0eV.xrm
 moveto energy 8640.00
 moveto zpz 4734.73
+moveto detx 327.00
+moveto dety 327.00
 moveto detz 453.15
 moveto x 1706.20
 moveto y -1927.20
