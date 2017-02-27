@@ -1142,14 +1142,18 @@ class XanesFrameset():
         """
         with self.store(mode='r+') as store:
             log.debug('Subtracting surroundings')
-            mask = np.broadcast_to(self.edge_mask(), store.absorbances.shape)
-            bg = store.absorbances[mask].reshape((*store.absorbances.shape[0:2], -1))
-            bg = bg.mean(axis=-1)
-            msg = "Background intensities calculated: {}"
-            log.debug(msg.format(bg))
-            bg = broadcast_reverse(bg, store.absorbances.shape)
-            # Save the resultant data to disk
-            store.absorbances = store.absorbances - bg
+            # Get the mask and make it compatible with XANES shape
+            mask = np.broadcast_to(self.edge_mask(), store.absorbances.shape[1:])
+            # Go through each timestep one at a time (to avoid using all the memory)
+            for timestep in range(store.absorbances.shape[0]):
+                bg = store.absorbances[timestep][mask]
+                bg = bg.reshape((*store.absorbances.shape[1:2], -1))
+                bg = bg.mean(axis=-1)
+                msg = "Background intensities calculated: {}"
+                log.debug(msg.format(bg))
+                bg = broadcast_reverse(bg, store.absorbances.shape[1:])
+                # Save the resultant data to disk
+                store.absorbances[timestep] = store.absorbances[timestep] - bg
 
     def extent_array(self, representation='intensities'):
         raise NotImplementedError()

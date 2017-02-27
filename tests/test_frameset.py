@@ -547,6 +547,35 @@ class XanesFramesetTest(TestCase):
         self.store = store
         return fs
 
+    def test_subtract_surroundings(self):
+        store = MockStore()
+        # Prepare some fake data
+        od = np.array(
+            [[[[1, 1, 1, 1],
+               [1, 4, 4, 1],
+               [1, 4, 4, 1],
+               [1, 1, 1, 1]]]]
+        )
+        mask = np.array(
+            [[True, True,  True,  True],
+             [True, False, False, True],
+             [True, False, False, True],
+             [True, True,  True,  True]]
+        )
+        expectation = np.array(
+            [[[[0, 0, 0, 0],
+               [0, 3, 3, 0],
+               [0, 3, 3, 0],
+               [0, 0, 0, 0]]]]
+        )
+        store.absorbances = od
+        fs = self.create_frameset(store=store)
+        fs.edge_mask = mock.Mock(return_value=mask)
+        # Do the calculation
+        fs.subtract_surroundings()
+        # Check that the subtraction happened properly
+        np.testing.assert_equal(store.absorbances, expectation)
+
     def test_spectrum(self):
         store = MockStore()
         # Prepare fake energy data

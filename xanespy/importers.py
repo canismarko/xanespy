@@ -414,7 +414,7 @@ def decode_aps_params(filename):
     """Accept the filename of an XRM file and return sample parameters as
     a dictionary."""
     regex = re.compile(
-        '(?P<pos>[a-zA-Z0-9_]+)_xanes(?P<sam>[a-zA-Z0-9_]+)_(?P<E_int>[0-9]+)_(?P<E_dec>[0-9])eV.xrm'
+        '(?P<pos>[a-zA-Z0-9_]+)_xanes(?P<sam>[a-zA-Z0-9_]+)_(?P<E_int>[0-9]+)_(?P<E_dec>[0-9]+)eV.xrm'
     )
     match = regex.search(filename)
     if not match:
