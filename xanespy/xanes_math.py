@@ -84,12 +84,13 @@ def apply_mosaic_reference(intensity, reference):
     od = np.log(mosaic_ref / intensity)
     return od
 
-def apply_internal_reference(intensities, out=None):
 
+def apply_internal_reference(intensities, out=None):
+    
     """Apply a reference correction to complex data to convert intensities
     into refractive index. :math:`I_0` is determined by separating the pixels
     into background and foreground using Otsu's method.
-
+    
     Arrays `intensities` and `out` must all have the same shape where
     the last two dimensions are image rows and column.
     """
@@ -401,7 +402,7 @@ def particle_labels(frames: np.ndarray, energies: np.ndarray, edge,
 kedge_params = (
     'scale', 'voffset', 'E0',  # Global parameters
     'sigw',  # Sharpness of the edge sigmoid
-    'pre_m', 'pre_b',  # Linear pre-edge slope/intercept
+    'bg_slope', # Linear reduction in background absorbance
     'ga', 'gb', 'gc',  # Gaussian height, center and width
 )
 KEdgeParams = namedtuple('KEdgeParams', kedge_params)
@@ -441,7 +442,7 @@ def predict_edge(energies, *params):
     # Gaussian
     gaus = p.ga*np.exp(-(x-p.gb)**2/2/p.gc**2)
     # Background
-    bg = x * p.pre_m + p.pre_b
+    bg = x * p.bg_slope
     curve = sig + gaus + bg
     curve = p.scale * curve + p.voffset
     return curve
@@ -480,7 +481,7 @@ def guess_kedge(spectrum, energies, edge):
     gc = 4  # Arbitrary choice, should improve this in the future
     # Construct the parameters tuple
     params = KEdgeParams(scale=scale, voffset=voffset, E0=E0,
-                         sigw=0.5, pre_m=0, pre_b=0,
+                         sigw=0.5, bg_slope=0,
                          ga=ga, gb=gb, gc=gc)
     return params
 

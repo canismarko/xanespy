@@ -76,7 +76,7 @@ class XanesMathTest(unittest.TestCase):
         params = KEdgeParams(
             scale=1, voffset=0, E0=8353,
             sigw=1,
-            pre_m=0, pre_b=0,
+            bg_slope=0,
             ga=0, gb=1, gc=1,
         )
         x = np.linspace(8330, 8440)
@@ -133,7 +133,7 @@ class XanesMathTest(unittest.TestCase):
         params = KEdgeParams(
             scale=1, voffset=0, E0=8353,
             sigw=1,
-            pre_m=0, pre_b=0,
+            bg_slope=0,
             ga=0, gb=1, gc=1,
         )
         Es = np.linspace(8250, 8640)
@@ -147,12 +147,12 @@ class XanesMathTest(unittest.TestCase):
         params = KEdgeParams(
             scale=0, voffset=0, E0=0,
             sigw=1,
-            pre_m=0, pre_b=0,
+            bg_slope=0,
             ga=0, gb=1, gc=1,
         )
         func = _fit_spectrum(params)
         result = func(predicted, Es)
-        np.testing.assert_equal(result, [np.nan] * 9)
+        np.testing.assert_equal(result, [np.nan] * 8)
 
 
     def test_apply_internal_reference(self):
@@ -251,8 +251,7 @@ class XanesMathTest(unittest.TestCase):
         self.assertEqual(result.E0, edge.E_0)
         self.assertAlmostEqual(result.ga, 0.97, places=2)
         self.assertAlmostEqual(result.gb, 17, places=1)
-        self.assertAlmostEqual(result.pre_m, 0, places=5)
-        self.assertAlmostEqual(result.pre_b, 0, places=2)
+        self.assertAlmostEqual(result.bg_slope, 0, places=5)
 
     def test_apply_references(self):
         # Create some fake frames. Reshaping is to mimic multi-dim dataset
@@ -294,17 +293,22 @@ class XanesMathTest(unittest.TestCase):
         Is = np.array([spectrum.Absorbance.values])
         Es = np.array([spectrum.index])
         # Give an intial guess
-        guess = KEdgeParams(1/5, -0.4, 8333,
-                            1,
-                            -0.0008, 0,
-                            1, 14, 1)
+        guess = KEdgeParams(1/5, 0, 8333, # Scale, v_offset, E_0
+                            1, # Sigmoid sharpness
+                            0, # Slope
+                            1, 17, 4) # Gaussian height, center and width
         out = fit_kedge(Is, energies=Es, p0=guess)
         self.assertEqual(out.shape, (1, len(kedge_params)))
         out_params = KEdgeParams(*out[0])
-        # Uncomment this plotting to check the fit if the test fails
+        # Uncomment these plotting commands to check the fit if the test fails
+        # guess0 = guess_kedge(spectrum=Is[0], energies=Es[0],
+        #                      edge=edges.k_edges['Ni_NCA'])
+        # print(guess0)
         # import matplotlib.pyplot as plt
-        # plt.plot(Es, Is, marker=".")
-        # plt.plot(Es, predict_edge(Es, *out_params), marker="+")
+        # plt.figure()
+        # plt.plot(Es, Is, marker="+")
+        # new_Es = np.linspace(8250, 8640, num=200)
+        # plt.plot(new_Es, predict_edge(new_Es, *out_params), marker="+", linestyle="-")
         # plt.show()
         self.assertAlmostEqual(out_params.E0 + out_params.gb, 8350.50, places=2)
 
