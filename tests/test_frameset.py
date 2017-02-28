@@ -303,10 +303,10 @@ class XanesFramesetTest(TestCase):
         fs = self.create_frameset()
         # Bad blur value
         with self.assertRaises(ValueError):
-            fs.align_frames(blur="bad-blur")
+            fs.align_frames(blur="bad-blur", plot_results=False)
         # Bad method
         with self.assertRaises(ValueError):
-            fs.align_frames(method="bad-method")
+            fs.align_frames(method="bad-method", plot_results=False)
 
     def test_label_particle(self):
         store = MockStore()
@@ -539,9 +539,11 @@ class OldXanesFramesetTest(XanespyTestCase):
             old_imgs = store.absorbances.value
         # Check that reference_frame arguments of the wrong shape are rejected
         with self.assertRaisesRegex(Exception, "does not match shape"):
-            self.frameset.align_frames(commit=False, reference_frame=0)
+            self.frameset.align_frames(commit=False,
+                                       reference_frame=0, plot_results=False)
         # Perform an alignment but don't commit to disk
-        self.frameset.align_frames(commit=False, reference_frame=(0, 0))
+        self.frameset.align_frames(commit=False, reference_frame=(0, 0),
+                                   plot_results=False)
         # Check that the translations weren't applied yet
         with self.frameset.store() as store:
             hasnotchanged = np.all(np.equal(old_imgs, store.absorbances.value))

@@ -892,10 +892,9 @@ class XanesFrameset():
          fitting curves, instead of the default of taking the direct
          maximum. This is likely to be very slow.
         """
+        self.calculate_whitelines()
         if fit_spectra:
             self.fit_spectra()
-        else:
-            self.calculate_whitelines()
         # Calculate particle_labels
         self.label_particles()
 
