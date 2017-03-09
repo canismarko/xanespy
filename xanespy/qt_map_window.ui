@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1044</width>
+    <width>1420</width>
     <height>600</height>
    </rect>
   </property>
@@ -23,6 +23,13 @@
          <widget class="QCheckBox" name="chkEdgeMask">
           <property name="text">
            <string>Edge Mask</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QCheckBox" name="chkFitSpectrum">
+          <property name="text">
+           <string>Fit Spectrum</string>
           </property>
          </widget>
         </item>
@@ -373,8 +380,8 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1044</width>
-     <height>25</height>
+     <width>1420</width>
+     <height>33</height>
     </rect>
    </property>
   </widget>

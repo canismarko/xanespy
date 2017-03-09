@@ -47,6 +47,7 @@ class QtFramesetPresenter(QtCore.QObject):
     _map_data = None
     _map_pixel = None
     use_edge_mask = False
+    show_spectrum_fit = False
     
     # Signals
     app_ready = QtCore.pyqtSignal()
@@ -58,11 +59,11 @@ class QtFramesetPresenter(QtCore.QObject):
     process_events = QtCore.pyqtSignal()
     cmap_list_changed = QtCore.pyqtSignal(list)
     mean_spectrum_changed = QtCore.pyqtSignal(
-        pd.Series, object, 'QString', object,
-        arguments=['spectrum', 'norm', 'cmap', 'edge_range'])
+        pd.Series, object, object, 'QString', object,
+        arguments=['spectrum', 'fit_spectrum', 'norm', 'cmap', 'edge_range'])
     map_spectrum_changed = QtCore.pyqtSignal(
-        pd.Series, object, 'QString', object,
-        arguments=['spectrum', 'norm', 'cmap', 'edge_range'])
+        pd.Series, object, object, 'QString', object,
+        arguments=['spectrum', 'fit_spectrum', 'norm', 'cmap', 'edge_range'])
     map_limits_changed = QtCore.pyqtSignal(
         float, float, float, int,
         arguments=['vmin', 'vmax', 'step', 'decimals'])
@@ -108,6 +109,7 @@ class QtFramesetPresenter(QtCore.QObject):
         # Connect to the view's signals
         view.cmap_changed.connect(self.change_map_cmap)
         view.edge_mask_toggled.connect(self.toggle_edge_mask)
+        view.spectrum_fit_toggled.connect(self.toggle_spectrum_fit)
         view.map_vmin_changed.connect(self.set_map_vmin)
         view.map_vmax_changed.connect(self.set_map_vmax)
         view.limits_applied.connect(self.update_maps)
@@ -119,6 +121,11 @@ class QtFramesetPresenter(QtCore.QObject):
         view.map_clicked.connect(self.set_map_pixel)
         view.map_moved.connect(self.move_map_pixel)
 
+    def toggle_spectrum_fit(self, state):
+        if self.show_spectrum_fit != state:
+            self.show_spectrum_fit = state
+            self.update_spectra()
+        
     def toggle_edge_mask(self, state):
         if self.use_edge_mask != state:
             self.use_edge_mask = state
@@ -522,10 +529,11 @@ class QtFramesetPresenter(QtCore.QObject):
     
     def update_status_value(self):
         px = self.frame_pixel
-        if px is not None:
+        try:
+            assert px is not None
             # Get the value of this pixel from the frame data
             value_s = str(self.active_frames()[self.active_frame][px])
-        else:
+        except (IndexError, AssertionError):
             value_s = ""
         self.frame_view.set_status_value(value_s)
     
@@ -641,22 +649,32 @@ class QtFramesetPresenter(QtCore.QObject):
         `pixel_sepctrum_changed`.
         """
         try:
-            mean_spectrum = self.frameset.spectrum(index=self.active_timestep,
-                                                  pixel=None,
-                                                  edge_jump_filter=self.use_edge_mask,
-                                                  representation=self.active_representation)
-            map_spectrum = self.frameset.spectrum(index=self.active_timestep,
-                                                  pixel=self._map_pixel,
-                                                  edge_jump_filter=self.use_edge_mask,
-                                                  representation=self.active_representation)
+            mean_spectrum = self.frameset.spectrum(
+                index=self.active_timestep,
+                pixel=None,
+                edge_jump_filter=self.use_edge_mask,
+                representation=self.active_representation)
+            map_spectrum = self.frameset.spectrum(
+                index=self.active_timestep,
+                pixel=self._map_pixel,
+                edge_jump_filter=self.use_edge_mask,
+                representation=self.active_representation)
         except exceptions.GroupKeyError:
             pass
         else:
+            # Get the fitted spectrum if available
+            if self.show_spectrum_fit:
+                fit = self.frameset.fitted_spectrum(
+                    pixel=self._map_pixel, index=self.active_timestep)
+            else:
+                fit = None
             self.mean_spectrum_changed.emit(mean_spectrum,
+                                            fit,
                                             self.map_norm(),
                                             self.map_cmap,
                                             self.frameset.edge.edge_range)
             self.map_spectrum_changed.emit(map_spectrum,
+                                           fit,
                                            self.map_norm(),
                                            self.map_cmap,
                                            self.frameset.edge.edge_range)

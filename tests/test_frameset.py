@@ -271,6 +271,39 @@ class XanesFramesetTest(TestCase):
         # Check that the subtraction happened properly
         np.testing.assert_equal(store.absorbances, expectation)
 
+    def test_fitted_spectrum(self):
+        # Prepare some dummy data
+        store = MockStore()
+        fit_params = np.random.rand(5, 256, 256, 8)
+        store.get_frames = mock.Mock(return_value=fit_params)
+        fs = self.create_frameset(store=store)
+        fs.energies = mock.Mock(return_value=np.linspace(8250, 8640, num=40))
+        pixel = (0, 0)
+        # Calculate the predicted spectrum for a single pixel
+        result = fs.fitted_spectrum(pixel=pixel)
+        # Validate the predicted spectrum
+        expected_Es = np.linspace(8250, 8640, num=500)
+        np.testing.assert_equal(result.index, expected_Es)
+        expected_As = predict_edge(expected_Es, *fit_params[0,0,0])
+        np.testing.assert_equal(result.values, expected_As)
+        # Calculate the predicted spectrum for a whole frame
+        result = fs.fitted_spectrum(pixel=None)
+        # Validate the predicted spectrum
+        np.testing.assert_equal(result.index, expected_Es)
+        mean_params = np.mean(fit_params[0], axis=(0, 1))
+        assert mean_params.shape == (8,)
+        expected_As = predict_edge(expected_Es, *mean_params)
+        np.testing.assert_equal(result.values, expected_As)
+        # Test with a user-provided energy list
+        energies = np.linspace(8300, 8500, num=47)
+        result = fs.fitted_spectrum(energies=energies)
+        # Validate the predicted spectrum
+        np.testing.assert_equal(result.index, energies)
+        mean_params = np.mean(fit_params[0], axis=(0, 1))
+        assert mean_params.shape == (8,)
+        expected_As = predict_edge(energies, *mean_params)
+        np.testing.assert_equal(result.values, expected_As)
+
     def test_spectrum(self):
         store = MockStore()
         # Prepare fake energy data

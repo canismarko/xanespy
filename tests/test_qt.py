@@ -253,6 +253,26 @@ class PresenterTestCase(QtTestCase):
         presenter.set_map_cursor(1, 3)
         self.assertEqual(len(spy), 1)
         self.assertEqual(spy[0], [None, None, None])
+
+    def test_spectrum_fit(self):
+        presenter = self.create_presenter()
+        spy = QtTest.QSignalSpy(presenter.map_spectrum_changed)
+        self.assertFalse(presenter.show_spectrum_fit)
+        presenter.toggle_spectrum_fit(True)
+        # Check that the state variable is set
+        self.assertTrue(presenter.show_spectrum_fit)
+        # Check that the right arguments are given to the signal
+        self.assertEqual(len(spy), 1)
+        fit = spy[0][1]
+        self.assertTrue(fit is not None)
+        # Now disable fit plotting
+        presenter.toggle_spectrum_fit(False)
+        # Check that the state variable is set
+        self.assertFalse(presenter.show_spectrum_fit)
+        # Check that the right arguments are given to the signal
+        self.assertEqual(len(spy), 2)
+        fit = spy[1][1]
+        self.assertIs(fit, None)
     
     def test_click_map_pixel(self):
         presenter = self.create_presenter()

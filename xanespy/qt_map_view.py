@@ -59,6 +59,7 @@ class QtMapView(QtCore.QObject):
     # Signals
     cmap_changed = QtCore.pyqtSignal('QString')
     edge_mask_toggled = QtCore.pyqtSignal(bool)
+    spectrum_fit_toggled = QtCore.pyqtSignal(bool)
     map_vmin_changed = QtCore.pyqtSignal(float)
     map_vmax_changed = QtCore.pyqtSignal(float)
     limits_applied = QtCore.pyqtSignal()
@@ -79,6 +80,7 @@ class QtMapView(QtCore.QObject):
         # Connect the UI signals to the view signals
         self.ui.cmbCmap.currentTextChanged.connect(self.cmap_changed)
         self.ui.chkEdgeMask.toggled.connect(self.edge_mask_toggled)
+        self.ui.chkFitSpectrum.toggled.connect(self.spectrum_fit_toggled)
         self.ui.spnVMin.valueChanged.connect(self.map_vmin_changed)
         self.ui.spnVMax.valueChanged.connect(self.map_vmax_changed)
         self.ui.btnApplyLimits.clicked.connect(self.limits_applied)
@@ -190,7 +192,8 @@ class QtMapView(QtCore.QObject):
         mappable = cm.ScalarMappable(norm=norm, cmap=cmap)
         self.cbar.on_mappable_changed(mappable)
 
-    def plot_spectrum(self, spectrum, norm, cmap, edge_range):  # pragma: no cover
+    def plot_spectrum(self, spectrum, fit_spectrum, norm, cmap,
+                      edge_range):  # pragma: no cover
         log.debug("Plotting new map spectrum")
         # Clear the old axes
         self.spectrum_ax.clear()
@@ -212,6 +215,12 @@ class QtMapView(QtCore.QObject):
             cmap=cmap,
             ax=self.edge_ax,
         )
+        # Plot the fitted spectrum for comparison
+        if fitted_spectrum:
+            plots.plot_xanes_spectrum(
+                spectrum=fitted_spectrum.values,
+                energies=fitted_spectrum.index,
+                ax=self.edge_ax)
         # Set axes limits on the edge axes
         self.edge_ax.set_xlim(norm.vmin, norm.vmax)
         self.redraw_canvas()

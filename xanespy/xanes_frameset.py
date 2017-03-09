@@ -664,6 +664,54 @@ class XanesFrameset():
             spectra = np.moveaxis(spectra, 0, -1)
         return spectra
 
+    def fitted_spectrum(self, energies=None, pixel=None, index=0,
+                        repsentation="fit_parameters"):
+        """Take the previously calculated fitting parameters from
+        `fit_spectra` and predict the XANES spectrum.
+
+        Parameters
+        ----------
+        energies : np.ndarray, optional
+          The input values to give to the predictor function. If
+          omitted, a np.linspace will be created covering the range of
+          energies.
+        pixel : 2-tuple, optional.
+          The specific pixel to use for getting fit parameters. If
+          omitted, the average for each parameter calculated.
+        index : int, optional
+          The timeindex to use for retrieving fit parameters.
+        representation : str, optional
+          Which dataset name to use for accessing the fit
+          parameters. The default value ("fit_parameters") is the one
+          used by ``fit_spectra`` to save the results.
+
+        Returns
+        -------
+        fit : pd.Series
+          The predicted spectrum based on the previously calculated
+          fit parameters.
+        """
+        # Get a default energy range in necessary
+        if energies is None:
+            Es = self.energies()
+            Es = np.linspace(np.min(Es), np.max(Es), num=500)
+        else:
+            Es = energies
+        # Get the fitting parameters (previously calculated)
+        with self.store() as store:
+            params = store.get_frames('representation')[index]
+        # Filter to the individual pixel if necessary
+        if pixel is None:
+            mean_axes = tuple(range(params.ndim-1))
+            params = np.mean(params, axis=mean_axes)
+        else:
+            params = params[pixel]
+        # Do the predicting
+        predicted_As = xm.predict_edge(Es, *params)
+        # Create the pandas series
+        fit = pd.Series(predicted_As, index=Es)
+        return fit
+
     def spectrum(self, pixel=None, edge_jump_filter=False,
                        representation="absorbances", index=0):
         """Collapse the frameset down to an energy spectrum.
@@ -745,6 +793,8 @@ class XanesFrameset():
         edge_jump_filter - If truthy, will only include those values
           that show a strong absorbtion jump across this edge.
         """
+        if show_fit:
+            raise NotImplementedError("`show_fit` parameter coming soon")
         if norm_range is None:
             norm_range = (self.edge.map_range[0], self.edge.map_range[1])
         norm = Normalize(*norm_range)
