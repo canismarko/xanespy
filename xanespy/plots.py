@@ -263,7 +263,8 @@ def plot_pixel_spectra(pixels, extent, spectra, energies, map_ax,
 
 def plot_xanes_spectrum(spectrum, energies, norm=Normalize(),
                         show_fit=False, ax=None, ax2=None,
-                        linestyle=':', color="blue", cmap="plasma"):  # pragma: no cover
+                        linestyle=':', color="blue", cmap="plasma",
+                        *args, **kwargs):  # pragma: no cover
     """Plot a XANES spectrum on an axes. Applies some color formatting if
     `edge` is a valid XANES Edge object.
 
@@ -315,7 +316,7 @@ def plot_xanes_spectrum(spectrum, energies, norm=Normalize(),
         ys = spectrum
         artist = ax.plot(energies, np.real(ys), linestyle=linestyle, color="green")
         artist.extend(ax2.plot(energies, np.imag(ys),
-                               linestyle=linestyle, color="red"))
+                               linestyle=linestyle, color="red", *args, **kwargs))
     else:
         # Just plot the real numbers
         ys = np.real(spectrum)

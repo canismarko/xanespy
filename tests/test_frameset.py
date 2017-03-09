@@ -281,6 +281,7 @@ class XanesFramesetTest(TestCase):
         pixel = (0, 0)
         # Calculate the predicted spectrum for a single pixel
         result = fs.fitted_spectrum(pixel=pixel)
+        store.get_frames.assert_called_with('fit_parameters')
         # Validate the predicted spectrum
         expected_Es = np.linspace(8250, 8640, num=500)
         np.testing.assert_equal(result.index, expected_Es)

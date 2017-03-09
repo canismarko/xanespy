@@ -60,10 +60,10 @@ class QtFramesetPresenter(QtCore.QObject):
     cmap_list_changed = QtCore.pyqtSignal(list)
     mean_spectrum_changed = QtCore.pyqtSignal(
         pd.Series, object, object, 'QString', object,
-        arguments=['spectrum', 'fit_spectrum', 'norm', 'cmap', 'edge_range'])
+        arguments=['spectrum', 'fitted_spectrum', 'norm', 'cmap', 'edge_range'])
     map_spectrum_changed = QtCore.pyqtSignal(
         pd.Series, object, object, 'QString', object,
-        arguments=['spectrum', 'fit_spectrum', 'norm', 'cmap', 'edge_range'])
+        arguments=['spectrum', 'fitted_spectrum', 'norm', 'cmap', 'edge_range'])
     map_limits_changed = QtCore.pyqtSignal(
         float, float, float, int,
         arguments=['vmin', 'vmax', 'step', 'decimals'])

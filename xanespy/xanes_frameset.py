@@ -665,10 +665,10 @@ class XanesFrameset():
         return spectra
 
     def fitted_spectrum(self, energies=None, pixel=None, index=0,
-                        repsentation="fit_parameters"):
+                        representation="fit_parameters"):
         """Take the previously calculated fitting parameters from
         `fit_spectra` and predict the XANES spectrum.
-
+        
         Parameters
         ----------
         energies : np.ndarray, optional
@@ -684,7 +684,7 @@ class XanesFrameset():
           Which dataset name to use for accessing the fit
           parameters. The default value ("fit_parameters") is the one
           used by ``fit_spectra`` to save the results.
-
+        
         Returns
         -------
         fit : pd.Series
@@ -699,7 +699,7 @@ class XanesFrameset():
             Es = energies
         # Get the fitting parameters (previously calculated)
         with self.store() as store:
-            params = store.get_frames('representation')[index]
+            params = store.get_frames(representation)[index]
         # Filter to the individual pixel if necessary
         if pixel is None:
             mean_axes = tuple(range(params.ndim-1))

@@ -192,7 +192,7 @@ class QtMapView(QtCore.QObject):
         mappable = cm.ScalarMappable(norm=norm, cmap=cmap)
         self.cbar.on_mappable_changed(mappable)
 
-    def plot_spectrum(self, spectrum, fit_spectrum, norm, cmap,
+    def plot_spectrum(self, spectrum, fitted_spectrum, norm, cmap,
                       edge_range):  # pragma: no cover
         log.debug("Plotting new map spectrum")
         # Clear the old axes
@@ -216,11 +216,15 @@ class QtMapView(QtCore.QObject):
             ax=self.edge_ax,
         )
         # Plot the fitted spectrum for comparison
-        if fitted_spectrum:
-            plots.plot_xanes_spectrum(
-                spectrum=fitted_spectrum.values,
-                energies=fitted_spectrum.index,
-                ax=self.edge_ax)
+        if fitted_spectrum is not None:
+            self.spectrum_ax.plot(
+                fitted_spectrum.index,
+                fitted_spectrum.values,
+                marker='None', linestyle=":")
+            self.edge_ax.plot(
+                fitted_spectrum.index,
+                fitted_spectrum.values,
+                marker='None', linestyle=":")
         # Set axes limits on the edge axes
         self.edge_ax.set_xlim(norm.vmin, norm.vmax)
         self.redraw_canvas()
