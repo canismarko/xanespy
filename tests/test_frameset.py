@@ -232,6 +232,16 @@ class XanesFramesetTest(TestCase):
         self.store = store
         return fs
 
+    def test_particle_series(self):
+        store = MockStore()
+        fake_data = np.random.rand(4, 256, 256)
+        store.get_map = mock.Mock(return_value=fake_data)
+        particle_map = np.random.choice([0, 1, 2, 3], size=(256,256))
+        store.particle_labels = particle_map
+        fs = self.create_frameset(store=store)
+        particles = fs.particle_series()
+        self.assertEqual(particles.shape, (3, 4)) # (3 particles, 4 energies)
+
     def test_subtract_surroundings(self):
         store = MockStore()
         # Prepare some fake data

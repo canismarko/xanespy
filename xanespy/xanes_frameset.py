@@ -37,6 +37,7 @@ from matplotlib import pyplot, cm, pyplot as plt
 from matplotlib.colors import Normalize
 import h5py
 import numpy as np
+from scipy.ndimage import median_filter
 from skimage import morphology, filters, transform,  measure
 from sklearn import linear_model, cluster
 
@@ -181,8 +182,10 @@ class XanesFrameset():
             # Get only the requested time index
             if timeidx is not None:
                 Ts = Ts[timeidx]
+            else:
+                Ts = Ts.value
             # Figure out which timestamp is the earliest
-            Ts = Ts.astype('datetime64').flatten()
+            Ts = Ts.astype('datetime64').ravel()
             start_idx = np.argmax(now - Ts)
             start_time = Ts[start_idx]
         # Return the earliest timestamp
@@ -516,7 +519,7 @@ class XanesFrameset():
         # Logging
         log.info("Calculated particle labels in %d sec", time() - logstart)
     
-    def particle_series(self, map_name="whiteline_map"):
+    def particle_series(self, map_name="whiteline_max"):
         """Generate an array of values from map_name averaged across each
         particle.
         
@@ -526,7 +529,7 @@ class XanesFrameset():
         """
         steps = []
         with self.store() as store:
-            data = store.get_map(map_name).value
+            data = store.get_map(map_name)
             for stepdata in data:
                 particles = self.particle_regions(intensity_image=stepdata)
                 imgs = [p.intensity_image for p in particles]
@@ -594,7 +597,7 @@ class XanesFrameset():
         """
         with self.store() as store:
             if labels is None:
-                labels = store.particle_labels.value
+                labels = store.particle_labels
             regions = measure.regionprops(labels,
                                           intensity_image=intensity_image)
         # Put in order of descending area
@@ -1236,8 +1239,17 @@ class XanesFrameset():
             val = store.energies.shape[-1]
         return val
 
-    def plot_map(self, ax=None, map_name="whiteline_fit", timeidx=0, vmin=None, vmax=None):
-        """Prepare data and plot a map of whiteline positions."""
+    def plot_map(self, ax=None, map_name="whiteline_fit", timeidx=0,
+                 vmin=None, vmax=None, median_size=0):
+        """Prepare data and plot a map of whiteline positions.
+
+        Parameters
+        ==========
+
+        median_size : int
+          Kernel size for the median rank filter.
+        
+        """
         # Do the plotting
         with self.store() as store:
             # Add bounds for the colormap if given
@@ -1246,6 +1258,8 @@ class XanesFrameset():
             norm = Normalize(vmin=vmin, vmax=vmax)
             # Do the actual plotting
             data = store.get_map(name=map_name)[timeidx]
+            if median_size > 0:
+                data = median_filter(data, median_size)
             plots.plot_txm_map(data=data,
                                ax=ax,
                                norm=norm,
