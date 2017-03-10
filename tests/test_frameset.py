@@ -232,6 +232,28 @@ class XanesFramesetTest(TestCase):
         self.store = store
         return fs
 
+    def test_fit_spectra(self):
+        """This test does not evaluate the quality of the fit, only that the
+        method selects the correct data and passes it on to the
+        correct math routine.
+        """
+        FRAME_SHAPE = (16, 16)
+        # Prepare some fake data
+        fake_As = np.zeros((2, 10, *FRAME_SHAPE))
+        fake_Es = np.linspace(8250, 8640, num=10)
+        fake_Es = np.broadcast_to(fake_Es, (2, 10))
+        store = MockStore()
+        store.absorbances = fake_As
+        type(store).whiteline_fit = mock.PropertyMock()
+        store.energies.value = fake_Es
+        # Prepare a fake frameset
+        fs = self.create_frameset(store=store)
+        fs.frame_shape = mock.Mock(return_value=FRAME_SHAPE)
+        # Call the method begin tested
+        fs.fit_spectra(edge_mask=False)
+        # No results are specified, but at least the function was
+        # called.
+        
     def test_particle_series(self):
         store = MockStore()
         fake_data = np.random.rand(4, 256, 256)

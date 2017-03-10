@@ -550,6 +550,52 @@ def fit_kedge(spectra, energies, p0):
     # foreach(fit_spectrum, spectrum_iters, threads=1)
     return result
 
+def fit_kedge_mpi(spectra, energies, p0):
+    """Use least squares to fit a set of curves to the data. Very similar
+    to ``fit_k_edge()`` except using message passing interface (MPI) for
+    parallel processing.
+
+    Returns an array with a similar shape to spectra but the last axis
+    is replaced with fitting parameters, described by the named tupled
+    ``KParams`` defined in this module.
+
+    Parameters
+    ==========
+    spectra : np.ndarray
+      An array containing absorbance data. Assumes that the index is
+      energy. This can be a multi-dimensional array, which allows
+      calculation of image frames, etc. The last axis should be X-ray
+      energy.
+    energies : np.ndarray
+      Array of X-ray energies. Must have same shape as `spectra`.
+    p0 : tuple
+      A tuple with the initial guess. The correct order is described
+      by kedge_params.
+    out : np.ndarray
+      To hold the results. If omitted, a new array will be created.
+
+    """
+    assert energies.shape == spectra.shape
+    
+    # Empty array to hold the results
+    # result_shape = (*spectra.shape[:-1], len(kedge_params))
+    # # Start threaded processing
+    # spectra_iter = list(zip(spectra, energies))
+    # if spectra.shape[0] > 1:
+    #     spectra_iter = prog(spectra_iter,
+    #                         desc="Fitting spectra")
+    # f = _fit_spectrum(p0=p0)
+    # with mp.Pool() as pool:
+    #     chunksize = 223  # Prime number just for kicks
+    #     result = pool.starmap(f, spectra_iter, chunksize=chunksize)
+    #     # result.wait()
+    #     pool.close()
+    #     pool.join()
+    #     result = np.array(result).reshape(result_shape)
+    # # foreach(fit_spectrum, spectrum_iters, threads=1)
+    # return result
+
+
 
 def direct_whitelines(spectra, energies, edge):
     """Takes an array of X-ray absorbance spectra and calculates the

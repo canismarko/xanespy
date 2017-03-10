@@ -156,7 +156,15 @@ class TXMStore():
     def parent_group(self):
         """Retrieve the top-level HDF5 group object for this file and
         groupname."""
-        return self._file[self.parent_name]
+        try:
+            group = self._file[self.parent_name]
+        except (TypeError, KeyError):
+            # Invalid group name, throw an exception
+            msg = 'Cannot load parent group "{group}". Valid choices are {choices}'
+            choices = list(self._file.keys())
+            msg = msg.format(group=self.parent_name, choices=choices)
+            raise exceptions.GroupKeyError(msg)
+        return group
 
     def data_group(self):
         """Retrieve the currently active second-level HDF5 group object for

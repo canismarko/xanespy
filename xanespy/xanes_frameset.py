@@ -31,6 +31,7 @@ import os
 from time import time
 import logging
 from collections import namedtuple
+import math
 
 import pandas as pd
 from matplotlib import pyplot, cm, pyplot as plt
@@ -40,6 +41,7 @@ import numpy as np
 from scipy.ndimage import median_filter
 from skimage import morphology, filters, transform,  measure
 from sklearn import linear_model, cluster
+from mpi4py import MPI
 
 from utilities import (prog, xycoord, Pixel, Extent, pixel_to_xy,
                        get_component, broadcast_reverse)
@@ -853,6 +855,11 @@ class XanesFrameset():
     
     def fit_spectra(self, edge_mask=True):
         """Fit a series of curves to the spectrum at each pixel.
+
+        For anything other than trivially small data-sets, this method
+        can take a very long time. To speed up processing, MPI calls
+        are used. Calling this function with mpiexec will allow for
+        more parallel processing.
         
         Arguments
         ---------
@@ -860,54 +867,96 @@ class XanesFrameset():
           If true, only pixels passing the edge_mask will be fit and
           the remaning pixels will be set to a default value. This can
           help reduce computing time.
-        
+
         """
-        logstart = time()
-        with self.store() as store:
-            frames = store.absorbances
-            energies = store.energies.value
-            # Get a mask to select only some pixels
-            if edge_mask:
-                # Active material pixels only
-                mask = self.edge_mask()
-            else:
-                # All pixels
-                mask = np.zeros_like(self.edge_mask())
-            frames_mask = np.broadcast_to(mask, frames.shape)
-            # Convert numpy axes to be in (pixel, energy) form
-            frames_mask = np.moveaxis(frames_mask, 1, -1)
-            spectra = np.moveaxis(frames, 1, -1)
-            map_shape = (*spectra.shape[:-1], len(xm.kedge_params))
-            fit_maps = np.empty(map_shape)  # To hold output
-            # Make sure spectra and energies have the same shape
-            energies = broadcast_reverse(energies, frames.shape)
-            spectra = spectra[~frames_mask].reshape((-1, spectra.shape[-1]))
-            energies = np.moveaxis(energies, 1, -1)
-            energies = energies[~frames_mask].reshape(spectra.shape)
-            # Do a preliminary fitting to get good parameters
-            I = np.median(spectra, axis=0)[np.newaxis, ...]
-            E = np.median(energies, axis=0)[np.newaxis, ...]
-            guess = xm.guess_kedge(I[0], E[0], edge=self.edge)
-            p0 = xm.fit_kedge(spectra=I, energies=E, p0=guess)
+        # Prepare MPI environment
+        comm = MPI.COMM_WORLD
+        if comm.rank == 0:
+            log.debug("Starting spectrum fitting on {} nodes.".format(comm.size))
+            logstart = time()
+        # Retrieve source data
+        if comm.rank == 0:
+            log.debug("Retrieving full spectra.")
+            with self.store() as store:
+                frames = store.absorbances
+                energies = store.energies.value
+                # Get a mask to select only some pixels
+                if edge_mask:
+                    # Active material pixels only
+                    mask = self.edge_mask()
+                else:
+                    # All pixels
+                    mask = np.zeros(self.frame_shape()).astype(bool)
+                frames_mask = np.broadcast_to(mask, frames.shape)
+                # Convert numpy axes to be in (pixel, energy) form
+                frames_mask = np.moveaxis(frames_mask, 1, -1)
+                spectra = np.moveaxis(frames, 1, -1)
+                map_shape = (*spectra.shape[:-1], len(xm.kedge_params))
+                fit_maps = np.empty(map_shape)  # To hold output
+                # Make sure spectra and energies have the same shape
+                energies = broadcast_reverse(energies, frames.shape)
+                # print(spectra)
+                spectra = spectra[~frames_mask].reshape((-1, spectra.shape[-1]))
+                spectra_shape = spectra.shape
+                energies = np.moveaxis(energies, 1, -1)
+                energies = energies[~frames_mask].reshape(spectra.shape)
+                # Do a preliminary fitting to get good parameters
+                I = np.median(spectra, axis=0)[np.newaxis, ...]
+                E = np.median(energies, axis=0)[np.newaxis, ...]
+                guess = xm.guess_kedge(I[0], E[0], edge=self.edge)
+                p0 = xm.fit_kedge(spectra=I, energies=E, p0=guess)[0]
+        else:
+            # Just a regular worker node
+            spectra = None
+            spectra_shape = None
+            energies = None
+            p0 = None
+        # Calculate shapes for distributing
+        p0 = comm.bcast(p0, root=0)
+        spectra_shape = comm.bcast(spectra_shape, root=0)
+        num_spectra = spectra_shape[0]
+        chunk_size = math.ceil(num_spectra / comm.size)
+        recvcounts = [chunk_size] * comm.size
+        recvcounts[-1] = num_spectra - (comm.size - 1) * chunk_size
+        local_shape = (recvcounts[comm.rank], *spectra_shape[1:])
+        # Distribute the  to all the nodes
+        local_spectra = np.empty(local_shape, dtype=np.float)
+        comm.Scatterv([spectra, recvcounts, MPI.DOUBLE],
+                      [local_spectra, recvcounts[comm.rank], MPI.DOUBLE], root=0)
+        local_energies = np.empty(local_shape, dtype=np.float)
+        comm.Scatterv([energies, recvcounts, MPI.DOUBLE],
+                      [local_energies, recvcounts[comm.rank], MPI.DOUBLE], root=0)
         # Perform full fitting for individual pixels
-        all_params = xm.fit_kedge(spectra=spectra,
-                                  energies=energies, p0=p0[0])
-        # Set actual calculate values
-        map_mask = np.broadcast_to(mask, fit_maps.shape[:-1])
-        # Set default values
-        fit_maps[map_mask] = np.nan
-        fit_maps[~map_mask] = all_params
-        # Calculate whiteline position
-        E0 = fit_maps[..., xm.kedge_params.index('E0')]
-        gaus_center = fit_maps[..., xm.kedge_params.index('gb')]
-        wl_maps = E0 + gaus_center
-        # Save results to disk
-        with self.store(mode='r+') as store:
-            store.fit_parameters = fit_maps
-            store.whiteline_fit = wl_maps
-            store.whiteline_fit.attrs['frame_source'] = 'absorbances'
-        log.info('fit %d spectra in %d seconds',
-                 spectra.shape[0], time() - logstart)
+        log.debug("[%d] Fitting spectra", comm.rank)
+        local_params = xm.fit_kedge(spectra=local_spectra,
+                                    energies=local_energies, p0=p0)
+        # local_params = np.ascontiguousarray(local_spectra[:, :8])
+        # Re-capture all the calculated data from MPI
+        if comm.rank == 0:
+            all_params = np.zeros((num_spectra, len(xm.kedge_params)),
+                                  dtype=np.float)
+        else:
+            all_params = None
+        log.debug("[%d] Finished fitting %d spectra", comm.rank, len(local_spectra))
+        comm.Gatherv([local_params, recvcounts[comm.rank], MPI.DOUBLE],
+                     [all_params, recvcounts, MPI.DOUBLE], root=0)
+        if comm.rank == 0:
+            # Set actual calculate values
+            map_mask = np.broadcast_to(mask, fit_maps.shape[:-1])
+            # Set default values
+            fit_maps[map_mask] = np.nan
+            fit_maps[~map_mask] = all_params
+            # Calculate whiteline position
+            E0 = fit_maps[..., xm.kedge_params.index('E0')]
+            gaus_center = fit_maps[..., xm.kedge_params.index('gb')]
+            wl_maps = E0 + gaus_center
+            # Save results to disk
+            with self.store(mode='r+') as store:
+                store.fit_parameters = fit_maps
+                store.whiteline_fit = wl_maps
+                store.whiteline_fit.attrs['frame_source'] = 'absorbances'
+            log.info('Finished fitting %d spectra in %d seconds',
+                     spectra.shape[0], time() - logstart)
 
     def calculate_whitelines(self, edge_mask=False):
         """Calculate and save a map of the whiteline position of each pixel by
