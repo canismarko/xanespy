@@ -9,12 +9,13 @@ import pandas as pd
 
 import exceptions
 
-from utilities import xy_to_pixel, pixel_to_xy, xycoord, Pixel
+from utilities import xy_to_pixel, pixel_to_xy, xycoord, Pixel, get_component
 
 
 CMAPS = ['plasma', 'viridis', 'inferno', 'magma', 'gray', 'bone',
          'copper', 'autumn', 'spring', 'summer', 'winter', 'spectral',
          'rainbow', 'gnuplot']
+COMPS = ['real', 'imag', 'modulus', 'phase']
 log = logging.getLogger(__name__)
 
 
@@ -41,6 +42,7 @@ class QtFramesetPresenter(QtCore.QObject):
     active_frame = 0
     active_timestep = 0
     active_representation = None
+    active_component = "real"
     frame_pixel = None
     num_frames = 0
     timer = None
@@ -58,6 +60,7 @@ class QtFramesetPresenter(QtCore.QObject):
     map_data_cleared = QtCore.pyqtSignal()
     process_events = QtCore.pyqtSignal()
     cmap_list_changed = QtCore.pyqtSignal(list)
+    component_list_changed = QtCore.pyqtSignal(list)
     mean_spectrum_changed = QtCore.pyqtSignal(
         pd.Series, object, object, 'QString', object,
         arguments=['spectrum', 'fitted_spectrum', 'norm', 'cmap', 'edge_range'])
@@ -158,6 +161,8 @@ class QtFramesetPresenter(QtCore.QObject):
         cmap_list = sorted(list(plt.cm.datad.keys()))
         self.frame_view.set_cmap_list(CMAPS)
         self.frame_view.set_cmap(self.frame_cmap)
+        self.frame_view.set_component_list(COMPS)
+        self.frame_view.set_component(self.active_component)
         # Set the list of possible timesteps
         with self.frameset.store() as store:
             tslist = ["{} - {}".format(idx, ts)
@@ -174,6 +179,8 @@ class QtFramesetPresenter(QtCore.QObject):
         self.play_timer = QtCore.QTimer()
         self.play_timer.timeout.connect(self.next_frame)
         self.set_play_speed(15)
+        # Connect a signal for exiting
+        # self.frame_view.ui.actionExit.triggered.connect(self.app.quit)
         # Connect signals for notifying the user of long operations
         self.busy_status_changed.connect(self.frame_view.disable_frame_controls)
         self.busy_status_changed.connect(self.frame_view.disable_plotting_controls)
@@ -182,6 +189,7 @@ class QtFramesetPresenter(QtCore.QObject):
         # We're done creating the app, so let the views create their UI's
         self.app_ready.emit()
         self.cmap_list_changed.emit(CMAPS)
+        self.component_list_changed.emit(COMPS)
     
     def create_app(self):  # pragma: no cover
         self.app = QtWidgets.QApplication([])
@@ -192,7 +200,9 @@ class QtFramesetPresenter(QtCore.QObject):
     def launch(self):  # pragma: no cover
         # Show the graphs and launch to event loop
         self.frame_view.show()
-        return self.app.exec_()
+        ret = self.app.exec_()
+        self.map_thread.quit()
+        return ret
     
     def set_timestep(self, new_timestep):
         self.active_timestep = new_timestep
@@ -401,12 +411,19 @@ class QtFramesetPresenter(QtCore.QObject):
                                             self.frame_norm(),
                                             self.frame_cmap)
     
+    def change_component(self, new_comp):
+        if not self.active_component == new_comp:
+            log.debug("Changing comp from %s to %s", self.active_component, new_comp)
+            self.active_component = new_comp
+            self.reset_frame_range()
+            self.refresh_frames()
+    
     def change_cmap(self, new_cmap):
         if not self.frame_cmap == new_cmap:
             log.debug("Changing cmap from %s to %s", self.frame_cmap, new_cmap)
             self.frame_cmap = new_cmap
             self.refresh_frames()
-    
+   
     def change_map_cmap(self, new_cmap):
         if new_cmap != self.map_cmap:
             # Cmap has changed, so update stuff
@@ -470,6 +487,7 @@ class QtFramesetPresenter(QtCore.QObject):
     def active_frames(self):
         frames = self.frameset.frames(timeidx=self.active_timestep,
                                       representation=self.active_representation)
+        frames = get_component(frames, self.active_component)
         return frames
     
     def active_map(self):

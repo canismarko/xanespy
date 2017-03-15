@@ -41,7 +41,6 @@ import numpy as np
 from scipy.ndimage import median_filter
 from skimage import morphology, filters, transform,  measure
 from sklearn import linear_model, cluster
-from mpi4py import MPI
 
 from utilities import (prog, xycoord, Pixel, Extent, pixel_to_xy,
                        get_component, broadcast_reverse)
@@ -774,7 +773,7 @@ class XanesFrameset():
 
     def plot_xanes_spectrum(self, ax=None, pixel=None,
                             norm_range=None, normalize=False,
-                            representation="modulus",
+                            representation="absorbances",
                             show_fit=False, edge_jump_filter=False,
                             linestyle=":",
                             *args, **kwargs):
@@ -824,7 +823,7 @@ class XanesFrameset():
                                  val=val)
             ax.set_title(title)
         # Plot lines at edge of normalization range or indicate peak positions
-        edge.annotate_spectrum(ax=scatter.axes)
+        edge.annotate_spectrum(ax=ax)
         return scatter
     
     @functools.lru_cache()
@@ -869,6 +868,7 @@ class XanesFrameset():
           help reduce computing time.
 
         """
+        from mpi4py import MPI
         # Prepare MPI environment
         comm = MPI.COMM_WORLD
         if comm.rank == 0:

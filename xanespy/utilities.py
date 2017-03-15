@@ -175,7 +175,7 @@ def get_component(data, name):
         elif name == "imag":
             data = np.imag(data)
     else:
-        # Just return the real part
+        # Real data so return the real part
         data = np.real(data)
     return data
 

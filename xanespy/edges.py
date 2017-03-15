@@ -139,6 +139,7 @@ class NCACobaltLEdge(LEdge):
     ]
     pre_edge = (770, 775)
     post_edge = (785, 790)
+    edge_range = (775, 785)
     map_range = (0, 1)
     _peak1 = 780.5
 
@@ -152,6 +153,7 @@ class NCANickelLEdge(LEdge):
     ]
     pre_edge = (844, 848)
     post_edge = (857, 862)
+    edge_range = (848, 857)
     map_range = (0, 1)
     _peak1 = 850.91
     _peak2 = 853.16
@@ -227,5 +229,6 @@ k_edges = {
 
 
 l_edges = {
+    'Co_NCA': NCACobaltLEdge(),
     'Ni_NCA': NCANickelLEdge(),
 }

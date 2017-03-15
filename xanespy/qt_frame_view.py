@@ -196,6 +196,7 @@ class QtFrameView(QtCore.QObject):  # pragma: no cover
         self.ui.btnApplyLimits.clicked.connect(presenter.refresh_frames)
         self.ui.cmbTimestep.currentIndexChanged.connect(presenter.set_timestep)
         self.ui.cmbCmap.currentTextChanged.connect(presenter.change_cmap)
+        self.ui.cmbComponent.currentTextChanged.connect(presenter.change_component)
         self.ui.sldFrameSlider.valueChanged.connect(presenter.move_slider)
         self.ui.btnRefresh.clicked.connect(presenter.refresh_frames)
         self.ui.hdfTree.currentItemChanged.connect(presenter.change_hdf_group)
@@ -384,6 +385,13 @@ class QtFrameView(QtCore.QObject):  # pragma: no cover
 
     def set_cmap(self, cmap):
         self.ui.cmbCmap.setCurrentText(cmap)
+
+    def set_component_list(self, component_list):
+        self.ui.cmbComponent.clear()
+        self.ui.cmbComponent.addItems(component_list)
+
+    def set_component(self, comp):
+        self.ui.cmbComponent.setCurrentText(comp)
 
     def add_hdf_tree_item(self, item):
         self.ui.hdfTree.addTopLevelItem(item)

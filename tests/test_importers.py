@@ -128,6 +128,7 @@ class PtychographyImportTest(TestCase):
             self.assertEqual(group['timestep_names'].value[0], bytes(dataset_name, 'ascii'))
             self.assertIn('intensities', keys)
             self.assertEqual(group['intensities'].shape, (1, 3, 228, 228))
+            self.assertEqual(group['intensities'].attrs['context'], 'frameset')
             self.assertIn('stxm', keys)
             self.assertEqual(group['stxm'].shape, (1, 3, 20, 20))
             self.assertEqual(group['pixel_sizes'].attrs['unit'], 'nm')

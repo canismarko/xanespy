@@ -191,6 +191,7 @@ def import_nanosurveyor_frameset(directory: str, quiet=False,
     # Check that we actually found some data
     if len(cxifiles) == 0:
         msg = "{} contained no cxi files to import."
+        msg = msg.format(directory)
         raise exceptions.DataNotFoundError(msg)
     # Import any cxi files that were found
     intensities = []
@@ -231,7 +232,12 @@ def import_nanosurveyor_frameset(directory: str, quiet=False,
             px_size = float(f['/entry_1/process_1/Param/pixnm'].value)
             log.debug("Scan %s has pixel size %f", filename, px_size)
             pixel_sizes.append(px_size)
-    
+
+    # Check that we have actual data to import
+    if len(intensities) == 0:
+        msg = "No files in directory {} pass import filters. "
+        msg += "Consider changing `exclude_re` or `energy_range` parameters."
+        raise exceptions.DataNotFoundError(msg.format(directory))
     # Helper function to save image data to the HDF file
     def replace_ds(name, parent, *args, **kwargs):
         if name in parent.keys():
@@ -288,6 +294,7 @@ def import_nanosurveyor_frameset(directory: str, quiet=False,
     replace_ds('filenames', parent=imported, data=[filenames], dtype="S100")
     zero_positions = [np.zeros(shape=(*filenames.shape, 3), dtype=np.float32)]
     imported.create_dataset('relative_positions', data=zero_positions)
+    imported['intensities'].attrs['context'] = 'frameset'
     nan_pos = np.empty(shape=(1, *filenames.shape, 3), dtype=np.float32)
     nan_pos.fill(np.nan)
     imported.create_dataset('original_positions', data=nan_pos)

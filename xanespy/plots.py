@@ -301,15 +301,17 @@ def plot_xanes_spectrum(spectrum, energies, norm=Normalize(),
     # Retrieve `values` in case it's a pandas series
     spectrum = getattr(spectrum, 'values', spectrum)
     # Color code the markers by energy
-    if color == "x":
+    is_complex = np.iscomplexobj(spectrum)
+    if is_complex:
+        colors = None
+    elif color == "x":
         colors = cm.get_cmap(cmap)(norm(energies))
     elif color == "y":
         colors = cm.get_cmap(cmap)(norm(spectrum))
     else:
         colors = [color] * len(energies)
-    is_complex = np.iscomplexobj(spectrum)
+    # Remove secondary axes and re-add them for complex values
     if is_complex:
-        # Remove secondary axes and re-add them
         if ax2 is None:
             ax2 = ax.twinx()
         # Convert complex values to two lines
@@ -320,7 +322,7 @@ def plot_xanes_spectrum(spectrum, energies, norm=Normalize(),
     else:
         # Just plot the real numbers
         ys = np.real(spectrum)
-        artist = ax.plot(energies, ys, linestyle=linestyle)
+        artist = ax.plot(energies, ys, linestyle=linestyle, *args, **kwargs)
     # save limits, since they get messed up by scatter plot
     xlim = ax.get_xlim()
     ylim = ax.get_ylim()

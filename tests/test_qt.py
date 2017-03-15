@@ -370,7 +370,7 @@ class PresenterTestCase(QtTestCase):
         presenter = self.create_presenter()
         fs = presenter.frameset
         # Create fake spectrum and frames arrays to test
-        spectrum = pd.Series(np.linspace(750, 760))
+        spectrum = pd.Series(np.linspace(750, 760, dtype=np.complex))
         fs.spectrum = mock.Mock(return_value=spectrum)
         frames = np.broadcast_to(spectrum.values, (128, 128, len(spectrum)))
         frames = np.moveaxis(frames, -1, 0)
