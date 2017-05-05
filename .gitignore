@@ -11,3 +11,5 @@ tests/.ipynb_checkpoints
 htmlcov
 build/
 .cache/
+
+xanespy.egg-info/

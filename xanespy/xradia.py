@@ -100,7 +100,12 @@ class XRMFile():
 
     def ole_value(self, stream, fmt=None):
         """Get arbitrary data from the ole file and convert from bytes."""
-        stream_bytes = self.ole_file.openstream(stream).read()
+        try:
+            stream_bytes = self.ole_file.openstream(stream).read()
+        except OSError:
+            msg = "Cannot find stream {} in file {}"
+            msg = msg.format(stream, self.filename)
+            raise exceptions.DataFormatError(msg)
         if fmt is not None:
             stream_value = struct.unpack(fmt, stream_bytes)[0]
         else:
@@ -167,6 +172,23 @@ class XRMFile():
                 raise exceptions.FileFormatError(msg.format(self.filename))
         return energy
 
+    def is_valid(self):
+        """Check that the XRM file has valid data."""
+        keys = ['ImageData1/Image1', 'ImageInfo/Date']
+        has_keys = [self.ole_file.exists(k) for k in keys]
+        if not all(has_keys):
+            is_valid = False
+        else:
+            # print(self.filename)
+            # print(self.ole_file.get_size('ImageData1/Image1'))            
+            is_valid = True
+        # The following code is more robust but much slower
+        # try:
+        #     self.image_data()
+        # except OSError:
+        #     is_valid = False
+        return is_valid
+
     def image_data(self):
         """TXM Image frame."""
         # Figure out byte size
@@ -179,7 +201,13 @@ class XRMFile():
         elif image_dtype == 'float32':
             fmt_str = "<{}f".format(num_bytes)
         # Return decoded image data
-        stream = self.ole_file.openstream('ImageData1/Image1')
+        try:
+            stream = self.ole_file.openstream('ImageData1/Image1')
+        except OSError:
+            raise
+            msg = "Cannot open image data {} in file {}"
+            msg = msg.format('ImageData1/Image1', self.filename)
+            raise exceptions.DataFormatError(msg)
         img_data = struct.unpack(fmt_str, stream.read())
         img_data = np.reshape(img_data, dimensions)
         return img_data
