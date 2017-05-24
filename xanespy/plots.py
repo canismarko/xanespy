@@ -231,9 +231,14 @@ def plot_pixel_spectra(pixels, extent, spectra, energies, map_ax,
         # Put an annotation on the map
         px = Pixel(*px)
         xy = pixel_to_xy(px, extent, shape=map_shape)
-        map_ax.annotate(str(idx), xy, color="white")
-        # Plot the spectrum on the spectrum axes
+        map_ax.text(xy.x, xy.y, str(idx), color="white",
+                    horizontalalignment="center", verticalalignment="center",)
+        # Normalize the spectrum
         spectrum = spectra[px]
+        min_ = np.min(np.abs(spectrum))
+        max_ = np.max(np.abs(spectrum))
+        spectrum = (spectrum - min_) / (max_ - min_)
+        # Plot the spectrum on the spectrum axes
         spectrum += step_size * idx
         plot_xanes_spectrum(spectrum, energies,
                             ax=spectra_ax, ax2=spectra_ax2)
@@ -316,9 +321,9 @@ def plot_xanes_spectrum(spectrum, energies, norm=Normalize(),
             ax2 = ax.twinx()
         # Convert complex values to two lines
         ys = spectrum
-        artist = ax.plot(energies, np.real(ys), linestyle=linestyle, color="green")
+        artist = ax.plot(energies, np.real(ys), linestyle=linestyle, color="C0")
         artist.extend(ax2.plot(energies, np.imag(ys),
-                               linestyle=linestyle, color="red", *args, **kwargs))
+                               linestyle=linestyle, color="C1", *args, **kwargs))
     else:
         # Just plot the real numbers
         ys = np.real(spectrum)
@@ -328,14 +333,14 @@ def plot_xanes_spectrum(spectrum, energies, norm=Normalize(),
     ylim = ax.get_ylim()
     # Draw scatter plot of data points
     if is_complex:
-        ax.scatter(energies, np.real(ys), c="green", s=25, alpha=0.5)
-        ax.set_ylabel("Real", color="green")
+        ax.scatter(energies, np.real(ys), c="C0", s=25, alpha=0.5)
+        ax.set_ylabel("Real", color="C0")
         for t1 in ax.get_yticklabels():
-            t1.set_color('green')
-        ax2.scatter(energies, np.imag(ys), c="red", s=25, alpha=0.5)
-        ax2.set_ylabel("Imag", color="red")
+            t1.set_color("C0")
+        ax2.scatter(energies, np.imag(ys), c="C1", s=25, alpha=0.5)
+        ax2.set_ylabel("Imag", color="C1")
         for t1 in ax2.get_yticklabels():
-            t1.set_color('red')
+            t1.set_color("C1")
     else:
         ax.scatter(energies, ys, c=colors, s=25)
         ax.set_ylabel('Absorbance')
@@ -351,7 +356,7 @@ def plot_xanes_spectrum(spectrum, energies, norm=Normalize(),
     return artist
 
 
-def plot_composite_map(data, ax=None, origin="lower", *args, **kwargs):  # pragma: no cover
+def plot_composite_map(data, ax=None, origin="upper", *args, **kwargs):  # pragma: no cover
     """Plot an RGB composite map on the given axes."""
     while data.shape[-1] < 3:
         data = np.concatenate((data, np.zeros_like(data)),

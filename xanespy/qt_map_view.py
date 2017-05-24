@@ -181,8 +181,13 @@ class QtMapView(QtCore.QObject):
         log.debug("Plotting new map data")
         self._latest_cmap = cmap
         self.map_ax.clear()
-        plots.plot_txm_map(map_data, ax=self.map_ax, norm=norm,
-                           cmap=cmap, extent=extent)
+        if map_data.ndim == 2:
+            # Scalar map showing some sort of metrich
+            plots.plot_txm_map(map_data, ax=self.map_ax, norm=norm,
+                               cmap=cmap, extent=extent)
+        elif map_data.ndim == 3:
+            # RGB map showing different components
+            plots.plot_composite_map(map_data, ax=self.map_ax, extent=extent)
 
     def plot_histogram_data(self, map_data, norm, cmap, extent):  # pragma: no cover
         log.debug("Plotting new map histogram")

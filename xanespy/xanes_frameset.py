@@ -1052,7 +1052,7 @@ class XanesFrameset():
             # ax2.set_ylim(*specrange)
             ax2.set_title("Signal Component {idx}".format(idx=idx))
 
-    def plot_signal_map(self, ax=None, signals_idx=None):
+    def plot_signal_map(self, ax=None, signals_idx=None, interpolation=None):
         """Plot the map of signal strength for signals extracted from
         self.calculate_signals().
 
@@ -1065,6 +1065,8 @@ class XanesFrameset():
         passed as a numpy array index. Special value None (default)
         means first three signals will be plotted.
 
+        - interpolation : str
+          How to smooth the image when plotting.
         """
         # Plot the composite signal map data
         with self.store() as store:
@@ -1078,35 +1080,44 @@ class XanesFrameset():
         composite = composite[..., signals_idx]
         # Do the plotting
         extent = self.extent(representation="absorbances")
-        artist = plots.plot_composite_map(composite, extent=extent, ax=ax)
+        artist = plots.plot_composite_map(composite, extent=extent,
+                                          ax=ax, interpolation=interpolation)
         ax = artist.axes
         ax.set_xlabel(px_unit)
         ax.set_ylabel(px_unit)
         ax.set_title("Composite of signals {}".format(signals_idx))
 
     def calculate_signals(self, n_components=2, method="nmf",
+                          frame_source='absorbances',
                           edge_mask=True):
         """Extract signals and assign each pixel to a group, then save the
         resulting RGB cluster map.
 
-        Arguments
-        ---------
+        Parameters
+        ----------
+        n_components : int, optional
+          The number of signals and number of clusters into which the
+          data will be separated.
 
-        - n_components : The number of signals and number of clusters
-          into which the data will be separated.
+        method : str, optional
+          The technique to use for extracting signals. Currently only
+          "nmf" is supported.
 
-        - method : The technique to use for extracting
-          signals. Currently only "nmf" is supported.
+        frame_source : str, optional
+          Name of the frame-set to use as the input data.
 
-        - edge_mask : If truthy (default), only those pixels passing
-          the edge filter will be considered.
+        edge_mask : bool, optional
+          If truthy (default), only those pixels passing the edge
+          filter will be considered.
+
         """
+        frame_source = "absorbances"
         msg = "Performing {} signal extraction with {} components"
         log.info(msg.format(method, n_components))
         frame_shape = self.frame_shape()
         # Retrieve the absorbances and convert to spectra
         with self.store() as store:
-            As = store.absorbances
+            As = store.get_frames(frame_source)
             # Collapse to (frame, pixel) shape
             n_timesteps = As.shape[0]
             assert n_timesteps == 1  # We can't currently handle timesteps
@@ -1143,6 +1154,7 @@ class XanesFrameset():
             store.signals = signals
             store.signal_method = method_names[method]
             store.signal_weights = weight_frames
+            store.signals.attrs['frame_source'] = frame_source
 
         # ## Construct a composite RGB signal map
         # Calculate a mean frame to normalize the weights
@@ -1154,6 +1166,7 @@ class XanesFrameset():
         # Make sure the composite has three color components (RGB)
         with self.store(mode="r+") as store:
             store.signal_map = composite
+            store.signal_map.attrs['frame_source'] = frame_source
         # ## Perform k-means clustering
         k_results = cluster.k_means(weights, n_clusters=n_components)
         centroid, labels, intertia = k_results
@@ -1368,7 +1381,7 @@ class XanesFrameset():
     def plot_map_pixel_spectra(self, pixels, map_ax=None,
                                spectra_ax=None,
                                map_name="whiteline_map", timeidx=0,
-                               step_size=0):
+                               step_size=0, *args, **kwargs):
         """Plot the frameset's map and highlight some pixels on it then plot
         those pixel's spectra on another set of axes.
         
@@ -1390,6 +1403,9 @@ class XanesFrameset():
           file. If falsy, no map will be plotted.
         
         - timeidx : Index of which timestep to use.
+
+        - *args, **kwargs
+          Passed to plots.plot_pixel_spectra()
         
         """
         # Create some axes if necessary
