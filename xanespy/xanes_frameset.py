@@ -605,7 +605,7 @@ class XanesFrameset():
         regions.sort(key=lambda p: p.area, reverse=True)
         return regions
 
-    def plot_mean_image(self, ax=None, component="modulus"):
+    def plot_mean_image(self, ax=None, component="modulus", cmap="gray", *args, **kwargs):
         if ax is None:
             ax = plots.new_image_axes()
         with self.store() as store:
@@ -616,7 +616,7 @@ class XanesFrameset():
         data = get_component(data, component)
         artist = ax.imshow(data,
                            extent=self.extent(representation='absorbances'),
-                           origin="lower", cmap='gray')
+                           cmap=cmap, *args, **kwargs)
         ax.set_xlabel(ax_unit)
         ax.set_ylabel(ax_unit)
         return artist

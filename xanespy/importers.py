@@ -92,10 +92,26 @@ def read_metadata(filenames, flavor):
             metadata = decode_ssrl_params(filename)
         # Fetch metadata from the file itself
         with format_classes[ext](filename, flavor=flavor) as f:
-            metadata['shape'] = f.image_shape()
-            # Get time in utc
-            metadata['starttime'] = f.starttime()
-        df.loc[filename] = metadata
+            if f.is_valid():
+                metadata['shape'] = f.image_shape()
+                # Get time in utc
+                metadata['starttime'] = f.starttime()
+                df.loc[filename] = metadata
+            else:
+                # Invalid file data, so warn the user and keep going
+                msg = "Ignoring invalid file {}".format(filename)
+                warnings.warn(RuntimeWarning(msg))
+                continue
+        # try:
+        #     with format_classes[ext](filename, flavor=flavor) as f:
+        #         metadata['shape'] = f.image_shape()
+        #         # Get time in utc
+        #         metadata['starttime'] = f.starttime()
+        # except exceptions.DataFormatError as e:
+        #     # Invalid file data, so warn the user and keep going
+        #     msg = "Ignoring invalid file {}".format(filename)
+        #     warnings.warn(RuntimeWarning(msg))
+        #     continue
     # Remove any incomplete framesets
     if len(df) > 0:
         timestep_names, timesteps = zip(*df.groupby('timestep_name'))

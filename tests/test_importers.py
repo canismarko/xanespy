@@ -26,6 +26,7 @@ from unittest import TestCase, mock
 import os
 import sys
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir)))
+import warnings
 
 import pytz
 import numpy as np
@@ -414,3 +415,22 @@ class SSRLImportTest(TestCase):
         # # Check the values for translation and scale for the changed image
         np.testing.assert_equal(scales[0, 1], (0.5, 0.5))
         np.testing.assert_equal(translations[0,1], (1., 1.))
+
+    def test_bad_file(self):
+        # One specific file is not saved properly
+        filenames = [
+            # Valid data
+            'rep02_000072_ref_20161456_ssrl-test-data_08348.0_eV_002of010.xrm',
+            # No timestamp
+            'rep01_000351_ref_20161456_ssrl-test-data_08354.0_eV_001of010.xrm',
+            # No image data
+            'rep02_000182_ref_20161456_ssrl-test-data_08400.0_eV_002of010.xrm',
+        ]
+        filenames = [os.path.join(SSRL_DIR, f) for f in filenames]
+        # Check that the importer warns the user of the bad file
+        with warnings.catch_warnings(record=True) as ws:
+            result = read_metadata(filenames, flavor='ssrl')
+            self.assertEqual(len(ws), 2)
+            [self.assertEqual(RuntimeWarning, w.category) for w in ws]
+        # Check that the bad entries was excluded from the processed list
+        self.assertEqual(len(result), 1)

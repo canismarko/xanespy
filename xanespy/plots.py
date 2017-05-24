@@ -89,18 +89,28 @@ def big_axes():  # pragma: no cover
     return new_axes(height=9, width=16)
 
 
-def dual_axes(fig=None, orientation='horizontal'):  # pragma: no cover
-    """Two new axes for mapping, side-by-side."""
+def dual_axes(fig=None, longdim=13.8, shortdim=6.9, orientation='horizontal'):  # pragma: no cover
+    """Two new axes for mapping, side-by-side.
+
+    Parameters
+    ----------
+    longdim : float
+      Size in inches for the long dimension. If orientation is
+      "vertical", this will be the height.
+    shortdim : float
+      Size in inches for the short dimension. If orientation is
+      "vertical", this will be the width.
+    """
     if fig is None:
         fig = pyplot.figure()
     if orientation == 'vertical':
         fig, (ax1, ax2) = fig.subplots(2, 1)
-        fig.set_figwidth(6.9)
-        fig.set_figheight(13.8)
+        fig.set_figwidth(shortdim)
+        fig.set_figheight(longdim)
     else:
         fig, (ax1, ax2) = pyplot.subplots(1, 2)
-        fig.set_figwidth(13.8)
-        fig.set_figheight(5)
+        fig.set_figwidth(longdim)
+        fig.set_figheight(shortdim)
     # Remove redundant borders
     remove_extra_spines(ax1)
     remove_extra_spines(ax2)
