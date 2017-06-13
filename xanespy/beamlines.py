@@ -312,8 +312,10 @@ def sector8_xanes_script(dest,
     abba_mode : str, optional
       If True, script will locations forward and backwards to save
       time. Eg: reference, sample, change-energy, sample, reference,
-      change-energy, etc. Not compatible with `frame_rest` argument.
-    
+      change-energy, etc. Not compatible with `frame_rest`
+      argument. If used, the reference frame should be first or last
+      in the order to make the process maximally efficient.
+
     """
     # Prepare a blank pandas dataframe for keeping track of files
     df = pd.DataFrame(columns=['filename', 'eV', 'iteration', 'reference'])

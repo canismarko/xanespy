@@ -94,6 +94,14 @@ def apply_internal_reference(intensities, out=None):
     Arrays `intensities` and `out` must all have the same shape where
     the last two dimensions are image rows and column.
     """
+    is_complex = np.iscomplexobj(intensities)
+    if is_complex:
+        intensities = intensities.astype(np.complex128)
+        component = "modulus"
+    else:
+        intensities = intensities.astype(np.float64)
+        component = "real"
+    print(intensities.shape)
     logstart = time()
     log.debug("Starting internal reference correction")
     if out is None:
@@ -102,15 +110,18 @@ def apply_internal_reference(intensities, out=None):
         # Calculate background intensity using thresholding
         log.debug("Applying reference for frame %s", idx)
         frame = intensities[idx]
-        direct_img = get_component(frame, "modulus")
+        if is_complex:
+            direct_img = get_component(frame, component)
+        else:
+            direct_img = frame
         threshold = filters.threshold_yen(direct_img)
         graymask = direct_img > threshold
-        background = get_component(frame, "modulus")[graymask]
+        background = get_component(frame, component)[graymask]
         I_0 = np.median(background)  # Median of each image
         log.debug("I0 for frame %s = %f", idx, I_0)
         # Calculate absorbance based on background
         absorbance = np.log(I_0 / np.abs(frame))
-        if np.iscomplexobj(out):
+        if is_complex:
             # Calculate relative phase shift if complex data is required
             phase = np.angle(frame)
             phase - np.median((phase * graymask)[graymask > 0])

@@ -319,6 +319,208 @@ def import_nanosurveyor_frameset(directory: str, quiet=False,
     log.info("Importing finished in %f seconds", time() - logstart)
 
 
+def import_stxm_frameset(directory: str, quiet=False,
+                         hdf_filename=None, hdf_groupname=None,
+                         energy_range=None, exclude_re=None, append=False):
+    """Import a set of images from scanning microscope data.
+
+    This generates Scanning Tranmission X-ray Microscopy chemical maps
+    based on data collected at ALS beamline 5.3.2.1
+
+    Parameters
+    ----------
+    directory : str
+      Directory where to look for results. It should contain .hdr and
+      xim files that are the output of the ptychography
+      reconstruction."
+    quiet : Bool, optional
+      If truthy, progress bars will not be shown.
+    hdf_filename : str, optional
+      HDF File used to store computed results. If omitted or None, the
+      `directory` basename is used
+    hdf_groupname : str, optional
+      Name to use for the hdf group of this dataset. If omitted or
+      None, the `directory` basename is used. Raises an exception if
+      the group already exists in the HDF file.
+    energy_range : 2-tuple, optional
+      A 2-tuple with the (min, max) energy to be imported. This is
+      useful if only a subset of the available data is usable. Values
+      are assumed to be in electron-volts.
+    exclude_re : str, optional
+      Any filenames matching this regular expression will not be
+      imported. A string or compiled re object can be given.
+    append : bool, optional
+      If True, any existing dataset will be added to, rather
+      than replaced (default False)
+
+    """
+    # Prepare logging info
+    logstart = time()
+    # Check if exclude_re is a string or regex object.
+    if exclude_re is not None and not hasattr(exclude_re, 'search'):
+        exclude_re = re.compile(exclude_re)
+    # Get a default groupname if none is given
+    path, sam_name = os.path.split(os.path.abspath(directory))
+    # Prepare the HDF5 file and sample group
+    log.info("Importing STXM directory %s", directory)
+    if hdf_filename is None:
+        hdf_filename = sam_name + '.h5'
+    h5file = h5py.File(hdf_filename)
+    if hdf_groupname is None:
+        hdf_groupname = sam_name
+    # Create the group if necessary
+    if hdf_groupname in h5file.keys() and not append:
+        msg = 'Overwriting existing group "{}"'.format(hdf_groupname)
+        log.warning(msg)
+        del h5file[hdf_groupname]
+    sam_group = h5file.require_group(hdf_groupname)
+    log.info("Created HDF group %s", sam_group.name)
+    # Set some metadata
+    sam_group.attrs["xanespy_version"] = CURRENT_VERSION
+    sam_group.attrs["technique"] = "STXM"
+    sam_group.attrs["beamline"] = "ALS 5.3.2.1"
+    sam_group.attrs["original_directory"] = os.path.abspath(directory)
+    # Prepare groups for data
+    imported = sam_group.require_group('imported')
+    sam_group.attrs['latest_data_name'] = 'imported'
+    # Check that the directory exists
+    if not os.path.exists(directory):
+        msg = "Could not find directory {}".format(directory)
+        raise exceptions.DataNotFoundError(msg)
+    # Look in each directory for cxi files
+    ximfiles = []
+    for root, dirs, files in os.walk(directory):
+        for file in files:
+            if file.endswith(".xim"):
+                ximfiles.append(os.path.join(root, file))
+    # Check that we actually found some data
+    if len(ximfiles) == 0:
+        msg = "{} contained no .xim files to import."
+        msg = msg.format(directory)
+        raise exceptions.DataNotFoundError(msg)
+    # Import any xim files that were found
+    intensities = []
+    filenames = ximfiles
+    pixel_sizes = []
+    log.info("Importing %d .xim files", len(ximfiles))
+    # Load data from header file
+    hdrfile = os.path.join(directory, '{}.hdr'.format(sam_name))
+    with open(hdrfile) as f:
+        # Get rid of extra tabs and newlines
+        lines = f.readlines()
+        lines = [l.replace('\t', '').replace('\n', '') for l in lines]
+        # [print(i, ": ", l) for i, l in enumerate(lines)]
+        # Extract energies
+        energy_re = "Points = \(\d+, ([0-9., ]+)\);"
+        e_string = re.search(energy_re, lines[14]).groups()[0]
+        energies = [float(s) for s in e_string.split(', ')]
+        # Fake pixel sizes for now
+        log.warning('Using unity pixel sizes')
+        pixel_sizes = [1 for e in energies]
+    # Open XIM files and load data
+    for idx, filename in enumerate(ximfiles):
+        # Skip this energy is its exclude by the regular expression
+        if exclude_re is not None and exclude_re.search(filename):
+            msg = 'Skipping {filename} (matches exclude_re: "{re}")'
+            msg = msg.format(filename=filename, re=exclude_re.pattern)
+            log.info(msg)
+            continue
+        # Load the XIM file
+        data = np.loadtxt(filename, dtype='int')
+        intensities.append(data)
+        # Get the energy
+        # Open the hdf5 file and get the data
+        # with h5py.File(filename, mode='r') as f:
+        #     # Extract energy in Joules and convert to eV
+        #     energy = f['/entry_1/instrument_1/source_1/energy'].value
+        #     energy = energy / physical_constants['electron volt'][0]
+        #     # Skip this energy if it's outside the desired range
+        #     is_in_range = (energy_range is None or
+        #                    min(energy_range) <= energy <= max(energy_range))
+        #     if not is_in_range:
+        #         log.info('Skipping %s (%f eV is outside of range)',
+        #                  filename, energy)
+        #         continue
+        #     log.debug("Importing %s -> %f eV", filename, energy)
+        #     filenames.append(os.path.relpath(filename))
+        #     energies.append(energy)
+        #     # Import complex reconstructed image
+        #     data = f['/entry_1/image_1/data'].value
+        #     intensities.append(data)
+        #     # Import STXM interpretation
+        #     stxm = f['entry_1/instrument_1/detector_1/STXM'].value
+        #     stxm_frames.append(stxm)
+        #     # Save pixel size
+        #     px_size = float(f['/entry_1/process_1/Param/pixnm'].value)
+        #     log.debug("Scan %s has pixel size %f", filename, px_size)
+        #     pixel_sizes.append(px_size)
+
+    # Check that we have actual data to import
+    if len(intensities) == 0:
+        msg = "No files in directory {} pass import filters. "
+        msg += "Consider changing `exclude_re` or `energy_range` parameters."
+        raise exceptions.DataNotFoundError(msg.format(directory))
+    # Helper function to save image data to the HDF file
+    def replace_ds(name, parent, *args, **kwargs):
+        if name in parent.keys():
+            # Delete previous dataset
+            del parent[name]
+        else:
+            log.info("Creating new dataset %s from %s", name, directory)
+        # Save new combined dataset
+        new_ds = parent.create_dataset(name, *args, **kwargs)
+        return new_ds
+    # Load previous datasets
+    if 'intensities' in imported.keys():
+        log.info("Appending data from %s", directory)
+        # Check for redundant energies
+        old_energies = imported['energies'][0]
+        energies = np.array(energies)
+        overlap = np.in1d(energies.astype(old_energies.dtype), old_energies)
+        if np.any(overlap):
+            msg = "Imported redundant energies from {directory}: {energies}"
+            msg = msg.format(directory=directory, energies=energies[overlap])
+            log.warning(msg)
+        # Combine new data with previously imported data
+        intensities = np.concatenate([intensities, imported['intensities'][0]])
+        energies = np.concatenate([energies, old_energies])
+        pixel_sizes = np.concatenate([pixel_sizes, imported['pixel_sizes'][0]])
+        filenames = np.concatenate([filenames, imported['filenames'][0]])
+        del imported['relative_positions']
+        del imported['original_positions']
+    else:
+        log.info("Creating datasets from %s", directory)
+        imported.create_dataset('timestep_names',
+                                data=np.array([sam_name], dtype="S50"))
+    # Sort all the datasets by energy
+    sort_idx = np.argsort(energies)
+    energies = np.array(energies)[sort_idx]
+    intensities = np.array(intensities)[sort_idx]
+    pixel_sizes = np.array(pixel_sizes)[sort_idx]
+    filenames = np.array(filenames)[sort_idx]
+    # Save updated data to HDF file
+    replace_ds('intensities', parent=imported, data=[intensities],
+               dtype=np.int)
+    replace_ds('energies', parent=imported, data=[energies], dtype=np.float32)
+    log.debug("Found energies %s", energies)
+    # Save pixel size information
+    px_grp = replace_ds('pixel_sizes', parent=imported, data=[pixel_sizes])
+    px_unit = 'nm'
+    px_grp.attrs['unit'] = px_unit
+    # Save metadata
+    filenames = np.array(filenames, dtype="S100")
+    replace_ds('filenames', parent=imported, data=[filenames], dtype="S100")
+    zero_positions = [np.zeros(shape=(*filenames.shape, 3), dtype=np.float32)]
+    imported.create_dataset('relative_positions', data=zero_positions)
+    imported['intensities'].attrs['context'] = 'frameset'
+    nan_pos = np.empty(shape=(1, *filenames.shape, 3), dtype=np.float32)
+    nan_pos.fill(np.nan)
+    imported.create_dataset('original_positions', data=nan_pos)
+    # Clean up any open files, etc
+    h5file.close()
+    log.info("Importing finished in %f seconds", time() - logstart)
+    
+
 _SsrlResponse = namedtuple("_SsrlResponse", ("data", "starttime", "endtime"))
 
 

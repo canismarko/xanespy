@@ -27,9 +27,13 @@ sys.path.append(os.path.dirname(__file__))
 
 import exceptions
 import xradia
+import beamlines
+from beamlines import (sector8_xanes_script, ZoneplatePoint,
+                       Zoneplate, Detector, DetectorPoint)
 from importers import (import_frameset, import_ssrl_frameset,
                        import_aps_8BM_frameset,
-                       import_nanosurveyor_frameset)
+                       import_nanosurveyor_frameset,
+                       import_stxm_frameset)
 from xanes_frameset import XanesFrameset, PtychoFrameset
 import edges
 from edges import k_edges, l_edges
