@@ -35,6 +35,7 @@ import h5py
 
 from xanespy import exceptions
 from xanespy.xradia import XRMFile
+from xanespy.sxstm import SxstmDataFile
 from xanespy.importers import (magnification_correction,
                                decode_aps_params, decode_ssrl_params,
                                import_ssrl_frameset, CURRENT_VERSION,
@@ -46,6 +47,7 @@ TEST_DIR = os.path.dirname(__file__)
 SSRL_DIR = os.path.join(TEST_DIR, 'txm-data-ssrl')
 APS_DIR = os.path.join(TEST_DIR, 'txm-data-aps')
 PTYCHO_DIR = os.path.join(TEST_DIR, 'ptycho-data-als/NS_160406074')
+SXSTM_DIR = os.path.join(TEST_DIR, "sxstm-data-4idc/")
 
 
 class XradiaTest(TestCase):
@@ -85,13 +87,13 @@ class XradiaTest(TestCase):
         end = end.astimezone(pytz.utc).replace(tzinfo=None)
         self.assertEqual(xrm.endtime(), end)
         xrm.close()
-
+    
     def test_str_and_repr(self):
         sample_filename = "rep01_20161456_ssrl-test-data_08324.0_eV_001of003.xrm"
         xrm = XRMFile(os.path.join(SSRL_DIR, sample_filename), flavor="ssrl")
         self.assertEqual(repr(xrm), "<XRMFile: '{}'>".format(sample_filename))
         self.assertEqual(str(xrm), "<XRMFile: '{}'>".format(sample_filename))
-
+    
     def test_binning(self):
         sample_filename = "rep01_20161456_ssrl-test-data_08324.0_eV_001of003.xrm"
         xrm = XRMFile(os.path.join(SSRL_DIR, sample_filename), flavor="ssrl")
@@ -103,16 +105,16 @@ class PtychographyImportTest(TestCase):
         self.hdf = os.path.join(PTYCHO_DIR, 'testdata.h5')
         if os.path.exists(self.hdf):
             os.remove(self.hdf)
-
+    
     def tearDown(self):
         if os.path.exists(self.hdf):
             os.remove(self.hdf)
-
+    
     def test_directory_names(self):
         """Tests for checking some of the edge cases for what can be passed as
         a directory string."""
         import_nanosurveyor_frameset(PTYCHO_DIR + "/", hdf_filename=self.hdf)
-
+    
     def test_imported_hdf(self):
         import_nanosurveyor_frameset(PTYCHO_DIR, hdf_filename=self.hdf)
         self.assertTrue(os.path.exists(self.hdf))
@@ -158,7 +160,7 @@ class PtychographyImportTest(TestCase):
             ## means for STXM data
             self.assertIn('original_positions', keys)
             self.assertEqual(group['original_positions'].shape, (1, 3, 3))
-
+    
     def test_partial_import(self):
         """Sometimes the user may want to specify that only a subset of
         ptychographs be imported.
@@ -174,7 +176,7 @@ class PtychographyImportTest(TestCase):
             self.assertEqual(group['intensities'].shape[0:2],
                              (1, 2))
             self.assertEqual(group['filenames'].shape, (1, 2))
-
+    
     def test_exclude_re(self):
         """Allow the user to exclude specific frames that are bad."""
         import_nanosurveyor_frameset(PTYCHO_DIR,
@@ -186,7 +188,7 @@ class PtychographyImportTest(TestCase):
             group = parent['imported']
             self.assertEqual(group['intensities'].shape[0:2],
                              (1, 2))
-
+    
     def test_multiple_import(self):
         """Check if we can import multiple different directories of different
         energies ranges."""
@@ -434,3 +436,15 @@ class SSRLImportTest(TestCase):
             [self.assertEqual(RuntimeWarning, w.category) for w in ws]
         # Check that the bad entries was excluded from the processed list
         self.assertEqual(len(result), 1)
+
+
+class SxstmTestCase(unittest.TestCase):
+    """Tests for soft x-ray tunneling microscope data from APS 4-ID-C."""
+    def test_header(self):
+        filename = os.path.join(SXSTM_DIR, 'XGSS_UIC_JC_475v_60c_001_001_001.3ds')
+        sxstm_data = SxstmDataFile(filename=filename)
+        header = sxstm_data.header_lines()
+        self.assertEqual(len(header), 33)
+        data = sxstm_data.dataframe()
+        sxstm_data.close()
+

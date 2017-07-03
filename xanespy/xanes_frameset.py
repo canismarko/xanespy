@@ -118,23 +118,23 @@ class XanesFrameset():
         with self.store() as store:
             result = store.has_dataset(representation)
         return result
-
+    
     @property
     def data_name(self):
         return self._data_name
-
+    
     @data_name.setter
     def data_name(self, val):
         self._data_name = val
         # Clear any cached values since the data are probably different
         self.clear_caches()
-
+    
     def data_tree(self):
         """Wrapper around the TXMStore.data_tree() method."""
         with self.store() as store:
             tree = store.data_tree()
         return tree
-
+    
     def store(self, mode='r'):
         """Get a TXM Store object that saves and retrieves data from the HDF5
         file. The mode argument is passed to h5py as is. This method
