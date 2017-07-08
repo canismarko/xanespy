@@ -171,7 +171,7 @@ class XRMFile():
                 msg = "Could not read energy for file {}"
                 raise exceptions.FileFormatError(msg.format(self.filename))
         return energy
-
+    
     def is_valid(self):
         """Check that the XRM file has valid data."""
         keys = ['ImageData1/Image1', 'ImageInfo/Date']
@@ -188,8 +188,15 @@ class XRMFile():
         # except OSError:
         #     is_valid = False
         return is_valid
-
-    def image_data(self):
+    
+    def image_stack(self):
+        entries = [s for s in self.ole_file.listdir() if s[0] == 'ImageData1']
+        stack = []
+        for idx in range(len(entries)):
+            stack.append(self.image_data(idx=idx))
+        return np.array(stack)
+  
+    def image_data(self, idx=0):
         """TXM Image frame."""
         # Figure out byte size
         dimensions = self.image_shape()
@@ -202,7 +209,7 @@ class XRMFile():
             fmt_str = "<{}f".format(num_bytes)
         # Return decoded image data
         try:
-            stream = self.ole_file.openstream('ImageData1/Image1')
+            stream = self.ole_file.openstream('ImageData1/Image{}'.format(idx+1))
         except OSError:
             raise
             msg = "Cannot open image data {} in file {}"

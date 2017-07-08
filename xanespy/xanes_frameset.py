@@ -760,10 +760,14 @@ class XanesFrameset():
                 frames = store.get_frames(representation)[index]
                 if edge_jump_filter:
                     # Filter out background pixels using edge mask
-                    mask = self.edge_mask()
-                    mask = np.broadcast_to(array=mask,
+                    try:
+                        mask = self.edge_mask()
+                    except exceptions.XanesMathError:
+                        log.error("Could not find pre-edge energies, ignoring mask.")
+                    else:
+                        mask = np.broadcast_to(array=mask,
                                            shape=(*energies.shape, *mask.shape))
-                    frames = np.ma.array(frames, mask=mask)
+                        frames = np.ma.array(frames, mask=mask)
                 # Take average of all pixel frames
                 flat = (*frames.shape[:frames.ndim-2], -1) # Collapse image dimension
                 spectrum = np.mean(np.reshape(frames, flat), axis=-1)
@@ -813,15 +817,15 @@ class XanesFrameset():
                                             ax=ax,
                                             energies=spectrum.index,
                                             norm=Normalize(*self.edge.map_range))
-        if pixel is not None:
-            xy = pixel_to_xy(pixel, extent=self.extent(), shape=self.map_shape())
-            title = 'XANES Spectrum at ({x}, {y}) = {val}'
-            masked_map = self.masked_map(goodness_filter=False)
-            val = masked_map[pixel.vertical][pixel.horizontal]
-            title = title.format(x=round(xy.x, 2),
-                                 y=round(xy.y, 2),
-                                 val=val)
-            ax.set_title(title)
+        # if pixel is not None:
+        #     # xy = pixel_to_xy(pixel, extent=self.extent(), shape=self.map_shape())
+        #     # title = 'XANES Spectrum at ({x}, {y}) = {val}'
+        #     # masked_map = self.masked_map(goodness_filter=False)
+        #     # val = masked_map[pixel.vertical][pixel.horizontal]
+        #     # title = title.format(x=round(xy.x, 2),
+        #     #                      y=round(xy.y, 2),
+        #     #                      val=val)
+        #     # ax.set_title(title)
         # Plot lines at edge of normalization range or indicate peak positions
         edge.annotate_spectrum(ax=ax)
         return scatter

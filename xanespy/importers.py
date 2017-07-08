@@ -656,7 +656,46 @@ def decode_aps_params(filename):
     return result
 
 
-def import_aps_8BM_frameset(directory, hdf_filename, quiet=False):
+def import_aps_8BM_xanes_file(filename, ref_filename, hdf_filename, energies, groupname=None):
+    """Extract an entire xanes framestack from one xradia file.
+    
+    """
+    if groupname is None:
+        groupname = os.path.splitext(filename)[0]
+    with XRMFile(filename, flavor='aps') as f:
+        int_data = f.image_stack()
+    with XRMFile(ref_filename, flavor='aps') as f:
+        ref_data = f.image_stack()
+    # Delete old data groups for this file
+    h5file = h5py.File(hdf_filename, mode='w')
+    if groupname in h5file.keys():
+        log.warning("Overwriting old HDF group {}".format(groupname))
+        del h5file[groupname]
+    # Save data the HDF file
+    g = h5file.create_group("{}/imported".format(groupname))
+    ds_shape = (1, *int_data.shape)
+    int_ds = g.create_dataset('intensities', data=[int_data])
+    int_ds.attrs['context'] = 'frameset'
+    ref_ds = g.create_dataset('references', data=[ref_data])
+    ref_ds.attrs['context'] = 'frameset'
+    E_ds = g.create_dataset('energies', data=[energies])
+    E_ds.attrs['context'] = 'metadata'
+    # Apply reference correction
+    abs_ds = g.create_dataset('absorbances', shape=ds_shape,
+                              dtype=np.float32, maxshape=ds_shape)
+    abs_ds.attrs['context'] = 'frameset'
+    apply_references(int_ds, ref_ds, out=abs_ds)
+    # Set some other metadata
+    h5file[groupname].attrs['latest_data_name'] = 'imported'
+    g.create_dataset('timestep_names', data=[0])
+    pixel_size = 40/int_data.shape[0]
+    pixel_sizes = np.full(ds_shape[0: 2], pixel_size)
+    pixel_ds = g.create_dataset('pixel_sizes', data=pixel_sizes)
+    pixel_ds.attrs['unit'] = 'um'
+    # Clean up and exit
+    h5file.close()
+
+def import_aps_8BM_xanes_dir(directory, hdf_filename, quiet=False):
     imp_group = import_frameset(directory=directory, flavor="aps",
                                 hdf_filename=hdf_filename, return_val="group")
     # Set some beamline specific metadata
@@ -668,6 +707,7 @@ def import_aps_8BM_frameset(directory, hdf_filename, quiet=False):
 
 
 def import_frameset(directory, flavor, hdf_filename, return_val=None):
+
     """Import all files in the given directory collected at an X-ray
     microscope beamline.
     
