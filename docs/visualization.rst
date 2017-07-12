@@ -1,10 +1,16 @@
 Visualization of Results
 ========================
 
-Plotting
---------
+Plotting Maps
+-------------
 
-The ``XanesFrameset`` object has a number of methods for plotting.
+After calculating the maps, there will be a number of options for
+plotting. The :py:class:`xanespy.xanes_frameset.XanesFrameset` object
+has a number of methods for plotting the maps. Many of these method
+use the ``map_name`` argument to The
+:py:meth:`xanespy.xanes_frameset.XanesFrameset.plot_map` method will
+prepare a plot of any of the maps.
+
 
 Interactive (Qt) Viewer
 -----------------------

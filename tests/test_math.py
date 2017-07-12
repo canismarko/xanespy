@@ -22,7 +22,12 @@
 
 import math
 import os
+import warnings
 
+import matplotlib
+with warnings.catch_warnings():
+    warnings.simplefilter('ignore', UserWarning, 1405)
+    matplotlib.use('Agg')
 import unittest
 import numpy as np
 from skimage import data
@@ -246,13 +251,13 @@ class XanesMathTest(unittest.TestCase):
         # Do the guessing
         result = guess_kedge(spectrum=As, energies=Es, edge=edge)
         # Check resultant guessed parameters
-        self.assertAlmostEqual(result.scale, 0.2, places=2)
+        self.assertAlmostEqual(result.scale, 0.214, places=2)
         self.assertAlmostEqual(result.voffset, 0.45, places=2)
         self.assertEqual(result.E0, edge.E_0)
-        self.assertAlmostEqual(result.ga, 0.97, places=2)
+        self.assertAlmostEqual(result.ga, 0.9, places=2)
         self.assertAlmostEqual(result.gb, 17, places=1)
         self.assertAlmostEqual(result.bg_slope, 0, places=5)
-
+    
     def test_apply_references(self):
         # Create some fake frames. Reshaping is to mimic multi-dim dataset
         Is, refs = self.coins()[:2], self.coins()[2:4]
@@ -389,3 +394,8 @@ class XanesMathTest(unittest.TestCase):
     #                                      n_components=2)
     #     # Check the results
     #     np.testing.assert_allclose(comps, [signal0, signal1])
+
+
+# Launch the tests if this is run as a script
+if __name__ == '__main__':
+    unittest.main()

@@ -74,7 +74,8 @@ class Edge():
             start = region[0]
             stop = region[1]
             step = region[2]
-            num = int(stop - start) / step + 1
+            rng = int(stop - start)
+            num = int(rng / step + 1)
             energies.append(np.linspace(region[0], region[1], num))
         energies = np.concatenate(energies)
         energies = sorted(list(set(energies)))

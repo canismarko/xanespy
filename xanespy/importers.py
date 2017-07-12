@@ -31,7 +31,7 @@ import numpy as np
 from scipy.constants import physical_constants
 from scipy.ndimage.filters import median_filter
 
-from xradia import XRMFile
+from xradia import XRMFile, TXRMFile
 from utilities import prog
 import exceptions
 from xanes_math import transform_images, apply_references, transformation_matrices
@@ -137,10 +137,13 @@ def import_nanosurveyor_frameset(directory: str, quiet=False,
                                  hdf_filename=None, hdf_groupname=None,
                                  energy_range=None, exclude_re=None, append=False):
     """Import a set of images from reconstructed ptychography scanning microscope data.
-
-    This generates ptychography chemical maps based on data collected at ALS beamline
-    5.3.2.1
-
+    
+    This generates ptychography chemical maps based on data collected
+    at ALS beamline 5.3.2.1. The arguments ``energy_range`` and
+    ``exclude_re`` can be used to fine-tune the set of imported
+    file. For example: passing ``exclude_re='(019|017)'`` will import
+    everything except scans 019 and 017.
+    
     Parameters
     ----------
     directory : str
@@ -248,7 +251,7 @@ def import_nanosurveyor_frameset(directory: str, quiet=False,
             px_size = float(f['/entry_1/process_1/Param/pixnm'].value)
             log.debug("Scan %s has pixel size %f", filename, px_size)
             pixel_sizes.append(px_size)
-
+    
     # Check that we have actual data to import
     if len(intensities) == 0:
         msg = "No files in directory {} pass import filters. "
@@ -548,27 +551,27 @@ def _average_ssrl_files(files):
 
 def magnification_correction(frames, pixel_sizes):
     """Correct for changes in magnification at different energies.
-
+    
     As the X-ray energy increases, the focal length of the zone plate
     changes and so the image is zoomed-out at higher energies. This
     method applies a correction to each frame to make the
     magnification similar to that of the first frame. Some beamlines
     correct for this automatically during acquisition and don't need
     this function: APS 8-BM-B, 32-ID-C.
-
+    
     Arguments
     ---------
     frames : np.ndarray
       Numpy array of image frames that need to be corrected.
     pixel_sizes : np.ndarray
       Numpy array of pixel sizes corresponding to entries in `frames`.
-
+    
     Returns
     -------
     (scales2D, translations) : (np.ndarray, np.ndarray)
       An array of scale factors to use for applying a correction to
       each frame. Translations show how much to move each frame array by to re-center it.
-
+    
     """
     scales = np.min(pixel_sizes) / pixel_sizes
     datashape = frames.shape[:-2]
@@ -578,12 +581,12 @@ def magnification_correction(frames, pixel_sizes):
     return (scales2D, translations)
 
 
-def import_ssrl_frameset(directory, hdf_filename):
+def import_ssrl_xanes_dir(directory, hdf_filename):
     """Import all files in the given directory collected at SSRL beamline
     6-2c and process into framesets. Images are assumed to full-field
     transmission X-ray micrographs and repetitions will be
     averaged. Passed on to ``xanespy.importers.import_frameset``
-
+    
     Arguments
     ---------
     directory : str
@@ -656,44 +659,84 @@ def decode_aps_params(filename):
     return result
 
 
-def import_aps_8BM_xanes_file(filename, ref_filename, hdf_filename, energies, groupname=None):
+def import_aps_8BM_xanes_file(filename, ref_filename, hdf_filename, groupname=None):
     """Extract an entire xanes framestack from one xradia file.
+    
+    A single TXRM file can contain multiple frames at different
+    energies. This function will import such a file along with the
+    corresponding reference frames into an HDF file. If the given
+    ``groupname`` exists in ``hdf_filename``, it will be overwritten
+    and a ``RuntimeWarning`` will be issued.
+    
+    Parameters
+    ----------
+    filename : str
+      File path to the txrm file to import.
+    ref_filename : str
+      File path to the txrm file that contains the white-field
+      reference images. This will be used to calculate optical depth
+      from transmitted intensity.
+    hdf_filename : str
+      File path to the destination HDF5 file that will receive the
+      imported data.
+    groupname : str, optional
+      The name for the top-level HDF group. If omitted, a group name
+      will be generated from the ``filename`` parameter.
     
     """
     if groupname is None:
-        groupname = os.path.splitext(filename)[0]
-    with XRMFile(filename, flavor='aps') as f:
+        groupname = os.path.splitext(os.path.basename(filename))[0]
+    with TXRMFile(filename, flavor='aps') as f:
         int_data = f.image_stack()
-    with XRMFile(ref_filename, flavor='aps') as f:
+        energies = f.energies()
+        sample_pos = f.sample_position()
+        timestamps = f.starttimes()
+    with TXRMFile(ref_filename, flavor='aps') as f:
         ref_data = f.image_stack()
     # Delete old data groups for this file
-    h5file = h5py.File(hdf_filename, mode='w')
+    h5file = h5py.File(hdf_filename, mode='a')
     if groupname in h5file.keys():
         log.warning("Overwriting old HDF group {}".format(groupname))
         del h5file[groupname]
     # Save data the HDF file
-    g = h5file.create_group("{}/imported".format(groupname))
+    sam_group = h5file.create_group(groupname)
+    imp_group = sam_group.create_group('imported')
     ds_shape = (1, *int_data.shape)
-    int_ds = g.create_dataset('intensities', data=[int_data])
+    int_ds = imp_group.create_dataset('intensities', data=[int_data])
     int_ds.attrs['context'] = 'frameset'
-    ref_ds = g.create_dataset('references', data=[ref_data])
+    ref_ds = imp_group.create_dataset('references', data=[ref_data])
     ref_ds.attrs['context'] = 'frameset'
-    E_ds = g.create_dataset('energies', data=[energies])
+    E_ds = imp_group.create_dataset('energies', data=[energies])
     E_ds.attrs['context'] = 'metadata'
+    # Prepare and save timestamps
+    timestamps = np.array([timestamps], dtype='S32')
+    timestamp_ds = imp_group.create_dataset('timestamps', data=timestamps)
     # Apply reference correction
-    abs_ds = g.create_dataset('absorbances', shape=ds_shape,
+    abs_ds = imp_group.create_dataset('absorbances', shape=ds_shape,
                               dtype=np.float32, maxshape=ds_shape)
     abs_ds.attrs['context'] = 'frameset'
     apply_references(int_ds, ref_ds, out=abs_ds)
     # Set some other metadata
+    h5file[groupname].attrs["original_file"] = filename
+    h5file[groupname].attrs["xanespy_version"] = CURRENT_VERSION
     h5file[groupname].attrs['latest_data_name'] = 'imported'
-    g.create_dataset('timestep_names', data=[0])
+    h5file[groupname].attrs['technique'] = 'Full-field TXM'
+    h5file[groupname].attrs['beamline'] = 'APS 8-BM-B'
+    imp_group.create_dataset('timestep_names', data=[0])
     pixel_size = 40/int_data.shape[0]
     pixel_sizes = np.full(ds_shape[0: 2], pixel_size)
-    pixel_ds = g.create_dataset('pixel_sizes', data=pixel_sizes)
-    pixel_ds.attrs['unit'] = 'um'
+    pixel_ds = imp_group.create_dataset('pixel_sizes', data=pixel_sizes)
+    pixel_ds.attrs['unit'] = 'µm'
+    # Save original filename
+    filenames = np.array([[filename]], dtype="S100")
+    imp_group.create_dataset('filenames', data=filenames)
+    # Save original sample positions
+    pos_shape = (*int_ds.shape[0:2], 3)
+    original_pos = np.broadcast_to(sample_pos, pos_shape)
+    imp_group.create_dataset('original_positions', data=original_pos)
     # Clean up and exit
     h5file.close()
+
 
 def import_aps_8BM_xanes_dir(directory, hdf_filename, quiet=False):
     imp_group = import_frameset(directory=directory, flavor="aps",
@@ -707,7 +750,6 @@ def import_aps_8BM_xanes_dir(directory, hdf_filename, quiet=False):
 
 
 def import_frameset(directory, flavor, hdf_filename, return_val=None):
-
     """Import all files in the given directory collected at an X-ray
     microscope beamline.
     
@@ -738,7 +780,8 @@ def import_frameset(directory, flavor, hdf_filename, return_val=None):
     # Check arguments for sanity
     valid_return_vals = ["group", None]
     if return_val not in valid_return_vals:
-        raise ValueError("Invalid `return_val`: {}. Choices are {}".format(return_val, valid_return_vals))
+        msg = "Invalid `return_val`: {}. Choices are {}"
+        raise ValueError(msg.format(return_val, valid_return_vals))
     # Check that file does not exist
     if os.path.exists(hdf_filename):
         raise OSError("File {} exists".format(hdf_filename))

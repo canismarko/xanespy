@@ -69,27 +69,27 @@ class TXMStore():
         if data_name is None:
             data_name = self.latest_data_name
         self._data_name = data_name
-
+    
     def __enter__(self):
         return self
-
+    
     def __exit__(self, type, value, traceback):
         self.close()
-
+    
     def close(self):
         self._file.close()
-
+    
     @property
     def data_name(self):
         return self._data_name
-
+    
     @data_name.setter
     def data_name(self, val):
         if val not in self.parent_group().keys():
             msg = "Group {} does not exists. Run TXMStore.fork_data_group('{}') first"
             raise exceptions.CreateGroupError(msg.format(val, val))
         self._data_name = val
-
+    
     def data_tree(self):
         """Create a tree of the possible groups this store could access. The
         first level is samples, then data_groups (ie. same sample but
@@ -118,12 +118,12 @@ class TXMStore():
         # Start the recursion at the top
         tree = walk_groups(self._file, level=0)
         return tree
-
+    
     def fork_data_group(self, dest, src=None):
         """Turn on different active data group for this store. This method
         deletes the existing group and copies symlinks from the
         current one.
-
+    
         """
         # Switch to the group given by `src`
         if src is not None:
@@ -143,16 +143,16 @@ class TXMStore():
         self.latest_data_name = dest
         self.data_name = dest
         return new_group
-
+    
     @property
     def latest_data_name(self):
         name = self.parent_group().attrs['latest_data_name']
         return name
-
+    
     @latest_data_name.setter
     def latest_data_name(self, val):
         self.parent_group().attrs['latest_data_name'] = val
-
+    
     def parent_group(self):
         """Retrieve the top-level HDF5 group object for this file and
         groupname."""

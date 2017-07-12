@@ -59,14 +59,14 @@ class XanesFrameset():
     absorption edge. Iterating over this object gives the individual
     Frame() objects. The class assumes that the data have been
     imported into an HDF file.
-
+    
     """
     active_group = ''
     cmap = 'plasma'
     _data_name = None
     # Places to store staged image transformations
     _transformations = None
-
+    
     def __init__(self, filename, edge, groupname=None):
         """
         Parameters
@@ -141,8 +141,12 @@ class XanesFrameset():
         should be used as a context manager, especially if mode is
         something writeable:
         
-            with self.store() as store:
-                # Do stuff with the store
+        .. code:: python
+        
+           # The 'r+' creates the file or appends if one exists
+           with self.store(mode='r+') as store:
+               # Do stuff with the store...
+               img = store.absorbances[0,0]
         """
         return TXMStore(hdf_filename=self.hdf_filename,
                         parent_name=self.parent_name,
@@ -584,17 +588,17 @@ class XanesFrameset():
         """Return a list of regions (1 for each particle) sorted by area.
         (largest first). This requires that the `label_particles`
         method be called first.
-
+        
         Arguments
         ---------
-        - intensity_image : 2D array passed on to the skimage
-          `regionprops` function to determine what shows up in the
-          image for each particle.
-
-        - labels : Dataframe of the same shape as the map, with the
-          particles segmented. If None, the `particle_labels`
+        intensity_image : np.ndarray, optional
+          2D array passed on to the skimage `regionprops` function to
+          determine what shows up in the image for each particle.
+        labels : np.ndarray, optional
+          Array of the same shape as the map, with the particles
+          segmented. If None (default), the `particle_labels`
           attribute of the TXM store will be used.
-
+        
         """
         with self.store() as store:
             if labels is None:
@@ -604,7 +608,7 @@ class XanesFrameset():
         # Put in order of descending area
         regions.sort(key=lambda p: p.area, reverse=True)
         return regions
-
+    
     def plot_mean_image(self, ax=None, component="modulus", cmap="gray", *args, **kwargs):
         if ax is None:
             ax = plots.new_image_axes()
@@ -620,11 +624,11 @@ class XanesFrameset():
         ax.set_xlabel(ax_unit)
         ax.set_ylabel(ax_unit)
         return artist
-
+    
     def mean_frame(self, representation="absorbances"):
         """Return the mean value with the same shape as an individual
         frame.
-
+        
         """
         with self.store() as store:
             Is = store.get_frames(representation)
@@ -632,23 +636,23 @@ class XanesFrameset():
             Is = np.reshape(Is, (-1, *frame_shape))
             mean = np.mean(Is, axis=0)
         return mean
-
+    
     def frame_shape(self, representation="absorbances"):
         """Return the shape of the individual energy frames."""
         with self.store() as store:
             imshape = store.get_frames(representation).shape[-2:]
         return imshape
-
+    
     def pixel_unit(self):
         """Return the unit of measure for the size of a pixel."""
         with self.store() as store:
             unit = store.pixel_unit
         return unit
-
+    
     def spectra(self, edge_filter=False):
         """Return a two-dimensional array of spectra for all the pixels in
         shape of (pixel, energy).
-
+        
         Arguments
         ---------
         edge_jump_filter (bool or str): [NOT YET IMPLEMENTED] If
@@ -664,7 +668,7 @@ class XanesFrameset():
             spectra = np.reshape(As, (-1, np.prod(img_shape)))
             spectra = np.moveaxis(spectra, 0, -1)
         return spectra
-
+    
     def fitted_spectrum(self, energies=None, pixel=None, index=0,
                         representation="fit_parameters"):
         """Take the previously calculated fitting parameters from
@@ -712,20 +716,20 @@ class XanesFrameset():
         # Create the pandas series
         fit = pd.Series(predicted_As, index=Es)
         return fit
-
+    
     def spectrum(self, pixel=None, edge_jump_filter=False,
                        representation="absorbances", index=0):
         """Collapse the frameset down to an energy spectrum.
-
+        
         Any dimensions (besides the energy dimension) that remain
         after applying the arguments below, will be averaged to give
         the final intensity at each energy.
-
+        
         Returns
         -------
         spectrum : pd.Series
           A pandas Series with the spectrum.
-
+        
         Parameters
         ----------
         pixel : tuple, optional
@@ -746,7 +750,7 @@ class XanesFrameset():
           Which step in the frameset to use. When used to index
           store().absorbances, this should return a 3D array like
           (energy, rows, columns).
-
+        
         """
         # Retrieve data
         with self.store() as store:
@@ -774,7 +778,7 @@ class XanesFrameset():
             # Combine into a series
             series = pd.Series(spectrum, index=energies)
         return series
-
+    
     def plot_xanes_spectrum(self, ax=None, pixel=None,
                             norm_range=None, normalize=False,
                             representation="absorbances",
@@ -782,19 +786,19 @@ class XanesFrameset():
                             linestyle=":",
                             *args, **kwargs):
         """Calculate and plot the xanes spectrum for this field-of-view.
-
+        
         Arguments
         ---------
         ax - matplotlib axes object on which to draw
-
+        
         pixel - Coordinates of a specific pixel on the image to plot.
-
+        
         normalize - If truthy, will set the pre-edge at zero and the
           post-edge at 1.
-
+        
         show_fit - If truthy, will use the edge object to fit the data
           and plot the resulting fit line.
-
+        
         edge_jump_filter - If truthy, will only include those values
           that show a strong absorbtion jump across this edge.
         """
@@ -858,7 +862,7 @@ class XanesFrameset():
     
     def fit_spectra(self, edge_mask=True):
         """Fit a series of curves to the spectrum at each pixel.
-
+        
         For anything other than trivially small data-sets, this method
         can take a very long time. To speed up processing, MPI calls
         are used. Calling this function with mpiexec will allow for
@@ -870,7 +874,7 @@ class XanesFrameset():
           If true, only pixels passing the edge_mask will be fit and
           the remaning pixels will be set to a default value. This can
           help reduce computing time.
-
+        
         """
         from mpi4py import MPI
         # Prepare MPI environment
@@ -899,7 +903,6 @@ class XanesFrameset():
                 fit_maps = np.empty(map_shape)  # To hold output
                 # Make sure spectra and energies have the same shape
                 energies = broadcast_reverse(energies, frames.shape)
-                # print(spectra)
                 spectra = spectra[~frames_mask].reshape((-1, spectra.shape[-1]))
                 spectra_shape = spectra.shape
                 energies = np.moveaxis(energies, 1, -1)
@@ -961,7 +964,7 @@ class XanesFrameset():
                 store.whiteline_fit.attrs['frame_source'] = 'absorbances'
             log.info('Finished fitting %d spectra in %d seconds',
                      spectra.shape[0], time() - logstart)
-
+    
     def calculate_whitelines(self, edge_mask=False):
         """Calculate and save a map of the whiteline position of each pixel by
         calculating the energy of simple maximum absorbance.
@@ -987,11 +990,11 @@ class XanesFrameset():
         with self.store(mode='r+') as store:
             store.whiteline_max = whitelines
             store.whiteline_max.attrs['frame_source'] = 'absorbances'
-
+    
     def calculate_maps(self, fit_spectra=False):
         """Generate a set of maps based on pixel-wise Xanes spectra: whiteline
         position, particle labels.
-
+        
         Arguments
         ---------
         -fit_spectra : If truthy, the whiteline will be found by
@@ -1003,12 +1006,11 @@ class XanesFrameset():
             self.fit_spectra()
         # Calculate particle_labels
         self.label_particles()
-
+    
     def plot_signals(self, cmap="viridis"):
         """Plot the signals from the previously extracted data. Requires that
-        self.store().signals and self.store().signal_weights be
-        set.
-
+        self.store().signals and self.store().signal_weights be set.
+        
         """
         with self.store() as store:
             signals = store.signals.value
@@ -1055,20 +1057,20 @@ class XanesFrameset():
             ax2.legend(["Obs Mod", "Real", "Imag", "Abs"], fontsize=8)
             # ax2.set_ylim(*specrange)
             ax2.set_title("Signal Component {idx}".format(idx=idx))
-
+    
     def plot_signal_map(self, ax=None, signals_idx=None, interpolation=None):
         """Plot the map of signal strength for signals extracted from
         self.calculate_signals().
-
+        
         Arguments
         ---------
         - ax : A matplotlib Axes object. If "None" (default) a new
           axes object is created.
-
+        
         - signals_idx : Indices of which signals to plot. This will be
         passed as a numpy array index. Special value None (default)
         means first three signals will be plotted.
-
+        
         - interpolation : str
           How to smooth the image when plotting.
         """
@@ -1090,30 +1092,30 @@ class XanesFrameset():
         ax.set_xlabel(px_unit)
         ax.set_ylabel(px_unit)
         ax.set_title("Composite of signals {}".format(signals_idx))
-
+    
     def calculate_signals(self, n_components=2, method="nmf",
                           frame_source='absorbances',
                           edge_mask=True):
         """Extract signals and assign each pixel to a group, then save the
         resulting RGB cluster map.
-
+        
         Parameters
         ----------
         n_components : int, optional
           The number of signals and number of clusters into which the
           data will be separated.
-
+        
         method : str, optional
           The technique to use for extracting signals. Currently only
           "nmf" is supported.
-
+        
         frame_source : str, optional
           Name of the frame-set to use as the input data.
-
+        
         edge_mask : bool, optional
           If truthy (default), only those pixels passing the edge
           filter will be considered.
-
+        
         """
         frame_source = "absorbances"
         msg = "Performing {} signal extraction with {} components"
@@ -1142,7 +1144,7 @@ class XanesFrameset():
         else:
             log.debug("No edge mask for signal extraction")
             mask = dummy_mask
-
+        
         # Separate the data into signals
         signals, weights = xm.extract_signals_nmf(
             spectra=spectra[mask.flatten()], n_components=n_components)
@@ -1180,7 +1182,7 @@ class XanesFrameset():
         # Save the resuliting k-means cluster map
         with self.store(mode="r+") as store:
             store.cluster_map = label_frame
-
+    
     @functools.lru_cache(maxsize=2)
     def map_data(self, timeidx=0, representation="absorbances"):
         """Return map data for the given time index and representation.
@@ -1202,7 +1204,7 @@ class XanesFrameset():
         -------
         map_data : np.ndarray
           A 2-dimensional array with the form (row, col).
-
+        
         """
         with self.store() as store:
             map_data = store.get_map(representation)
@@ -1255,8 +1257,9 @@ class XanesFrameset():
     def subtract_surroundings(self):
         """Use the edge mask to separate "surroundings" from "sample", then
         subtract the average surrounding absorbance from each
-        frame. This effective removes effects where the entire frame
+        frame. This effectively removes effects where the entire frame
         is brighter from one energy to the next.
+        
         """
         with self.store(mode='r+') as store:
             log.debug('Subtracting surroundings')
@@ -1381,7 +1384,7 @@ class XanesFrameset():
                                norm=norm,
                                edge=self.edge,
                                extent=self.extent(representation='absorbances'))
-
+    
     def plot_map_pixel_spectra(self, pixels, map_ax=None,
                                spectra_ax=None,
                                map_name="whiteline_map", timeidx=0,
@@ -1391,24 +1394,23 @@ class XanesFrameset():
         
         Arguments
         ---------
-        
-        - pixels : An iterable of 2-tuples indicating which (row,
-          column) pixels to highlight.
-        
-        - map_ax : A matplotlib axes object to put the map onto. If
-          None, a new 2-wide subplot will be created for both map_ax
-          and spectra_ax.
-        
-        - spectra_ax : A matplotlib axes to be used for plotting
-          spectra. Will only be used if `map_ax` is not None.
-        
-        - map_name : Name of the map to use for plotting. It will be
-          passed to the TXM store object and retrieved from the hdf5
-          file. If falsy, no map will be plotted.
-        
-        - timeidx : Index of which timestep to use.
-
-        - *args, **kwargs
+        pixels : iterable
+          An iterable of 2-tuples indicating which (row, column)
+          pixels to highlight.
+        map_ax : optional
+          A matplotlib axes object to put the map onto. If None, a new
+          2-wide subplot will be created for both map_ax and
+          spectra_ax.
+        spectra_ax : optional
+          A matplotlib axes to be used for plotting spectra. Will only
+          be used if ``map_ax`` is not None.
+        map_name : str, optional
+          Name of the map to use for plotting. It will be passed to
+          the TXM store object and retrieved from the hdf5 file. If
+          falsy, no map will be plotted.
+        timeidx : int, optional
+          Index of which timestep to use (default: 0).
+        args, kwargs : optional
           Passed to plots.plot_pixel_spectra()
         
         """

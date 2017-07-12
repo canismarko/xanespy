@@ -41,18 +41,32 @@ from utilities import shape, Pixel
 
 class XRMFile():
     """Single X-ray micrscopy frame created using XRadia XRM format.
-
+    
+    Formats from different beamlines have subtly different storage
+    patterns. The ``flavor`` argument controls this parameter. The
+    following metadata are affected by this coice:
+    
+    - Energy: SSRL 6-2c does not store the X-ray beam energy in the
+      file so it must be extracted from the filename.
+    - starttime, endtime : The XRMFile does not store timezone info,
+      so we have to guess based on beamline.
+    - pixel_size : The APS microscope automatically corrects
+      magnification when changing energy, the SSRL microscope does
+      not.
+    
     Arguments
     ---------
-    - filename : The path to the .xrm file
-
-    - flavor : The variety of data represented in the xrm file. Valid
+    filename : str
+      The path to the .xrm file
+    flavor : str
+      The variety of data represented in the xrm file. Valid
       choices are ['ssrl', 'aps', 'aps-old1']. These choices should
       line up with whatever is generated using the scripts in
       beamlines moudles.
+    
     """
     aps_old1_regex = re.compile("(\d{8})_([a-zA-Z0-9_]+)_([a-zA-Z0-9]+)_(\d{4}).xrm")
-
+    
     def __init__(self, filename, flavor: str):
         self.filename = filename
         self.flavor = flavor
@@ -62,23 +76,23 @@ class XRMFile():
         # self.sample_name = params['sample_name']
         # self.position_name = params['position_name']
         # self.is_background = params['is_background']
-
+    
     def __enter__(self):
         return self
-
+    
     def __exit__(self, type, value, traceback):
         self.close()
-
+    
     def __str__(self):
         return self.__repr__()
-
+    
     def __repr__(self):
         return "<XRMFile: '{}'>".format(os.path.basename(self.filename))
-
+    
     def close(self):
         """Close original XRM (ole) file on disk."""
         self.ole_file.close()
-
+    
     def um_per_pixel(self):
         """Describe the size of a pixel in microns. If this is an SSRL frame,
         the pixel size is dependent on energy. For APS frames, the pixel size
@@ -97,8 +111,8 @@ class XRMFile():
         num_pixels = max(self.image_data().shape)
         pixel_size = field_size / num_pixels
         return pixel_size
-
-    def ole_value(self, stream, fmt=None):
+    
+    def ole_value(self, stream, fmt=None, as_array=False):
         """Get arbitrary data from the ole file and convert from bytes."""
         try:
             stream_bytes = self.ole_file.openstream(stream).read()
@@ -106,12 +120,22 @@ class XRMFile():
             msg = "Cannot find stream {} in file {}"
             msg = msg.format(stream, self.filename)
             raise exceptions.DataFormatError(msg)
+        # Modify the format string to read all values if an array
+        if fmt is not None and len(fmt) == 2:
+            endian, dtype = fmt
+            num_vals = int(len(stream_bytes) / struct.calcsize(fmt))
+            fmt = "{endian}{num_vals}{dtype}"
+            fmt = fmt.format(endian=endian, num_vals=num_vals, dtype=dtype)
+        # Decode the bytes value
         if fmt is not None:
-            stream_value = struct.unpack(fmt, stream_bytes)[0]
+            stream_value = struct.unpack(fmt, stream_bytes)
+            # Return just the first value if requested
+            if not as_array:
+                stream_value = stream_value[0]
         else:
             stream_value = stream_bytes
         return stream_value
-
+    
     def print_ole(self):  # pragma: no cover
         for l in self.ole_file.listdir():
             if l[0] == 'ImageInfo':
@@ -121,7 +145,7 @@ class XRMFile():
                     pass
                 else:
                     print(l, ':', val)
-
+    
     def endtime(self):
         """Retrieve a datetime object representing when this frame was
         finished collecting. Duration is decided by exposure time of the frame
@@ -130,34 +154,54 @@ class XRMFile():
         startime = self.starttime()
         duration = dt.timedelta(seconds=exptime)
         return startime + duration
-
-    def starttime(self):
-        """Retrieve a datetime object representing when this frame was
-        collected. Timezone is inferred from flavor (eg. ssrl -> california
-        time)."""
-        # Decode bytestring.
-        # (First 16 bytes contain a date and time, not sure about the rest)
-        dt_bytes = self.ole_value('ImageInfo/Date')[0:17]
-        dt_string = dt_bytes.decode()
-        # Determine most likely timezone based on synchrotron location
+    
+    def starttimes(self):
+        """Retrieve all datetime objects representing when these frames were
+        collected. Timezone is inferred from flavor (eg. ssrl ->
+        california time).
+        
+        """
+        # Determine most likely timezone
         if self.flavor == 'ssrl':
             timezone = pytz.timezone('US/Pacific')
         elif self.flavor in ['aps', 'aps-old1']:
-            timezone = pytz.timezone('US/Central')
+            # timezone = pytz.timezone('US/Central')
+            timezone = pytz.timezone("America/Chicago")
         else:  # pragma: no cover
             # Unknown flavor. Raising here instead of constructor
             # means you forgot to put in the proper timezone.
             msg = "Unknown timezone for flavor '{flavor}'. Assuming UTC"
             warnings.warn(msg.format(flavor=self.flavor))
             timezone = pytz.utc
-        # Convert string into datetime object
+        # Retrieve the raw bytes from disk
+        key = 'ImageInfo/Date'
+        bytes_ = self.ole_value(key)
+        # Split the date into chunks
+        n_images = self.num_images()
+        chunk_size = int(len(bytes_) / n_images)
+        chunk_starts = range(0, len(bytes_), chunk_size)
+        date_chunks = [bytes_[i:i+chunk_size] for i in chunk_starts]
+        # Convert each chunk into a date
         fmt = "%m/%d/%y %H:%M:%S"
-        timestamp = dt.datetime.strptime(dt_string, fmt)
-        timestamp = timestamp.replace(tzinfo=timezone)
-        # Now convert to datetime naive UTC format
-        timestamp = timestamp.astimezone(pytz.utc).replace(tzinfo=None)
+        dt_list = []
+        for dt_bytes in date_chunks:
+            dt_str = dt_bytes[0:17].decode()
+            # Convert string into datetime object
+            timestamp = dt.datetime.strptime(dt_str, fmt)
+            timestamp = timezone.localize(timestamp)
+            # Now convert to datetime naive UTC format
+            timestamp = timestamp.astimezone(pytz.utc).replace(tzinfo=None)
+            dt_list.append(timestamp)
+        return dt_list
+    
+    def num_images(self):
+        return self.ole_value('ImageInfo/NoOfImages', '<I')
+    
+    def starttime(self):
+        """Return the earliest timestamp for the collected frames."""
+        timestamp = min(self.starttimes())
         return timestamp
-
+    
     def energy(self):
         """Beam energy in electronvoltes."""
         # Try reading from file first
@@ -176,12 +220,10 @@ class XRMFile():
         """Check that the XRM file has valid data."""
         keys = ['ImageData1/Image1', 'ImageInfo/Date']
         has_keys = [self.ole_file.exists(k) for k in keys]
-        if not all(has_keys):
-            is_valid = False
-        else:
-            # print(self.filename)
-            # print(self.ole_file.get_size('ImageData1/Image1'))            
+        if all(has_keys):
             is_valid = True
+        else:
+            is_valid = False
         # The following code is more robust but much slower
         # try:
         #     self.image_data()
@@ -189,13 +231,6 @@ class XRMFile():
         #     is_valid = False
         return is_valid
     
-    def image_stack(self):
-        entries = [s for s in self.ole_file.listdir() if s[0] == 'ImageData1']
-        stack = []
-        for idx in range(len(entries)):
-            stack.append(self.image_data(idx=idx))
-        return np.array(stack)
-  
     def image_data(self, idx=0):
         """TXM Image frame."""
         # Figure out byte size
@@ -218,26 +253,33 @@ class XRMFile():
         img_data = struct.unpack(fmt_str, stream.read())
         img_data = np.reshape(img_data, dimensions)
         return img_data
-
+    
     # def is_background(self):
     #     """Look at the file name for clues to whether this is a background
     #     frame."""
     #     result = re.search('bkg|_ref_', self.filename)
     #     return bool(result)
-
+    
     def sample_position(self):
         position = namedtuple('position', ('x', 'y', 'z'))
         x = self.ole_value('ImageInfo/XPosition', '<f')
         y = self.ole_value('ImageInfo/YPosition', '<f')
         z = self.ole_value('ImageInfo/ZPosition', '<f')
         return position(x, y, z)
-
+    
     def binning(self):
+        """Binning mode of the image.
+        
+        Binning reduces pixel density but improves signal/noise ratio
+        by combining adjacent pixels. For example, a 2048 x 2048 CCD
+        with binning 4 would produce a 512 x 512 image.
+        
+        """
         vertical = self.ole_value('ImageInfo/VerticalalBin', '<L')
         horizontal = self.ole_value('ImageInfo/HorizontalBin', '<L')
         binning = namedtuple('binning', ('horizontal', 'vertical'))
         return binning(horizontal, vertical)
-
+    
     def image_dtype(self):
         dtypes = {
             5: 'uint16',
@@ -245,8 +287,30 @@ class XRMFile():
         }
         dtype_number = self.ole_value('ImageInfo/DataType', '<1I')
         return dtypes[dtype_number]
-
+    
     def image_shape(self):
         horizontal = self.ole_value('ImageInfo/ImageWidth', '<I')
         vertical = self.ole_value('ImageInfo/ImageHeight', '<I')
         return shape(columns=vertical, rows=horizontal)
+
+
+class TXRMFile(XRMFile):
+    """Similar to :py:class:`XRMFile` but contains multiple images in a data-set."""
+    def image_stack(self):
+        entries = [s for s in self.ole_file.listdir() if s[0] == 'ImageData1']
+        stack = []
+        for idx in range(len(entries)):
+            stack.append(self.image_data(idx=idx))
+        return np.array(stack)
+    
+    def energies(self):
+        bytesize = 4
+        energy_bytes = self.ole_value('ImageInfo/Energy')
+        # Unpack the array
+        length = int(len(energy_bytes) / bytesize)
+        fmt = "<{}f".format(length)
+        energies = struct.unpack(fmt, energy_bytes)
+        # Filter out any zero values
+        energies = np.array([e for e in energies if e > 0.])
+        return energies
+    

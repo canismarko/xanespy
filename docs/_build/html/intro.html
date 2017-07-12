@@ -1,12 +1,12 @@
+
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-
 
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Introduction &#8212; Xanespy 0.1 documentation</title>
+    <title>Introduction &#8212; Xanespy 0.1.1 documentation</title>
     
     <link rel="stylesheet" href="_static/classic.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -14,7 +14,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    './',
-        VERSION:     '0.1',
+        VERSION:     '0.1.1',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true,
@@ -24,13 +24,13 @@
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
-    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Importing Data into Xanespy" href="importing.html" />
     <link rel="prev" title="Xanespy documentation" href="index.html" /> 
   </head>
-  <body role="document">
+  <body>
     <div class="related" role="navigation" aria-label="related navigation">
       <h3>Navigation</h3>
       <ul>
@@ -38,15 +38,12 @@
           <a href="genindex.html" title="General Index"
              accesskey="I">index</a></li>
         <li class="right" >
-          <a href="py-modindex.html" title="Python Module Index"
-             >modules</a> |</li>
-        <li class="right" >
           <a href="importing.html" title="Importing Data into Xanespy"
              accesskey="N">next</a> |</li>
         <li class="right" >
           <a href="index.html" title="Xanespy documentation"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">Xanespy 0.1 documentation</a> &#187;</li> 
+        <li class="nav-item nav-item-0"><a href="index.html">Xanespy 0.1.1 documentation</a> &#187;</li> 
       </ul>
     </div>  
 
@@ -76,9 +73,21 @@ does provide an interactive GUI for visualizing the data, but this GUI
 does not alter the data or export results. This way, the analysis
 steps are caputed either in an IPython notebook or conventional python
 script. These steps, together with the original data, should then be
-sufficient to reproduce the results exactly (provided the .</p>
+sufficient to reproduce the results exactly.</p>
+<div class="section" id="installation">
+<h2>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h2>
+<p>Xanespy can be installed from the <strong>python package index (PyPI) using pip</strong></p>
+<div class="code bash highlight-default"><div class="highlight"><pre><span></span>$ pip install xanespy
+</pre></div>
+</div>
+<p>or from anaconda.org using <strong>conda</strong></p>
+<div class="code bash highlight-default"><div class="highlight"><pre><span></span>$ conda install -c canismarko xanespy
+</pre></div>
+</div>
+</div>
 <div class="section" id="x-ray-absorbance-basics">
 <h2>X-Ray Absorbance Basics<a class="headerlink" href="#x-ray-absorbance-basics" title="Permalink to this headline">¶</a></h2>
+<p>Coming soon…</p>
 </div>
 <div class="section" id="example-workflow">
 <h2>Example Workflow<a class="headerlink" href="#example-workflow" title="Permalink to this headline">¶</a></h2>
@@ -87,7 +96,7 @@ sufficient to reproduce the results exactly (provided the .</p>
 <li>Import the raw data</li>
 <li>Apply corrections and align the images</li>
 <li>Calculate some metric and create maps of it</li>
-<li>Visualize the maps, static or interactively.</li>
+<li>Visualize the maps, staticly or interactively.</li>
 </ul>
 <p>Example for a single frameset across an X-ray absorbance edge:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">xanespy</span>
@@ -124,6 +133,7 @@ sufficient to reproduce the results exactly (provided the .</p>
   <h3><a href="index.html">Table Of Contents</a></h3>
   <ul>
 <li><a class="reference internal" href="#">Introduction</a><ul>
+<li><a class="reference internal" href="#installation">Installation</a></li>
 <li><a class="reference internal" href="#x-ray-absorbance-basics">X-Ray Absorbance Basics</a></li>
 <li><a class="reference internal" href="#example-workflow">Example Workflow</a></li>
 </ul>
@@ -164,20 +174,17 @@ sufficient to reproduce the results exactly (provided the .</p>
           <a href="genindex.html" title="General Index"
              >index</a></li>
         <li class="right" >
-          <a href="py-modindex.html" title="Python Module Index"
-             >modules</a> |</li>
-        <li class="right" >
           <a href="importing.html" title="Importing Data into Xanespy"
              >next</a> |</li>
         <li class="right" >
           <a href="index.html" title="Xanespy documentation"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">Xanespy 0.1 documentation</a> &#187;</li> 
+        <li class="nav-item nav-item-0"><a href="index.html">Xanespy 0.1.1 documentation</a> &#187;</li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2017, Mark Wolf.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.5.1.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.2.
     </div>
   </body>
 </html>

@@ -1,12 +1,12 @@
+
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-
 
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Accessing the Data Directly &#8212; Xanespy 0.1 documentation</title>
+    <title>Accessing the Data Directly &#8212; Xanespy 0.1.1 documentation</title>
     
     <link rel="stylesheet" href="_static/classic.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -14,7 +14,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    './',
-        VERSION:     '0.1',
+        VERSION:     '0.1.1',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true,
@@ -24,13 +24,13 @@
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
-    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="xanespy" href="modules.html" />
     <link rel="prev" title="Visualization of Results" href="visualization.html" /> 
   </head>
-  <body role="document">
+  <body>
     <div class="related" role="navigation" aria-label="related navigation">
       <h3>Navigation</h3>
       <ul>
@@ -46,7 +46,7 @@
         <li class="right" >
           <a href="visualization.html" title="Visualization of Results"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">Xanespy 0.1 documentation</a> &#187;</li> 
+        <li class="nav-item nav-item-0"><a href="index.html">Xanespy 0.1.1 documentation</a> &#187;</li> 
       </ul>
     </div>  
 
@@ -57,17 +57,18 @@
             
   <div class="section" id="accessing-the-data-directly">
 <h1>Accessing the Data Directly<a class="headerlink" href="#accessing-the-data-directly" title="Permalink to this headline">¶</a></h1>
-<p>While the <code class="docutils literal"><span class="pre">XanesFrameset</span></code> class has methods for common tasks,
-sometimes it is necessary to access the data directly, as either numpy
-arrays or h5py datasets. The xanes_frameset has a <code class="docutils literal"><span class="pre">store()</span></code> method
+<p>While the <a class="reference internal" href="xanespy.html#xanespy.xanes_frameset.XanesFrameset" title="xanespy.xanes_frameset.XanesFrameset"><code class="xref py py-class docutils literal"><span class="pre">XanesFrameset</span></code></a> class has
+methods for common tasks, sometimes it is necessary to access the data
+directly, as either numpy arrays or h5py datasets. The xanes_frameset
+has a <a class="reference internal" href="xanespy.html#xanespy.xanes_frameset.XanesFrameset.store" title="xanespy.xanes_frameset.XanesFrameset.store"><code class="xref py py-meth docutils literal"><span class="pre">store()</span></code></a> method
 that returns an interface (<code class="docutils literal"><span class="pre">TXMStore</span></code>) to the underlying HDF5 file.</p>
 <div class="admonition warning">
 <p class="first admonition-title">Warning</p>
 <p class="last">The <code class="docutils literal"><span class="pre">TXMStore</span></code> created by <code class="docutils literal"><span class="pre">xanes_frameset.store()</span></code> is
 attached to an open HDF5 file. It is strongly recommended to use
 the <code class="docutils literal"><span class="pre">with</span></code> statement described below. Otherwise make sure to call
-the store&#8217;s <code class="docutils literal"><span class="pre">close()</span></code> method in a <code class="docutils literal"><span class="pre">try...except</span></code>
-block. File corruption is possible if not opened in this manner.</p>
+the store’s <code class="docutils literal"><span class="pre">close()</span></code> method in a <code class="docutils literal"><span class="pre">try...except</span></code> block. File
+corruption is likely if not opened in this manner.</p>
 </div>
 <p>Call the following to get access to the associated datasets. Properties of the interface will
 return an HDF5 dataset in most cases.:</p>
@@ -135,12 +136,12 @@ return an HDF5 dataset in most cases.:</p>
         <li class="right" >
           <a href="visualization.html" title="Visualization of Results"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">Xanespy 0.1 documentation</a> &#187;</li> 
+        <li class="nav-item nav-item-0"><a href="index.html">Xanespy 0.1.1 documentation</a> &#187;</li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2017, Mark Wolf.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.5.1.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.2.
     </div>
   </body>
 </html>

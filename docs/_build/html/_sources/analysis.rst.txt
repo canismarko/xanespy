@@ -1,6 +1,41 @@
 Analyzing the Data
 ==================
 
+Forking the Data
+----------------
+
+After long computations it can be helpful to create a copy of the
+dataset as a sort of checkpoint. To enable this, xanespy includes the
+``fork_data_group()`` method: it creates a copy of the HDF group. The
+active set can be changed by setting the ``data_name`` attribute on a
+``XanesFrameset`` object. Most operations enabled by the
+``XanesFrameset()`` class are not idempotent, so starting from a clean
+dataset may be necessary:
+
+.. code:: python
+
+   import xanespy
+   # Select an imported hdf file to use
+   frameset = xanespy.XanesFrameset(hdf_filename="...")
+   # Make sure we're starting with clean data
+   frameset.data_name = "imported"
+
+   # Create a copy as a checkpoint
+   frameset.fork_data_group("aligned")
+   # Do some work that we're not sure will succeed
+   frameset.align_frames(passes=5)
+
+   # If the alignment doesn't work right,
+   # we can switch back to the original data and try again
+   frameset.data_name = "imported"
+   frameset.fork_data_group("aligned")
+   frameset.align_frames(passes=3)
+
+The :py:meth:`~xanespy.xanes_frameset.XanesFrameset.fork_data_group` method can be slow for large datasets. Xanespy
+will raise exceptions for non-sensical requests for forking: trying to
+copy a group onto itself, using a datagroup that doesn't exist, etc.
+
+
 Frame Alignment
 ---------------
 
@@ -15,7 +50,7 @@ This is done with the ``xanespy.XanesFrameset().align_frames()`` method::
   import xanespy
   # Select an imported hdf file to use
   frameset = xanespy.XanesFrameset(hdf_filename="...")
-  frameset.fork_data_group('aligned')
+  
   # Run through five passes of the default phase correlation
   frameset.align_frames(passes=5, plot_results=True)
 

@@ -27,11 +27,13 @@ sys.path.append(os.path.dirname(__file__))
 
 import exceptions
 import xradia
+from xradia import XRMFile, TXRMFile
 import beamlines
 import sxstm
 from beamlines import (sector8_xanes_script, ZoneplatePoint,
                        Zoneplate, Detector, DetectorPoint)
-from importers import (import_frameset, import_ssrl_frameset,
+from importers import (import_frameset,
+                       import_ssrl_xanes_dir,
                        import_aps_8BM_xanes_dir,
                        import_aps_8BM_xanes_file,
                        import_nanosurveyor_frameset,

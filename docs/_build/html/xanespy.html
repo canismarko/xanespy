@@ -1,12 +1,12 @@
+
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-
 
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>xanespy package &#8212; Xanespy 0.1 documentation</title>
+    <title>xanespy package &#8212; Xanespy 0.1.1 documentation</title>
     
     <link rel="stylesheet" href="_static/classic.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -14,7 +14,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    './',
-        VERSION:     '0.1',
+        VERSION:     '0.1.1',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true,
@@ -24,12 +24,12 @@
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
-    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="prev" title="xanespy" href="modules.html" /> 
   </head>
-  <body role="document">
+  <body>
     <div class="related" role="navigation" aria-label="related navigation">
       <h3>Navigation</h3>
       <ul>
@@ -42,7 +42,7 @@
         <li class="right" >
           <a href="modules.html" title="xanespy"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">Xanespy 0.1 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Xanespy 0.1.1 documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="modules.html" accesskey="U">xanespy</a> &#187;</li> 
       </ul>
     </div>  
@@ -63,32 +63,44 @@
 synchrotron beamlines.</p>
 <dl class="class">
 <dt id="xanespy.beamlines.Detector">
-<em class="property">class </em><code class="descclassname">xanespy.beamlines.</code><code class="descname">Detector</code><span class="sig-paren">(</span><em>start: xanespy.beamlines.ZoneplatePoint</em>, <em>z_step: int = None</em>, <em>end: xanespy.beamlines.ZoneplatePoint = None</em><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.beamlines.Detector" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">xanespy.beamlines.</code><code class="descname">Detector</code><span class="sig-paren">(</span><em>start: xanespy.beamlines.ZoneplatePoint</em>, <em>x_step: int = None</em>, <em>y_step: int = None</em>, <em>z_step: int = None</em>, <em>end: xanespy.beamlines.ZoneplatePoint = None</em><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.beamlines.Detector" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#xanespy.beamlines.Zoneplate" title="xanespy.beamlines.Zoneplate"><code class="xref py py-class docutils literal"><span class="pre">xanespy.beamlines.Zoneplate</span></code></a></p>
 <p>A calibration object for the position of the detector.</p>
 </dd></dl>
 
 <dl class="class">
 <dt id="xanespy.beamlines.DetectorPoint">
-<em class="property">class </em><code class="descclassname">xanespy.beamlines.</code><code class="descname">DetectorPoint</code><span class="sig-paren">(</span><em>z</em>, <em>energy</em><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.beamlines.DetectorPoint" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">xanespy.beamlines.</code><code class="descname">DetectorPoint</code><span class="sig-paren">(</span><em>x</em>, <em>y</em>, <em>z</em>, <em>energy</em><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.beamlines.DetectorPoint" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">tuple</span></code></p>
 <dl class="attribute">
 <dt id="xanespy.beamlines.DetectorPoint.energy">
 <code class="descname">energy</code><a class="headerlink" href="#xanespy.beamlines.DetectorPoint.energy" title="Permalink to this definition">¶</a></dt>
+<dd><p>Alias for field number 3</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="xanespy.beamlines.DetectorPoint.x">
+<code class="descname">x</code><a class="headerlink" href="#xanespy.beamlines.DetectorPoint.x" title="Permalink to this definition">¶</a></dt>
+<dd><p>Alias for field number 0</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="xanespy.beamlines.DetectorPoint.y">
+<code class="descname">y</code><a class="headerlink" href="#xanespy.beamlines.DetectorPoint.y" title="Permalink to this definition">¶</a></dt>
 <dd><p>Alias for field number 1</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="xanespy.beamlines.DetectorPoint.z">
 <code class="descname">z</code><a class="headerlink" href="#xanespy.beamlines.DetectorPoint.z" title="Permalink to this definition">¶</a></dt>
-<dd><p>Alias for field number 0</p>
+<dd><p>Alias for field number 2</p>
 </dd></dl>
 
 </dd></dl>
 
 <dl class="class">
 <dt id="xanespy.beamlines.Zoneplate">
-<em class="property">class </em><code class="descclassname">xanespy.beamlines.</code><code class="descname">Zoneplate</code><span class="sig-paren">(</span><em>start: xanespy.beamlines.ZoneplatePoint</em>, <em>z_step: int = None</em>, <em>end: xanespy.beamlines.ZoneplatePoint = None</em><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.beamlines.Zoneplate" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">xanespy.beamlines.</code><code class="descname">Zoneplate</code><span class="sig-paren">(</span><em>start: xanespy.beamlines.ZoneplatePoint</em>, <em>x_step: int = None</em>, <em>y_step: int = None</em>, <em>z_step: int = None</em>, <em>end: xanespy.beamlines.ZoneplatePoint = None</em><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.beamlines.Zoneplate" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
 <p>Type of focusing optic using in X-ray microscopy. It must be moved
 with changing energy to properly focus the beam. In order to
@@ -101,10 +113,10 @@ allows x, y and z to be set properly instead of just z.</p>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>start</strong> (<em>tuple</em>) &#8211; The first zoneplate position-energy pair.</li>
-<li><strong>z_step</strong> (<em>int</em><em>, </em><em>optional</em>) &#8211; Adjustment in z-position for every positive change of 1 eV
+<li><strong>start</strong> (<em>tuple</em>) – The first zoneplate position-energy pair.</li>
+<li><strong>z_step</strong> (<em>int</em><em>, </em><em>optional</em>) – Adjustment in z-position for every positive change of 1 eV
 of beam energy.</li>
-<li><strong>end</strong> (<em>tuple</em><em>, </em><em>optional</em>) &#8211; The second zoneplate position-energy pair.</li>
+<li><strong>end</strong> (<em>tuple</em><em>, </em><em>optional</em>) – The second zoneplate position-energy pair.</li>
 </ul>
 </td>
 </tr>
@@ -150,31 +162,55 @@ energy.</p>
 </dd></dl>
 
 <dl class="function">
+<dt id="xanespy.beamlines.monitor_sector8">
+<code class="descclassname">xanespy.beamlines.</code><code class="descname">monitor_sector8</code><span class="sig-paren">(</span><em>tsv_filename</em><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.beamlines.monitor_sector8" title="Permalink to this definition">¶</a></dt>
+<dd><p>Monitors a list of files and displays them as they are collected
+from the instrument. A matplotlib axes is displayed and is updated
+with each new frame that is detected. This function will block
+until all files in the file list are accounted for.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>tsv_filename</strong> (<em>string</em>) – The name of the file that contains a tab-separated-values list
+of filenames. This file is automatically generated by the
+<code class="docutils literal"><span class="pre">sector8_xanes_script</span></code> function.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
 <dt id="xanespy.beamlines.sector8_xanes_script">
-<code class="descclassname">xanespy.beamlines.</code><code class="descname">sector8_xanes_script</code><span class="sig-paren">(</span><em>dest, edge: edges.KEdge, zoneplate: xanespy.beamlines.Zoneplate, detector: xanespy.beamlines.Detector, sample_positions: typing.List[utilities.position], names: typing.List[str], iterations: typing.Iterable = range(0, 1), binning: int = 1, exposure: int = 30, abba_mode: bool = True</em><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.beamlines.sector8_xanes_script" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">xanespy.beamlines.</code><code class="descname">sector8_xanes_script</code><span class="sig-paren">(</span><em>dest</em>, <em>edge</em>, <em>zoneplate</em>, <em>detector</em>, <em>sample_positions</em>, <em>names</em>, <em>iterations=range(0</em>, <em>1)</em>, <em>binning=1</em>, <em>exposure=30</em>, <em>abba_mode=True</em><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.beamlines.sector8_xanes_script" title="Permalink to this definition">¶</a></dt>
 <dd><p>Prepare an script file for running multiple consecutive XANES
 framesets on the transmission x-ray micrscope at the Advanced
-Photon Source beamline 8-BM-B.</p>
+Photon Source beamline 8-BM-B. This function also creates a
+tab-separated-values (tsv) file which contains each sample
+filename and its associated meta-data. This can then be used for
+real-time processing.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>dest</strong> &#8211; file-like object that will hold the resulting script</li>
-<li><strong>edge</strong> (<a class="reference internal" href="#xanespy.edges.KEdge" title="xanespy.edges.KEdge"><em>KEdge</em></a>) &#8211; Description of the absorption edge.</li>
-<li><strong>binning</strong> (<em>int</em><em>, </em><em>optional</em>) &#8211; how many CCD pixels to combine into one image pixel
+<li><strong>dest</strong> – file-like object that will hold the resulting script</li>
+<li><strong>zoneplate</strong> (<a class="reference internal" href="#xanespy.beamlines.Zoneplate" title="xanespy.beamlines.Zoneplate"><em>Zoneplate</em></a>) – Calibration details for the Fresnel zone-plate.</li>
+<li><strong>detector</strong> (<a class="reference internal" href="#xanespy.beamlines.Detector" title="xanespy.beamlines.Detector"><em>Detector</em></a>) – Like zoneplate, but for detector.</li>
+<li><strong>edge</strong> (<a class="reference internal" href="#xanespy.edges.KEdge" title="xanespy.edges.KEdge"><em>KEdge</em></a>) – Description of the absorption edge.</li>
+<li><strong>binning</strong> (<em>int</em><em>, </em><em>optional</em>) – how many CCD pixels to combine into one image pixel
 (eg. 2 means 2x2 CCD pixels become 1 image pixel.</li>
-<li><strong>exposure</strong> (<em>float</em>) &#8211; How many seconds to collect for per frame</li>
-<li><strong>sample_positions</strong> &#8211; Locations to move the x, y (and z) axes to in order to capture
+<li><strong>exposure</strong> (<em>float</em>) – How many seconds to collect for per frame</li>
+<li><strong>sample_positions</strong> – Locations to move the x, y (and z) axes to in order to capture
 the image.</li>
-<li><strong>zoneplate</strong> (<a class="reference internal" href="#xanespy.beamlines.Zoneplate" title="xanespy.beamlines.Zoneplate"><em>Zoneplate</em></a>) &#8211; Calibration details for the Fresnel zone-plate.</li>
-<li><strong>detector</strong> (<a class="reference internal" href="#xanespy.beamlines.Detector" title="xanespy.beamlines.Detector"><em>Detector</em></a>) &#8211; Like zoneplate, but for detector.</li>
-<li><strong>names</strong> &#8211; sample name to use in file names.</li>
-<li><strong>iterations</strong> (<em>iterable</em>) &#8211; contains an identifier for each full set of xanes location with
+<li><strong>names</strong> – sample name to use in file names. Should match <cite>sample_positions</cite> in length.</li>
+<li><strong>iterations</strong> (<em>iterable</em>) – contains an identifier for each full set of xanes location with
 reference.</li>
-<li><strong>abba_mode</strong> (<em>str</em><em>, </em><em>optional</em>) &#8211; If True, script will locations forward and backwards to save
+<li><strong>abba_mode</strong> (<em>str</em><em>, </em><em>optional</em>) – If True, script will locations forward and backwards to save
 time. Eg: reference, sample, change-energy, sample, reference,
-change-energy, etc. Not compatible with <cite>frame_rest</cite> argument.</li>
+change-energy, etc. Not compatible with <cite>frame_rest</cite>
+argument. If used, the reference frame should be first or last
+in the order to make the process maximally efficient.</li>
 </ul>
 </td>
 </tr>
@@ -195,25 +231,25 @@ X-ray damage.</p>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>dest</strong> &#8211; A file-like object that will hold the resulting script</li>
-<li><strong>edge</strong> (<a class="reference internal" href="#xanespy.edges.Edge" title="xanespy.edges.Edge"><em>Edge</em></a>) &#8211; Description of the absorption edge.</li>
-<li><strong>binning</strong> (<em>int</em><em>, </em><em>optional</em>) &#8211; how many CCD pixels to combine into one image pixel (eg. 2 means
+<li><strong>dest</strong> – A file-like object that will hold the resulting script</li>
+<li><strong>edge</strong> (<a class="reference internal" href="#xanespy.edges.Edge" title="xanespy.edges.Edge"><em>Edge</em></a>) – Description of the absorption edge.</li>
+<li><strong>binning</strong> (<em>int</em><em>, </em><em>optional</em>) – how many CCD pixels to combine into one image pixel (eg. 2 means
 2x2 CCD pixels become 1 image pixel.</li>
-<li><strong>exposure</strong> (<em>float</em><em>, </em><em>optional</em>) &#8211; How many seconds to collect for per frame</li>
-<li><strong>positions</strong> &#8211; Locations to move the x, y (and z) axes to in order to capture
+<li><strong>exposure</strong> (<em>float</em><em>, </em><em>optional</em>) – How many seconds to collect for per frame</li>
+<li><strong>positions</strong> – Locations to move the x, y (and z) axes to in order to capture
 the image.</li>
-<li><strong>reference_position</strong> (<em>tuple</em>) &#8211; Single x, y, z location to capture a reference frame.</li>
-<li><strong>iteration_rest</strong> (<em>int</em><em>, </em><em>optional</em>) &#8211; Time (in seconds) to wait between iterations. Beam will wait at
+<li><strong>reference_position</strong> (<em>tuple</em>) – Single x, y, z location to capture a reference frame.</li>
+<li><strong>iteration_rest</strong> (<em>int</em><em>, </em><em>optional</em>) – Time (in seconds) to wait between iterations. Beam will wait at
 reference location before starting next XANES set.</li>
-<li><strong>frame_rest</strong> (<em>int</em><em>, </em><em>optional</em>) &#8211; Time (in seconds) to wait between frames. Beam will wait at
+<li><strong>frame_rest</strong> (<em>int</em><em>, </em><em>optional</em>) – Time (in seconds) to wait between frames. Beam will wait at
 reference location before starting next energy frame.</li>
-<li><strong>zoneplate</strong> (<a class="reference internal" href="#xanespy.beamlines.Zoneplate" title="xanespy.beamlines.Zoneplate"><em>Zoneplate</em></a>) &#8211; Calibration details for the Fresnel zone-plate.</li>
-<li><strong>detector</strong> (<a class="reference internal" href="#xanespy.beamlines.Detector" title="xanespy.beamlines.Detector"><em>Detector</em></a>) &#8211; Like zoneplate, but for detector.</li>
-<li><strong>iterations</strong> (<em>Iterable</em>) &#8211; Contains an identifier for each XANES dataset.</li>
-<li><strong>repetitions</strong> (<em>int</em><em>, </em><em>optional</em>) &#8211; How many images to collect for each location/energy. These
+<li><strong>zoneplate</strong> (<a class="reference internal" href="#xanespy.beamlines.Zoneplate" title="xanespy.beamlines.Zoneplate"><em>Zoneplate</em></a>) – Calibration details for the Fresnel zone-plate.</li>
+<li><strong>detector</strong> (<a class="reference internal" href="#xanespy.beamlines.Detector" title="xanespy.beamlines.Detector"><em>Detector</em></a>) – Like zoneplate, but for detector.</li>
+<li><strong>iterations</strong> (<em>Iterable</em>) – Contains an identifier for each XANES dataset.</li>
+<li><strong>repetitions</strong> (<em>int</em><em>, </em><em>optional</em>) – How many images to collect for each location/energy. These
 frames will then be averaged during analysis.</li>
-<li><strong>ref_repetitions</strong> (<em>int</em><em>, </em><em>optional</em>) &#8211; Same as <cite>repetitions</cite> but for reference frames.</li>
-<li><strong>abba_mode</strong> (<em>bool</em><em>, </em><em>optional</em>) &#8211; If True, script will alternate sample and reference locations
+<li><strong>ref_repetitions</strong> (<em>int</em><em>, </em><em>optional</em>) – Same as <cite>repetitions</cite> but for reference frames.</li>
+<li><strong>abba_mode</strong> (<em>bool</em><em>, </em><em>optional</em>) – If True, script will alternate sample and reference locations
 first to save time. Eg: reference, sample, change-energy,
 sample, reference, change-energy, etc. Not compatible with
 <cite>frame_rest</cite> argument.</li>
@@ -244,47 +280,47 @@ L-edge, etc.</p>
 <dl class="attribute">
 <dt id="xanespy.edges.Edge.E_0">
 <code class="descname">E_0</code><a class="headerlink" href="#xanespy.edges.Edge.E_0" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>float</em> &#8211; The energy of the absorption edge itself.</p>
+<dd><p><em>float</em> – The energy of the absorption edge itself.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="xanespy.edges.Edge.regions">
 <code class="descname">regions</code><a class="headerlink" href="#xanespy.edges.Edge.regions" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>list of 3-tuples</em> &#8211; All the energy regions. Each tuple is of the form (start, end,
+<dd><p><em>list of 3-tuples</em> – All the energy regions. Each tuple is of the form (start, end,
 step) and is inclusive at both ends.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="xanespy.edges.Edge.name">
 <code class="descname">name</code><a class="headerlink" href="#xanespy.edges.Edge.name" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>string</em> &#8211; A human-readable name for this edge (eg &#8220;Ni K-edge&#8221;)</p>
+<dd><p><em>string</em> – A human-readable name for this edge (eg “Ni K-edge”)</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="xanespy.edges.Edge.pre_edge">
 <code class="descname">pre_edge</code><a class="headerlink" href="#xanespy.edges.Edge.pre_edge" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>2-tuple</em> &#8211; Energy range (start, stop) that defines points below the edge
+<dd><p><em>2-tuple</em> – Energy range (start, stop) that defines points below the edge
 region, inclusive.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="xanespy.edges.Edge.post_edge">
 <code class="descname">post_edge</code><a class="headerlink" href="#xanespy.edges.Edge.post_edge" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>2-tuple</em> &#8211; Energy range (start, stop) that defines points above the edge
+<dd><p><em>2-tuple</em> – Energy range (start, stop) that defines points above the edge
 region, inclusive.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="xanespy.edges.Edge.map_range">
 <code class="descname">map_range</code><a class="headerlink" href="#xanespy.edges.Edge.map_range" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>2-tuple</em> &#8211; Energy range (start, stop) used for normalizing maps. If not
+<dd><p><em>2-tuple</em> – Energy range (start, stop) used for normalizing maps. If not
 supplied, will be determine from pre- and post-edge arguments.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="xanespy.edges.Edge.edge_range">
 <code class="descname">edge_range</code><a class="headerlink" href="#xanespy.edges.Edge.edge_range" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>2-tuple</em> &#8211; Energy range (start, stop) used to determine the official
+<dd><p><em>2-tuple</em> – Energy range (start, stop) used to determine the official
 beginning and edge of the edge itself.</p>
 </dd></dl>
 
@@ -301,7 +337,7 @@ beginning and edge of the edge itself.</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><strong>energies</strong> &#8211; Flat array with the energies for this edge.</td>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><strong>energies</strong> – Flat array with the energies for this edge.</td>
 </tr>
 <tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">list</td>
 </tr>
@@ -360,7 +396,7 @@ beginning and edge of the edge itself.</p>
 <dl class="method">
 <dt id="xanespy.edges.KEdge.mask">
 <code class="descname">mask</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.edges.KEdge.mask" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return a numpy array mask for material that&#8217;s active at this
+<dd><p>Return a numpy array mask for material that’s active at this
 edge. Calculations are done in <code class="docutils literal"><span class="pre">xanes_math.l_edge_mask()</span></code>.</p>
 </dd></dl>
 
@@ -381,7 +417,7 @@ transition.</p>
 <dl class="method">
 <dt id="xanespy.edges.LEdge.mask">
 <code class="descname">mask</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.edges.LEdge.mask" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return a numpy array mask for material that&#8217;s active at this
+<dd><p>Return a numpy array mask for material that’s active at this
 edge. Calculations are done in <cite>xanes_math.l_edge_mask()</cite>.</p>
 </dd></dl>
 
@@ -405,6 +441,11 @@ edge. Calculations are done in <cite>xanes_math.l_edge_mask()</cite>.</p>
 <dl class="attribute">
 <dt id="xanespy.edges.NCACobaltLEdge.E_0">
 <code class="descname">E_0</code><em class="property"> = 793.2</em><a class="headerlink" href="#xanespy.edges.NCACobaltLEdge.E_0" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="xanespy.edges.NCACobaltLEdge.edge_range">
+<code class="descname">edge_range</code><em class="property"> = (775, 785)</em><a class="headerlink" href="#xanespy.edges.NCACobaltLEdge.edge_range" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="attribute">
@@ -445,17 +486,17 @@ edge. Calculations are done in <cite>xanes_math.l_edge_mask()</cite>.</p>
 
 <dl class="attribute">
 <dt id="xanespy.edges.NCANickelKEdge.map_range">
-<code class="descname">map_range</code><em class="property"> = (8341, 8358)</em><a class="headerlink" href="#xanespy.edges.NCANickelKEdge.map_range" title="Permalink to this definition">¶</a></dt>
+<code class="descname">map_range</code><em class="property"> = (8341, 8360)</em><a class="headerlink" href="#xanespy.edges.NCANickelKEdge.map_range" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="attribute">
 <dt id="xanespy.edges.NCANickelKEdge.post_edge">
-<code class="descname">post_edge</code><em class="property"> = (8440, 8640)</em><a class="headerlink" href="#xanespy.edges.NCANickelKEdge.post_edge" title="Permalink to this definition">¶</a></dt>
+<code class="descname">post_edge</code><em class="property"> = (8400, 8640)</em><a class="headerlink" href="#xanespy.edges.NCANickelKEdge.post_edge" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="attribute">
 <dt id="xanespy.edges.NCANickelKEdge.pre_edge">
-<code class="descname">pre_edge</code><em class="property"> = (8249, 8281)</em><a class="headerlink" href="#xanespy.edges.NCANickelKEdge.pre_edge" title="Permalink to this definition">¶</a></dt>
+<code class="descname">pre_edge</code><em class="property"> = (8249, 8320)</em><a class="headerlink" href="#xanespy.edges.NCANickelKEdge.pre_edge" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="attribute">
@@ -465,7 +506,7 @@ edge. Calculations are done in <cite>xanes_math.l_edge_mask()</cite>.</p>
 
 <dl class="attribute">
 <dt id="xanespy.edges.NCANickelKEdge.shell">
-<code class="descname">shell</code><em class="property"> = 'K'</em><a class="headerlink" href="#xanespy.edges.NCANickelKEdge.shell" title="Permalink to this definition">¶</a></dt>
+<code class="descname">shell</code><em class="property"> = ‘K’</em><a class="headerlink" href="#xanespy.edges.NCANickelKEdge.shell" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -502,6 +543,11 @@ edge. Calculations are done in <cite>xanes_math.l_edge_mask()</cite>.</p>
 <dd></dd></dl>
 
 <dl class="attribute">
+<dt id="xanespy.edges.NCANickelLEdge.edge_range">
+<code class="descname">edge_range</code><em class="property"> = (848, 857)</em><a class="headerlink" href="#xanespy.edges.NCANickelLEdge.edge_range" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
 <dt id="xanespy.edges.NCANickelLEdge.map_range">
 <code class="descname">map_range</code><em class="property"> = (0, 1)</em><a class="headerlink" href="#xanespy.edges.NCANickelLEdge.map_range" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
@@ -519,6 +565,17 @@ edge. Calculations are done in <cite>xanes_math.l_edge_mask()</cite>.</p>
 <dl class="attribute">
 <dt id="xanespy.edges.NCANickelLEdge.regions">
 <code class="descname">regions</code><em class="property"> = [(844, 848, 1), (849, 856, 0.25), (857, 862, 1)]</em><a class="headerlink" href="#xanespy.edges.NCANickelLEdge.regions" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="xanespy.edges.NMCNickelKEdge29">
+<em class="property">class </em><code class="descclassname">xanespy.edges.</code><code class="descname">NMCNickelKEdge29</code><a class="headerlink" href="#xanespy.edges.NMCNickelKEdge29" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#xanespy.edges.NCANickelKEdge" title="xanespy.edges.NCANickelKEdge"><code class="xref py py-class docutils literal"><span class="pre">xanespy.edges.NCANickelKEdge</span></code></a></p>
+<dl class="attribute">
+<dt id="xanespy.edges.NMCNickelKEdge29.regions">
+<code class="descname">regions</code><em class="property"> = [(8250, 8310, 20), (8324, 8346, 6), (8346, 8358, 1), (8360, 8400, 10), (8400, 8440, 15), (8440, 8640, 100)]</em><a class="headerlink" href="#xanespy.edges.NMCNickelKEdge29.regions" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -579,7 +636,7 @@ associated with this flavor.</p>
 <dt id="xanespy.exceptions.FrameFileNotFound">
 <em class="property">exception </em><code class="descclassname">xanespy.exceptions.</code><code class="descname">FrameFileNotFound</code><a class="headerlink" href="#xanespy.exceptions.FrameFileNotFound" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">OSError</span></code></p>
-<p>Expected to load a TXM frame file but it doesn&#8217;t exist.</p>
+<p>Expected to load a TXM frame file but it doesn’t exist.</p>
 </dd></dl>
 
 <dl class="exception">
@@ -587,7 +644,7 @@ associated with this flavor.</p>
 <em class="property">exception </em><code class="descclassname">xanespy.exceptions.</code><code class="descname">GroupKeyError</code><a class="headerlink" href="#xanespy.exceptions.GroupKeyError" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">KeyError</span></code></p>
 <p>Tried to load or create an HDF group but failed. Examples include:
-the group doesn&#8217;t exist, is ambiguous or already exists when being
+the group doesn’t exist, is ambiguous or already exists when being
 created.</p>
 </dd></dl>
 
@@ -634,27 +691,63 @@ a dictionary.</p>
 </dd></dl>
 
 <dl class="function">
-<dt id="xanespy.importers.import_aps_8BM_frameset">
-<code class="descclassname">xanespy.importers.</code><code class="descname">import_aps_8BM_frameset</code><span class="sig-paren">(</span><em>directory</em>, <em>hdf_filename</em>, <em>quiet=False</em><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.importers.import_aps_8BM_frameset" title="Permalink to this definition">¶</a></dt>
+<dt id="xanespy.importers.import_aps_8BM_xanes_dir">
+<code class="descclassname">xanespy.importers.</code><code class="descname">import_aps_8BM_xanes_dir</code><span class="sig-paren">(</span><em>directory</em>, <em>hdf_filename</em>, <em>quiet=False</em><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.importers.import_aps_8BM_xanes_dir" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="function">
-<dt id="xanespy.importers.import_frameset">
-<code class="descclassname">xanespy.importers.</code><code class="descname">import_frameset</code><span class="sig-paren">(</span><em>directory</em>, <em>flavor</em>, <em>hdf_filename</em><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.importers.import_frameset" title="Permalink to this definition">¶</a></dt>
-<dd><p>Import all files in the given directory collected at an X-ray
-microscope beamline.</p>
-<p>Images are assumed to full-field transmission X-ray micrographs.</p>
+<dt id="xanespy.importers.import_aps_8BM_xanes_file">
+<code class="descclassname">xanespy.importers.</code><code class="descname">import_aps_8BM_xanes_file</code><span class="sig-paren">(</span><em>filename</em>, <em>ref_filename</em>, <em>hdf_filename</em>, <em>groupname=None</em><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.importers.import_aps_8BM_xanes_file" title="Permalink to this definition">¶</a></dt>
+<dd><p>Extract an entire xanes framestack from one xradia file.</p>
+<p>A single TXRM file can contain multiple frames at different
+energies. This function will import such a file along with the
+corresponding reference frames into an HDF file. If the given
+<code class="docutils literal"><span class="pre">groupname</span></code> exists in <code class="docutils literal"><span class="pre">hdf_filename</span></code>, it will be overwritten
+and a <code class="docutils literal"><span class="pre">RuntimeWarning</span></code> will be issued.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>directory</strong> (<em>str</em>) &#8211; A valid path to a directory containing the frame data to import.</li>
-<li><strong>flavor</strong> (<em>str</em>) &#8211; Indicates what type of naming conventions and data structure to
+<li><strong>filename</strong> (<em>str</em>) – File path to the txrm file to import.</li>
+<li><strong>ref_filename</strong> (<em>str</em>) – File path to the txrm file that contains the white-field
+reference images. This will be used to calculate optical depth
+from transmitted intensity.</li>
+<li><strong>hdf_filename</strong> (<em>str</em>) – File path to the destination HDF5 file that will receive the
+imported data.</li>
+<li><strong>groupname</strong> (<em>str</em><em>, </em><em>optional</em>) – The name for the top-level HDF group. If omitted, a group name
+will be generated from the <code class="docutils literal"><span class="pre">filename</span></code> parameter.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="xanespy.importers.import_frameset">
+<code class="descclassname">xanespy.importers.</code><code class="descname">import_frameset</code><span class="sig-paren">(</span><em>directory</em>, <em>flavor</em>, <em>hdf_filename</em>, <em>return_val=None</em><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.importers.import_frameset" title="Permalink to this definition">¶</a></dt>
+<dd><p>Import all files in the given directory collected at an X-ray
+microscope beamline.</p>
+<p>Images are assumed to full-field transmission X-ray micrographs.</p>
+<p>If <code class="docutils literal"><span class="pre">return_val</span></code> is “group”, the return value for this function
+will be a data group in an <strong>open</strong> HDF5 file. The underlying file
+should be explicitly closed to avoid corruption. This is done
+automatically if <code class="docutils literal"><span class="pre">return_val</span></code> is None (default).</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>directory</strong> (<em>str</em>) – A valid path to a directory containing the frame data to import.</li>
+<li><strong>flavor</strong> (<em>str</em>) – Indicates what type of naming conventions and data structure to
 assume. See documentation for <code class="docutils literal"><span class="pre">xanespy.xradia.XRMFile</span></code> for
 possible choice.</li>
-<li><strong>hdf_filename</strong> (<em>str</em>) &#8211; Where to save the output to. An exception is throw if this file
+<li><strong>hdf_filename</strong> (<em>str</em>) – Where to save the output to. An exception is throw if this file
 already exists.</li>
+<li><strong>return_val</strong> (<em>str</em>) – Request a specific return value.
+- None: No return value
+- “group”: The open HDF5 group for this experiment.</li>
 </ul>
 </td>
 </tr>
@@ -666,27 +759,30 @@ already exists.</li>
 <dt id="xanespy.importers.import_nanosurveyor_frameset">
 <code class="descclassname">xanespy.importers.</code><code class="descname">import_nanosurveyor_frameset</code><span class="sig-paren">(</span><em>directory: str</em>, <em>quiet=False</em>, <em>hdf_filename=None</em>, <em>hdf_groupname=None</em>, <em>energy_range=None</em>, <em>exclude_re=None</em>, <em>append=False</em><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.importers.import_nanosurveyor_frameset" title="Permalink to this definition">¶</a></dt>
 <dd><p>Import a set of images from reconstructed ptychography scanning microscope data.</p>
-<p>This generates ptychography chemical maps based on data collected at ALS beamline
-5.3.2.1</p>
+<p>This generates ptychography chemical maps based on data collected
+at ALS beamline 5.3.2.1. The arguments <code class="docutils literal"><span class="pre">energy_range</span></code> and
+<code class="docutils literal"><span class="pre">exclude_re</span></code> can be used to fine-tune the set of imported
+file. For example: passing <code class="docutils literal"><span class="pre">exclude_re='(019|017)'</span></code> will import
+everything except scans 019 and 017.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>directory</strong> (<em>str</em>) &#8211; Directory where to look for results. It should contain .cxi
-files that are the output of the ptychography reconstruction.&#8221;</li>
-<li><strong>quiet</strong> (<em>Bool</em><em>, </em><em>optional</em>) &#8211; If truthy, progress bars will not be shown.</li>
-<li><strong>hdf_filename</strong> (<em>str</em><em>, </em><em>optional</em>) &#8211; HDF File used to store computed results. If omitted or None, the
+<li><strong>directory</strong> (<em>str</em>) – Directory where to look for results. It should contain .cxi
+files that are the output of the ptychography reconstruction.”</li>
+<li><strong>quiet</strong> (<em>Bool</em><em>, </em><em>optional</em>) – If truthy, progress bars will not be shown.</li>
+<li><strong>hdf_filename</strong> (<em>str</em><em>, </em><em>optional</em>) – HDF File used to store computed results. If omitted or None, the
 <cite>directory</cite> basename is used</li>
-<li><strong>hdf_groupname</strong> (<em>str</em><em>, </em><em>optional</em>) &#8211; Name to use for the hdf group of this dataset. If omitted or
+<li><strong>hdf_groupname</strong> (<em>str</em><em>, </em><em>optional</em>) – Name to use for the hdf group of this dataset. If omitted or
 None, the <cite>directory</cite> basename is used. Raises an exception if
 the group already exists in the HDF file.</li>
-<li><strong>energy_range</strong> (<em>2-tuple</em><em>, </em><em>optional</em>) &#8211; A 2-tuple with the (min, max) energy to be imported. This is
+<li><strong>energy_range</strong> (<em>2-tuple</em><em>, </em><em>optional</em>) – A 2-tuple with the (min, max) energy to be imported. This is
 useful if only a subset of the available data is usable. Values
 are assumed to be in electron-volts.</li>
-<li><strong>exclude_re</strong> (<em>str</em><em>, </em><em>optional</em>) &#8211; Any filenames matching this regular expression will not be
+<li><strong>exclude_re</strong> (<em>str</em><em>, </em><em>optional</em>) – Any filenames matching this regular expression will not be
 imported. A string or compiled re object can be given.</li>
-<li><strong>append</strong> (<em>bool</em><em>, </em><em>optional</em>) &#8211; If True, any existing dataset will be added to, rather
+<li><strong>append</strong> (<em>bool</em><em>, </em><em>optional</em>) – If True, any existing dataset will be added to, rather
 than replaced (default False)</li>
 </ul>
 </td>
@@ -696,8 +792,8 @@ than replaced (default False)</li>
 </dd></dl>
 
 <dl class="function">
-<dt id="xanespy.importers.import_ssrl_frameset">
-<code class="descclassname">xanespy.importers.</code><code class="descname">import_ssrl_frameset</code><span class="sig-paren">(</span><em>directory</em>, <em>hdf_filename</em><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.importers.import_ssrl_frameset" title="Permalink to this definition">¶</a></dt>
+<dt id="xanespy.importers.import_ssrl_xanes_dir">
+<code class="descclassname">xanespy.importers.</code><code class="descname">import_ssrl_xanes_dir</code><span class="sig-paren">(</span><em>directory</em>, <em>hdf_filename</em><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.importers.import_ssrl_xanes_dir" title="Permalink to this definition">¶</a></dt>
 <dd><p>Import all files in the given directory collected at SSRL beamline
 6-2c and process into framesets. Images are assumed to full-field
 transmission X-ray micrographs and repetitions will be
@@ -707,8 +803,42 @@ averaged. Passed on to <code class="docutils literal"><span class="pre">xanespy.
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>directory</strong> (<em>str</em>) &#8211; Where to look for files to import.</li>
-<li><strong>hdf_filename</strong> (<em>str</em>) &#8211; Path to an HDF5 to receive the data.</li>
+<li><strong>directory</strong> (<em>str</em>) – Where to look for files to import.</li>
+<li><strong>hdf_filename</strong> (<em>str</em>) – Path to an HDF5 to receive the data.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="xanespy.importers.import_stxm_frameset">
+<code class="descclassname">xanespy.importers.</code><code class="descname">import_stxm_frameset</code><span class="sig-paren">(</span><em>directory: str</em>, <em>quiet=False</em>, <em>hdf_filename=None</em>, <em>hdf_groupname=None</em>, <em>energy_range=None</em>, <em>exclude_re=None</em>, <em>append=False</em><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.importers.import_stxm_frameset" title="Permalink to this definition">¶</a></dt>
+<dd><p>Import a set of images from scanning microscope data.</p>
+<p>This generates Scanning Tranmission X-ray Microscopy chemical maps
+based on data collected at ALS beamline 5.3.2.1</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>directory</strong> (<em>str</em>) – Directory where to look for results. It should contain .hdr and
+xim files that are the output of the ptychography
+reconstruction.”</li>
+<li><strong>quiet</strong> (<em>Bool</em><em>, </em><em>optional</em>) – If truthy, progress bars will not be shown.</li>
+<li><strong>hdf_filename</strong> (<em>str</em><em>, </em><em>optional</em>) – HDF File used to store computed results. If omitted or None, the
+<cite>directory</cite> basename is used</li>
+<li><strong>hdf_groupname</strong> (<em>str</em><em>, </em><em>optional</em>) – Name to use for the hdf group of this dataset. If omitted or
+None, the <cite>directory</cite> basename is used. Raises an exception if
+the group already exists in the HDF file.</li>
+<li><strong>energy_range</strong> (<em>2-tuple</em><em>, </em><em>optional</em>) – A 2-tuple with the (min, max) energy to be imported. This is
+useful if only a subset of the available data is usable. Values
+are assumed to be in electron-volts.</li>
+<li><strong>exclude_re</strong> (<em>str</em><em>, </em><em>optional</em>) – Any filenames matching this regular expression will not be
+imported. A string or compiled re object can be given.</li>
+<li><strong>append</strong> (<em>bool</em><em>, </em><em>optional</em>) – If True, any existing dataset will be added to, rather
+than replaced (default False)</li>
 </ul>
 </td>
 </tr>
@@ -724,19 +854,19 @@ averaged. Passed on to <code class="docutils literal"><span class="pre">xanespy.
 changes and so the image is zoomed-out at higher energies. This
 method applies a correction to each frame to make the
 magnification similar to that of the first frame. Some beamlines
-correct for this automatically during acquisition and don&#8217;t need
+correct for this automatically during acquisition and don’t need
 this function: APS 8-BM-B, 32-ID-C.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>frames</strong> (<em>np.ndarray</em>) &#8211; Numpy array of image frames that need to be corrected.</li>
-<li><strong>pixel_sizes</strong> (<em>np.ndarray</em>) &#8211; Numpy array of pixel sizes corresponding to entries in <cite>frames</cite>.</li>
+<li><strong>frames</strong> (<em>np.ndarray</em>) – Numpy array of image frames that need to be corrected.</li>
+<li><strong>pixel_sizes</strong> (<em>np.ndarray</em>) – Numpy array of pixel sizes corresponding to entries in <cite>frames</cite>.</li>
 </ul>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>(scales2D, translations)</strong> &#8211; An array of scale factors to use for applying a correction to
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>(scales2D, translations)</strong> – An array of scale factors to use for applying a correction to
 each frame. Translations show how much to move each frame array by to re-center it.</p>
 </td>
 </tr>
@@ -757,8 +887,8 @@ metadata.</p>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>filenames</strong> (<em>iterable</em>) &#8211; Iterable of filenames to use for extracting metadata.</li>
-<li><strong>flavor</strong> (<em>str</em>) &#8211; Same as in <code class="docutils literal"><span class="pre">import_frameset</span></code>.</li>
+<li><strong>filenames</strong> (<em>iterable</em>) – Iterable of filenames to use for extracting metadata.</li>
+<li><strong>flavor</strong> (<em>str</em>) – Same as in <code class="docutils literal"><span class="pre">import_frameset</span></code>.</li>
 </ul>
 </td>
 </tr>
@@ -778,7 +908,7 @@ metadata.</p>
 
 <dl class="function">
 <dt id="xanespy.plots.draw_colorbar">
-<code class="descclassname">xanespy.plots.</code><code class="descname">draw_colorbar</code><span class="sig-paren">(</span><em>ax</em>, <em>cmap</em>, <em>norm</em>, <em>energies</em>, <em>orientation='vertical'</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.plots.draw_colorbar" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">xanespy.plots.</code><code class="descname">draw_colorbar</code><span class="sig-paren">(</span><em>ax</em>, <em>cmap</em>, <em>norm</em>, <em>energies</em>, <em>orientation=’vertical’</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.plots.draw_colorbar" title="Permalink to this definition">¶</a></dt>
 <dd><p>Draw a colorbar on the side of a mapping axes to show the range of
 colors used. Returns the newly created colorbar object.</p>
 <table class="docutils field-list" frame="void" rules="none">
@@ -786,10 +916,10 @@ colors used. Returns the newly created colorbar object.</p>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>ax</strong> (<em>-</em>) &#8211; </li>
-<li><strong>cmap</strong> (<em>-</em>) &#8211; to use.</li>
-<li><strong>norm</strong> (<em>-</em>) &#8211; use.</li>
-<li><strong>energies</strong> (<em>-</em>) &#8211; colorbar.</li>
+<li><strong>ax</strong> (<em>-</em>) – </li>
+<li><strong>cmap</strong> (<em>-</em>) – to use.</li>
+<li><strong>norm</strong> (<em>-</em>) – use.</li>
+<li><strong>energies</strong> (<em>-</em>) – colorbar.</li>
 </ul>
 </td>
 </tr>
@@ -806,8 +936,22 @@ to put it along the X-axis of the axes.</p>
 
 <dl class="function">
 <dt id="xanespy.plots.dual_axes">
-<code class="descclassname">xanespy.plots.</code><code class="descname">dual_axes</code><span class="sig-paren">(</span><em>fig=None</em>, <em>orientation='horizontal'</em><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.plots.dual_axes" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">xanespy.plots.</code><code class="descname">dual_axes</code><span class="sig-paren">(</span><em>fig=None</em>, <em>longdim=13.8</em>, <em>shortdim=6.9</em>, <em>orientation=’horizontal’</em><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.plots.dual_axes" title="Permalink to this definition">¶</a></dt>
 <dd><p>Two new axes for mapping, side-by-side.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>longdim</strong> (<em>float</em>) – Size in inches for the long dimension. If orientation is
+“vertical”, this will be the height.</li>
+<li><strong>shortdim</strong> (<em>float</em>) – Size in inches for the short dimension. If orientation is
+“vertical”, this will be the width.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="function">
@@ -824,7 +968,7 @@ to put it along the X-axis of the axes.</p>
 
 <dl class="function">
 <dt id="xanespy.plots.plot_composite_map">
-<code class="descclassname">xanespy.plots.</code><code class="descname">plot_composite_map</code><span class="sig-paren">(</span><em>data</em>, <em>ax=None</em>, <em>origin='lower'</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.plots.plot_composite_map" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">xanespy.plots.</code><code class="descname">plot_composite_map</code><span class="sig-paren">(</span><em>data</em>, <em>ax=None</em>, <em>origin=’upper’</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.plots.plot_composite_map" title="Permalink to this definition">¶</a></dt>
 <dd><p>Plot an RGB composite map on the given axes.</p>
 </dd></dl>
 
@@ -838,14 +982,14 @@ spectra. The map should already have been plotted.</p>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>pixels</strong> (<em>-</em>) &#8211; to highlight and plot.</li>
-<li><strong>extent</strong> (<em>-</em>) &#8211; positions to (row, column) positions.</li>
-<li><strong>spectra</strong> (<em>-</em>) &#8211; in <cite>pixels</cite> will use this array to get spectra. Shape is assumed
+<li><strong>pixels</strong> (<em>-</em>) – to highlight and plot.</li>
+<li><strong>extent</strong> (<em>-</em>) – positions to (row, column) positions.</li>
+<li><strong>spectra</strong> (<em>-</em>) – in <cite>pixels</cite> will use this array to get spectra. Shape is assumed
 to be (row, column, energy).</li>
-<li><strong>energies</strong> (<em>-</em>) &#8211; plotting spectra.</li>
-<li><strong>map_ax</strong> (<em>-</em>) &#8211; pixels.</li>
-<li><strong>spectra_ax</strong> (<em>-</em>) &#8211; None (default) a new axes will be created.</li>
-<li><strong>step_size</strong> (<em>-</em>) &#8211; directly on top of each other.</li>
+<li><strong>energies</strong> (<em>-</em>) – plotting spectra.</li>
+<li><strong>map_ax</strong> (<em>-</em>) – pixels.</li>
+<li><strong>spectra_ax</strong> (<em>-</em>) – None (default) a new axes will be created.</li>
+<li><strong>step_size</strong> (<em>-</em>) – directly on top of each other.</li>
 </ul>
 </td>
 </tr>
@@ -855,7 +999,7 @@ to be (row, column, energy).</li>
 
 <dl class="function">
 <dt id="xanespy.plots.plot_txm_histogram">
-<code class="descclassname">xanespy.plots.</code><code class="descname">plot_txm_histogram</code><span class="sig-paren">(</span><em>data</em>, <em>ax=None</em>, <em>norm=None</em>, <em>bins=None</em>, <em>cmap='plasma'</em>, <em>add_cbar=True</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.plots.plot_txm_histogram" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">xanespy.plots.</code><code class="descname">plot_txm_histogram</code><span class="sig-paren">(</span><em>data</em>, <em>ax=None</em>, <em>norm=None</em>, <em>bins=None</em>, <em>cmap=’plasma’</em>, <em>add_cbar=True</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.plots.plot_txm_histogram" title="Permalink to this definition">¶</a></dt>
 <dd><p>Take an array of data values and show a histogram with some
 color-coding related to normalization value.</p>
 <p>Returns: The matplotlib axes object used for plotting.</p>
@@ -864,18 +1008,18 @@ color-coding related to normalization value.</p>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>data</strong> (<em>np.ndarray</em>) &#8211; An array of values to plot on the histogram.</li>
-<li><strong>ax</strong> (<em>optional</em>) &#8211; Matplotlib Axes instance to receive the plot. If None, a new axes
+<li><strong>data</strong> (<em>np.ndarray</em>) – An array of values to plot on the histogram.</li>
+<li><strong>ax</strong> (<em>optional</em>) – Matplotlib Axes instance to receive the plot. If None, a new axes
 will created.</li>
-<li><strong>norm</strong> (<em>optional</em>) &#8211; Matplotlib Normalize instance with the colormap range.</li>
-<li><strong>bins</strong> (<em>optional</em>) &#8211; Bins to pass to the matplotlib hist() routine. If None
+<li><strong>norm</strong> (<em>optional</em>) – Matplotlib Normalize instance with the colormap range.</li>
+<li><strong>bins</strong> (<em>optional</em>) – Bins to pass to the matplotlib hist() routine. If None
 (default), we will choose based on dtype of the data: integers
 will yield 1-wide bins, anything else will give 256 bins.</li>
-<li><strong>cmap</strong> (<em>str</em><em>, </em><em>optional</em>) &#8211; Matplotlib colormap for coloring the bars.</li>
-<li><strong>add_cbar</strong> (<em>bool</em><em>, </em><em>optional</em>) &#8211; Boolean to decide whether to add a colorbar along the
+<li><strong>cmap</strong> (<em>str</em><em>, </em><em>optional</em>) – Matplotlib colormap for coloring the bars.</li>
+<li><strong>add_cbar</strong> (<em>bool</em><em>, </em><em>optional</em>) – Boolean to decide whether to add a colorbar along the
 bottom axis or not.</li>
-<li><strong>*args</strong> &#8211; Positional arguments passed to matplotlib&#8217;s <cite>hist</cite> call.</li>
-<li><strong>*kwargs</strong> &#8211; Keyword arguments passed to matplotlib&#8217;s <cite>hist</cite> call.</li>
+<li><strong>*args</strong> – Positional arguments passed to matplotlib’s <cite>hist</cite> call.</li>
+<li><strong>*kwargs</strong> – Keyword arguments passed to matplotlib’s <cite>hist</cite> call.</li>
 </ul>
 </td>
 </tr>
@@ -887,19 +1031,19 @@ bottom axis or not.</li>
 <dt id="xanespy.plots.plot_txm_intermediates">
 <code class="descclassname">xanespy.plots.</code><code class="descname">plot_txm_intermediates</code><span class="sig-paren">(</span><em>images</em><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.plots.plot_txm_intermediates" title="Permalink to this definition">¶</a></dt>
 <dd><p>Accept a dictionary of images and plots them each on its own axes
-using matplotlib&#8217;s <cite>imshow</cite>. This is a complement to routines that
+using matplotlib’s <cite>imshow</cite>. This is a complement to routines that
 operate on a microscopy frame and optionally return all the
 intermediate calculated frames.</p>
 </dd></dl>
 
 <dl class="function">
 <dt id="xanespy.plots.plot_txm_map">
-<code class="descclassname">xanespy.plots.</code><code class="descname">plot_txm_map</code><span class="sig-paren">(</span><em>data</em>, <em>edge=None</em>, <em>norm=None</em>, <em>ax=None</em>, <em>cmap='plasma'</em>, <em>origin='upper'</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.plots.plot_txm_map" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">xanespy.plots.</code><code class="descname">plot_txm_map</code><span class="sig-paren">(</span><em>data</em>, <em>edge=None</em>, <em>norm=None</em>, <em>ax=None</em>, <em>cmap=’plasma’</em>, <em>origin=’upper’</em>, <em>vmin=None</em>, <em>vmax=None</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.plots.plot_txm_map" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="function">
 <dt id="xanespy.plots.plot_xanes_spectrum">
-<code class="descclassname">xanespy.plots.</code><code class="descname">plot_xanes_spectrum</code><span class="sig-paren">(</span><em>spectrum</em>, <em>energies</em>, <em>norm=&lt;matplotlib.colors.Normalize object&gt;</em>, <em>show_fit=False</em>, <em>ax=None</em>, <em>ax2=None</em>, <em>linestyle=':'</em>, <em>color='blue'</em>, <em>cmap='plasma'</em><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.plots.plot_xanes_spectrum" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">xanespy.plots.</code><code class="descname">plot_xanes_spectrum</code><span class="sig-paren">(</span><em>spectrum</em>, <em>energies</em>, <em>norm=&lt;matplotlib.colors.Normalize object&gt;</em>, <em>show_fit=False</em>, <em>ax=None</em>, <em>ax2=None</em>, <em>linestyle=’:’</em>, <em>color=’blue’</em>, <em>cmap=’plasma’</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.plots.plot_xanes_spectrum" title="Permalink to this definition">¶</a></dt>
 <dd><p>Plot a XANES spectrum on an axes. Applies some color formatting if
 <cite>edge</cite> is a valid XANES Edge object.</p>
 <table class="docutils field-list" frame="void" rules="none">
@@ -907,15 +1051,15 @@ intermediate calculated frames.</p>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>spectrum</strong> (<em>-</em>) &#8211; </li>
-<li><strong>energies</strong> (<em>-</em>) &#8211; </li>
-<li><strong>norm</strong> (<em>-</em>) &#8211; range. This will be used to annotate the plot if it is give.</li>
-<li><strong>show_fit</strong> (<em>-</em>) &#8211; </li>
-<li><strong>ax</strong> (<em>-</em>) &#8211; will be generated.</li>
-<li><strong>ax2</strong> (<em>-</em>) &#8211; the data are complex.</li>
-<li><strong>linestyle</strong> (<em>-</em>) &#8211; </li>
-<li><strong>cmap</strong> (<em>-</em>) &#8211; </li>
-<li><strong>color</strong> (<em>-</em>) &#8211; or &#8220;y&#8221; will decide based on the numerical value, <cite>norm</cite> and
+<li><strong>spectrum</strong> (<em>-</em>) – </li>
+<li><strong>energies</strong> (<em>-</em>) – </li>
+<li><strong>norm</strong> (<em>-</em>) – range. This will be used to annotate the plot if it is give.</li>
+<li><strong>show_fit</strong> (<em>-</em>) – </li>
+<li><strong>ax</strong> (<em>-</em>) – will be generated.</li>
+<li><strong>ax2</strong> (<em>-</em>) – the data are complex.</li>
+<li><strong>linestyle</strong> (<em>-</em>) – </li>
+<li><strong>cmap</strong> (<em>-</em>) – </li>
+<li><strong>color</strong> (<em>-</em>) – or “y” will decide based on the numerical value, <cite>norm</cite> and
 <cite>cmap</cite> arguments. Anything else will be passed as a color spec
 to the matplotlib commands.</li>
 </ul>
@@ -935,14 +1079,14 @@ to the matplotlib commands.</li>
 <dt id="xanespy.plots.set_axes_color">
 <code class="descclassname">xanespy.plots.</code><code class="descname">set_axes_color</code><span class="sig-paren">(</span><em>ax</em>, <em>color</em><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.plots.set_axes_color" title="Permalink to this definition">¶</a></dt>
 <dd><p>Set the axes, tick marks, etc of <cite>ax</cite> to mpl color <cite>color</cite>. Also,
-&#8220;doegreen&#8221; has special significance as the color associated with the
+“doegreen” has special significance as the color associated with the
 US department of energy.</p>
 </dd></dl>
 
 <dl class="function">
 <dt id="xanespy.plots.set_outside_ticks">
 <code class="descclassname">xanespy.plots.</code><code class="descname">set_outside_ticks</code><span class="sig-paren">(</span><em>ax</em><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.plots.set_outside_ticks" title="Permalink to this definition">¶</a></dt>
-<dd><p>Convert all the axes so that the ticks are on the outside and don&#8217;t
+<dd><p>Convert all the axes so that the ticks are on the outside and don’t
 obscure data.</p>
 </dd></dl>
 
@@ -1106,6 +1250,16 @@ changing how the frameset is plotted.</p>
 <dd></dd></dl>
 
 <dl class="method">
+<dt id="xanespy.qt_frame_view.QtFrameView.set_component">
+<code class="descname">set_component</code><span class="sig-paren">(</span><em>comp</em><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.qt_frame_view.QtFrameView.set_component" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="xanespy.qt_frame_view.QtFrameView.set_component_list">
+<code class="descname">set_component_list</code><span class="sig-paren">(</span><em>component_list</em><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.qt_frame_view.QtFrameView.set_component_list" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
 <dt id="xanespy.qt_frame_view.QtFrameView.set_drawing_status">
 <code class="descname">set_drawing_status</code><span class="sig-paren">(</span><em>status</em><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.qt_frame_view.QtFrameView.set_drawing_status" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
@@ -1260,26 +1414,31 @@ frame window. Useful for indicating blocking operations.</p>
 <dl class="attribute">
 <dt id="xanespy.qt_frameset_presenter.QtFramesetPresenter.app_ready">
 <code class="descname">app_ready</code><a class="headerlink" href="#xanespy.qt_frameset_presenter.QtFramesetPresenter.app_ready" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>pyqtSignal</em> &#8211; Emitted when the application has been created and is ready for drawing.</p>
+<dd><p><em>pyqtSignal</em> – Emitted when the application has been created and is ready for drawing.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="xanespy.qt_frameset_presenter.QtFramesetPresenter.busy_status_changed">
 <code class="descname">busy_status_changed</code><a class="headerlink" href="#xanespy.qt_frameset_presenter.QtFramesetPresenter.busy_status_changed" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>pyqtSignal</em> &#8211; Emitted when processing has started or ended.</p>
+<dd><p><em>pyqtSignal</em> – Emitted when processing has started or ended.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="xanespy.qt_frameset_presenter.QtFramesetPresenter.map_data_changed">
 <code class="descname">map_data_changed</code><a class="headerlink" href="#xanespy.qt_frameset_presenter.QtFramesetPresenter.map_data_changed" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>pyqtSignal</em> &#8211; Emitted when the map data is different and should be re-plotted.</p>
+<dd><p><em>pyqtSignal</em> – Emitted when the map data is different and should be re-plotted.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="xanespy.qt_frameset_presenter.QtFramesetPresenter.map_data_cleared">
 <code class="descname">map_data_cleared</code><a class="headerlink" href="#xanespy.qt_frameset_presenter.QtFramesetPresenter.map_data_cleared" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>pyqtSignal</em> &#8211; Emitted when no map data is available and plots can be cleared.</p>
+<dd><p><em>pyqtSignal</em> – Emitted when no map data is available and plots can be cleared.</p>
 </dd></dl>
+
+<dl class="attribute">
+<dt id="xanespy.qt_frameset_presenter.QtFramesetPresenter.active_component">
+<code class="descname">active_component</code><em class="property"> = ‘real’</em><a class="headerlink" href="#xanespy.qt_frameset_presenter.QtFramesetPresenter.active_component" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
 
 <dl class="attribute">
 <dt id="xanespy.qt_frameset_presenter.QtFramesetPresenter.active_frame">
@@ -1294,7 +1453,7 @@ frame window. Useful for indicating blocking operations.</p>
 <dl class="method">
 <dt id="xanespy.qt_frameset_presenter.QtFramesetPresenter.active_map">
 <code class="descname">active_map</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.qt_frameset_presenter.QtFramesetPresenter.active_map" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns the active map array if possible. If it doesn&#8217;t exist,
+<dd><p>Returns the active map array if possible. If it doesn’t exist,
 return None.</p>
 </dd></dl>
 
@@ -1317,9 +1476,9 @@ return None.</p>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>view</strong> (<em>QObject</em>) &#8211; The view will be connected to signals that describe changes in
+<li><strong>view</strong> (<em>QObject</em>) – The view will be connected to signals that describe changes in
 frame data.</li>
-<li><strong>threaded</strong> (<em>bool</em><em>, </em><em>optional</em>) &#8211; If true, this view will be added to its own thread before
+<li><strong>threaded</strong> (<em>bool</em><em>, </em><em>optional</em>) – If true, this view will be added to its own thread before
 signals get connected</li>
 </ul>
 </td>
@@ -1337,9 +1496,9 @@ signals get connected</li>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>view</strong> (<em>QObject</em>) &#8211; The view will be connected to signals that describe changes in
+<li><strong>view</strong> (<em>QObject</em>) – The view will be connected to signals that describe changes in
 map data.</li>
-<li><strong>threaded</strong> (<em>bool</em><em>, </em><em>optional</em>) &#8211; If true, this view will be added to its own thread before
+<li><strong>threaded</strong> (<em>bool</em><em>, </em><em>optional</em>) – If true, this view will be added to its own thread before
 signals get connected, giving a snapier UI. Disabling makes
 testing more straightforward.</li>
 </ul>
@@ -1362,8 +1521,8 @@ testing more straightforward.</li>
 <dl class="method">
 <dt id="xanespy.qt_frameset_presenter.QtFramesetPresenter.build_hdf_tree">
 <code class="descname">build_hdf_tree</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.qt_frameset_presenter.QtFramesetPresenter.build_hdf_tree" title="Permalink to this definition">¶</a></dt>
-<dd><p>Build the items and insert them into the view&#8217;s HDF tree based on
-the structure of the frameset&#8217;s HDF file.</p>
+<dd><p>Build the items and insert them into the view’s HDF tree based on
+the structure of the frameset’s HDF file.</p>
 </dd></dl>
 
 <dl class="attribute">
@@ -1374,6 +1533,11 @@ the structure of the frameset&#8217;s HDF file.</p>
 <dl class="method">
 <dt id="xanespy.qt_frameset_presenter.QtFramesetPresenter.change_cmap">
 <code class="descname">change_cmap</code><span class="sig-paren">(</span><em>new_cmap</em><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.qt_frameset_presenter.QtFramesetPresenter.change_cmap" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="xanespy.qt_frameset_presenter.QtFramesetPresenter.change_component">
+<code class="descname">change_component</code><span class="sig-paren">(</span><em>new_comp</em><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.qt_frameset_presenter.QtFramesetPresenter.change_component" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
@@ -1389,6 +1553,11 @@ the structure of the frameset&#8217;s HDF file.</p>
 <dl class="attribute">
 <dt id="xanespy.qt_frameset_presenter.QtFramesetPresenter.cmap_list_changed">
 <code class="descname">cmap_list_changed</code><a class="headerlink" href="#xanespy.qt_frameset_presenter.QtFramesetPresenter.cmap_list_changed" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="xanespy.qt_frameset_presenter.QtFramesetPresenter.component_list_changed">
+<code class="descname">component_list_changed</code><a class="headerlink" href="#xanespy.qt_frameset_presenter.QtFramesetPresenter.component_list_changed" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
@@ -1418,7 +1587,7 @@ the structure of the frameset&#8217;s HDF file.</p>
 
 <dl class="attribute">
 <dt id="xanespy.qt_frameset_presenter.QtFramesetPresenter.frame_cmap">
-<code class="descname">frame_cmap</code><em class="property"> = 'copper'</em><a class="headerlink" href="#xanespy.qt_frameset_presenter.QtFramesetPresenter.frame_cmap" title="Permalink to this definition">¶</a></dt>
+<code class="descname">frame_cmap</code><em class="property"> = ‘copper’</em><a class="headerlink" href="#xanespy.qt_frameset_presenter.QtFramesetPresenter.frame_cmap" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
@@ -1448,7 +1617,7 @@ the structure of the frameset&#8217;s HDF file.</p>
 
 <dl class="attribute">
 <dt id="xanespy.qt_frameset_presenter.QtFramesetPresenter.map_cmap">
-<code class="descname">map_cmap</code><em class="property"> = 'plasma'</em><a class="headerlink" href="#xanespy.qt_frameset_presenter.QtFramesetPresenter.map_cmap" title="Permalink to this definition">¶</a></dt>
+<code class="descname">map_cmap</code><em class="property"> = ‘plasma’</em><a class="headerlink" href="#xanespy.qt_frameset_presenter.QtFramesetPresenter.map_cmap" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="attribute">
@@ -1550,8 +1719,8 @@ the <cite>frame_norm()</cite> method.</p>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><ul class="simple">
-<li><strong>(vmin, vmax)</strong> (<em>(float, float)</em>) &#8211; A 2-tuple with the new min and max range.</li>
-<li><em>None</em> &#8211; If current representation is not a valid map, None will be
+<li><strong>(vmin, vmax)</strong> (<em>(float, float)</em>) – A 2-tuple with the new min and max range.</li>
+<li><em>None</em> – If current representation is not a valid map, None will be
 returned.</li>
 </ul>
 </td>
@@ -1573,7 +1742,7 @@ vmin and vmax will be returned with no other changes.</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><strong>(vmin, vmax)</strong> &#8211; A 2-tuple with the current min and max range.</td>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><strong>(vmin, vmax)</strong> – A 2-tuple with the current min and max range.</td>
 </tr>
 <tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">(float, float)</td>
 </tr>
@@ -1625,6 +1794,11 @@ intervals between 1ms and 1000ms on a exponential scale.</p>
 <dd></dd></dl>
 
 <dl class="attribute">
+<dt id="xanespy.qt_frameset_presenter.QtFramesetPresenter.show_spectrum_fit">
+<code class="descname">show_spectrum_fit</code><em class="property"> = False</em><a class="headerlink" href="#xanespy.qt_frameset_presenter.QtFramesetPresenter.show_spectrum_fit" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
 <dt id="xanespy.qt_frameset_presenter.QtFramesetPresenter.timer">
 <code class="descname">timer</code><em class="property"> = None</em><a class="headerlink" href="#xanespy.qt_frameset_presenter.QtFramesetPresenter.timer" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
@@ -1632,6 +1806,11 @@ intervals between 1ms and 1000ms on a exponential scale.</p>
 <dl class="method">
 <dt id="xanespy.qt_frameset_presenter.QtFramesetPresenter.toggle_edge_mask">
 <code class="descname">toggle_edge_mask</code><span class="sig-paren">(</span><em>state</em><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.qt_frameset_presenter.QtFramesetPresenter.toggle_edge_mask" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="xanespy.qt_frameset_presenter.QtFramesetPresenter.toggle_spectrum_fit">
+<code class="descname">toggle_spectrum_fit</code><span class="sig-paren">(</span><em>state</em><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.qt_frameset_presenter.QtFramesetPresenter.toggle_spectrum_fit" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
@@ -1709,19 +1888,19 @@ presenter.</p>
 <dl class="attribute">
 <dt id="xanespy.qt_map_view.QtMapView.cmap_changed">
 <code class="descname">cmap_changed</code><a class="headerlink" href="#xanespy.qt_map_view.QtMapView.cmap_changed" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>signal</em> &#8211; Fires when the user changes the colormap via the UI</p>
+<dd><p><em>signal</em> – Fires when the user changes the colormap via the UI</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="xanespy.qt_map_view.QtMapView.limits_applied">
 <code class="descname">limits_applied</code><a class="headerlink" href="#xanespy.qt_map_view.QtMapView.limits_applied" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>signal</em> &#8211; Fires when the user requests that data be redrawn with new limits.</p>
+<dd><p><em>signal</em> – Fires when the user requests that data be redrawn with new limits.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="xanespy.qt_map_view.QtMapView.limits_reset">
 <code class="descname">limits_reset</code><a class="headerlink" href="#xanespy.qt_map_view.QtMapView.limits_reset" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>signal</em> &#8211; Fires when the user asks that the norm limits be reset to the data.</p>
+<dd><p><em>signal</em> – Fires when the user asks that the norm limits be reset to the data.</p>
 </dd></dl>
 
 <dl class="attribute">
@@ -1767,7 +1946,7 @@ presenter.</p>
 
 <dl class="attribute">
 <dt id="xanespy.qt_map_view.QtMapView.latest_cmap">
-<code class="descname">latest_cmap</code><em class="property"> = 'plasma'</em><a class="headerlink" href="#xanespy.qt_map_view.QtMapView.latest_cmap" title="Permalink to this definition">¶</a></dt>
+<code class="descname">latest_cmap</code><em class="property"> = ‘plasma’</em><a class="headerlink" href="#xanespy.qt_map_view.QtMapView.latest_cmap" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="attribute">
@@ -1827,7 +2006,7 @@ presenter.</p>
 
 <dl class="method">
 <dt id="xanespy.qt_map_view.QtMapView.plot_spectrum">
-<code class="descname">plot_spectrum</code><span class="sig-paren">(</span><em>spectrum</em>, <em>norm</em>, <em>cmap</em>, <em>edge_range</em><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.qt_map_view.QtMapView.plot_spectrum" title="Permalink to this definition">¶</a></dt>
+<code class="descname">plot_spectrum</code><span class="sig-paren">(</span><em>spectrum</em>, <em>fitted_spectrum</em>, <em>norm</em>, <em>cmap</em>, <em>edge_range</em><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.qt_map_view.QtMapView.plot_spectrum" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
@@ -1862,6 +2041,11 @@ presenter.</p>
 <dd></dd></dl>
 
 <dl class="attribute">
+<dt id="xanespy.qt_map_view.QtMapView.spectrum_fit_toggled">
+<code class="descname">spectrum_fit_toggled</code><a class="headerlink" href="#xanespy.qt_map_view.QtMapView.spectrum_fit_toggled" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
 <dt id="xanespy.qt_map_view.QtMapView.ui">
 <code class="descname">ui</code><em class="property"> = None</em><a class="headerlink" href="#xanespy.qt_map_view.QtMapView.ui" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
@@ -1889,7 +2073,7 @@ presenter.</p>
 <p>Tools for accessing TXM data stored in an HDF5 file.</p>
 <dl class="class">
 <dt id="xanespy.txmstore.TXMStore">
-<em class="property">class </em><code class="descclassname">xanespy.txmstore.</code><code class="descname">TXMStore</code><span class="sig-paren">(</span><em>hdf_filename: str</em>, <em>parent_name: str</em>, <em>data_name=None</em>, <em>mode='r'</em><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.txmstore.TXMStore" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">xanespy.txmstore.</code><code class="descname">TXMStore</code><span class="sig-paren">(</span><em>hdf_filename: str</em>, <em>parent_name: str</em>, <em>data_name=None</em>, <em>mode=’r’</em><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.txmstore.TXMStore" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
 <p>Wrapper around HDF5 file that stores TXM data. It has a series of
 properties that return the corresponding HDF5 dataset object; the
@@ -1907,11 +2091,11 @@ that the file is closed, especially if using a writing mode:</p>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>hdf_filename</strong> (<em>str</em>) &#8211; Path to the HDF file to be used.</li>
-<li><strong>parent_name</strong> (<em>str</em>) &#8211; Name of the top-level HDF5 group.</li>
-<li><strong>data_name</strong> (<em>str</em>) &#8211; Name of the second level HDF5 group, used for specific data
+<li><strong>hdf_filename</strong> (<em>str</em>) – Path to the HDF file to be used.</li>
+<li><strong>parent_name</strong> (<em>str</em>) – Name of the top-level HDF5 group.</li>
+<li><strong>data_name</strong> (<em>str</em>) – Name of the second level HDF5 group, used for specific data
 iterations (eg. imported, aligned)</li>
-<li><strong>mode</strong> (<em>str</em>) &#8211; Eg. &#8216;r&#8217; for read-only, &#8216;r+&#8217; for read-write. Passed directly to
+<li><strong>mode</strong> (<em>str</em>) – Eg. ‘r’ for read-only, ‘r+’ for read-write. Passed directly to
 h5py.File constructor.</li>
 </ul>
 </td>
@@ -1942,7 +2126,7 @@ h5py.File constructor.</li>
 <dt id="xanespy.txmstore.TXMStore.data_group">
 <code class="descname">data_group</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.txmstore.TXMStore.data_group" title="Permalink to this definition">¶</a></dt>
 <dd><p>Retrieve the currently active second-level HDF5 group object for
-this file and groupname. Ex. &#8220;imported&#8221; or &#8220;aligned_frames&#8221;.</p>
+this file and groupname. Ex. “imported” or “aligned_frames”.</p>
 </dd></dl>
 
 <dl class="attribute">
@@ -1990,11 +2174,11 @@ current one.</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><strong>data</strong> &#8211; An open HDF5 dataset</td>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><strong>data</strong> – An open HDF5 dataset</td>
 </tr>
 <tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">hyp5.Dataset</td>
 </tr>
-<tr class="field-odd field"><th class="field-name">Raises:</th><td class="field-body"><code class="xref py py-exc docutils literal"><span class="pre">exceptions.GroupKeyError</span></code> &#8211; If the dataset does not exist in the file.</td>
+<tr class="field-odd field"><th class="field-name">Raises:</th><td class="field-body"><code class="xref py py-exc docutils literal"><span class="pre">exceptions.GroupKeyError</span></code> – If the dataset does not exist in the file.</td>
 </tr>
 </tbody>
 </table>
@@ -2077,14 +2261,14 @@ if it exists.</p>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>name</strong> (<em>str</em>) &#8211; HDF5 groupname name to give this dataset.</li>
-<li><strong>data</strong> (<em>np.ndarray</em>) &#8211; Numpy array of data to be saved.</li>
-<li><strong>context</strong> (<em>str</em><em>, </em><em>optional</em>) &#8211; Specifies what kind of data is stored. Eg. &#8220;frameset&#8221;,
-&#8220;metadata&#8221;, &#8220;map&#8221;.</li>
-<li><strong>attrs</strong> (<em>dict</em><em>, </em><em>optional</em>) &#8211; Dictionary containing HDF5 metadata attributes to be set on
+<li><strong>name</strong> (<em>str</em>) – HDF5 groupname name to give this dataset.</li>
+<li><strong>data</strong> (<em>np.ndarray</em>) – Numpy array of data to be saved.</li>
+<li><strong>context</strong> (<em>str</em><em>, </em><em>optional</em>) – Specifies what kind of data is stored. Eg. “frameset”,
+“metadata”, “map”.</li>
+<li><strong>attrs</strong> (<em>dict</em><em>, </em><em>optional</em>) – Dictionary containing HDF5 metadata attributes to be set on
 the resulting dataset.</li>
-<li><strong>*args</strong> &#8211; Arguments to pass to h5py&#8217;s <code class="docutils literal"><span class="pre">create_dataset</span></code> method.</li>
-<li><strong>**kwargs</strong> &#8211; Keyword arguments to pass to h5py&#8217;s <code class="docutils literal"><span class="pre">create_dataset</span></code> method.</li>
+<li><strong>*args</strong> – Arguments to pass to h5py’s <code class="docutils literal"><span class="pre">create_dataset</span></code> method.</li>
+<li><strong>**kwargs</strong> – Keyword arguments to pass to h5py’s <code class="docutils literal"><span class="pre">create_dataset</span></code> method.</li>
 </ul>
 </td>
 </tr>
@@ -2136,8 +2320,13 @@ decomposition methods, saved as <cite>signal_method</cite>.</p>
 <dd></dd></dl>
 
 <dl class="attribute">
-<dt id="xanespy.txmstore.TXMStore.whiteline_map">
-<code class="descname">whiteline_map</code><a class="headerlink" href="#xanespy.txmstore.TXMStore.whiteline_map" title="Permalink to this definition">¶</a></dt>
+<dt id="xanespy.txmstore.TXMStore.whiteline_fit">
+<code class="descname">whiteline_fit</code><a class="headerlink" href="#xanespy.txmstore.TXMStore.whiteline_fit" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="xanespy.txmstore.TXMStore.whiteline_max">
+<code class="descname">whiteline_max</code><a class="headerlink" href="#xanespy.txmstore.TXMStore.whiteline_max" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -2145,7 +2334,7 @@ decomposition methods, saved as <cite>signal_method</cite>.</p>
 </div>
 <div class="section" id="module-xanespy.utilities">
 <span id="xanespy-utilities-module"></span><h2>xanespy.utilities module<a class="headerlink" href="#module-xanespy.utilities" title="Permalink to this headline">¶</a></h2>
-<p>A collection of classes and functions that arent&#8217; specific to any
+<p>A collection of classes and functions that arent’ specific to any
 one type of measurement. Also, it defines some namedtuples for
 describing coordinates.</p>
 <dl class="attribute">
@@ -2176,7 +2365,7 @@ describing coordinates.</p>
 <dt id="xanespy.utilities.broadcast_reverse">
 <code class="descclassname">xanespy.utilities.</code><code class="descname">broadcast_reverse</code><span class="sig-paren">(</span><em>array</em>, <em>shape</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.utilities.broadcast_reverse" title="Permalink to this definition">¶</a></dt>
 <dd><p>Take the array and extends it as much as possible to match
-<cite>shape</cite>. Similar to numpy&#8217;s broadcast_to function, but starts with
+<cite>shape</cite>. Similar to numpy’s broadcast_to function, but starts with
 the most significant axis. For example, if <cite>array</cite> has shape (7,
 29), it can be broadcast to (7, 29, 1024, 1024).</p>
 </dd></dl>
@@ -2196,7 +2385,7 @@ the most significant axis. For example, if <cite>array</cite> has shape (7,
 <dl class="function">
 <dt id="xanespy.utilities.is_kernel">
 <code class="descclassname">xanespy.utilities.</code><code class="descname">is_kernel</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.utilities.is_kernel" title="Permalink to this definition">¶</a></dt>
-<dd><p>Detect whether or not we&#8217;re running inside an IPython kernel. NB:
+<dd><p>Detect whether or not we’re running inside an IPython kernel. NB:
 This does not distinguish between eg IPython notebook and IPython
 QtConsole.</p>
 </dd></dl>
@@ -2239,23 +2428,26 @@ suitable for numpy indexing.</p>
 
 <dl class="function">
 <dt id="xanespy.utilities.prog">
-<code class="descclassname">xanespy.utilities.</code><code class="descname">prog</code><span class="sig-paren">(</span><em>iterable=None</em>, <em>leave=False</em>, <em>dynamic_ncols=True</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.utilities.prog" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">xanespy.utilities.</code><code class="descname">prog</code><span class="sig-paren">(</span><em>iterable=None</em>, <em>leave=None</em>, <em>dynamic_ncols=True</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.utilities.prog" title="Permalink to this definition">¶</a></dt>
 <dd><p>A progress bar for displaying how many iterations have been
-completed. This is mostly just a wrapper around the tqdm
-library. args and kwargs are passed directly to either
-tqdm.tqdm or tqdm.tqdm_notebook.</p>
+completed.</p>
+<p>This is mostly just a wrapper around the tqdm library. args and
+kwargs are passed directly to either tqdm.tqdm or
+tqdm.tqdm_notebook. This function also takes into account the
+value of <code class="docutils literal"><span class="pre">USE_PROG</span></code> defined in this module. If tqdm is no
+installed, then calls to prog will just return the iterable again.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>iterable</strong> &#8211; Iterable to decorate with a progressbar. See <code class="docutils literal"><span class="pre">tqdm.tqdm</span></code>
+<li><strong>iterable</strong> – Iterable to decorate with a progressbar. See <code class="docutils literal"><span class="pre">tqdm.tqdm</span></code>
 documentation for more details.</li>
-<li><strong>leave</strong> (<em>bool</em><em>, </em><em>optional</em>) &#8211; Whether to leave the progress bar in the stream after it&#8217;s
-completed.</li>
-<li><strong>dynamic_ncols</strong> (<em>bool</em><em>, </em><em>optional</em>) &#8211; Whether to adapt dynamically to the width of the environment.</li>
-<li><strong>args</strong> &#8211; Positional arguments passed directly to <code class="docutils literal"><span class="pre">tqdm</span></code> or <code class="docutils literal"><span class="pre">tqdm_notebook</span></code>.</li>
-<li><strong>kwargs</strong> &#8211; Keyword arguments passed directly to <code class="docutils literal"><span class="pre">tqdm</span></code> or <code class="docutils literal"><span class="pre">tqdm_notebook</span></code>.</li>
+<li><strong>leave</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether to leave the progress bar in the stream after it’s
+completed. If omitted, will depend on terminal used.</li>
+<li><strong>dynamic_ncols</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether to adapt dynamically to the width of the environment.</li>
+<li><strong>args</strong> – Positional arguments passed directly to <code class="docutils literal"><span class="pre">tqdm</span></code> or <code class="docutils literal"><span class="pre">tqdm_notebook</span></code>.</li>
+<li><strong>kwargs</strong> – Keyword arguments passed directly to <code class="docutils literal"><span class="pre">tqdm</span></code> or <code class="docutils literal"><span class="pre">tqdm_notebook</span></code>.</li>
 </ul>
 </td>
 </tr>
@@ -2317,34 +2509,13 @@ row, column).</p>
 <dt id="xanespy.xanes_frameset.PtychoFrameset">
 <em class="property">class </em><code class="descclassname">xanespy.xanes_frameset.</code><code class="descname">PtychoFrameset</code><span class="sig-paren">(</span><em>filename</em>, <em>edge</em>, <em>groupname=None</em><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.xanes_frameset.PtychoFrameset" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#xanespy.xanes_frameset.XanesFrameset" title="xanespy.xanes_frameset.XanesFrameset"><code class="xref py py-class docutils literal"><span class="pre">xanespy.xanes_frameset.XanesFrameset</span></code></a></p>
-<p>A set of images (&#8220;frames&#8221;) at different energies moving across an
+<p>A set of images (“frames”) at different energies moving across an
 absorption edge. The individual frames should be generated by
 ptychographic reconstruction of scanning transmission X-ray
 microscopy (STXM) to produce an array complex intensity
 values. This class does <em>not</em> include any code responsible for the
 collection and reconstruction of such data, only for the analysis
 in the context of X-ray absorption near edge spectroscopy.</p>
-<dl class="method">
-<dt id="xanespy.xanes_frameset.PtychoFrameset.apply_internal_reference">
-<code class="descname">apply_internal_reference</code><span class="sig-paren">(</span><em>plot_background=True</em>, <em>ax=None</em><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.xanes_frameset.PtychoFrameset.apply_internal_reference" title="Permalink to this definition">¶</a></dt>
-<dd><p>Use a portion of each frame for internal reference correction. The
-result is the complex refraction for each pixel: the real
-component describes the phase shift, and the imaginary
-component is exponential decay, ie. absorbance.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>plot_background</strong> (<em>If truthy</em><em>, </em><em>the values of I_0 are plotted as</em>) &#8211; a function of energy.</li>
-<li><strong>ax</strong> (The axes to use for plotting if <cite>plot_background</cite> is) &#8211; truthy.</li>
-</ul>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
 <dl class="method">
 <dt id="xanespy.xanes_frameset.PtychoFrameset.representations">
 <code class="descname">representations</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.xanes_frameset.PtychoFrameset.representations" title="Permalink to this definition">¶</a></dt>
@@ -2364,14 +2535,14 @@ Frame() objects. The class assumes that the data have been
 imported into an HDF file.</p>
 <dl class="attribute">
 <dt id="xanespy.xanes_frameset.XanesFrameset.active_group">
-<code class="descname">active_group</code><em class="property"> = ''</em><a class="headerlink" href="#xanespy.xanes_frameset.XanesFrameset.active_group" title="Permalink to this definition">¶</a></dt>
+<code class="descname">active_group</code><em class="property"> = ”</em><a class="headerlink" href="#xanespy.xanes_frameset.XanesFrameset.active_group" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="xanespy.xanes_frameset.XanesFrameset.align_frames">
-<code class="descname">align_frames</code><span class="sig-paren">(</span><em>reference_frame='mean'</em>, <em>blur=None</em>, <em>method: str = 'cross_correlation'</em>, <em>template=None</em>, <em>passes=1</em>, <em>commit=True</em>, <em>component='modulus'</em>, <em>plot_results=True</em><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.xanes_frameset.XanesFrameset.align_frames" title="Permalink to this definition">¶</a></dt>
+<code class="descname">align_frames</code><span class="sig-paren">(</span><em>reference_frame=’mean’</em>, <em>blur=None</em>, <em>method: str = ‘cross_correlation’</em>, <em>template=None</em>, <em>passes=1</em>, <em>commit=True</em>, <em>component=’modulus’</em>, <em>plot_results=True</em><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.xanes_frameset.XanesFrameset.align_frames" title="Permalink to this definition">¶</a></dt>
 <dd><p>Use cross correlation algorithm to line up the frames. All frames
-will have their sample position set to (0, 0) since we don&#8217;t
+will have their sample position set to (0, 0) since we don’t
 know which one is the real position. This operation will
 interpolate between pixels so introduces error. If multiple
 passes are performed, the translations are saved and combined
@@ -2385,27 +2556,48 @@ registration.</p>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong></strong><strong>(</strong><strong>int</strong><strong>, </strong><strong>str</strong><strong> or </strong><strong>None</strong><strong>)</strong><strong></strong> (<em>reference_frame</em>) &#8211; which all other frames should be aligned. If None, the frame
-of highest intensity will be used. If &#8220;mean&#8221; (default) or
-&#8220;median&#8221;, the average or median of all frames will be
-used. If &#8220;max&#8221;, the frame with highest absorbance is
+<li><strong>(</strong><strong>int</strong><strong>, </strong><strong>str</strong><strong> or </strong><strong>None</strong><strong>)</strong> (<em>reference_frame</em>) – which all other frames should be aligned. If None, the frame
+of highest intensity will be used. If “mean” (default) or
+“median”, the average or median of all frames will be
+used. If “max”, the frame with highest absorbance is
 used. This attribute has no effect if template matching is
 used.</li>
-<li><strong>blur</strong> (<em>A type of filter to apply to each frame of the data</em>) &#8211; before attempting registration. Choices are &#8220;median&#8221; or None</li>
-<li><strong>method</strong> (<em>Which technique to use to calculate the translation</em>) &#8211; <ul>
-<li>&#8220;cross_correlation&#8221; (default)</li>
-<li>&#8220;template_match&#8221;</li>
+<li><strong>blur</strong> (<em>A type of filter to apply to each frame of the data</em>) – before attempting registration. Choices are “median” or None</li>
+<li><strong>method</strong> (<em>Which technique to use to calculate the translation</em>) – <ul>
+<li>“cross_correlation” (default)</li>
+<li>”template_match”</li>
 </ul>
-<p>(If &#8220;template_match&#8221; is used, the <cite>template</cite> argument should
+<p>(If “template_match” is used, the <cite>template</cite> argument should
 also be provided.)</p>
 </li>
-<li><strong>passes</strong> (<em>How many times this alignment should be done. Default: 1.</em>) &#8211; </li>
-<li><strong>template</strong> (<em>Image data that should be matched if the</em>) &#8211; <cite>template_match</cite> method is used.</li>
-<li><strong>commit</strong> (<em>If truthy</em><em> (</em><em>default</em><em>)</em><em></em><em>, </em><em>the final translation will be</em>) &#8211; applied to the data stored on disk by calling
+<li><strong>passes</strong> (<em>How many times this alignment should be done. Default: 1.</em>) – </li>
+<li><strong>template</strong> (<em>Image data that should be matched if the</em>) – <cite>template_match</cite> method is used.</li>
+<li><strong>commit</strong> (<em>If truthy</em><em> (</em><em>default</em><em>)</em><em>, </em><em>the final translation will be</em>) – applied to the data stored on disk by calling
 <cite>self.apply_translations(crop=True)</cite> after all passes have
 finished.</li>
-<li><strong>component</strong> (<em>What component of the data to use: 'modulus'</em><em>,</em><em></em>) &#8211; &#8216;phase&#8217;, &#8216;imag&#8217; or &#8216;real&#8217;.</li>
-<li><strong>plot_results</strong> (<em>If truthy</em><em> (</em><em>default</em><em>)</em><em></em><em>, </em><em>plot the root-mean-square of the</em>) &#8211; translation distance for each pass.</li>
+<li><strong>component</strong> (<em>What component of the data to use: 'modulus'</em><em>,</em>) – ‘phase’, ‘imag’ or ‘real’.</li>
+<li><strong>plot_results</strong> (<em>If truthy</em><em> (</em><em>default</em><em>)</em><em>, </em><em>plot the root-mean-square of the</em>) – translation distance for each pass.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="xanespy.xanes_frameset.XanesFrameset.apply_internal_reference">
+<code class="descname">apply_internal_reference</code><span class="sig-paren">(</span><em>plot_background=True</em>, <em>ax=None</em><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.xanes_frameset.XanesFrameset.apply_internal_reference" title="Permalink to this definition">¶</a></dt>
+<dd><p>Use a portion of each frame for internal reference correction. The
+result is the complex refraction for each pixel: the real
+component describes the phase shift, and the imaginary
+component is exponential decay, ie. absorbance.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>plot_background</strong> (<em>If truthy</em><em>, </em><em>the values of I_0 are plotted as</em>) – a function of energy.</li>
+<li><strong>ax</strong> (The axes to use for plotting if <cite>plot_background</cite> is) – truthy.</li>
 </ul>
 </td>
 </tr>
@@ -2425,13 +2617,13 @@ transformations are reset.</p>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>crop</strong> (<em>-</em>) &#8211; </li>
-<li><strong>so there are not edges. If falsy</strong><strong>, </strong><strong>the images will</strong> (<em>translated</em><em>,</em><em></em>) &#8211; </li>
-<li><strong>wrapped.</strong> (<em>be</em>) &#8211; </li>
-<li><strong>commit</strong> (<em>-</em>) &#8211; store for absorbances, intensities and references, and the
+<li><strong>crop</strong> (<em>-</em>) – </li>
+<li><strong>so there are not edges. If falsy</strong><strong>, </strong><strong>the images will</strong> (<em>translated</em><em>,</em>) – </li>
+<li><strong>wrapped.</strong> (<em>be</em>) – </li>
+<li><strong>commit</strong> (<em>-</em>) – store for absorbances, intensities and references, and the
 staged transformations will be cleared. Otherwise, only the
 absorbance data will be transformed and returned.</li>
-<li><strong>frames_name</strong> (<em>-</em>) &#8211; transformation too (eg. &#8216;absorbances&#8217;)</li>
+<li><strong>frames_name</strong> (<em>-</em>) – transformation too (eg. ‘absorbances’)</li>
 </ul>
 </td>
 </tr>
@@ -2441,15 +2633,15 @@ absorbance data will be transformed and returned.</li>
 
 <dl class="method">
 <dt id="xanespy.xanes_frameset.XanesFrameset.calculate_maps">
-<code class="descname">calculate_maps</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.xanes_frameset.XanesFrameset.calculate_maps" title="Permalink to this definition">¶</a></dt>
+<code class="descname">calculate_maps</code><span class="sig-paren">(</span><em>fit_spectra=False</em><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.xanes_frameset.XanesFrameset.calculate_maps" title="Permalink to this definition">¶</a></dt>
 <dd><p>Generate a set of maps based on pixel-wise Xanes spectra: whiteline
 position, particle labels.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>-fit_spectra</strong> (<em>If truthy</em><em>, </em><em>the whiteline will be found by</em>) &#8211; fitting curves, instead of the default of taking the direct
-maximum.</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>-fit_spectra</strong> (<em>If truthy</em><em>, </em><em>the whiteline will be found by</em>) – fitting curves, instead of the default of taking the direct
+maximum. This is likely to be very slow.</td>
 </tr>
 </tbody>
 </table>
@@ -2457,7 +2649,7 @@ maximum.</td>
 
 <dl class="method">
 <dt id="xanespy.xanes_frameset.XanesFrameset.calculate_signals">
-<code class="descname">calculate_signals</code><span class="sig-paren">(</span><em>n_components=2</em>, <em>method='nmf'</em>, <em>edge_mask=True</em><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.xanes_frameset.XanesFrameset.calculate_signals" title="Permalink to this definition">¶</a></dt>
+<code class="descname">calculate_signals</code><span class="sig-paren">(</span><em>n_components=2</em>, <em>method=’nmf’</em>, <em>frame_source=’absorbances’</em>, <em>edge_mask=True</em><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.xanes_frameset.XanesFrameset.calculate_signals" title="Permalink to this definition">¶</a></dt>
 <dd><p>Extract signals and assign each pixel to a group, then save the
 resulting RGB cluster map.</p>
 <table class="docutils field-list" frame="void" rules="none">
@@ -2465,9 +2657,13 @@ resulting RGB cluster map.</p>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>n_components</strong> (<em>-</em>) &#8211; into which the data will be separated.</li>
-<li><strong>method</strong> (<em>-</em>) &#8211; signals. Currently only &#8220;nmf&#8221; is supported.</li>
-<li><strong>edge_mask</strong> (<em>-</em>) &#8211; the edge filter will be considered.</li>
+<li><strong>n_components</strong> (<em>int</em><em>, </em><em>optional</em>) – The number of signals and number of clusters into which the
+data will be separated.</li>
+<li><strong>method</strong> (<em>str</em><em>, </em><em>optional</em>) – The technique to use for extracting signals. Currently only
+“nmf” is supported.</li>
+<li><strong>frame_source</strong> (<em>str</em><em>, </em><em>optional</em>) – Name of the frame-set to use as the input data.</li>
+<li><strong>edge_mask</strong> (<em>bool</em><em>, </em><em>optional</em>) – If truthy (default), only those pixels passing the edge
+filter will be considered.</li>
 </ul>
 </td>
 </tr>
@@ -2484,7 +2680,7 @@ calculating the energy of simple maximum absorbance.</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>edge_mask</strong> (<em>-</em>) &#8211; be fit and the remaning pixels will be set to a default
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>edge_mask</strong> (<em>-</em>) – be fit and the remaning pixels will be set to a default
 value. This can help reduce computing time.</td>
 </tr>
 </tbody>
@@ -2500,7 +2696,7 @@ data</p>
 
 <dl class="attribute">
 <dt id="xanespy.xanes_frameset.XanesFrameset.cmap">
-<code class="descname">cmap</code><em class="property"> = 'plasma'</em><a class="headerlink" href="#xanespy.xanes_frameset.XanesFrameset.cmap" title="Permalink to this definition">¶</a></dt>
+<code class="descname">cmap</code><em class="property"> = ‘plasma’</em><a class="headerlink" href="#xanespy.xanes_frameset.XanesFrameset.cmap" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
@@ -2530,9 +2726,9 @@ edge.</p>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>sensitivity</strong> (<em>float</em>) &#8211; A multiplier for the otsu value to determine
+<li><strong>sensitivity</strong> (<em>float</em>) – A multiplier for the otsu value to determine
 the actual threshold.</li>
-<li><strong>min_size</strong> (<em>int</em>) &#8211; Objects below this size (in pixels) will be removed. Passing
+<li><strong>min_size</strong> (<em>int</em>) – Objects below this size (in pixels) will be removed. Passing
 zero (default) will result in no effect.</li>
 </ul>
 </td>
@@ -2549,10 +2745,10 @@ zero (default) will result in no effect.</li>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>timeidx</strong> (<em>int</em><em>, </em><em>optional</em>) &#8211; Which timestep to use for finding the end time. If
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>timeidx</strong> (<em>int</em><em>, </em><em>optional</em>) – Which timestep to use for finding the end time. If
 omitted or None (default), all timesteps will be checked.</td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><strong>start_time</strong> &#8211; Naive datetime representing the latest known frame for
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><strong>start_time</strong> – Naive datetime representing the latest known frame for
 this time index. Timezone will always be UTC no matter where
 the data were collected.</td>
 </tr>
@@ -2570,7 +2766,7 @@ the data were collected.</td>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><strong>energies</strong> &#8211; A 1-dimensional array with the energy for each frame.</td>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><strong>energies</strong> – A 1-dimensional array with the energy for each frame.</td>
 </tr>
 <tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">np.ndarray</td>
 </tr>
@@ -2582,19 +2778,26 @@ the data were collected.</td>
 <dt id="xanespy.xanes_frameset.XanesFrameset.extent">
 <code class="descname">extent</code><a class="headerlink" href="#xanespy.xanes_frameset.XanesFrameset.extent" title="Permalink to this definition">¶</a></dt>
 <dd><p>Determine physical dimensions for axes values.</p>
-<p>Returns: If idx was given, a single tuple of (left, right,
-bottom, up), otherwise if idx is None it returns an array of
-extents for each frame.</p>
+<p>If an index is given, it will first be applied to the frames
+array. For any remaining dimensions besides the last two, the
+median will be taken. For an array of extents for each frame,
+use the <code class="docutils literal"><span class="pre">extent_array</span></code> method.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>representation</strong> (<em>str</em><em>, </em><em>optional</em>) &#8211; Name for which dataset to use.</li>
-<li><strong>idx</strong> (<em>int</em><em>, </em><em>optional</em>) &#8211; Index for a given frame. This allows for faster calculation
-if only a single frame is required. By default, returns the
-first frame.</li>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>representation</strong> (<em>str</em><em>, </em><em>optional</em>) – Name for which dataset to use.</li>
+<li><strong>idx</strong> (<em>int</em><em>, </em><em>optional</em>) – Index for choosing a frame. Any valid numpy index is
+allowed, eg. <code class="docutils literal"><span class="pre">...</span></code> (default) uses all frame.</li>
 </ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>extent</strong> – The spatial extent for the frame with order specified by
+<code class="docutils literal"><span class="pre">utilities.Extent</span></code></p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">tuple</p>
 </td>
 </tr>
 </tbody>
@@ -2602,14 +2805,23 @@ first frame.</li>
 </dd></dl>
 
 <dl class="method">
+<dt id="xanespy.xanes_frameset.XanesFrameset.extent_array">
+<code class="descname">extent_array</code><span class="sig-paren">(</span><em>representation=’intensities’</em><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.xanes_frameset.XanesFrameset.extent_array" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
 <dt id="xanespy.xanes_frameset.XanesFrameset.fit_spectra">
 <code class="descname">fit_spectra</code><span class="sig-paren">(</span><em>edge_mask=True</em><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.xanes_frameset.XanesFrameset.fit_spectra" title="Permalink to this definition">¶</a></dt>
 <dd><p>Fit a series of curves to the spectrum at each pixel.</p>
+<p>For anything other than trivially small data-sets, this method
+can take a very long time. To speed up processing, MPI calls
+are used. Calling this function with mpiexec will allow for
+more parallel processing.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>edge_mask</strong> (<em>bool</em><em>, </em><em>optional</em>) &#8211; If true, only pixels passing the edge_mask will be fit and
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>edge_mask</strong> (<em>bool</em><em>, </em><em>optional</em>) – If true, only pixels passing the edge_mask will be fit and
 the remaning pixels will be set to a default value. This can
 help reduce computing time.</td>
 </tr>
@@ -2618,9 +2830,42 @@ help reduce computing time.</td>
 </dd></dl>
 
 <dl class="method">
+<dt id="xanespy.xanes_frameset.XanesFrameset.fitted_spectrum">
+<code class="descname">fitted_spectrum</code><span class="sig-paren">(</span><em>energies=None</em>, <em>pixel=None</em>, <em>index=0</em>, <em>representation=’fit_parameters’</em><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.xanes_frameset.XanesFrameset.fitted_spectrum" title="Permalink to this definition">¶</a></dt>
+<dd><p>Take the previously calculated fitting parameters from
+<cite>fit_spectra</cite> and predict the XANES spectrum.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>energies</strong> (<em>np.ndarray</em><em>, </em><em>optional</em>) – The input values to give to the predictor function. If
+omitted, a np.linspace will be created covering the range of
+energies.</li>
+<li><strong>pixel</strong> (<em>2-tuple</em><em>, </em><em>optional.</em>) – The specific pixel to use for getting fit parameters. If
+omitted, the average for each parameter calculated.</li>
+<li><strong>index</strong> (<em>int</em><em>, </em><em>optional</em>) – The timeindex to use for retrieving fit parameters.</li>
+<li><strong>representation</strong> (<em>str</em><em>, </em><em>optional</em>) – Which dataset name to use for accessing the fit
+parameters. The default value (“fit_parameters”) is the one
+used by <code class="docutils literal"><span class="pre">fit_spectra</span></code> to save the results.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>fit</strong> – The predicted spectrum based on the previously calculated
+fit parameters.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">pd.Series</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
 <dt id="xanespy.xanes_frameset.XanesFrameset.fork_data_group">
 <code class="descname">fork_data_group</code><span class="sig-paren">(</span><em>dest</em>, <em>src=None</em><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.xanes_frameset.XanesFrameset.fork_data_group" title="Permalink to this definition">¶</a></dt>
-<dd><p>Turn on different active data for this frameset&#8217;s store
+<dd><p>Turn on different active data for this frameset’s store
 object. Similar to <cite>switch_data_group</cite> except that this method
 deletes the existing group and copies symlinks from the current one.</p>
 <table class="docutils field-list" frame="void" rules="none">
@@ -2628,8 +2873,8 @@ deletes the existing group and copies symlinks from the current one.</p>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>dest</strong> (<em>str</em>) &#8211; Name for the data group.</li>
-<li><strong>src</strong> (<em>str</em>) &#8211; String with the name of the data group to copy from. If None
+<li><strong>dest</strong> (<em>str</em>) – Name for the data group.</li>
+<li><strong>src</strong> (<em>str</em>) – String with the name of the data group to copy from. If None
 (default), the current data group will be used.</li>
 </ul>
 </td>
@@ -2640,7 +2885,7 @@ deletes the existing group and copies symlinks from the current one.</p>
 
 <dl class="method">
 <dt id="xanespy.xanes_frameset.XanesFrameset.frame_shape">
-<code class="descname">frame_shape</code><span class="sig-paren">(</span><em>representation='absorbances'</em><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.xanes_frameset.XanesFrameset.frame_shape" title="Permalink to this definition">¶</a></dt>
+<code class="descname">frame_shape</code><span class="sig-paren">(</span><em>representation=’absorbances’</em><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.xanes_frameset.XanesFrameset.frame_shape" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return the shape of the individual energy frames.</p>
 </dd></dl>
 
@@ -2655,13 +2900,13 @@ frames will be returned.</p>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>timeidx</strong> (<em>int</em>) &#8211; Index for the first dimension of the combined data array.</li>
-<li><strong>representation</strong> (<em>str</em>) &#8211; The group name for these data. Eg &#8220;absorbances&#8221;,
-&#8220;whiteline_map&#8221;, &#8220;intensities&#8221;</li>
+<li><strong>timeidx</strong> (<em>int</em>) – Index for the first dimension of the combined data array.</li>
+<li><strong>representation</strong> (<em>str</em>) – The group name for these data. Eg “absorbances”,
+“whiteline_map”, “intensities”</li>
 </ul>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>frames</strong> &#8211; A 3-dimensional array with the form (energy, row, col).</p>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>frames</strong> – A 3-dimensional array with the form (energy, row, col).</p>
 </td>
 </tr>
 <tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">np.ndarray</p>
@@ -2684,10 +2929,10 @@ frames will be returned.</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>representation</strong> (<em>str</em><em>, </em><em>optional</em>) &#8211; Name of third-level group to use. If omitted, the path to
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>representation</strong> (<em>str</em><em>, </em><em>optional</em>) – Name of third-level group to use. If omitted, the path to
 the parent group will be given.</td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><strong>path</strong> &#8211; The path to the current group in the HDF5 file. Returns an
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><strong>path</strong> – The path to the current group in the HDF5 file. Returns an
 empty string if the representation does not exists.</td>
 </tr>
 <tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">str</td>
@@ -2704,7 +2949,7 @@ empty string if the representation does not exists.</td>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>min_distance</strong> (<em>-</em>) &#8211; grouping areas into particles. Lower numbers means more
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>min_distance</strong> (<em>-</em>) – grouping areas into particles. Lower numbers means more
 particles, but might split large particles into two.</td>
 </tr>
 </tbody>
@@ -2722,15 +2967,15 @@ will have more dimensions than expected.</p>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>timeidx</strong> (<em>int</em>) &#8211; Index for the first dimension of the combined data array. If
+<li><strong>timeidx</strong> (<em>int</em>) – Index for the first dimension of the combined data array. If
 the underlying map data has only 2 dimensions, this
 parameter is ignored.</li>
-<li><strong>representation</strong> (<em>str</em>) &#8211; The group name for these data. Eg &#8220;absorbances&#8221;,
-&#8220;whiteline_map&#8221;, &#8220;intensities&#8221;</li>
+<li><strong>representation</strong> (<em>str</em>) – The group name for these data. Eg “absorbances”,
+“whiteline_map”, “intensities”</li>
 </ul>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>map_data</strong> &#8211; A 2-dimensional array with the form (row, col).</p>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>map_data</strong> – A 2-dimensional array with the form (row, col).</p>
 </td>
 </tr>
 <tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">np.ndarray</p>
@@ -2742,14 +2987,14 @@ parameter is ignored.</li>
 
 <dl class="method">
 <dt id="xanespy.xanes_frameset.XanesFrameset.mean_frame">
-<code class="descname">mean_frame</code><span class="sig-paren">(</span><em>representation='absorbances'</em><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.xanes_frameset.XanesFrameset.mean_frame" title="Permalink to this definition">¶</a></dt>
+<code class="descname">mean_frame</code><span class="sig-paren">(</span><em>representation=’absorbances’</em><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.xanes_frameset.XanesFrameset.mean_frame" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return the mean value with the same shape as an individual
 frame.</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="xanespy.xanes_frameset.XanesFrameset.normalize">
-<code class="descname">normalize</code><span class="sig-paren">(</span><em>plot_fit=False</em>, <em>new_name='normalized'</em><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.xanes_frameset.XanesFrameset.normalize" title="Permalink to this definition">¶</a></dt>
+<code class="descname">normalize</code><span class="sig-paren">(</span><em>plot_fit=False</em>, <em>new_name=’normalized’</em><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.xanes_frameset.XanesFrameset.normalize" title="Permalink to this definition">¶</a></dt>
 <dd><p>Correct for background material not absorbing at this edge. Uses
 method described in DOI 10.1038/ncomms7883: fit line against
 material that fails edge_jump_filter and use this line to
@@ -2759,8 +3004,8 @@ correct entire frame.</p>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>plot_fit</strong> (<em>-</em>) &#8211; </li>
-<li><strong>line.</strong> (<em>best-fit</em>) &#8211; </li>
+<li><strong>plot_fit</strong> (<em>-</em>) – </li>
+<li><strong>line.</strong> (<em>best-fit</em>) – </li>
 </ul>
 </td>
 </tr>
@@ -2789,9 +3034,10 @@ method be called first.</p>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>intensity_image</strong> (<em>-</em>) &#8211; <cite>regionprops</cite> function to determine what shows up in the
-image for each particle.</li>
-<li><strong>labels</strong> (<em>-</em>) &#8211; particles segmented. If None, the <cite>particle_labels</cite>
+<li><strong>intensity_image</strong> (<em>np.ndarray</em><em>, </em><em>optional</em>) – 2D array passed on to the skimage <cite>regionprops</cite> function to
+determine what shows up in the image for each particle.</li>
+<li><strong>labels</strong> (<em>np.ndarray</em><em>, </em><em>optional</em>) – Array of the same shape as the map, with the particles
+segmented. If None (default), the <cite>particle_labels</cite>
 attribute of the TXM store will be used.</li>
 </ul>
 </td>
@@ -2802,7 +3048,7 @@ attribute of the TXM store will be used.</li>
 
 <dl class="method">
 <dt id="xanespy.xanes_frameset.XanesFrameset.particle_series">
-<code class="descname">particle_series</code><span class="sig-paren">(</span><em>map_name='whiteline_map'</em><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.xanes_frameset.XanesFrameset.particle_series" title="Permalink to this definition">¶</a></dt>
+<code class="descname">particle_series</code><span class="sig-paren">(</span><em>map_name=’whiteline_max’</em><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.xanes_frameset.XanesFrameset.particle_series" title="Permalink to this definition">¶</a></dt>
 <dd><p>Generate an array of values from map_name averaged across each
 particle.</p>
 <p>Returns: A 2D array where the first dimension is particles and
@@ -2817,40 +3063,53 @@ the second is the first dimension of the map dataset (usually time).</p>
 
 <dl class="method">
 <dt id="xanespy.xanes_frameset.XanesFrameset.plot_frame">
-<code class="descname">plot_frame</code><span class="sig-paren">(</span><em>idx</em>, <em>ax=None</em>, <em>cmap='gray'</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.xanes_frameset.XanesFrameset.plot_frame" title="Permalink to this definition">¶</a></dt>
+<code class="descname">plot_frame</code><span class="sig-paren">(</span><em>idx</em>, <em>ax=None</em>, <em>cmap=’gray’</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.xanes_frameset.XanesFrameset.plot_frame" title="Permalink to this definition">¶</a></dt>
 <dd><p>Plot the frame with given index as an image.</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="xanespy.xanes_frameset.XanesFrameset.plot_histogram">
-<code class="descname">plot_histogram</code><span class="sig-paren">(</span><em>plotter=None</em>, <em>timeidx=None</em>, <em>ax=None</em>, <em>vmin=None</em>, <em>vmax=None</em>, <em>goodness_filter=False</em>, <em>active_pixel=None</em>, <em>bins='energies'</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.xanes_frameset.XanesFrameset.plot_histogram" title="Permalink to this definition">¶</a></dt>
+<code class="descname">plot_histogram</code><span class="sig-paren">(</span><em>plotter=None</em>, <em>timeidx=None</em>, <em>ax=None</em>, <em>vmin=None</em>, <em>vmax=None</em>, <em>goodness_filter=False</em>, <em>representation=’whiteline_fit’</em>, <em>active_pixel=None</em>, <em>bins=’energies’</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.xanes_frameset.XanesFrameset.plot_histogram" title="Permalink to this definition">¶</a></dt>
 <dd><p>Use a default frameset plotter to draw a map of the chemical
 data.</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="xanespy.xanes_frameset.XanesFrameset.plot_map">
-<code class="descname">plot_map</code><span class="sig-paren">(</span><em>ax=None</em>, <em>map_name='whiteline_map'</em>, <em>timeidx=0</em>, <em>vmin=None</em>, <em>vmax=None</em><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.xanes_frameset.XanesFrameset.plot_map" title="Permalink to this definition">¶</a></dt>
+<code class="descname">plot_map</code><span class="sig-paren">(</span><em>ax=None</em>, <em>map_name=’whiteline_fit’</em>, <em>timeidx=0</em>, <em>vmin=None</em>, <em>vmax=None</em>, <em>median_size=0</em><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.xanes_frameset.XanesFrameset.plot_map" title="Permalink to this definition">¶</a></dt>
 <dd><p>Prepare data and plot a map of whiteline positions.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>median_size</strong> (<em>int</em>) – Kernel size for the median rank filter.</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="method">
 <dt id="xanespy.xanes_frameset.XanesFrameset.plot_map_pixel_spectra">
-<code class="descname">plot_map_pixel_spectra</code><span class="sig-paren">(</span><em>pixels</em>, <em>map_ax=None</em>, <em>spectra_ax=None</em>, <em>map_name='whiteline_map'</em>, <em>timeidx=0</em>, <em>step_size=0</em><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.xanes_frameset.XanesFrameset.plot_map_pixel_spectra" title="Permalink to this definition">¶</a></dt>
-<dd><p>Plot the frameset&#8217;s map and highlight some pixels on it then plot
-those pixel&#8217;s spectra on another set of axes.</p>
+<code class="descname">plot_map_pixel_spectra</code><span class="sig-paren">(</span><em>pixels</em>, <em>map_ax=None</em>, <em>spectra_ax=None</em>, <em>map_name=’whiteline_map’</em>, <em>timeidx=0</em>, <em>step_size=0</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.xanes_frameset.XanesFrameset.plot_map_pixel_spectra" title="Permalink to this definition">¶</a></dt>
+<dd><p>Plot the frameset’s map and highlight some pixels on it then plot
+those pixel’s spectra on another set of axes.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>pixels</strong> (<em>-</em>) &#8211; column) pixels to highlight.</li>
-<li><strong>map_ax</strong> (<em>-</em>) &#8211; None, a new 2-wide subplot will be created for both map_ax
-and spectra_ax.</li>
-<li><strong>spectra_ax</strong> (<em>-</em>) &#8211; spectra. Will only be used if <cite>map_ax</cite> is not None.</li>
-<li><strong>map_name</strong> (<em>-</em>) &#8211; passed to the TXM store object and retrieved from the hdf5
-file. If falsy, no map will be plotted.</li>
-<li><strong>timeidx</strong> (<em>-</em>) &#8211; </li>
+<li><strong>pixels</strong> (<em>iterable</em>) – An iterable of 2-tuples indicating which (row, column)
+pixels to highlight.</li>
+<li><strong>map_ax</strong> (<em>optional</em>) – A matplotlib axes object to put the map onto. If None, a new
+2-wide subplot will be created for both map_ax and
+spectra_ax.</li>
+<li><strong>spectra_ax</strong> (<em>optional</em>) – A matplotlib axes to be used for plotting spectra. Will only
+be used if <code class="docutils literal"><span class="pre">map_ax</span></code> is not None.</li>
+<li><strong>map_name</strong> (<em>str</em><em>, </em><em>optional</em>) – Name of the map to use for plotting. It will be passed to
+the TXM store object and retrieved from the hdf5 file. If
+falsy, no map will be plotted.</li>
+<li><strong>timeidx</strong> (<em>int</em><em>, </em><em>optional</em>) – Index of which timestep to use (default: 0).</li>
+<li><strong>kwargs</strong> (<em>args</em><em>,</em>) – Passed to plots.plot_pixel_spectra()</li>
 </ul>
 </td>
 </tr>
@@ -2860,12 +3119,12 @@ file. If falsy, no map will be plotted.</li>
 
 <dl class="method">
 <dt id="xanespy.xanes_frameset.XanesFrameset.plot_mean_image">
-<code class="descname">plot_mean_image</code><span class="sig-paren">(</span><em>ax=None</em>, <em>component='modulus'</em><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.xanes_frameset.XanesFrameset.plot_mean_image" title="Permalink to this definition">¶</a></dt>
+<code class="descname">plot_mean_image</code><span class="sig-paren">(</span><em>ax=None</em>, <em>component=’modulus’</em>, <em>cmap=’gray’</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.xanes_frameset.XanesFrameset.plot_mean_image" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="xanespy.xanes_frameset.XanesFrameset.plot_signal_map">
-<code class="descname">plot_signal_map</code><span class="sig-paren">(</span><em>ax=None</em>, <em>signals_idx=None</em><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.xanes_frameset.XanesFrameset.plot_signal_map" title="Permalink to this definition">¶</a></dt>
+<code class="descname">plot_signal_map</code><span class="sig-paren">(</span><em>ax=None</em>, <em>signals_idx=None</em>, <em>interpolation=None</em><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.xanes_frameset.XanesFrameset.plot_signal_map" title="Permalink to this definition">¶</a></dt>
 <dd><p>Plot the map of signal strength for signals extracted from
 self.calculate_signals().</p>
 <table class="docutils field-list" frame="void" rules="none">
@@ -2873,10 +3132,11 @@ self.calculate_signals().</p>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>ax</strong> (<em>-</em>) &#8211; axes object is created.</li>
-<li><strong>signals_idx</strong> (<em>-</em>) &#8211; </li>
-<li><strong>as a numpy array index. Special value None</strong><strong> (</strong><strong>default</strong><strong>)</strong><strong></strong> (<em>passed</em>) &#8211; </li>
-<li><strong>first three signals will be plotted.</strong> (<em>means</em>) &#8211; </li>
+<li><strong>ax</strong> (<em>-</em>) – axes object is created.</li>
+<li><strong>signals_idx</strong> (<em>-</em>) – </li>
+<li><strong>as a numpy array index. Special value None</strong><strong> (</strong><strong>default</strong><strong>)</strong> (<em>passed</em>) – </li>
+<li><strong>first three signals will be plotted.</strong> (<em>means</em>) – </li>
+<li><strong>interpolation</strong> (<em>-</em>) – How to smooth the image when plotting.</li>
 </ul>
 </td>
 </tr>
@@ -2886,26 +3146,25 @@ self.calculate_signals().</p>
 
 <dl class="method">
 <dt id="xanespy.xanes_frameset.XanesFrameset.plot_signals">
-<code class="descname">plot_signals</code><span class="sig-paren">(</span><em>cmap='viridis'</em><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.xanes_frameset.XanesFrameset.plot_signals" title="Permalink to this definition">¶</a></dt>
+<code class="descname">plot_signals</code><span class="sig-paren">(</span><em>cmap=’viridis’</em><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.xanes_frameset.XanesFrameset.plot_signals" title="Permalink to this definition">¶</a></dt>
 <dd><p>Plot the signals from the previously extracted data. Requires that
-self.store().signals and self.store().signal_weights be
-set.</p>
+self.store().signals and self.store().signal_weights be set.</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="xanespy.xanes_frameset.XanesFrameset.plot_xanes_spectrum">
-<code class="descname">plot_xanes_spectrum</code><span class="sig-paren">(</span><em>ax=None</em>, <em>pixel=None</em>, <em>norm_range=None</em>, <em>normalize=False</em>, <em>representation='modulus'</em>, <em>show_fit=False</em>, <em>edge_jump_filter=False</em>, <em>linestyle=':'</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.xanes_frameset.XanesFrameset.plot_xanes_spectrum" title="Permalink to this definition">¶</a></dt>
+<code class="descname">plot_xanes_spectrum</code><span class="sig-paren">(</span><em>ax=None</em>, <em>pixel=None</em>, <em>norm_range=None</em>, <em>normalize=False</em>, <em>representation=’absorbances’</em>, <em>show_fit=False</em>, <em>edge_jump_filter=False</em>, <em>linestyle=’:’</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.xanes_frameset.XanesFrameset.plot_xanes_spectrum" title="Permalink to this definition">¶</a></dt>
 <dd><p>Calculate and plot the xanes spectrum for this field-of-view.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>- matplotlib axes object on which to draw</strong> (<em>ax</em>) &#8211; </li>
-<li><strong>- Coordinates of a specific pixel on the image to plot.</strong> (<em>pixel</em>) &#8211; </li>
-<li><strong>- If truthy</strong><strong>, </strong><strong>will set the pre-edge at zero and the</strong> (<a class="reference internal" href="#xanespy.xanes_frameset.XanesFrameset.normalize" title="xanespy.xanes_frameset.XanesFrameset.normalize"><em>normalize</em></a>) &#8211; post-edge at 1.</li>
-<li><strong>- If truthy</strong><strong>, </strong><strong>will use the edge object to fit the data</strong> (<em>show_fit</em>) &#8211; and plot the resulting fit line.</li>
-<li><strong>- If truthy</strong><strong>, </strong><strong>will only include those values</strong> (<em>edge_jump_filter</em>) &#8211; that show a strong absorbtion jump across this edge.</li>
+<li><strong>- matplotlib axes object on which to draw</strong> (<em>ax</em>) – </li>
+<li><strong>- Coordinates of a specific pixel on the image to plot.</strong> (<em>pixel</em>) – </li>
+<li><strong>- If truthy</strong><strong>, </strong><strong>will set the pre-edge at zero and the</strong> (<a class="reference internal" href="#xanespy.xanes_frameset.XanesFrameset.normalize" title="xanespy.xanes_frameset.XanesFrameset.normalize"><em>normalize</em></a>) – post-edge at 1.</li>
+<li><strong>- If truthy</strong><strong>, </strong><strong>will use the edge object to fit the data</strong> (<em>show_fit</em>) – and plot the resulting fit line.</li>
+<li><strong>- If truthy</strong><strong>, </strong><strong>will only include those values</strong> (<em>edge_jump_filter</em>) – that show a strong absorbtion jump across this edge.</li>
 </ul>
 </td>
 </tr>
@@ -2927,8 +3186,8 @@ shape of (pixel, energy).</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong></strong><strong>(</strong><strong>bool</strong><strong> or </strong><strong>str</strong><strong>)</strong><strong></strong> (<em>edge_jump_filter</em>) &#8211; truthy, only pixels that pass the edge jump filter are
-used to calculate the spectrum. If &#8220;inverse&#8221; is given,
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>(</strong><strong>bool</strong><strong> or </strong><strong>str</strong><strong>)</strong> (<em>edge_jump_filter</em>) – truthy, only pixels that pass the edge jump filter are
+used to calculate the spectrum. If “inverse” is given,
 then the edge jump filter is logically not-ted and
 calculated with a more conservative threshold.</td>
 </tr>
@@ -2938,7 +3197,7 @@ calculated with a more conservative threshold.</td>
 
 <dl class="method">
 <dt id="xanespy.xanes_frameset.XanesFrameset.spectrum">
-<code class="descname">spectrum</code><span class="sig-paren">(</span><em>pixel=None</em>, <em>edge_jump_filter=False</em>, <em>representation='absorbances'</em>, <em>index=0</em><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.xanes_frameset.XanesFrameset.spectrum" title="Permalink to this definition">¶</a></dt>
+<code class="descname">spectrum</code><span class="sig-paren">(</span><em>pixel=None</em>, <em>edge_jump_filter=False</em>, <em>representation=’absorbances’</em>, <em>index=0</em><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.xanes_frameset.XanesFrameset.spectrum" title="Permalink to this definition">¶</a></dt>
 <dd><p>Collapse the frameset down to an energy spectrum.</p>
 <p>Any dimensions (besides the energy dimension) that remain
 after applying the arguments below, will be averaged to give
@@ -2947,25 +3206,25 @@ the final intensity at each energy.</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>spectrum</strong> &#8211; A pandas Series with the spectrum.</p>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>spectrum</strong> – A pandas Series with the spectrum.</p>
 </td>
 </tr>
 <tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><p class="first">pd.Series</p>
 </td>
 </tr>
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>pixel</strong> (<em>tuple</em><em>, </em><em>optional</em>) &#8211; A 2-tuple that causes the returned series to represent
+<li><strong>pixel</strong> (<em>tuple</em><em>, </em><em>optional</em>) – A 2-tuple that causes the returned series to represent
 the spectrum for only 1 pixel in the frameset. If None, a
 larger part of the frame will be used, depending on the
 other arguments.</li>
-<li><strong>edge_jump_filter</strong> (<em>bool</em><em> or </em><em>str</em><em>, </em><em>optional</em>) &#8211; If truthy, only pixels that
+<li><strong>edge_jump_filter</strong> (<em>bool</em><em> or </em><em>str</em><em>, </em><em>optional</em>) – If truthy, only pixels that
 pass the edge jump filter are used to calculate the
-spectrum. If &#8220;inverse&#8221; is given, then the edge jump filter
+spectrum. If “inverse” is given, then the edge jump filter
 is logically not-ted and calculated with a more
 conservative threshold.</li>
-<li><strong>representation</strong> (<em>str</em><em>, </em><em>optional</em>) &#8211; What kind of data to use for creating the spectrum. This
+<li><strong>representation</strong> (<em>str</em><em>, </em><em>optional</em>) – What kind of data to use for creating the spectrum. This
 will be passed to TXMStore.get_map()</li>
-<li><strong>index</strong> (<em>int</em><em>, </em><em>optional</em>) &#8211; Which step in the frameset to use. When used to index
+<li><strong>index</strong> (<em>int</em><em>, </em><em>optional</em>) – Which step in the frameset to use. When used to index
 store().absorbances, this should return a 3D array like
 (energy, rows, columns).</li>
 </ul>
@@ -3022,11 +3281,11 @@ than translation/scale values.</p>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>translations</strong> (<em>np.ndarray</em>) &#8211; How much to move each axis (x, y[, z]).</li>
-<li><strong>rotations</strong> (<em>np.ndarray</em>) &#8211; How much to rotate around the origin (0, 0) pixel.</li>
-<li><strong>center</strong> (<em>2-tuple</em>) &#8211; Where to set the origin of rotation. Default is the first
+<li><strong>translations</strong> (<em>np.ndarray</em>) – How much to move each axis (x, y[, z]).</li>
+<li><strong>rotations</strong> (<em>np.ndarray</em>) – How much to rotate around the origin (0, 0) pixel.</li>
+<li><strong>center</strong> (<em>2-tuple</em>) – Where to set the origin of rotation. Default is the first
 pixel (0, 0).</li>
-<li><strong>scales</strong> (<em>np.ndarray</em>) &#8211; How much to scale the image by in each dimension (x, y[,
+<li><strong>scales</strong> (<em>np.ndarray</em>) – How much to scale the image by in each dimension (x, y[,
 z]).</li>
 </ul>
 </td>
@@ -3043,10 +3302,10 @@ z]).</li>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>timeidx</strong> (<em>int</em><em>, </em><em>optional</em>) &#8211; Which timestep to use for finding the start time. If
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>timeidx</strong> (<em>int</em><em>, </em><em>optional</em>) – Which timestep to use for finding the start time. If
 omitted or None (default), all timesteps will be checked.</td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><strong>start_time</strong> &#8211; Naive datetime representing the earliest known frame for
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><strong>start_time</strong> – Naive datetime representing the earliest known frame for
 this timeidx. Timezone will always be UTC no matter where
 the data were collected.</td>
 </tr>
@@ -3058,25 +3317,25 @@ the data were collected.</td>
 
 <dl class="method">
 <dt id="xanespy.xanes_frameset.XanesFrameset.store">
-<code class="descname">store</code><span class="sig-paren">(</span><em>mode='r'</em><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.xanes_frameset.XanesFrameset.store" title="Permalink to this definition">¶</a></dt>
+<code class="descname">store</code><span class="sig-paren">(</span><em>mode=’r’</em><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.xanes_frameset.XanesFrameset.store" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get a TXM Store object that saves and retrieves data from the HDF5
 file. The mode argument is passed to h5py as is. This method
 should be used as a context manager, especially if mode is
 something writeable:</p>
-<blockquote>
-<div><dl class="docutils">
-<dt>with self.store() as store:</dt>
-<dd># Do stuff with the store</dd>
-</dl>
-</div></blockquote>
+<div class="code python highlight-default"><div class="highlight"><pre><span></span><span class="c1"># The &#39;r+&#39; creates the file or appends if one exists</span>
+<span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">store</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="s1">&#39;r+&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">store</span><span class="p">:</span>
+    <span class="c1"># Do stuff with the store...</span>
+    <span class="n">img</span> <span class="o">=</span> <span class="n">store</span><span class="o">.</span><span class="n">absorbances</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span>
+</pre></div>
+</div>
 </dd></dl>
 
 <dl class="method">
 <dt id="xanespy.xanes_frameset.XanesFrameset.subtract_surroundings">
 <code class="descname">subtract_surroundings</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.xanes_frameset.XanesFrameset.subtract_surroundings" title="Permalink to this definition">¶</a></dt>
-<dd><p>Use the edge mask to separate &#8220;surroundings&#8221; from &#8220;sample&#8221;, then
+<dd><p>Use the edge mask to separate “surroundings” from “sample”, then
 subtract the average surrounding absorbance from each
-frame. This effective removes effects where the entire frame
+frame. This effectively removes effects where the entire frame
 is brighter from one energy to the next.</p>
 </dd></dl>
 
@@ -3090,7 +3349,7 @@ allows for easy optimization of parallelizable algorithms. Most
 functions will operate on large arrays of data.</p>
 <dl class="class">
 <dt id="xanespy.xanes_math.KEdgeParams">
-<em class="property">class </em><code class="descclassname">xanespy.xanes_math.</code><code class="descname">KEdgeParams</code><span class="sig-paren">(</span><em>scale</em>, <em>voffset</em>, <em>E0</em>, <em>sigw</em>, <em>pre_m</em>, <em>pre_b</em>, <em>ga</em>, <em>gb</em>, <em>gc</em><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.xanes_math.KEdgeParams" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">xanespy.xanes_math.</code><code class="descname">KEdgeParams</code><span class="sig-paren">(</span><em>scale</em>, <em>voffset</em>, <em>E0</em>, <em>sigw</em>, <em>bg_slope</em>, <em>ga</em>, <em>gb</em>, <em>gc</em><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.xanes_math.KEdgeParams" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">tuple</span></code></p>
 <dl class="attribute">
 <dt id="xanespy.xanes_math.KEdgeParams.E0">
@@ -3099,33 +3358,27 @@ functions will operate on large arrays of data.</p>
 </dd></dl>
 
 <dl class="attribute">
+<dt id="xanespy.xanes_math.KEdgeParams.bg_slope">
+<code class="descname">bg_slope</code><a class="headerlink" href="#xanespy.xanes_math.KEdgeParams.bg_slope" title="Permalink to this definition">¶</a></dt>
+<dd><p>Alias for field number 4</p>
+</dd></dl>
+
+<dl class="attribute">
 <dt id="xanespy.xanes_math.KEdgeParams.ga">
 <code class="descname">ga</code><a class="headerlink" href="#xanespy.xanes_math.KEdgeParams.ga" title="Permalink to this definition">¶</a></dt>
-<dd><p>Alias for field number 6</p>
+<dd><p>Alias for field number 5</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="xanespy.xanes_math.KEdgeParams.gb">
 <code class="descname">gb</code><a class="headerlink" href="#xanespy.xanes_math.KEdgeParams.gb" title="Permalink to this definition">¶</a></dt>
-<dd><p>Alias for field number 7</p>
+<dd><p>Alias for field number 6</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="xanespy.xanes_math.KEdgeParams.gc">
 <code class="descname">gc</code><a class="headerlink" href="#xanespy.xanes_math.KEdgeParams.gc" title="Permalink to this definition">¶</a></dt>
-<dd><p>Alias for field number 8</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="xanespy.xanes_math.KEdgeParams.pre_b">
-<code class="descname">pre_b</code><a class="headerlink" href="#xanespy.xanes_math.KEdgeParams.pre_b" title="Permalink to this definition">¶</a></dt>
-<dd><p>Alias for field number 5</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="xanespy.xanes_math.KEdgeParams.pre_m">
-<code class="descname">pre_m</code><a class="headerlink" href="#xanespy.xanes_math.KEdgeParams.pre_m" title="Permalink to this definition">¶</a></dt>
-<dd><p>Alias for field number 4</p>
+<dd><p>Alias for field number 7</p>
 </dd></dl>
 
 <dl class="attribute">
@@ -3153,9 +3406,36 @@ functions will operate on large arrays of data.</p>
 <code class="descclassname">xanespy.xanes_math.</code><code class="descname">apply_internal_reference</code><span class="sig-paren">(</span><em>intensities</em>, <em>out=None</em><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.xanes_math.apply_internal_reference" title="Permalink to this definition">¶</a></dt>
 <dd><p>Apply a reference correction to complex data to convert intensities
 into refractive index. <span class="math">\(I_0\)</span> is determined by separating the pixels
-into background and foreground using Otsu&#8217;s method.</p>
+into background and foreground using Otsu’s method.</p>
 <p>Arrays <cite>intensities</cite> and <cite>out</cite> must all have the same shape where
 the last two dimensions are image rows and column.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="xanespy.xanes_math.apply_mosaic_reference">
+<code class="descclassname">xanespy.xanes_math.</code><code class="descname">apply_mosaic_reference</code><span class="sig-paren">(</span><em>intensity</em>, <em>reference</em><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.xanes_math.apply_mosaic_reference" title="Permalink to this definition">¶</a></dt>
+<dd><p>Use a single reference frame to calculate the reference for a
+mosaic of intensity frames.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>- out</strong> – Same shape as <code class="docutils literal"><span class="pre">intensity</span></code> (I) but with optical depth: ln(I/I0)
+where I0 is the reference frame.</p>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><p class="first">ndarray</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>intensity</strong> (<em>-</em>) – Intensity data image of the sample. It’s shape must be a whole
+multiple of the shape of <code class="docutils literal"><span class="pre">reference</span></code>.</li>
+<li><strong>reference</strong> (<em>-</em>) – A reference image with no sample that will be applied.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="function">
@@ -3172,10 +3452,10 @@ dimensions are image rows and columns.</p>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>intensities</strong> (<em>np.ndarray</em>) &#8211; Sample input signal data.</li>
-<li><strong>references</strong> (<em>np.ndarray</em>) &#8211; Background input signal data. Must be the same shape as
+<li><strong>intensities</strong> (<em>np.ndarray</em>) – Sample input signal data.</li>
+<li><strong>references</strong> (<em>np.ndarray</em>) – Background input signal data. Must be the same shape as
 intensities.</li>
-<li><strong>out</strong> (<em>np.ndarray</em><em>, </em><em>optional</em>) &#8211; Array to receive the results.</li>
+<li><strong>out</strong> (<em>np.ndarray</em><em>, </em><em>optional</em>) – Array to receive the results.</li>
 </ul>
 </td>
 </tr>
@@ -3193,16 +3473,16 @@ positions of maximum intensities over the near-edge region.</p>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>spectra</strong> (<em>np.array</em>) &#8211; 2D numpy array of absorbance spectra where the last dimension is
+<li><strong>spectra</strong> (<em>np.array</em>) – 2D numpy array of absorbance spectra where the last dimension is
 energy.</li>
-<li><strong>energies</strong> (<em>np.array</em>) &#8211; Array of X-ray energies in electron-volts. Must be broadcastable
+<li><strong>energies</strong> (<em>np.array</em>) – Array of X-ray energies in electron-volts. Must be broadcastable
 to the shape of spectra.</li>
-<li><strong>edge</strong> &#8211; An XAS Edge object that describes the absorbance edge in
+<li><strong>edge</strong> – An XAS Edge object that describes the absorbance edge in
 question.</li>
 </ul>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>out</strong> &#8211; Array with the whiteline position of each spectrum.</p>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>out</strong> – Array with the whiteline position of each spectrum.</p>
 </td>
 </tr>
 <tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">np.ndarray</p>
@@ -3223,9 +3503,9 @@ it will be shifted up, processed, then shifted down again.</p>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>spectra</strong> (<em>-</em>) &#8211; </li>
-<li><strong>n_components</strong> (<em>-</em>) &#8211; </li>
-<li><strong>nmf_kwargs</strong> (<em>-</em>) &#8211; the constructor of the estimator.</li>
+<li><strong>spectra</strong> (<em>-</em>) – </li>
+<li><strong>n_components</strong> (<em>-</em>) – </li>
+<li><strong>nmf_kwargs</strong> (<em>-</em>) – the constructor of the estimator.</li>
 </ul>
 </td>
 </tr>
@@ -3254,13 +3534,42 @@ is replaced with fitting parameters, describe by the named tupled
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>spectra</strong> (<em>-</em>) &#8211; index is energy. This can be a multi-dimensional array, which
+<li><strong>spectra</strong> (<em>-</em>) – index is energy. This can be a multi-dimensional array, which
 allows calculation of image frames, etc. The last axis should be
 X-ray energy.</li>
-<li><strong>energies</strong> (<em>-</em>) &#8211; </li>
-<li><strong>p0</strong> (<em>-</em>) &#8211; described by kedge_params.</li>
-<li><strong>out</strong> (<em>-</em>) &#8211; </li>
-<li><strong>be created.</strong> (<em>will</em>) &#8211; </li>
+<li><strong>energies</strong> (<em>-</em>) – </li>
+<li><strong>p0</strong> (<em>-</em>) – described by kedge_params.</li>
+<li><strong>out</strong> (<em>-</em>) – </li>
+<li><strong>be created.</strong> (<em>will</em>) – </li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="xanespy.xanes_math.fit_kedge_mpi">
+<code class="descclassname">xanespy.xanes_math.</code><code class="descname">fit_kedge_mpi</code><span class="sig-paren">(</span><em>spectra</em>, <em>energies</em>, <em>p0</em><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.xanes_math.fit_kedge_mpi" title="Permalink to this definition">¶</a></dt>
+<dd><p>Use least squares to fit a set of curves to the data. Very similar
+to <code class="docutils literal"><span class="pre">fit_k_edge()</span></code> except using message passing interface (MPI) for
+parallel processing.</p>
+<p>Returns an array with a similar shape to spectra but the last axis
+is replaced with fitting parameters, described by the named tupled
+<code class="docutils literal"><span class="pre">KParams</span></code> defined in this module.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>spectra</strong> (<em>np.ndarray</em>) – An array containing absorbance data. Assumes that the index is
+energy. This can be a multi-dimensional array, which allows
+calculation of image frames, etc. The last axis should be X-ray
+energy.</li>
+<li><strong>energies</strong> (<em>np.ndarray</em>) – Array of X-ray energies. Must have same shape as <cite>spectra</cite>.</li>
+<li><strong>p0</strong> (<em>tuple</em>) – A tuple with the initial guess. The correct order is described
+by kedge_params.</li>
+<li><strong>out</strong> (<em>np.ndarray</em>) – To hold the results. If omitted, a new array will be created.</li>
 </ul>
 </td>
 </tr>
@@ -3279,10 +3588,10 @@ function as the starting parameters, p0.</p>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>spectrum</strong> (<em>-</em>) &#8211; K-edge spectrum. Only 1-dimensional data are currently accepted.</li>
-<li><strong>energies</strong> (<em>-</em>) &#8211; the points in <cite>spectrum</cite>. Must have the same shape as <cite>spectrum</cite>.</li>
-<li><strong>edge</strong> (<em>-</em>) &#8211; actual edge energy itself.</li>
-<li><strong>Returns</strong> (<em>A named tuple with the estimated parameters</em><em> (</em><em>see</em>) &#8211; .KEdgeParams for definition)</li>
+<li><strong>spectrum</strong> (<em>-</em>) – K-edge spectrum. Only 1-dimensional data are currently accepted.</li>
+<li><strong>energies</strong> (<em>-</em>) – the points in <cite>spectrum</cite>. Must have the same shape as <cite>spectrum</cite>.</li>
+<li><strong>edge</strong> (<em>-</em>) – actual edge energy itself.</li>
+<li><strong>Returns</strong> (<em>A named tuple with the estimated parameters</em><em> (</em><em>see</em>) – .KEdgeParams for definition)</li>
 </ul>
 </td>
 </tr>
@@ -3323,20 +3632,24 @@ edge-jump accounts for most of the standard deviation.</p>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>frames</strong> (<em>-</em>) &#8211; </li>
-<li><strong>energies</strong> (<em>-</em>) &#8211; <cite>frames</cite>. Must have the same shape along the first dimenion as
-<cite>frames</cite>.</li>
-<li><strong>edge</strong> (<em>-</em>) &#8211; elemental edge being studied.</li>
-<li><strong>sensitivity</strong> (<em>-</em>) &#8211; the actual threshold.</li>
-<li><strong>min_size</strong> (<em>-</em>) &#8211; removed. Passing zero (default) will result in no effect.</li>
+<li><strong>frames</strong> (<em>numpy.ndarray</em>) – Array with images at different energies.</li>
+<li><strong>energies</strong> (<em>numpy.ndarray</em>) – X-ray energies corresponding to images in <code class="docutils literal"><span class="pre">frames</span></code>. Must have
+the same shape along the first dimenion as <code class="docutils literal"><span class="pre">frames</span></code>.</li>
+<li><strong>edge</strong> (<a class="reference internal" href="#xanespy.edges.KEdge" title="xanespy.edges.KEdge"><em>KEdge</em></a>) – A <a class="reference internal" href="#xanespy.edges.KEdge" title="xanespy.edges.KEdge"><code class="xref py py-class docutils literal"><span class="pre">xanespy.edges.KEdge</span></code></a> object that contains a
+description of the elemental edge being studied.</li>
+<li><strong>sensitivity</strong> (<em>float</em><em>, </em><em>optional</em>) – A multiplier for the otsu value to determine the actual
+threshold.</li>
+<li><strong>min_size</strong> (<em>int</em><em>, </em><em>optional</em>) – Objects below this size (in pixels) will be removed. Passing
+zero (default) will result in no effect.</li>
 </ul>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"><ul class="simple">
-<li><em>- A boolean mask with the same shape as the last two dimensions of</em></li>
-<li><cite>frames</cite> where True pixels are likely to be background material.</li>
-</ul>
-</p>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>mask</strong> – A boolean mask with the same shape as the last two dimensions of
+<code class="docutils literal"><span class="pre">frames</span></code> where True pixels are likely to be background
+material.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">numpy.ndarray</p>
 </td>
 </tr>
 </tbody>
@@ -3355,13 +3668,13 @@ to mitigate differences in total intensity.</p>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>frames</strong> (<em>-</em>) &#8211; </li>
-<li><strong>energies</strong> (<em>-</em>) &#8211; <cite>frames</cite>. Must have the same shape along the first dimenion as
+<li><strong>frames</strong> (<em>-</em>) – </li>
+<li><strong>energies</strong> (<em>-</em>) – <cite>frames</cite>. Must have the same shape along the first dimenion as
 <cite>frames</cite>.</li>
-<li><strong>edge</strong> (<em>-</em>) &#8211; elemental edge being studied.</li>
-<li><strong>sensitivity</strong> (<em>-</em>) &#8211; the actual threshold.</li>
-<li><strong>frame_dims</strong> (<em>-</em>) &#8211; means each frame is a two-dimensional image.</li>
-<li><strong>min_size</strong> (<em>-</em>) &#8211; removed. Passing zero (default) will result in no effect.</li>
+<li><strong>edge</strong> (<em>-</em>) – elemental edge being studied.</li>
+<li><strong>sensitivity</strong> (<em>-</em>) – the actual threshold.</li>
+<li><strong>frame_dims</strong> (<em>-</em>) – means each frame is a two-dimensional image.</li>
+<li><strong>min_size</strong> (<em>-</em>) – removed. Passing zero (default) will result in no effect.</li>
 </ul>
 </td>
 </tr>
@@ -3384,7 +3697,8 @@ to mitigate differences in total intensity.</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>frames</strong> (<em>-</em>) &#8211; energy. These will be merged and used for segmentation.</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>frames</strong> (<em>numpy.ndarray</em>) – An array of images, each one at a different energy. These will
+be merged and used for segmentation.</td>
 </tr>
 </tbody>
 </table>
@@ -3403,13 +3717,13 @@ peak (for the whiteline).</p>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>energies</strong> (<em>np.ndarray</em>) &#8211; Array with energy values to be predicted.</li>
-<li><strong>*params</strong> (<em>tuple</em><em>(</em><em>int</em><em>)</em><em></em>) &#8211; The curve parameters that should be used for the
+<li><strong>energies</strong> (<em>np.ndarray</em>) – Array with energy values to be predicted.</li>
+<li><strong>*params</strong> (<em>tuple</em><em>(</em><em>int</em><em>)</em>) – The curve parameters that should be used for the
 prediction. Their order is described by kedge_params variable.</li>
 </ul>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>curve</strong> &#8211; The predicted absorbance values based on the input
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>curve</strong> – The predicted absorbance values based on the input
 parameters. Shape will match <cite>energies</cite>.</p>
 </td>
 </tr>
@@ -3422,25 +3736,25 @@ parameters. Shape will match <cite>energies</cite>.</p>
 
 <dl class="function">
 <dt id="xanespy.xanes_math.register_correlations">
-<code class="descclassname">xanespy.xanes_math.</code><code class="descname">register_correlations</code><span class="sig-paren">(</span><em>frames</em>, <em>reference</em>, <em>upsample_factor=10</em>, <em>desc='Registering'</em><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.xanes_math.register_correlations" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">xanespy.xanes_math.</code><code class="descname">register_correlations</code><span class="sig-paren">(</span><em>frames</em>, <em>reference</em>, <em>upsample_factor=10</em>, <em>desc=’Registering’</em><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.xanes_math.register_correlations" title="Permalink to this definition">¶</a></dt>
 <dd><p>Calculate the relative translation between the reference image and
 a series of frames.</p>
-<p>This uses phase correlation through scikit-image&#8217;s
+<p>This uses phase correlation through scikit-image’s
 <cite>register_translation</cite> function.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>frames</strong> (<em>np.ndarray</em>) &#8211; Array where the last two dimensions are (column, row) of images
+<li><strong>frames</strong> (<em>np.ndarray</em>) – Array where the last two dimensions are (column, row) of images
 to be registered.</li>
-<li><strong>reference</strong> (<em>np.ndarray</em>) &#8211; Image frame against which to align the entries in <cite>frames</cite>.</li>
-<li><strong>upsample_factor</strong> (<em>int</em><em>, </em><em>optional</em>) &#8211; Factor controls subpixel registration via scikit-image.</li>
-<li><strong>desc</strong> (<em>str</em><em>, </em><em>optional</em>) &#8211; Description for putting in the progress bar.</li>
+<li><strong>reference</strong> (<em>np.ndarray</em>) – Image frame against which to align the entries in <cite>frames</cite>.</li>
+<li><strong>upsample_factor</strong> (<em>int</em><em>, </em><em>optional</em>) – Factor controls subpixel registration via scikit-image.</li>
+<li><strong>desc</strong> (<em>str</em><em>, </em><em>optional</em>) – Description for putting in the progress bar.</li>
 </ul>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>translations</strong> &#8211; Array with same dimensions as 0-th axis of <cite>frames</cite> containing
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>translations</strong> – Array with same dimensions as 0-th axis of <cite>frames</cite> containing
 (x, y) translations for each frame.</p>
 </td>
 </tr>
@@ -3453,10 +3767,10 @@ to be registered.</li>
 
 <dl class="function">
 <dt id="xanespy.xanes_math.register_template">
-<code class="descclassname">xanespy.xanes_math.</code><code class="descname">register_template</code><span class="sig-paren">(</span><em>frames</em>, <em>reference</em>, <em>template</em>, <em>desc='Registering'</em><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.xanes_math.register_template" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">xanespy.xanes_math.</code><code class="descname">register_template</code><span class="sig-paren">(</span><em>frames</em>, <em>reference</em>, <em>template</em>, <em>desc=’Registering’</em><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.xanes_math.register_template" title="Permalink to this definition">¶</a></dt>
 <dd><p>Calculate the relative translation between the reference image and
 a series of frames.</p>
-<p>This uses template cross correlation through scikit-image&#8217;s
+<p>This uses template cross correlation through scikit-image’s
 <cite>match_template</cite> function.</p>
 <p>The <cite>register_correlations</cite> algorithm is simpler to use in most
 cases but sometimes results in unreasonable results; in those
@@ -3467,16 +3781,16 @@ approximation.</p>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>frames</strong> (<em>np.ndarray</em>) &#8211; Array where the last two dimensions are (column, row) of images
+<li><strong>frames</strong> (<em>np.ndarray</em>) – Array where the last two dimensions are (column, row) of images
 to be registered.</li>
-<li><strong>reference</strong> (<em>np.ndarray</em>) &#8211; Image frame against which to align the entries in <cite>frames</cite>.</li>
-<li><strong>template</strong> (<em>np.ndarray</em>) &#8211; A 2D array (smaller than frames and reference) that will be
+<li><strong>reference</strong> (<em>np.ndarray</em>) – Image frame against which to align the entries in <cite>frames</cite>.</li>
+<li><strong>template</strong> (<em>np.ndarray</em>) – A 2D array (smaller than frames and reference) that will be
 identified in each frame and used for alignment.</li>
-<li><strong>desc</strong> (<em>str</em><em>, </em><em>optional</em>) &#8211; Description for putting in the progress bar.</li>
+<li><strong>desc</strong> (<em>str</em><em>, </em><em>optional</em>) – Description for putting in the progress bar.</li>
 </ul>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>translations</strong> &#8211; Array with same dimensions as 0-th axis of <cite>frames</cite> containing
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>translations</strong> – Array with same dimensions as 0-th axis of <cite>frames</cite> containing
 (x, y) translations for each frame.</p>
 </td>
 </tr>
@@ -3489,7 +3803,7 @@ identified in each frame and used for alignment.</li>
 
 <dl class="function">
 <dt id="xanespy.xanes_math.transform_images">
-<code class="descclassname">xanespy.xanes_math.</code><code class="descname">transform_images</code><span class="sig-paren">(</span><em>data</em>, <em>transformations</em>, <em>out=None</em>, <em>mode='median'</em><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.xanes_math.transform_images" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">xanespy.xanes_math.</code><code class="descname">transform_images</code><span class="sig-paren">(</span><em>data</em>, <em>transformations</em>, <em>out=None</em>, <em>mode=’median’</em><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.xanes_math.transform_images" title="Permalink to this definition">¶</a></dt>
 <dd><p>Takes image data and applies the given translation matrices.</p>
 <p>It is assumed that the first dimension of <cite>data</cite> is the same as
 the length of <cite>transformations</cite>. The transformation matrices can
@@ -3502,20 +3816,20 @@ returned as a new array.</p>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>data</strong> (<em>np.ndarray</em>) &#8211; Numeric array with frames to transform. Last two dimensions are
+<li><strong>data</strong> (<em>np.ndarray</em>) – Numeric array with frames to transform. Last two dimensions are
 assumed to be (row, columns).</li>
-<li><strong>transformations</strong> (<em>np.ndarray</em>) &#8211; A numeric array shaped compatibally with <cite>data</cite>. The last two
+<li><strong>transformations</strong> (<em>np.ndarray</em>) – A numeric array shaped compatibally with <cite>data</cite>. The last two
 dimensions are assumed to be (3, 3) and each (3, 3) encodes a
 transformation matrix for the corresponding frame in <cite>data</cite>.</li>
-<li><strong>out</strong> (<em>np.ndarray</em><em>, </em><em>optional</em>) &#8211; A numeric array with same shape as <cite>data</cite> that will hold the
+<li><strong>out</strong> (<em>np.ndarray</em><em>, </em><em>optional</em>) – A numeric array with same shape as <cite>data</cite> that will hold the
 transformed data.</li>
-<li><strong>mode</strong> (<em>str</em><em>, </em><em>optional</em>) &#8211; Describes how to deal with edges. See scikit-image documentation
-for options. Special value &#8220;median&#8221; (default), takes the median
+<li><strong>mode</strong> (<em>str</em><em>, </em><em>optional</em>) – Describes how to deal with edges. See scikit-image documentation
+for options. Special value “median” (default), takes the median
 pixel intensity of that frame and uses it as the constant value.</li>
 </ul>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>out</strong> &#8211; A new array with similar dimensions to <cite>data</cite> but with
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>out</strong> – A new array with similar dimensions to <cite>data</cite> but with
 transformations applied and converted to float datatype.</p>
 </td>
 </tr>
@@ -3570,16 +3884,16 @@ have one less degree of freedom than translation/scale values.</p>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>translations</strong> (<em>np.ndarray</em><em>, </em><em>optional</em>) &#8211; How much to move each axis (x, y[, z]).</li>
-<li><strong>rotations</strong> (<em>np.ndarray</em><em>, </em><em>optional</em>) &#8211; How much to rotate around the origin (0, 0) pixel.</li>
-<li><strong>center</strong> (<em>np.ndarray</em><em>, </em><em>optional</em>) &#8211; Where to set the origin of rotation. Default is the
+<li><strong>translations</strong> (<em>np.ndarray</em><em>, </em><em>optional</em>) – How much to move each axis (x, y[, z]).</li>
+<li><strong>rotations</strong> (<em>np.ndarray</em><em>, </em><em>optional</em>) – How much to rotate around the origin (0, 0) pixel.</li>
+<li><strong>center</strong> (<em>np.ndarray</em><em>, </em><em>optional</em>) – Where to set the origin of rotation. Default is the
 first pixel (0, 0).</li>
-<li><strong>scales</strong> (<em>np.ndarray</em><em>, </em><em>optional</em>) &#8211; How much to scale the image by in each dimension
+<li><strong>scales</strong> (<em>np.ndarray</em><em>, </em><em>optional</em>) – How much to scale the image by in each dimension
 (x, y[, z]).</li>
 </ul>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>new_transforms</strong> &#8211; Resulting transformation matrices. Will have the same shape as the
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>new_transforms</strong> – Resulting transformation matrices. Will have the same shape as the
 input arrays but with the last dimension replaced by (3, 3).</p>
 </td>
 </tr>
@@ -3596,17 +3910,47 @@ input arrays but with the last dimension replaced by (3, 3).</p>
 <p>Tools for importing X-ray microscopy frames in formats produced by
 Xradia instruments.</p>
 <dl class="class">
+<dt id="xanespy.xradia.TXRMFile">
+<em class="property">class </em><code class="descclassname">xanespy.xradia.</code><code class="descname">TXRMFile</code><span class="sig-paren">(</span><em>filename</em>, <em>flavor: str</em><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.xradia.TXRMFile" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#xanespy.xradia.XRMFile" title="xanespy.xradia.XRMFile"><code class="xref py py-class docutils literal"><span class="pre">xanespy.xradia.XRMFile</span></code></a></p>
+<p>Similar to <a class="reference internal" href="#xanespy.xradia.XRMFile" title="xanespy.xradia.XRMFile"><code class="xref py py-class docutils literal"><span class="pre">XRMFile</span></code></a> but contains multiple images in a data-set.</p>
+<dl class="method">
+<dt id="xanespy.xradia.TXRMFile.energies">
+<code class="descname">energies</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.xradia.TXRMFile.energies" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="xanespy.xradia.TXRMFile.image_stack">
+<code class="descname">image_stack</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.xradia.TXRMFile.image_stack" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
 <dt id="xanespy.xradia.XRMFile">
 <em class="property">class </em><code class="descclassname">xanespy.xradia.</code><code class="descname">XRMFile</code><span class="sig-paren">(</span><em>filename</em>, <em>flavor: str</em><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.xradia.XRMFile" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
 <p>Single X-ray micrscopy frame created using XRadia XRM format.</p>
+<p>Formats from different beamlines have subtly different storage
+patterns. The <code class="docutils literal"><span class="pre">flavor</span></code> argument controls this parameter. The
+following metadata are affected by this coice:</p>
+<ul class="simple">
+<li>Energy: SSRL 6-2c does not store the X-ray beam energy in the
+file so it must be extracted from the filename.</li>
+<li>starttime, endtime : The XRMFile does not store timezone info,
+so we have to guess based on beamline.</li>
+<li>pixel_size : The APS microscope automatically corrects
+magnification when changing energy, the SSRL microscope does
+not.</li>
+</ul>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>filename</strong> (<em>-</em>) &#8211; </li>
-<li><strong>flavor</strong> (<em>-</em>) &#8211; choices are [&#8216;ssrl&#8217;, &#8216;aps&#8217;, &#8216;aps-old1&#8217;]. These choices should
+<li><strong>filename</strong> (<em>str</em>) – The path to the .xrm file</li>
+<li><strong>flavor</strong> (<em>str</em>) – The variety of data represented in the xrm file. Valid
+choices are [‘ssrl’, ‘aps’, ‘aps-old1’]. These choices should
 line up with whatever is generated using the scripts in
 beamlines moudles.</li>
 </ul>
@@ -3616,13 +3960,17 @@ beamlines moudles.</li>
 </table>
 <dl class="attribute">
 <dt id="xanespy.xradia.XRMFile.aps_old1_regex">
-<code class="descname">aps_old1_regex</code><em class="property"> = re.compile('(\\d{8})_([a-zA-Z0-9_]+)_([a-zA-Z0-9]+)_(\\d{4}).xrm')</em><a class="headerlink" href="#xanespy.xradia.XRMFile.aps_old1_regex" title="Permalink to this definition">¶</a></dt>
+<code class="descname">aps_old1_regex</code><em class="property"> = re.compile(‘(\d{8})_([a-zA-Z0-9_]+)_([a-zA-Z0-9]+)_(\d{4}).xrm’)</em><a class="headerlink" href="#xanespy.xradia.XRMFile.aps_old1_regex" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="xanespy.xradia.XRMFile.binning">
 <code class="descname">binning</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.xradia.XRMFile.binning" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Binning mode of the image.</p>
+<p>Binning reduces pixel density but improves signal/noise ratio
+by combining adjacent pixels. For example, a 2048 x 2048 CCD
+with binning 4 would produce a 512 x 512 image.</p>
+</dd></dl>
 
 <dl class="method">
 <dt id="xanespy.xradia.XRMFile.close">
@@ -3646,7 +3994,7 @@ and the start time.</p>
 
 <dl class="method">
 <dt id="xanespy.xradia.XRMFile.image_data">
-<code class="descname">image_data</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.xradia.XRMFile.image_data" title="Permalink to this definition">¶</a></dt>
+<code class="descname">image_data</code><span class="sig-paren">(</span><em>idx=0</em><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.xradia.XRMFile.image_data" title="Permalink to this definition">¶</a></dt>
 <dd><p>TXM Image frame.</p>
 </dd></dl>
 
@@ -3661,8 +4009,19 @@ and the start time.</p>
 <dd></dd></dl>
 
 <dl class="method">
+<dt id="xanespy.xradia.XRMFile.is_valid">
+<code class="descname">is_valid</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.xradia.XRMFile.is_valid" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check that the XRM file has valid data.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="xanespy.xradia.XRMFile.num_images">
+<code class="descname">num_images</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.xradia.XRMFile.num_images" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
 <dt id="xanespy.xradia.XRMFile.ole_value">
-<code class="descname">ole_value</code><span class="sig-paren">(</span><em>stream</em>, <em>fmt=None</em><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.xradia.XRMFile.ole_value" title="Permalink to this definition">¶</a></dt>
+<code class="descname">ole_value</code><span class="sig-paren">(</span><em>stream</em>, <em>fmt=None</em>, <em>as_array=False</em><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.xradia.XRMFile.ole_value" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get arbitrary data from the ole file and convert from bytes.</p>
 </dd></dl>
 
@@ -3679,9 +4038,15 @@ and the start time.</p>
 <dl class="method">
 <dt id="xanespy.xradia.XRMFile.starttime">
 <code class="descname">starttime</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.xradia.XRMFile.starttime" title="Permalink to this definition">¶</a></dt>
-<dd><p>Retrieve a datetime object representing when this frame was
-collected. Timezone is inferred from flavor (eg. ssrl -&gt; california
-time).</p>
+<dd><p>Return the earliest timestamp for the collected frames.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="xanespy.xradia.XRMFile.starttimes">
+<code class="descname">starttimes</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.xradia.XRMFile.starttimes" title="Permalink to this definition">¶</a></dt>
+<dd><p>Retrieve all datetime objects representing when these frames were
+collected. Timezone is inferred from flavor (eg. ssrl -&gt;
+california time).</p>
 </dd></dl>
 
 <dl class="method">
@@ -3767,13 +4132,13 @@ is uniform and assumes a 40µm field-of-view.</p>
         <li class="right" >
           <a href="modules.html" title="xanespy"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">Xanespy 0.1 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Xanespy 0.1.1 documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="modules.html" >xanespy</a> &#187;</li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2017, Mark Wolf.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.5.1.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.2.
     </div>
   </body>
 </html>

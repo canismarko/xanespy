@@ -101,7 +101,6 @@ def apply_internal_reference(intensities, out=None):
     else:
         intensities = intensities.astype(np.float64)
         component = "real"
-    print(intensities.shape)
     logstart = time()
     log.debug("Starting internal reference correction")
     if out is None:
@@ -315,26 +314,28 @@ def k_edge_mask(frames: np.ndarray, energies: np.ndarray, edge,
 
     Arguments
     ---------
-    - frames : Array with images at different energies.
-
-    - energies : X-ray energies corresponding to images in
-      `frames`. Must have the same shape along the first dimenion as
-      `frames`.
-
-    - edge : An Edge object that contains a description of the
-      elemental edge being studied.
-
-    - sensitivity : A multiplier for the otsu value to determine
-      the actual threshold.
-
-    - min_size : Objects below this size (in pixels) will be
-      removed. Passing zero (default) will result in no effect.
-
+    frames : numpy.ndarray
+      Array with images at different energies.
+    energies : numpy.ndarray
+      X-ray energies corresponding to images in ``frames``. Must have
+      the same shape along the first dimenion as ``frames``.
+    edge : KEdge
+      A :py:class:`xanespy.edges.KEdge` object that contains a
+      description of the elemental edge being studied.
+    sensitivity : float, optional
+      A multiplier for the otsu value to determine the actual
+      threshold.
+    min_size : int, optional
+      Objects below this size (in pixels) will be removed. Passing
+      zero (default) will result in no effect.
+    
     Returns
     -------
-    - A boolean mask with the same shape as the last two dimensions of
-    `frames` where True pixels are likely to be background material.
-
+    mask : numpy.ndarray
+      A boolean mask with the same shape as the last two dimensions of
+      ``frames`` where True pixels are likely to be background
+      material.
+    
     """
     # Dividing the edge jump by the standard deviation provides sharp constrast
     ej = k_edge_jump(frames=frames, energies=energies, edge=edge)
@@ -383,12 +384,13 @@ def k_edge_jump(frames: np.ndarray, energies: np.ndarray, edge):
 def particle_labels(frames: np.ndarray, energies: np.ndarray, edge,
                     min_distance=20):
     """Prepare a map by segmenting the images into particles.
-
+    
     Arguments
     ---------
-
-    - frames : An array of images, each one at a different
-      energy. These will be merged and used for segmentation.
+    frames : numpy.ndarray
+      An array of images, each one at a different energy. These will
+      be merged and used for segmentation.
+    
     """
     # Get edge-jump mask
     mask = ~edge.mask(frames, energies=energies, min_size=0)
