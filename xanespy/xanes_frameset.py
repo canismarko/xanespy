@@ -633,7 +633,7 @@ class XanesFrameset():
             mean = np.mean(Is, axis=0)
         return mean
 
-    def frame_shape(self, representation="absorbances"):
+    def frame_shape(self, representation="intensities"):
         """Return the shape of the individual energy frames."""
         with self.store() as store:
             imshape = store.get_frames(representation).shape[-2:]
@@ -842,14 +842,18 @@ class XanesFrameset():
         
         """
         with self.store() as store:
-            As = store.absorbances.value
-            # Check for complex values and convert to absorbances only
-            if np.iscomplexobj(As):
-                As = np.imag(As)
-            mask = self.edge.mask(frames=As,
-                                  energies=store.energies.value,
-                                  sensitivity=sensitivity,
-                                  min_size=min_size)
+            if not store.has_dataset('absorbances'):
+                # Store has no absorbance data so just return a blank array
+                mask = np.zeros(shape=store.intensities.shape[-2:])
+            else:
+                # Check for complex values and convert to absorbances only
+                As = store.absorbances.value
+                if np.iscomplexobj(As):
+                    As = np.imag(As)
+                mask = self.edge.mask(frames=As,
+                                      energies=store.energies.value,
+                                      sensitivity=sensitivity,
+                                      min_size=min_size)
         return mask
     
     def fit_spectra(self, edge_mask=True):
@@ -997,6 +1001,11 @@ class XanesFrameset():
         self.calculate_whitelines()
         if fit_spectra:
             self.fit_spectra()
+        # Calculate the mean and median maps
+        with self.store(mode="r+") as store:
+            energy_axis = -3
+            mean = np.mean(store.absorbances, axis=energy_axis)
+            store.absorbance_mean = mean
         # Calculate particle_labels
         self.label_particles()
 
@@ -1431,6 +1440,7 @@ class XanesFrameset():
     def plot_histogram(self, plotter=None, timeidx=None, ax=None,
                        vmin=None, vmax=None, goodness_filter=False,
                        representation="whiteline_fit",
+                       component="real",
                        active_pixel=None, bins="energies", *args, **kwargs):
         """Use a default frameset plotter to draw a map of the chemical
         data."""
@@ -1440,6 +1450,7 @@ class XanesFrameset():
                 data = map_ds.value
             else:
                 data = map_ds[timeidx]
+        data = get_component(data, component)
         # Add bounds for the colormap if given
         vmin = self.edge.map_range[0] if vmin is None else vmin
         vmax = self.edge.map_range[1] if vmax is None else vmax
@@ -1451,6 +1462,7 @@ class XanesFrameset():
         artists = plots.plot_txm_histogram(data=data, ax=ax,
                                            norm=norm,
                                            cmap=self.cmap, bins=bins)
+        ax.set_xlabel(representation)
         return artists
    
     def qt_viewer(self):

@@ -209,6 +209,7 @@ def apply_references(intensities, references, out=None):
       Array to receive the results.
 
     """
+    logstart = time()
     # Create an empty array to hold the results
     if out is None:
         out = np.zeros_like(intensities)
@@ -265,6 +266,8 @@ def l_edge_mask(frames: np.ndarray, energies: np.ndarray, edge,
         E_dim = frame_dims + 1
         As = np.mean(frames.reshape(-1, *frames.shape[-E_dim:]), axis=0)
         Es = np.mean(energies.reshape(-1, frames.shape[-E_dim]), axis=0)
+    elif frames.ndim == 3:
+        Es = energies
     # Convert absorbances into spectra -> (spectrum, energy) shape
     frame_shape = frames.shape[-frame_dims:]
     spectra = As.reshape(-1, np.prod(frame_shape))
@@ -295,7 +298,7 @@ def l_edge_mask(frames: np.ndarray, energies: np.ndarray, edge,
     # Compute the overlap between the global and pixel spectra
     overlap = np.dot(spectrum, pixels)
     # Threshold the pixel overlap to find foreground vs background
-    threshold = filters.threshold_otsu(overlap)
+    threshold = filters.threshold_otsu(np.abs(overlap))
     mask = overlap > threshold
     # Recreate the original image shape as a boolean array
     mask = np.reshape(mask, frame_shape)

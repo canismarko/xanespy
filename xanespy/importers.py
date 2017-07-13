@@ -657,6 +657,7 @@ def decode_aps_params(filename):
 
 
 def import_aps_8BM_frameset(directory, hdf_filename, quiet=False):
+    log.debug("Starting import of APS 8-BM frameset.")
     imp_group = import_frameset(directory=directory, flavor="aps",
                                 hdf_filename=hdf_filename, return_val="group")
     # Set some beamline specific metadata
@@ -716,6 +717,7 @@ def import_frameset(directory, flavor, hdf_filename, return_val=None):
         msg = msg.format(os.path.abspath(directory))
         raise exceptions.DataNotFoundError(msg)
     # Import each sample-position combination
+    log.debug("Opening hdf file %s.", hdf_filename)
     h5file = h5py.File(hdf_filename)
     # Get some shape information for all the datasets
     shapes = metadata['shape'].unique()
@@ -855,7 +857,9 @@ def import_frameset(directory, flavor, hdf_filename, return_val=None):
             h5group['references'] = ref_ds
         progbar.close()
         # Convert to absorbance values
+        abs_start = time()
         apply_references(int_ds, ref_ds, out=abs_ds)
+        log.info("Applied reference correction in %f seconds.", time() - abs_start)
         # Correct magnification from different energy focusing
         if flavor == 'ssrl':
             # Correct magnification changes due to zone-plate movement

@@ -293,6 +293,14 @@ class XanesFramesetTest(TestCase):
         # Check that the subtraction happened properly
         np.testing.assert_equal(store.absorbances, expectation)
 
+    def test_edge_mask(self):
+        store = MockStore()
+        store.has_dataset = mock.MagicMock(return_value=False)
+        store.intensities = np.random.rand(128, 128)
+        fs = self.create_frameset(store=store)
+        # Check that the new edge mask has same shape as intensities
+        np.testing.assert_equal(fs.edge_mask(), np.zeros(shape=(128, 128)))
+    
     def test_fitted_spectrum(self):
         # Prepare some dummy data
         store = MockStore()

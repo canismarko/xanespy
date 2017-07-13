@@ -471,7 +471,6 @@ def plot_txm_histogram(data, ax=None, norm=None, bins=None,
         color = real_cmap(norm(x_position))
         patch.set_color(color)
     # Set axes decorations
-    ax.set_xlabel("Whiteline position /eV")
     ax.set_ylabel("Pixels")
     ax.set_xlim(norm.vmin, norm.vmax)
     # ax.xaxis.set_ticks(energies)

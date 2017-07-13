@@ -335,6 +335,15 @@ class TXMStore():
         self.replace_dataset('absorbances', val, context="frameset")
 
     @property
+    def absorbance_mean(self):
+        return self.get_map('absorbance_mean')
+
+    @absorbance_mean.setter
+    def absorbance_mean(self, val):
+        self.replace_dataset('absorbance_mean', val, context='map')
+
+
+    @property
     def energies(self):
         return self.data_group()['energies']
 
