@@ -53,7 +53,7 @@ A typical prcocedure for interacting with microscope frame-sets involves the fol
 - Import the raw data
 - Apply corrections and align the images
 - Calculate some metric and create maps of it
-- Visualize the maps, static or interactively.
+- Visualize the maps, staticly or interactively.
 
 Example for a single frameset across an X-ray absorbance edge::
 

@@ -74,7 +74,8 @@ class Edge():
             start = region[0]
             stop = region[1]
             step = region[2]
-            num = int(stop - start) / step + 1
+            rng = int(stop - start)
+            num = int(rng / step + 1)
             energies.append(np.linspace(region[0], region[1], num))
         energies = np.concatenate(energies)
         energies = sorted(list(set(energies)))
@@ -183,8 +184,8 @@ class NCANickelKEdge(KEdge):
         (8400, 8440, 8),
         (8440, 8640, 50),
     ]
-    pre_edge = (8249, 8281)
-    post_edge = (8440, 8640)
+    pre_edge = (8249, 8320)
+    post_edge = (8400, 8640)
     map_range = (8341, 8360)
     edge_range = (8341, 8358)
 

@@ -34,85 +34,100 @@ import pandas as pd
 import h5py
 
 from xanespy import exceptions
-from xanespy.xradia import XRMFile
+from xanespy.xradia import XRMFile, TXRMFile
+from xanespy.sxstm import SxstmDataFile
 from xanespy.importers import (magnification_correction,
                                decode_aps_params, decode_ssrl_params,
-                               import_ssrl_frameset, CURRENT_VERSION,
+                               import_ssrl_xanes_dir, CURRENT_VERSION,
                                import_nanosurveyor_frameset,
-                               import_aps_8BM_frameset, read_metadata)
+                               import_aps_8BM_xanes_dir,
+                               import_aps_8BM_xanes_file,
+                               read_metadata)
 
 
 TEST_DIR = os.path.dirname(__file__)
 SSRL_DIR = os.path.join(TEST_DIR, 'txm-data-ssrl')
 APS_DIR = os.path.join(TEST_DIR, 'txm-data-aps')
 PTYCHO_DIR = os.path.join(TEST_DIR, 'ptycho-data-als/NS_160406074')
+SXSTM_DIR = os.path.join(TEST_DIR, "sxstm-data-4idc/")
 
 
 class XradiaTest(TestCase):
-    
+    txrm_filename = os.path.join(TEST_DIR, "aps-8BM-sample.txrm")
     def test_pixel_size(self):
         sample_filename = "rep01_20161456_ssrl-test-data_08324.0_eV_001of003.xrm"
-        xrm = XRMFile(os.path.join(SSRL_DIR, sample_filename), flavor="ssrl")
-        self.assertAlmostEqual(xrm.um_per_pixel(), 0.03287, places=4)
+        with XRMFile(os.path.join(SSRL_DIR, sample_filename), flavor="ssrl") as xrm:
+            self.assertAlmostEqual(xrm.um_per_pixel(), 0.03287, places=4)
     
     def test_timestamp_from_xrm(self):
+        pacific_tz = pytz.timezone("US/Pacific")
+        chicago_tz = pytz.timezone('US/Central')
         sample_filename = "rep01_20161456_ssrl-test-data_08324.0_eV_001of003.xrm"
-        xrm = XRMFile(os.path.join(SSRL_DIR, sample_filename), flavor="ssrl")
-        # Check start time
-        start = dt.datetime(2016, 5, 29,
-                            15, 2, 37,
-                            tzinfo=pytz.timezone('US/Pacific'))
-        start = start.astimezone(pytz.utc).replace(tzinfo=None)
-        self.assertEqual(xrm.starttime(), start)
-        self.assertEqual(xrm.starttime().tzinfo, None)
-        # Check end time (offset determined by exposure time)
-        end = dt.datetime(2016, 5, 29,
-                          15, 2, 37, 500000,
-                          tzinfo=pytz.timezone('US/Pacific'))
-        end = end.astimezone(pytz.utc).replace(tzinfo=None)
-        self.assertEqual(xrm.endtime(), end)
-        xrm.close()
+        with XRMFile(os.path.join(SSRL_DIR, sample_filename), flavor="ssrl") as xrm:
+            # Check start time
+            start = pacific_tz.localize(dt.datetime(2016, 5, 29, 15, 2, 37))
+            start = start.astimezone(pytz.utc).replace(tzinfo=None)
+            self.assertEqual(xrm.starttime(), start)
+            self.assertEqual(xrm.starttime().tzinfo, None)
+            # Check end time (offset determined by exposure time)
+            end = pacific_tz.localize(dt.datetime(2016, 5, 29, 15, 2, 37, 500000))
+            end = end.astimezone(pytz.utc).replace(tzinfo=None)
+            self.assertEqual(xrm.endtime(), end)
+            xrm.close()
         
         # Test APS frame
         sample_filename = "fov03_xanesocv_8353_0eV.xrm"
-        xrm = XRMFile(os.path.join(APS_DIR, sample_filename), flavor="aps")
-        # Check start time
-        start = dt.datetime(2016, 7, 2, 17, 50, 35, tzinfo=pytz.timezone('US/Central'))
-        start = start.astimezone(pytz.utc).replace(tzinfo=None)
-        self.assertEqual(xrm.starttime(), start)
-        # Check end time (offset determined by exposure time)
-        end = dt.datetime(2016, 7, 2, 17, 51, 25, tzinfo=pytz.timezone('US/Central'))
-        end = end.astimezone(pytz.utc).replace(tzinfo=None)
-        self.assertEqual(xrm.endtime(), end)
-        xrm.close()
-
+        with XRMFile(os.path.join(APS_DIR, sample_filename), flavor="aps") as xrm:
+            # Check start time
+            start = chicago_tz.localize(dt.datetime(2016, 7, 2, 17, 50, 35))
+            start = start.astimezone(pytz.utc).replace(tzinfo=None)
+            self.assertEqual(xrm.starttime(), start)
+            # Check end time (offset determined by exposure time)
+            end = chicago_tz.localize(dt.datetime(2016, 7, 2, 17, 51, 25))
+            end = end.astimezone(pytz.utc).replace(tzinfo=None)
+            self.assertEqual(xrm.endtime(), end)
+    
     def test_str_and_repr(self):
         sample_filename = "rep01_20161456_ssrl-test-data_08324.0_eV_001of003.xrm"
-        xrm = XRMFile(os.path.join(SSRL_DIR, sample_filename), flavor="ssrl")
-        self.assertEqual(repr(xrm), "<XRMFile: '{}'>".format(sample_filename))
-        self.assertEqual(str(xrm), "<XRMFile: '{}'>".format(sample_filename))
-
+        with XRMFile(os.path.join(SSRL_DIR, sample_filename), flavor="ssrl") as xrm:
+            self.assertEqual(repr(xrm), "<XRMFile: '{}'>".format(sample_filename))
+            self.assertEqual(str(xrm), "<XRMFile: '{}'>".format(sample_filename))
+    
     def test_binning(self):
         sample_filename = "rep01_20161456_ssrl-test-data_08324.0_eV_001of003.xrm"
-        xrm = XRMFile(os.path.join(SSRL_DIR, sample_filename), flavor="ssrl")
-        self.assertEqual(xrm.binning(), (2, 2))
-
+        with XRMFile(os.path.join(SSRL_DIR, sample_filename), flavor="ssrl") as xrm:
+            self.assertEqual(xrm.binning(), (2, 2))
+    
+    def test_frame_stack(self):
+        with TXRMFile(self.txrm_filename, flavor="aps") as txrm:
+            self.assertEqual(txrm.image_stack().shape, (3, 1024, 1024))
+            self.assertEqual(txrm.energies().shape, (3,))
+    
+    def test_num_images(self):
+        with TXRMFile(self.txrm_filename, flavor="aps") as txrm:
+            self.assertEqual(txrm.num_images(), 3)
+    
+    def test_starttimes(self):
+        with TXRMFile(self.txrm_filename, flavor="aps") as txrm:
+            result = txrm.starttimes()
+            expected_start = dt.datetime(2017, 7, 9, 0, 49, 2)
+            self.assertEqual(result[0], expected_start)
 
 class PtychographyImportTest(TestCase):
     def setUp(self):
         self.hdf = os.path.join(PTYCHO_DIR, 'testdata.h5')
         if os.path.exists(self.hdf):
             os.remove(self.hdf)
-
+    
     def tearDown(self):
         if os.path.exists(self.hdf):
             os.remove(self.hdf)
-
+    
     def test_directory_names(self):
         """Tests for checking some of the edge cases for what can be passed as
         a directory string."""
         import_nanosurveyor_frameset(PTYCHO_DIR + "/", hdf_filename=self.hdf)
-
+    
     def test_imported_hdf(self):
         import_nanosurveyor_frameset(PTYCHO_DIR, hdf_filename=self.hdf)
         self.assertTrue(os.path.exists(self.hdf))
@@ -158,7 +173,7 @@ class PtychographyImportTest(TestCase):
             ## means for STXM data
             self.assertIn('original_positions', keys)
             self.assertEqual(group['original_positions'].shape, (1, 3, 3))
-
+    
     def test_partial_import(self):
         """Sometimes the user may want to specify that only a subset of
         ptychographs be imported.
@@ -174,7 +189,7 @@ class PtychographyImportTest(TestCase):
             self.assertEqual(group['intensities'].shape[0:2],
                              (1, 2))
             self.assertEqual(group['filenames'].shape, (1, 2))
-
+    
     def test_exclude_re(self):
         """Allow the user to exclude specific frames that are bad."""
         import_nanosurveyor_frameset(PTYCHO_DIR,
@@ -186,7 +201,7 @@ class PtychographyImportTest(TestCase):
             group = parent['imported']
             self.assertEqual(group['intensities'].shape[0:2],
                              (1, 2))
-
+    
     def test_multiple_import(self):
         """Check if we can import multiple different directories of different
         energies ranges."""
@@ -220,18 +235,65 @@ class PtychographyImportTest(TestCase):
             np.testing.assert_array_equal(saved_files, sorted_files)
 
 
-class APSImportTest(TestCase):
+class APSFileImportTest(TestCase):
+    txrm_file = os.path.join(TEST_DIR, 'aps-8BM-sample.txrm')
+    txrm_ref = os.path.join(TEST_DIR, 'aps-8BM-reference.txrm')
+    def setUp(self):
+        self.hdf = os.path.join(APS_DIR, 'testdata.h5')
+        if os.path.exists(self.hdf):
+            os.remove(self.hdf)
+    
+    def tearDown(self):
+        if os.path.exists(self.hdf):
+            os.remove(self.hdf)
+    
+    def test_imported_hdf(self):
+        import_aps_8BM_xanes_file(self.txrm_file,
+                                  ref_filename=self.txrm_ref, hdf_filename=self.hdf)
+        # Check that the file was created
+        self.assertTrue(os.path.exists(self.hdf))
+        with h5py.File(self.hdf, mode='r') as f:
+            group = f['aps-8BM-sample/imported']
+            parent = f['aps-8BM-sample']
+            # Check metadata about beamline
+            self.assertEqual(parent.attrs['technique'], 'Full-field TXM')
+            self.assertEqual(parent.attrs['xanespy_version'], CURRENT_VERSION)
+            self.assertEqual(parent.attrs['beamline'], "APS 8-BM-B")
+            self.assertEqual(parent.attrs['original_file'], self.txrm_file)
+            # Check h5 data structure
+            keys = list(group.keys())
+            self.assertIn('intensities', keys)
+            self.assertEqual(group['intensities'].shape, (1, 3, 1024, 1024))
+            self.assertIn('references', keys)
+            self.assertIn('absorbances', keys)
+            self.assertEqual(group['pixel_sizes'].attrs['unit'], 'µm')
+            self.assertEqual(group['pixel_sizes'].shape, (1, 3))
+            self.assertTrue(np.any(group['pixel_sizes'].value > 0))
+            expected_Es = np.array([[8312.9287109,  8363.0078125,  8412.9541016]])
+            np.testing.assert_almost_equal(group['energies'].value, expected_Es)
+            self.assertIn('timestamps', keys)
+            expected_timestamp = np.array([
+                [b'2017-07-09 00:49:02', b'2017-07-09 00:49:30', b'2017-07-09 00:49:58'],
+            ], dtype="S32")
+            np.testing.assert_equal(group['timestamps'].value,
+                                    expected_timestamp)
+            self.assertIn('filenames', keys)
+            self.assertIn('original_positions', keys)
+            self.assertEqual(group['original_positions'].shape, (1, 3, 3))
+
+
+class APSDirImportTest(TestCase):
     """Check that the program can import a collection of SSRL frames from
     a directory."""
     def setUp(self):
         self.hdf = os.path.join(APS_DIR, 'testdata.h5')
         if os.path.exists(self.hdf):
             os.remove(self.hdf)
-
+    
     def tearDown(self):
         if os.path.exists(self.hdf):
             os.remove(self.hdf)
-
+    
     def test_import_empty_directory(self):
         """Check that the proper exception is raised if the directory has no
         TXM files in it."""
@@ -240,20 +302,20 @@ class APSImportTest(TestCase):
         try:
             with self.assertRaisesRegex(exceptions.DataNotFoundError,
                                         '/temp-empty-dir'):
-                import_aps_8BM_frameset(EMPTY_DIR, hdf_filename="test-file.hdf")
+                import_aps_8BM_xanes_dir(EMPTY_DIR, hdf_filename="test-file.hdf")
         finally:
             # Clean up by deleting any temporary files/directories
             if os.path.exists('test-file.hdf'):
                 os.remove('test-file.hdf')
             os.rmdir(EMPTY_DIR)
-
+    
     def test_imported_references(self):
-        import_aps_8BM_frameset(APS_DIR, hdf_filename=self.hdf, quiet=True)
+        import_aps_8BM_xanes_dir(APS_DIR, hdf_filename=self.hdf, quiet=True)
         with h5py.File(self.hdf, mode='r') as f:
             self.assertIn('references', f['fov03/imported'].keys())
-
+    
     def test_imported_hdf(self):
-        import_aps_8BM_frameset(APS_DIR, hdf_filename=self.hdf, quiet=True)
+        import_aps_8BM_xanes_dir(APS_DIR, hdf_filename=self.hdf, quiet=True)
         # Check that the file was created
         self.assertTrue(os.path.exists(self.hdf))
         with h5py.File(self.hdf, mode='r') as f:
@@ -278,10 +340,10 @@ class APSImportTest(TestCase):
             self.assertTrue(np.array_equal(group['energies'].value, expected_Es))
             self.assertIn('timestamps', keys)
             expected_timestamp = np.array([
-                [[b'2016-07-02 22:22:36', b'2016-07-02 22:23:26'],
-                 [b'2016-07-02 23:41:35', b'2016-07-02 23:42:25']],
-                [[b'2016-07-03 04:10:23', b'2016-07-03 04:10:58'],
-                 [b'2016-07-03 05:12:21', b'2016-07-03 05:12:56']],
+                [[b'2016-07-02 21:31:36', b'2016-07-02 21:32:26'],
+                 [b'2016-07-02 22:50:35', b'2016-07-02 22:51:25']],
+                [[b'2016-07-03 03:19:23', b'2016-07-03 03:19:58'],
+                 [b'2016-07-03 04:21:21', b'2016-07-03 04:21:56']],
             ], dtype="S32")
             np.testing.assert_equal(group['timestamps'].value,
                                     expected_timestamp)
@@ -289,7 +351,7 @@ class APSImportTest(TestCase):
             self.assertIn('original_positions', keys)
             # self.assertIn('relative_positions', keys)
             # self.assertEqual(group['relative_positions'].shape, (2, 3))
-
+    
     def test_params_from_aps(self):
         """Check that the new naming scheme is decoded properly."""
         ref_filename = "ref_xanesocv_8250_0eV.xrm"
@@ -306,15 +368,15 @@ class APSImportTest(TestCase):
         filenames = [os.path.join(APS_DIR, 'fov03_xanessoc01_8353_0eV.xrm')]
         df = read_metadata(filenames=filenames, flavor='aps')
         self.assertIsInstance(df, pd.DataFrame)
-        row = df.ix[0]
+        row = df.iloc[0]
         self.assertIn('shape', row.keys())
         self.assertIn('timestep_name', row.keys())
         # Check the correct start time
-        realtime = dt.datetime(2016, 7, 2, 23, 21, 21,
-                               tzinfo=pytz.timezone('US/Central'))
+        chicago_tz = pytz.timezone('US/Central')
+        realtime = chicago_tz.localize(dt.datetime(2016, 7, 2, 23, 21, 21))
         realtime = realtime.astimezone(pytz.utc).replace(tzinfo=None)
         # Convert to unix timestamp
-        self.assertIsInstance(row['starttime'], pd.tslib.Timestamp)
+        self.assertIsInstance(row['starttime'], pd.Timestamp)
         self.assertEqual(row['starttime'], realtime)
 
 
@@ -331,7 +393,9 @@ class SSRLImportTest(TestCase):
             os.remove(self.hdf)
     
     def test_imported_hdf(self):
-        import_ssrl_frameset(SSRL_DIR, hdf_filename=self.hdf)
+        with warnings.catch_warnings() as w:
+            warnings.simplefilter('ignore', RuntimeWarning, 103)
+            import_ssrl_xanes_dir(SSRL_DIR, hdf_filename=self.hdf)
         # Check that the file was created
         self.assertTrue(os.path.exists(self.hdf))
         with h5py.File(self.hdf, mode='r') as f:
@@ -419,18 +483,31 @@ class SSRLImportTest(TestCase):
     def test_bad_file(self):
         # One specific file is not saved properly
         filenames = [
-            # Valid data
+            # No image data nor timestamp
             'rep02_000072_ref_20161456_ssrl-test-data_08348.0_eV_002of010.xrm',
-            # No timestamp
+            # Valid file
             'rep01_000351_ref_20161456_ssrl-test-data_08354.0_eV_001of010.xrm',
-            # No image data
-            'rep02_000182_ref_20161456_ssrl-test-data_08400.0_eV_002of010.xrm',
+            # Malformed image data
+            # 'rep02_000182_ref_20161456_ssrl-test-data_08400.0_eV_002of010.xrm',
         ]
         filenames = [os.path.join(SSRL_DIR, f) for f in filenames]
         # Check that the importer warns the user of the bad file
         with warnings.catch_warnings(record=True) as ws:
+            warnings.simplefilter('always')
             result = read_metadata(filenames, flavor='ssrl')
-            self.assertEqual(len(ws), 2)
+            self.assertEqual(len(ws), 1)
             [self.assertEqual(RuntimeWarning, w.category) for w in ws]
         # Check that the bad entries was excluded from the processed list
         self.assertEqual(len(result), 1)
+
+
+class SxstmTestCase(unittest.TestCase):
+    """Tests for soft x-ray tunneling microscope data from APS 4-ID-C."""
+    def test_header(self):
+        filename = os.path.join(SXSTM_DIR, 'XGSS_UIC_JC_475v_60c_001_001_001.3ds')
+        sxstm_data = SxstmDataFile(filename=filename)
+        header = sxstm_data.header_lines()
+        self.assertEqual(len(header), 33)
+        data = sxstm_data.dataframe()
+        sxstm_data.close()
+

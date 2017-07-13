@@ -42,8 +42,8 @@ class Zoneplate():
     step. Passing two position-energy pairs is preffered because this
     allows x, y and z to be set properly instead of just z.
 
-    Arguments
-    ---------
+    Parameters
+    ----------
     start : tuple
       The first zoneplate position-energy pair.
     z_step : int, optional
@@ -77,10 +77,12 @@ class Zoneplate():
         else:
             # Use the steps given given by the user
             self.step = position(x=x_step, y=y_step, z=z_step)
-
+    
     def position(self, energy: float):
         """Predict the x, y and z position of the zonplate for the given
-        energy."""
+        energy.
+        
+        """
         pos = position(
             x=self.start.x + self.step.x * (energy - self.start.energy),
             y=self.start.y + self.step.y * (energy - self.start.energy),
@@ -270,15 +272,15 @@ def ssrl6_xanes_script(dest,
     scaninfo.close()
 
 def sector8_xanes_script(dest,
-                         edge: KEdge,
-                         zoneplate: Zoneplate,
-                         detector: Detector,
-                         sample_positions: List[position],
-                         names: List[str],
-                         iterations: Iterable=range(0, 1),
-                         binning: int=1,
-                         exposure: int=30,
-                         abba_mode: bool=True):
+                         edge,
+                         zoneplate,
+                         detector,
+                         sample_positions,
+                         names,
+                         iterations=range(0, 1),
+                         binning=1,
+                         exposure=30,
+                         abba_mode=True):
     """Prepare an script file for running multiple consecutive XANES
     framesets on the transmission x-ray micrscope at the Advanced
     Photon Source beamline 8-BM-B. This function also creates a
@@ -290,6 +292,10 @@ def sector8_xanes_script(dest,
     ---------
     dest
       file-like object that will hold the resulting script
+    zoneplate : Zoneplate
+      Calibration details for the Fresnel zone-plate.
+    detector : Detector
+      Like zoneplate, but for detector.
     edge : KEdge
       Description of the absorption edge.
     binning : int, optional
@@ -300,10 +306,6 @@ def sector8_xanes_script(dest,
     sample_positions
       Locations to move the x, y (and z) axes to in order to capture
       the image.
-    zoneplate : Zoneplate
-      Calibration details for the Fresnel zone-plate.
-    detector : Detector
-      Like zoneplate, but for detector.
     names
       sample name to use in file names. Should match `sample_positions` in length.
     iterations : iterable

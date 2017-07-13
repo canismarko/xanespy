@@ -34,11 +34,11 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardi
 
 import h5py
 import numpy as np
-with warnings.catch_warnings():
-    warnings.simplefilter('ignore', PendingDeprecationWarning)
 import pandas as pd
 import matplotlib
-matplotlib.use("Agg")
+with warnings.catch_warnings():
+    warnings.simplefilter('ignore', UserWarning, 1405)
+    matplotlib.use("Agg")
 from matplotlib.colors import Normalize
 import pytz
 from skimage import data, transform
@@ -59,8 +59,7 @@ from xanespy.xanes_math import (transform_images, direct_whitelines,
                                 apply_internal_reference,
                                 register_template, _fit_spectrum)
 # from xanespy.edges import KEdge, k_edges, l_edges
-from xanespy.importers import (import_ssrl_frameset,
-                               import_aps_8BM_frameset,
+from xanespy.importers import (import_ssrl_xanes_dir,
                                import_nanosurveyor_frameset,
                                _average_frames,
                                magnification_correction,
@@ -84,7 +83,9 @@ class TXMStoreTest(XanespyTestCase):
         if os.path.exists(cls.hdfname):
             os.remove(cls.hdfname)
         # Prepare an HDF5 file that these tests can use.
-        import_ssrl_frameset(SSRL_DIR, hdf_filename=cls.hdfname)
+        with warnings.catch_warnings() as w:
+            warnings.simplefilter('ignore', RuntimeWarning, 103)
+            import_ssrl_xanes_dir(SSRL_DIR, hdf_filename=cls.hdfname)
     
     @classmethod
     def tearDownClass(cls):
@@ -188,15 +189,15 @@ class XrayEdgeTest(unittest.TestCase):
             pre_edge = (8250, 8290)
             post_edge = (8290, 8295)
             map_range = (8291, 8293)
-
+        
         self.edge = DummyEdge()
-
+    
     def test_energies(self):
         self.assertEqual(
             self.edge.all_energies(),
             [8250, 8270, 8290, 8291, 8292, 8293, 8294, 8295]
         )
-
+    
     def test_norm_energies(self):
         self.assertEqual(
             self.edge.energies_in_range(),
@@ -209,7 +210,7 @@ MockStore = mock.MagicMock(TXMStore)
 class XanesFramesetTest(TestCase):
     """Set of python tests that work on full framesets and require data
     from multiple frames to make sense."""
-
+    
     def dummy_frame_data(self, shape=(5, 5, 128, 128)):
         """Create some dummy data with a given shape. It's pretty much just an
         arange with reshaping."""
@@ -217,7 +218,7 @@ class XanesFramesetTest(TestCase):
         data = np.arange(length)
         data = np.reshape(data, shape)
         return data
-
+    
     def create_frameset(self, store=None, edge=None):
         if edge is None:
             edge = edges.k_edges['Ni_NCA']
@@ -231,7 +232,7 @@ class XanesFramesetTest(TestCase):
         fs.store = mock.Mock(return_value=store)
         self.store = store
         return fs
-
+    
     def test_fit_spectra(self):
         """This test does not evaluate the quality of the fit, only that the
         method selects the correct data and passes it on to the
@@ -253,7 +254,7 @@ class XanesFramesetTest(TestCase):
         fs.fit_spectra(edge_mask=False)
         # No results are specified, but at least the function was
         # called.
-        
+    
     def test_particle_series(self):
         store = MockStore()
         fake_data = np.random.rand(4, 256, 256)
@@ -263,7 +264,7 @@ class XanesFramesetTest(TestCase):
         fs = self.create_frameset(store=store)
         particles = fs.particle_series()
         self.assertEqual(particles.shape, (3, 4)) # (3 particles, 4 energies)
-
+    
     def test_subtract_surroundings(self):
         store = MockStore()
         # Prepare some fake data
@@ -334,7 +335,7 @@ class XanesFramesetTest(TestCase):
         assert mean_params.shape == (8,)
         expected_As = predict_edge(energies, *mean_params)
         np.testing.assert_equal(result.values, expected_As)
-
+    
     def test_spectrum(self):
         store = MockStore()
         # Prepare fake energy data
@@ -350,12 +351,12 @@ class XanesFramesetTest(TestCase):
         result = fs.spectrum()
         np.testing.assert_equal(result.index, energies)
         np.testing.assert_almost_equal(result.values, spectrum)
-
+    
     def test_has_representation(self):
         fs = self.create_frameset()
         fs.has_representation('some data')
         self.store.has_dataset.assert_called_once_with('some data')
-
+    
     def test_fork_group(self):
         """Tests that the XanesFrameset.fork_group properly hands off to
         TXMStore.fork_data_group.
@@ -368,7 +369,7 @@ class XanesFramesetTest(TestCase):
         store.fork_data_group.assert_called_once_with(
             dest='new_group', src='old_group'
         )
-
+    
     def test_align_frames_invalid(self):
         """Check that the `align_frames` method throws the right exceptions on
         bad inputs.
@@ -381,9 +382,10 @@ class XanesFramesetTest(TestCase):
         # Bad method
         with self.assertRaises(ValueError):
             fs.align_frames(method="bad-method", plot_results=False)
-
+    
     def test_label_particle(self):
         store = MockStore()
+        store.absorbances = mock.MagicMock()
         fs = self.create_frameset()
         # Prepare dummy frame data
         num_E = 10
@@ -466,7 +468,7 @@ class XanesFramesetTest(TestCase):
         frameset.clear_caches()
         result = frameset.map_data(timeidx=5)
         np.testing.assert_equal(result, data)
-
+    
     def test_frames(self):
         # Make mocked data
         store = MockStore
@@ -477,7 +479,7 @@ class XanesFramesetTest(TestCase):
         result = fs.frames(timeidx=3, representation='marbles')
         store.get_frames.assert_called_once_with(name='marbles')
         np.testing.assert_equal(result, data[3])
-
+    
     def test_energies(self):
         # Make mocked data
         store = MockStore
@@ -487,10 +489,10 @@ class XanesFramesetTest(TestCase):
         # Check that the method returns the right data
         result = fs.energies(timeidx=3)
         np.testing.assert_equal(result, data[3])
-
+    
     def test_all_extents(self):
         pass
-        
+    
     def test_extent(self):
         # Create mock data source
         store = MockStore()
@@ -508,7 +510,7 @@ class XanesFramesetTest(TestCase):
         actual = fs.extent('absorbances', idx=(0, 0))
         expected = (-16.1680896, 16.1680896, -16.1680896, 16.1680896)
         np.testing.assert_almost_equal(actual, expected)
-
+    
     def test_extent_array(self):
         # Create mock data source
         store = MockStore()
@@ -557,7 +559,7 @@ class XanesFramesetTest(TestCase):
         fs = self.create_frameset()
         fs.fork_data_group('new_group')
         self.assertEqual(fs.data_name, 'new_group')
-
+    
     def test_repr(self):
         fs = XanesFrameset(filename=None, edge=edges.k_edges['Ni_NCA'],
                            groupname="ssrl-test-data")
@@ -581,7 +583,9 @@ class OldXanesFramesetTest(XanespyTestCase):
         # Prepare an HDF5 file that these tests can use.
         if os.path.exists(cls.originhdf):
             os.remove(cls.originhdf)
-        import_ssrl_frameset(SSRL_DIR, hdf_filename=cls.originhdf)
+        with warnings.catch_warnings() as w:
+            warnings.simplefilter('ignore', RuntimeWarning, 103)
+            import_ssrl_xanes_dir(SSRL_DIR, hdf_filename=cls.originhdf)
 
     def setUp(self):
         # Copy the HDF5 file so we can safely make changes
@@ -589,11 +593,11 @@ class OldXanesFramesetTest(XanespyTestCase):
         self.frameset = XanesFrameset(filename=self.temphdf,
                                       groupname='ssrl-test-data',
                                       edge=edges.k_edges['Ni_NCA'])
-
+    
     def tearDown(self):
         if os.path.exists(self.temphdf):
             os.remove(self.temphdf)
-
+    
     @classmethod
     def tearDownClass(cls):
         # Delete temporary HDF5 files
