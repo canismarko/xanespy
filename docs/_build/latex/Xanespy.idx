@@ -1,443 +1,448 @@
-\indexentry{xanespy.beamlines (module)|hyperpage}{13}
-\indexentry{Detector (class in xanespy.beamlines)|hyperpage}{13}
-\indexentry{DetectorPoint (class in xanespy.beamlines)|hyperpage}{13}
-\indexentry{energy (xanespy.beamlines.DetectorPoint attribute)|hyperpage}{13}
-\indexentry{z (xanespy.beamlines.DetectorPoint attribute)|hyperpage}{13}
-\indexentry{Zoneplate (class in xanespy.beamlines)|hyperpage}{13}
-\indexentry{position() (xanespy.beamlines.Zoneplate method)|hyperpage}{13}
-\indexentry{ZoneplatePoint (class in xanespy.beamlines)|hyperpage}{13}
-\indexentry{energy (xanespy.beamlines.ZoneplatePoint attribute)|hyperpage}{13}
-\indexentry{x (xanespy.beamlines.ZoneplatePoint attribute)|hyperpage}{14}
-\indexentry{y (xanespy.beamlines.ZoneplatePoint attribute)|hyperpage}{14}
-\indexentry{z (xanespy.beamlines.ZoneplatePoint attribute)|hyperpage}{14}
-\indexentry{sector8\_xanes\_script() (in module xanespy.beamlines)|hyperpage}{14}
-\indexentry{ssrl6\_xanes\_script() (in module xanespy.beamlines)|hyperpage}{14}
-\indexentry{write\_scaninfo\_header() (in module xanespy.beamlines)|hyperpage}{15}
-\indexentry{xanespy.edges (module)|hyperpage}{15}
-\indexentry{Edge (class in xanespy.edges)|hyperpage}{15}
-\indexentry{E\_0 (xanespy.edges.Edge attribute)|hyperpage}{15}
-\indexentry{regions (xanespy.edges.Edge attribute)|hyperpage}{15}
-\indexentry{name (xanespy.edges.Edge attribute)|hyperpage}{15}
-\indexentry{pre\_edge (xanespy.edges.Edge attribute)|hyperpage}{15}
-\indexentry{post\_edge (xanespy.edges.Edge attribute)|hyperpage}{15}
-\indexentry{post\_edge\_order (xanespy.edges.Edge attribute)|hyperpage}{15}
-\indexentry{map\_range (xanespy.edges.Edge attribute)|hyperpage}{15}
-\indexentry{edge\_range (xanespy.edges.Edge attribute)|hyperpage}{15}
-\indexentry{E\_0 (xanespy.edges.Edge attribute)|hyperpage}{15}
-\indexentry{all\_energies() (xanespy.edges.Edge method)|hyperpage}{15}
-\indexentry{edge\_range (xanespy.edges.Edge attribute)|hyperpage}{15}
-\indexentry{energies\_in\_range() (xanespy.edges.Edge method)|hyperpage}{16}
-\indexentry{map\_range (xanespy.edges.Edge attribute)|hyperpage}{16}
-\indexentry{post\_edge (xanespy.edges.Edge attribute)|hyperpage}{16}
-\indexentry{post\_edge\_order (xanespy.edges.Edge attribute)|hyperpage}{16}
-\indexentry{pre\_edge (xanespy.edges.Edge attribute)|hyperpage}{16}
-\indexentry{pre\_edge\_fit (xanespy.edges.Edge attribute)|hyperpage}{16}
-\indexentry{regions (xanespy.edges.Edge attribute)|hyperpage}{16}
-\indexentry{KEdge (class in xanespy.edges)|hyperpage}{16}
-\indexentry{annotate\_spectrum() (xanespy.edges.KEdge method)|hyperpage}{16}
-\indexentry{mask() (xanespy.edges.KEdge method)|hyperpage}{16}
-\indexentry{LEdge (class in xanespy.edges)|hyperpage}{16}
-\indexentry{annotate\_spectrum() (xanespy.edges.LEdge method)|hyperpage}{16}
-\indexentry{mask() (xanespy.edges.LEdge method)|hyperpage}{16}
-\indexentry{LMOMnKEdge (class in xanespy.edges)|hyperpage}{16}
-\indexentry{regions (xanespy.edges.LMOMnKEdge attribute)|hyperpage}{16}
-\indexentry{NCACobaltLEdge (class in xanespy.edges)|hyperpage}{16}
-\indexentry{E\_0 (xanespy.edges.NCACobaltLEdge attribute)|hyperpage}{16}
-\indexentry{map\_range (xanespy.edges.NCACobaltLEdge attribute)|hyperpage}{16}
-\indexentry{post\_edge (xanespy.edges.NCACobaltLEdge attribute)|hyperpage}{16}
-\indexentry{pre\_edge (xanespy.edges.NCACobaltLEdge attribute)|hyperpage}{16}
-\indexentry{regions (xanespy.edges.NCACobaltLEdge attribute)|hyperpage}{16}
-\indexentry{NCANickelKEdge (class in xanespy.edges)|hyperpage}{16}
-\indexentry{E\_0 (xanespy.edges.NCANickelKEdge attribute)|hyperpage}{16}
-\indexentry{edge\_range (xanespy.edges.NCANickelKEdge attribute)|hyperpage}{16}
-\indexentry{map\_range (xanespy.edges.NCANickelKEdge attribute)|hyperpage}{16}
-\indexentry{post\_edge (xanespy.edges.NCANickelKEdge attribute)|hyperpage}{16}
-\indexentry{pre\_edge (xanespy.edges.NCANickelKEdge attribute)|hyperpage}{16}
-\indexentry{regions (xanespy.edges.NCANickelKEdge attribute)|hyperpage}{16}
-\indexentry{shell (xanespy.edges.NCANickelKEdge attribute)|hyperpage}{16}
-\indexentry{NCANickelKEdge61 (class in xanespy.edges)|hyperpage}{17}
-\indexentry{regions (xanespy.edges.NCANickelKEdge61 attribute)|hyperpage}{17}
-\indexentry{NCANickelKEdge62 (class in xanespy.edges)|hyperpage}{17}
-\indexentry{regions (xanespy.edges.NCANickelKEdge62 attribute)|hyperpage}{17}
-\indexentry{NCANickelLEdge (class in xanespy.edges)|hyperpage}{17}
-\indexentry{E\_0 (xanespy.edges.NCANickelLEdge attribute)|hyperpage}{17}
-\indexentry{map\_range (xanespy.edges.NCANickelLEdge attribute)|hyperpage}{17}
-\indexentry{post\_edge (xanespy.edges.NCANickelLEdge attribute)|hyperpage}{17}
-\indexentry{pre\_edge (xanespy.edges.NCANickelLEdge attribute)|hyperpage}{17}
-\indexentry{regions (xanespy.edges.NCANickelLEdge attribute)|hyperpage}{17}
-\indexentry{xanespy.exceptions (module)|hyperpage}{17}
-\indexentry{CreateGroupError|hyperpage}{17}
-\indexentry{DataFormatError|hyperpage}{17}
-\indexentry{DataNotFoundError|hyperpage}{17}
-\indexentry{DatasetExistsError|hyperpage}{17}
-\indexentry{FileExistsError|hyperpage}{17}
-\indexentry{FilenameParseError|hyperpage}{17}
-\indexentry{FrameFileNotFound|hyperpage}{17}
-\indexentry{GroupKeyError|hyperpage}{17}
-\indexentry{HDFScopeError|hyperpage}{18}
-\indexentry{NoParticleError|hyperpage}{18}
-\indexentry{RefinementError|hyperpage}{18}
-\indexentry{XanesMathError|hyperpage}{18}
-\indexentry{xanespy.importers (module)|hyperpage}{18}
-\indexentry{decode\_aps\_params() (in module xanespy.importers)|hyperpage}{18}
-\indexentry{decode\_ssrl\_params() (in module xanespy.importers)|hyperpage}{18}
-\indexentry{import\_aps\_8BM\_frameset() (in module xanespy.importers)|hyperpage}{18}
-\indexentry{import\_frameset() (in module xanespy.importers)|hyperpage}{18}
-\indexentry{import\_nanosurveyor\_frameset() (in module xanespy.importers)|hyperpage}{18}
-\indexentry{import\_ssrl\_frameset() (in module xanespy.importers)|hyperpage}{19}
-\indexentry{magnification\_correction() (in module xanespy.importers)|hyperpage}{19}
-\indexentry{read\_metadata() (in module xanespy.importers)|hyperpage}{19}
-\indexentry{xanespy.plots (module)|hyperpage}{19}
-\indexentry{big\_axes() (in module xanespy.plots)|hyperpage}{19}
-\indexentry{draw\_colorbar() (in module xanespy.plots)|hyperpage}{19}
-\indexentry{draw\_histogram\_colorbar() (in module xanespy.plots)|hyperpage}{19}
-\indexentry{dual\_axes() (in module xanespy.plots)|hyperpage}{20}
-\indexentry{new\_axes() (in module xanespy.plots)|hyperpage}{20}
-\indexentry{new\_image\_axes() (in module xanespy.plots)|hyperpage}{20}
-\indexentry{plot\_composite\_map() (in module xanespy.plots)|hyperpage}{20}
-\indexentry{plot\_pixel\_spectra() (in module xanespy.plots)|hyperpage}{20}
-\indexentry{plot\_txm\_histogram() (in module xanespy.plots)|hyperpage}{20}
-\indexentry{plot\_txm\_intermediates() (in module xanespy.plots)|hyperpage}{20}
-\indexentry{plot\_txm\_map() (in module xanespy.plots)|hyperpage}{21}
-\indexentry{plot\_xanes\_spectrum() (in module xanespy.plots)|hyperpage}{21}
-\indexentry{remove\_extra\_spines() (in module xanespy.plots)|hyperpage}{21}
-\indexentry{set\_axes\_color() (in module xanespy.plots)|hyperpage}{21}
-\indexentry{set\_outside\_ticks() (in module xanespy.plots)|hyperpage}{21}
-\indexentry{xanespy.qt\_frame\_view (module)|hyperpage}{21}
-\indexentry{FrameAnimation (class in xanespy.qt\_frame\_view)|hyperpage}{21}
-\indexentry{stop() (xanespy.qt\_frame\_view.FrameAnimation method)|hyperpage}{21}
-\indexentry{FrameChangeSource (class in xanespy.qt\_frame\_view)|hyperpage}{21}
-\indexentry{add\_callback() (xanespy.qt\_frame\_view.FrameChangeSource method)|hyperpage}{21}
-\indexentry{callbacks (xanespy.qt\_frame\_view.FrameChangeSource attribute)|hyperpage}{21}
-\indexentry{remove\_callback() (xanespy.qt\_frame\_view.FrameChangeSource method)|hyperpage}{21}
-\indexentry{start() (xanespy.qt\_frame\_view.FrameChangeSource method)|hyperpage}{21}
-\indexentry{stop() (xanespy.qt\_frame\_view.FrameChangeSource method)|hyperpage}{21}
-\indexentry{QtFrameView (class in xanespy.qt\_frame\_view)|hyperpage}{21}
-\indexentry{add\_hdf\_tree\_item() (xanespy.qt\_frame\_view.QtFrameView method)|hyperpage}{22}
-\indexentry{clear\_axes() (xanespy.qt\_frame\_view.QtFrameView method)|hyperpage}{22}
-\indexentry{connect\_signals() (xanespy.qt\_frame\_view.QtFrameView method)|hyperpage}{22}
-\indexentry{create\_canvas() (xanespy.qt\_frame\_view.QtFrameView method)|hyperpage}{22}
-\indexentry{create\_status\_bar() (xanespy.qt\_frame\_view.QtFrameView method)|hyperpage}{22}
-\indexentry{disable\_frame\_controls() (xanespy.qt\_frame\_view.QtFrameView method)|hyperpage}{22}
-\indexentry{disable\_plotting\_controls() (xanespy.qt\_frame\_view.QtFrameView method)|hyperpage}{22}
-\indexentry{draw\_frames (xanespy.qt\_frame\_view.QtFrameView attribute)|hyperpage}{22}
-\indexentry{draw\_histogram (xanespy.qt\_frame\_view.QtFrameView attribute)|hyperpage}{22}
-\indexentry{draw\_spectrum() (xanespy.qt\_frame\_view.QtFrameView method)|hyperpage}{22}
-\indexentry{edge\_ax (xanespy.qt\_frame\_view.QtFrameView attribute)|hyperpage}{22}
-\indexentry{expand\_hdf\_tree (xanespy.qt\_frame\_view.QtFrameView attribute)|hyperpage}{22}
-\indexentry{fig (xanespy.qt\_frame\_view.QtFrameView attribute)|hyperpage}{22}
-\indexentry{frame\_changed (xanespy.qt\_frame\_view.QtFrameView attribute)|hyperpage}{22}
-\indexentry{frame\_controls (xanespy.qt\_frame\_view.QtFrameView attribute)|hyperpage}{22}
-\indexentry{hist\_ax (xanespy.qt\_frame\_view.QtFrameView attribute)|hyperpage}{22}
-\indexentry{hist\_cb (xanespy.qt\_frame\_view.QtFrameView attribute)|hyperpage}{22}
-\indexentry{plotting\_controls (xanespy.qt\_frame\_view.QtFrameView attribute)|hyperpage}{22}
-\indexentry{select\_active\_hdf\_item() (xanespy.qt\_frame\_view.QtFrameView method)|hyperpage}{22}
-\indexentry{set\_cmap() (xanespy.qt\_frame\_view.QtFrameView method)|hyperpage}{22}
-\indexentry{set\_cmap\_list() (xanespy.qt\_frame\_view.QtFrameView method)|hyperpage}{22}
-\indexentry{set\_drawing\_status() (xanespy.qt\_frame\_view.QtFrameView method)|hyperpage}{22}
-\indexentry{set\_slider\_max() (xanespy.qt\_frame\_view.QtFrameView method)|hyperpage}{22}
-\indexentry{set\_status\_cursor() (xanespy.qt\_frame\_view.QtFrameView method)|hyperpage}{22}
-\indexentry{set\_status\_energy() (xanespy.qt\_frame\_view.QtFrameView method)|hyperpage}{22}
-\indexentry{set\_status\_index() (xanespy.qt\_frame\_view.QtFrameView method)|hyperpage}{22}
-\indexentry{set\_status\_pixel() (xanespy.qt\_frame\_view.QtFrameView method)|hyperpage}{22}
-\indexentry{set\_status\_shape() (xanespy.qt\_frame\_view.QtFrameView method)|hyperpage}{22}
-\indexentry{set\_status\_unit() (xanespy.qt\_frame\_view.QtFrameView method)|hyperpage}{22}
-\indexentry{set\_status\_value() (xanespy.qt\_frame\_view.QtFrameView method)|hyperpage}{22}
-\indexentry{set\_timestep() (xanespy.qt\_frame\_view.QtFrameView method)|hyperpage}{22}
-\indexentry{set\_timestep\_list() (xanespy.qt\_frame\_view.QtFrameView method)|hyperpage}{22}
-\indexentry{set\_ui\_enabled() (xanespy.qt\_frame\_view.QtFrameView method)|hyperpage}{22}
-\indexentry{set\_vmax() (xanespy.qt\_frame\_view.QtFrameView method)|hyperpage}{23}
-\indexentry{set\_vmax\_decimals() (xanespy.qt\_frame\_view.QtFrameView method)|hyperpage}{23}
-\indexentry{set\_vmax\_minimum() (xanespy.qt\_frame\_view.QtFrameView method)|hyperpage}{23}
-\indexentry{set\_vmax\_step() (xanespy.qt\_frame\_view.QtFrameView method)|hyperpage}{23}
-\indexentry{set\_vmin() (xanespy.qt\_frame\_view.QtFrameView method)|hyperpage}{23}
-\indexentry{set\_vmin\_decimals() (xanespy.qt\_frame\_view.QtFrameView method)|hyperpage}{23}
-\indexentry{set\_vmin\_maximum() (xanespy.qt\_frame\_view.QtFrameView method)|hyperpage}{23}
-\indexentry{set\_vmin\_step() (xanespy.qt\_frame\_view.QtFrameView method)|hyperpage}{23}
-\indexentry{set\_window\_title() (xanespy.qt\_frame\_view.QtFrameView method)|hyperpage}{23}
-\indexentry{setup() (xanespy.qt\_frame\_view.QtFrameView method)|hyperpage}{23}
-\indexentry{show() (xanespy.qt\_frame\_view.QtFrameView method)|hyperpage}{23}
-\indexentry{show\_status\_message() (xanespy.qt\_frame\_view.QtFrameView method)|hyperpage}{23}
-\indexentry{spectrum\_ax (xanespy.qt\_frame\_view.QtFrameView attribute)|hyperpage}{23}
-\indexentry{ui (xanespy.qt\_frame\_view.QtFrameView attribute)|hyperpage}{23}
-\indexentry{use\_busy\_cursor() (xanespy.qt\_frame\_view.QtFrameView method)|hyperpage}{23}
-\indexentry{window (xanespy.qt\_frame\_view.QtFrameView attribute)|hyperpage}{23}
-\indexentry{xanespy.qt\_frameset\_presenter (module)|hyperpage}{23}
-\indexentry{QtFramesetPresenter (class in xanespy.qt\_frameset\_presenter)|hyperpage}{23}
-\indexentry{app\_ready (xanespy.qt\_frameset\_presenter.QtFramesetPresenter attribute)|hyperpage}{23}
-\indexentry{busy\_status\_changed (xanespy.qt\_frameset\_presenter.QtFramesetPresenter attribute)|hyperpage}{23}
-\indexentry{map\_data\_changed (xanespy.qt\_frameset\_presenter.QtFramesetPresenter attribute)|hyperpage}{23}
-\indexentry{map\_data\_cleared (xanespy.qt\_frameset\_presenter.QtFramesetPresenter attribute)|hyperpage}{23}
-\indexentry{active\_frame (xanespy.qt\_frameset\_presenter.QtFramesetPresenter attribute)|hyperpage}{23}
-\indexentry{active\_frames() (xanespy.qt\_frameset\_presenter.QtFramesetPresenter method)|hyperpage}{23}
-\indexentry{active\_map() (xanespy.qt\_frameset\_presenter.QtFramesetPresenter method)|hyperpage}{23}
-\indexentry{active\_representation (xanespy.qt\_frameset\_presenter.QtFramesetPresenter attribute)|hyperpage}{23}
-\indexentry{active\_timestep (xanespy.qt\_frameset\_presenter.QtFramesetPresenter attribute)|hyperpage}{23}
-\indexentry{add\_frame\_view() (xanespy.qt\_frameset\_presenter.QtFramesetPresenter method)|hyperpage}{23}
-\indexentry{add\_map\_view() (xanespy.qt\_frameset\_presenter.QtFramesetPresenter method)|hyperpage}{24}
-\indexentry{animate\_frames() (xanespy.qt\_frameset\_presenter.QtFramesetPresenter method)|hyperpage}{24}
-\indexentry{app\_ready (xanespy.qt\_frameset\_presenter.QtFramesetPresenter attribute)|hyperpage}{24}
-\indexentry{build\_hdf\_tree() (xanespy.qt\_frameset\_presenter.QtFramesetPresenter method)|hyperpage}{24}
-\indexentry{busy\_status\_changed (xanespy.qt\_frameset\_presenter.QtFramesetPresenter attribute)|hyperpage}{24}
-\indexentry{change\_cmap() (xanespy.qt\_frameset\_presenter.QtFramesetPresenter method)|hyperpage}{24}
-\indexentry{change\_hdf\_group() (xanespy.qt\_frameset\_presenter.QtFramesetPresenter method)|hyperpage}{24}
-\indexentry{change\_map\_cmap() (xanespy.qt\_frameset\_presenter.QtFramesetPresenter method)|hyperpage}{24}
-\indexentry{cmap\_list\_changed (xanespy.qt\_frameset\_presenter.QtFramesetPresenter attribute)|hyperpage}{24}
-\indexentry{connect\_signals() (xanespy.qt\_frameset\_presenter.QtFramesetPresenter method)|hyperpage}{24}
-\indexentry{create\_app() (xanespy.qt\_frameset\_presenter.QtFramesetPresenter method)|hyperpage}{24}
-\indexentry{draw\_frame\_histogram() (xanespy.qt\_frameset\_presenter.QtFramesetPresenter method)|hyperpage}{24}
-\indexentry{draw\_frame\_spectra() (xanespy.qt\_frameset\_presenter.QtFramesetPresenter method)|hyperpage}{24}
-\indexentry{first\_frame() (xanespy.qt\_frameset\_presenter.QtFramesetPresenter method)|hyperpage}{24}
-\indexentry{frame\_cmap (xanespy.qt\_frameset\_presenter.QtFramesetPresenter attribute)|hyperpage}{24}
-\indexentry{frame\_norm() (xanespy.qt\_frameset\_presenter.QtFramesetPresenter method)|hyperpage}{24}
-\indexentry{frame\_pixel (xanespy.qt\_frameset\_presenter.QtFramesetPresenter attribute)|hyperpage}{24}
-\indexentry{hover\_frame\_pixel() (xanespy.qt\_frameset\_presenter.QtFramesetPresenter method)|hyperpage}{24}
-\indexentry{last\_frame() (xanespy.qt\_frameset\_presenter.QtFramesetPresenter method)|hyperpage}{24}
-\indexentry{launch() (xanespy.qt\_frameset\_presenter.QtFramesetPresenter method)|hyperpage}{24}
-\indexentry{map\_cmap (xanespy.qt\_frameset\_presenter.QtFramesetPresenter attribute)|hyperpage}{24}
-\indexentry{map\_cursor\_changed (xanespy.qt\_frameset\_presenter.QtFramesetPresenter attribute)|hyperpage}{24}
-\indexentry{map\_data\_changed (xanespy.qt\_frameset\_presenter.QtFramesetPresenter attribute)|hyperpage}{24}
-\indexentry{map\_data\_cleared (xanespy.qt\_frameset\_presenter.QtFramesetPresenter attribute)|hyperpage}{24}
-\indexentry{map\_limits\_changed (xanespy.qt\_frameset\_presenter.QtFramesetPresenter attribute)|hyperpage}{24}
-\indexentry{map\_norm() (xanespy.qt\_frameset\_presenter.QtFramesetPresenter method)|hyperpage}{25}
-\indexentry{map\_pixel\_changed (xanespy.qt\_frameset\_presenter.QtFramesetPresenter attribute)|hyperpage}{25}
-\indexentry{map\_spectrum\_changed (xanespy.qt\_frameset\_presenter.QtFramesetPresenter attribute)|hyperpage}{25}
-\indexentry{mean\_spectrum\_changed (xanespy.qt\_frameset\_presenter.QtFramesetPresenter attribute)|hyperpage}{25}
-\indexentry{move\_map\_pixel() (xanespy.qt\_frameset\_presenter.QtFramesetPresenter method)|hyperpage}{25}
-\indexentry{move\_slider() (xanespy.qt\_frameset\_presenter.QtFramesetPresenter method)|hyperpage}{25}
-\indexentry{next\_frame() (xanespy.qt\_frameset\_presenter.QtFramesetPresenter method)|hyperpage}{25}
-\indexentry{num\_frames (xanespy.qt\_frameset\_presenter.QtFramesetPresenter attribute)|hyperpage}{25}
-\indexentry{play\_frames() (xanespy.qt\_frameset\_presenter.QtFramesetPresenter method)|hyperpage}{25}
-\indexentry{prepare\_ui() (xanespy.qt\_frameset\_presenter.QtFramesetPresenter method)|hyperpage}{25}
-\indexentry{previous\_frame() (xanespy.qt\_frameset\_presenter.QtFramesetPresenter method)|hyperpage}{25}
-\indexentry{process\_events (xanespy.qt\_frameset\_presenter.QtFramesetPresenter attribute)|hyperpage}{25}
-\indexentry{refresh\_frames() (xanespy.qt\_frameset\_presenter.QtFramesetPresenter method)|hyperpage}{25}
-\indexentry{reset\_frame\_range() (xanespy.qt\_frameset\_presenter.QtFramesetPresenter method)|hyperpage}{25}
-\indexentry{reset\_map\_range() (xanespy.qt\_frameset\_presenter.QtFramesetPresenter method)|hyperpage}{25}
-\indexentry{set\_frame\_vmax() (xanespy.qt\_frameset\_presenter.QtFramesetPresenter method)|hyperpage}{25}
-\indexentry{set\_frame\_vmin() (xanespy.qt\_frameset\_presenter.QtFramesetPresenter method)|hyperpage}{25}
-\indexentry{set\_map\_cursor() (xanespy.qt\_frameset\_presenter.QtFramesetPresenter method)|hyperpage}{25}
-\indexentry{set\_map\_pixel() (xanespy.qt\_frameset\_presenter.QtFramesetPresenter method)|hyperpage}{25}
-\indexentry{set\_map\_vmax() (xanespy.qt\_frameset\_presenter.QtFramesetPresenter method)|hyperpage}{25}
-\indexentry{set\_map\_vmin() (xanespy.qt\_frameset\_presenter.QtFramesetPresenter method)|hyperpage}{25}
-\indexentry{set\_play\_speed() (xanespy.qt\_frameset\_presenter.QtFramesetPresenter method)|hyperpage}{25}
-\indexentry{set\_timestep() (xanespy.qt\_frameset\_presenter.QtFramesetPresenter method)|hyperpage}{25}
-\indexentry{timer (xanespy.qt\_frameset\_presenter.QtFramesetPresenter attribute)|hyperpage}{26}
-\indexentry{toggle\_edge\_mask() (xanespy.qt\_frameset\_presenter.QtFramesetPresenter method)|hyperpage}{26}
-\indexentry{update\_frame\_range\_limits() (xanespy.qt\_frameset\_presenter.QtFramesetPresenter method)|hyperpage}{26}
-\indexentry{update\_map\_limits() (xanespy.qt\_frameset\_presenter.QtFramesetPresenter method)|hyperpage}{26}
-\indexentry{update\_maps() (xanespy.qt\_frameset\_presenter.QtFramesetPresenter method)|hyperpage}{26}
-\indexentry{update\_spectra() (xanespy.qt\_frameset\_presenter.QtFramesetPresenter method)|hyperpage}{26}
-\indexentry{update\_status\_frame() (xanespy.qt\_frameset\_presenter.QtFramesetPresenter method)|hyperpage}{26}
-\indexentry{update\_status\_shape() (xanespy.qt\_frameset\_presenter.QtFramesetPresenter method)|hyperpage}{26}
-\indexentry{update\_status\_unit() (xanespy.qt\_frameset\_presenter.QtFramesetPresenter method)|hyperpage}{26}
-\indexentry{update\_status\_value() (xanespy.qt\_frameset\_presenter.QtFramesetPresenter method)|hyperpage}{26}
-\indexentry{use\_edge\_mask (xanespy.qt\_frameset\_presenter.QtFramesetPresenter attribute)|hyperpage}{26}
-\indexentry{xanespy.qt\_map\_view (module)|hyperpage}{26}
-\indexentry{QtMapView (class in xanespy.qt\_map\_view)|hyperpage}{26}
-\indexentry{cmap\_changed (xanespy.qt\_map\_view.QtMapView attribute)|hyperpage}{26}
-\indexentry{limits\_applied (xanespy.qt\_map\_view.QtMapView attribute)|hyperpage}{26}
-\indexentry{limits\_reset (xanespy.qt\_map\_view.QtMapView attribute)|hyperpage}{26}
-\indexentry{cmap\_changed (xanespy.qt\_map\_view.QtMapView attribute)|hyperpage}{26}
-\indexentry{connect\_presenter() (xanespy.qt\_map\_view.QtMapView method)|hyperpage}{26}
-\indexentry{create\_canvas() (xanespy.qt\_map\_view.QtMapView method)|hyperpage}{26}
-\indexentry{crosshairs (xanespy.qt\_map\_view.QtMapView attribute)|hyperpage}{26}
-\indexentry{edge\_mask\_toggled (xanespy.qt\_map\_view.QtMapView attribute)|hyperpage}{26}
-\indexentry{fig (xanespy.qt\_map\_view.QtMapView attribute)|hyperpage}{27}
-\indexentry{hide() (xanespy.qt\_map\_view.QtMapView method)|hyperpage}{27}
-\indexentry{keyboard\_nav() (xanespy.qt\_map\_view.QtMapView method)|hyperpage}{27}
-\indexentry{latest\_cmap (xanespy.qt\_map\_view.QtMapView attribute)|hyperpage}{27}
-\indexentry{limits\_applied (xanespy.qt\_map\_view.QtMapView attribute)|hyperpage}{27}
-\indexentry{limits\_reset (xanespy.qt\_map\_view.QtMapView attribute)|hyperpage}{27}
-\indexentry{map\_clicked (xanespy.qt\_map\_view.QtMapView attribute)|hyperpage}{27}
-\indexentry{map\_hovered (xanespy.qt\_map\_view.QtMapView attribute)|hyperpage}{27}
-\indexentry{map\_moved (xanespy.qt\_map\_view.QtMapView attribute)|hyperpage}{27}
-\indexentry{map\_vmax\_changed (xanespy.qt\_map\_view.QtMapView attribute)|hyperpage}{27}
-\indexentry{map\_vmin\_changed (xanespy.qt\_map\_view.QtMapView attribute)|hyperpage}{27}
-\indexentry{mouse\_clicked\_canvas() (xanespy.qt\_map\_view.QtMapView method)|hyperpage}{27}
-\indexentry{mouse\_in\_canvas() (xanespy.qt\_map\_view.QtMapView method)|hyperpage}{27}
-\indexentry{plot\_histogram\_data() (xanespy.qt\_map\_view.QtMapView method)|hyperpage}{27}
-\indexentry{plot\_map\_data() (xanespy.qt\_map\_view.QtMapView method)|hyperpage}{27}
-\indexentry{plot\_spectrum() (xanespy.qt\_map\_view.QtMapView method)|hyperpage}{27}
-\indexentry{redraw\_canvas() (xanespy.qt\_map\_view.QtMapView method)|hyperpage}{27}
-\indexentry{redraw\_crosshairs() (xanespy.qt\_map\_view.QtMapView method)|hyperpage}{27}
-\indexentry{set\_cmap\_list() (xanespy.qt\_map\_view.QtMapView method)|hyperpage}{27}
-\indexentry{set\_map\_limits() (xanespy.qt\_map\_view.QtMapView method)|hyperpage}{27}
-\indexentry{setup\_ui() (xanespy.qt\_map\_view.QtMapView method)|hyperpage}{27}
-\indexentry{show() (xanespy.qt\_map\_view.QtMapView method)|hyperpage}{27}
-\indexentry{ui (xanespy.qt\_map\_view.QtMapView attribute)|hyperpage}{27}
-\indexentry{update\_crosshair\_labels() (xanespy.qt\_map\_view.QtMapView method)|hyperpage}{27}
-\indexentry{update\_cursor\_labels() (xanespy.qt\_map\_view.QtMapView method)|hyperpage}{27}
-\indexentry{window (xanespy.qt\_map\_view.QtMapView attribute)|hyperpage}{27}
-\indexentry{xanespy.txmstore (module)|hyperpage}{27}
-\indexentry{TXMStore (class in xanespy.txmstore)|hyperpage}{27}
-\indexentry{VERSION (xanespy.txmstore.TXMStore attribute)|hyperpage}{28}
-\indexentry{absorbances (xanespy.txmstore.TXMStore attribute)|hyperpage}{28}
-\indexentry{close() (xanespy.txmstore.TXMStore method)|hyperpage}{28}
-\indexentry{cluster\_map (xanespy.txmstore.TXMStore attribute)|hyperpage}{28}
-\indexentry{data\_group() (xanespy.txmstore.TXMStore method)|hyperpage}{28}
-\indexentry{data\_name (xanespy.txmstore.TXMStore attribute)|hyperpage}{28}
-\indexentry{data\_tree() (xanespy.txmstore.TXMStore method)|hyperpage}{28}
-\indexentry{energies (xanespy.txmstore.TXMStore attribute)|hyperpage}{28}
-\indexentry{filenames (xanespy.txmstore.TXMStore attribute)|hyperpage}{28}
-\indexentry{fit\_parameters (xanespy.txmstore.TXMStore attribute)|hyperpage}{28}
-\indexentry{fork\_data\_group() (xanespy.txmstore.TXMStore method)|hyperpage}{28}
-\indexentry{get\_dataset() (xanespy.txmstore.TXMStore method)|hyperpage}{28}
-\indexentry{get\_frames() (xanespy.txmstore.TXMStore method)|hyperpage}{28}
-\indexentry{get\_map() (xanespy.txmstore.TXMStore method)|hyperpage}{28}
-\indexentry{has\_dataset() (xanespy.txmstore.TXMStore method)|hyperpage}{28}
-\indexentry{intensities (xanespy.txmstore.TXMStore attribute)|hyperpage}{28}
-\indexentry{latest\_data\_name (xanespy.txmstore.TXMStore attribute)|hyperpage}{28}
-\indexentry{original\_positions (xanespy.txmstore.TXMStore attribute)|hyperpage}{28}
-\indexentry{parent\_group() (xanespy.txmstore.TXMStore method)|hyperpage}{28}
-\indexentry{particle\_labels (xanespy.txmstore.TXMStore attribute)|hyperpage}{28}
-\indexentry{pixel\_sizes (xanespy.txmstore.TXMStore attribute)|hyperpage}{29}
-\indexentry{pixel\_unit (xanespy.txmstore.TXMStore attribute)|hyperpage}{29}
-\indexentry{references (xanespy.txmstore.TXMStore attribute)|hyperpage}{29}
-\indexentry{relative\_positions (xanespy.txmstore.TXMStore attribute)|hyperpage}{29}
-\indexentry{replace\_dataset() (xanespy.txmstore.TXMStore method)|hyperpage}{29}
-\indexentry{set\_frames() (xanespy.txmstore.TXMStore method)|hyperpage}{29}
-\indexentry{signal\_map (xanespy.txmstore.TXMStore attribute)|hyperpage}{29}
-\indexentry{signal\_method (xanespy.txmstore.TXMStore attribute)|hyperpage}{29}
-\indexentry{signal\_weights (xanespy.txmstore.TXMStore attribute)|hyperpage}{29}
-\indexentry{signals (xanespy.txmstore.TXMStore attribute)|hyperpage}{29}
-\indexentry{timestamps (xanespy.txmstore.TXMStore attribute)|hyperpage}{29}
-\indexentry{timestep\_names (xanespy.txmstore.TXMStore attribute)|hyperpage}{29}
-\indexentry{whiteline\_map (xanespy.txmstore.TXMStore attribute)|hyperpage}{29}
-\indexentry{xanespy.utilities (module)|hyperpage}{29}
-\indexentry{Extent (in module xanespy.utilities)|hyperpage}{29}
-\indexentry{Pixel (class in xanespy.utilities)|hyperpage}{29}
-\indexentry{horizontal (xanespy.utilities.Pixel attribute)|hyperpage}{29}
-\indexentry{vertical (xanespy.utilities.Pixel attribute)|hyperpage}{29}
-\indexentry{broadcast\_reverse() (in module xanespy.utilities)|hyperpage}{30}
-\indexentry{foreach() (in module xanespy.utilities)|hyperpage}{30}
-\indexentry{get\_component() (in module xanespy.utilities)|hyperpage}{30}
-\indexentry{is\_kernel() (in module xanespy.utilities)|hyperpage}{30}
-\indexentry{parallel\_map() (in module xanespy.utilities)|hyperpage}{30}
-\indexentry{pixel\_to\_xy() (in module xanespy.utilities)|hyperpage}{30}
-\indexentry{position (class in xanespy.utilities)|hyperpage}{30}
-\indexentry{x (xanespy.utilities.position attribute)|hyperpage}{30}
-\indexentry{y (xanespy.utilities.position attribute)|hyperpage}{30}
-\indexentry{z (xanespy.utilities.position attribute)|hyperpage}{30}
-\indexentry{prog() (in module xanespy.utilities)|hyperpage}{30}
-\indexentry{shape (class in xanespy.utilities)|hyperpage}{30}
-\indexentry{columns (xanespy.utilities.shape attribute)|hyperpage}{30}
-\indexentry{rows (xanespy.utilities.shape attribute)|hyperpage}{30}
-\indexentry{xy\_to\_pixel() (in module xanespy.utilities)|hyperpage}{30}
-\indexentry{xycoord (class in xanespy.utilities)|hyperpage}{30}
-\indexentry{x (xanespy.utilities.xycoord attribute)|hyperpage}{31}
-\indexentry{y (xanespy.utilities.xycoord attribute)|hyperpage}{31}
-\indexentry{xanespy.xanes\_frameset (module)|hyperpage}{31}
-\indexentry{PtychoFrameset (class in xanespy.xanes\_frameset)|hyperpage}{31}
-\indexentry{apply\_internal\_reference() (xanespy.xanes\_frameset.PtychoFrameset method)|hyperpage}{31}
-\indexentry{representations() (xanespy.xanes\_frameset.PtychoFrameset method)|hyperpage}{31}
-\indexentry{XanesFrameset (class in xanespy.xanes\_frameset)|hyperpage}{31}
-\indexentry{active\_group (xanespy.xanes\_frameset.XanesFrameset attribute)|hyperpage}{31}
-\indexentry{active\_labels\_groupname (xanespy.xanes\_frameset.XanesFrameset attribute)|hyperpage}{31}
-\indexentry{add\_frame() (xanespy.xanes\_frameset.XanesFrameset method)|hyperpage}{31}
-\indexentry{align\_frames() (xanespy.xanes\_frameset.XanesFrameset method)|hyperpage}{31}
-\indexentry{apply\_transformations() (xanespy.xanes\_frameset.XanesFrameset method)|hyperpage}{32}
-\indexentry{background\_group() (xanespy.xanes\_frameset.XanesFrameset method)|hyperpage}{32}
-\indexentry{background\_normalizer() (xanespy.xanes\_frameset.XanesFrameset method)|hyperpage}{32}
-\indexentry{calculate\_maps() (xanespy.xanes\_frameset.XanesFrameset method)|hyperpage}{32}
-\indexentry{calculate\_signals() (xanespy.xanes\_frameset.XanesFrameset method)|hyperpage}{32}
-\indexentry{calculate\_whitelines() (xanespy.xanes\_frameset.XanesFrameset method)|hyperpage}{33}
-\indexentry{clear\_caches() (xanespy.xanes\_frameset.XanesFrameset method)|hyperpage}{33}
-\indexentry{cmap (xanespy.xanes\_frameset.XanesFrameset attribute)|hyperpage}{33}
-\indexentry{data\_name (xanespy.xanes\_frameset.XanesFrameset attribute)|hyperpage}{33}
-\indexentry{data\_tree() (xanespy.xanes\_frameset.XanesFrameset method)|hyperpage}{33}
-\indexentry{drop\_frame() (xanespy.xanes\_frameset.XanesFrameset method)|hyperpage}{33}
-\indexentry{edge\_jump (xanespy.xanes\_frameset.XanesFrameset attribute)|hyperpage}{33}
-\indexentry{edge\_mask (xanespy.xanes\_frameset.XanesFrameset attribute)|hyperpage}{33}
-\indexentry{endtime() (xanespy.xanes\_frameset.XanesFrameset method)|hyperpage}{33}
-\indexentry{energies (xanespy.xanes\_frameset.XanesFrameset attribute)|hyperpage}{33}
-\indexentry{extent (xanespy.xanes\_frameset.XanesFrameset attribute)|hyperpage}{33}
-\indexentry{fit\_spectra() (xanespy.xanes\_frameset.XanesFrameset method)|hyperpage}{33}
-\indexentry{fork\_data\_group() (xanespy.xanes\_frameset.XanesFrameset method)|hyperpage}{34}
-\indexentry{frame\_shape() (xanespy.xanes\_frameset.XanesFrameset method)|hyperpage}{34}
-\indexentry{frames (xanespy.xanes\_frameset.XanesFrameset attribute)|hyperpage}{34}
-\indexentry{goodness\_mask() (xanespy.xanes\_frameset.XanesFrameset method)|hyperpage}{34}
-\indexentry{gtk\_viewer() (xanespy.xanes\_frameset.XanesFrameset method)|hyperpage}{34}
-\indexentry{has\_representation() (xanespy.xanes\_frameset.XanesFrameset method)|hyperpage}{34}
-\indexentry{hdf\_file() (xanespy.xanes\_frameset.XanesFrameset method)|hyperpage}{34}
-\indexentry{hdf\_node() (xanespy.xanes\_frameset.XanesFrameset method)|hyperpage}{34}
-\indexentry{hdf\_path() (xanespy.xanes\_frameset.XanesFrameset method)|hyperpage}{34}
-\indexentry{image\_normalizer (xanespy.xanes\_frameset.XanesFrameset attribute)|hyperpage}{35}
-\indexentry{is\_background() (xanespy.xanes\_frameset.XanesFrameset method)|hyperpage}{35}
-\indexentry{label\_particles() (xanespy.xanes\_frameset.XanesFrameset method)|hyperpage}{35}
-\indexentry{map\_data (xanespy.xanes\_frameset.XanesFrameset attribute)|hyperpage}{35}
-\indexentry{masked\_map() (xanespy.xanes\_frameset.XanesFrameset method)|hyperpage}{35}
-\indexentry{mean\_frame() (xanespy.xanes\_frameset.XanesFrameset method)|hyperpage}{35}
-\indexentry{movie\_plotter() (xanespy.xanes\_frameset.XanesFrameset method)|hyperpage}{35}
-\indexentry{normalize() (xanespy.xanes\_frameset.XanesFrameset method)|hyperpage}{35}
-\indexentry{num\_energies (xanespy.xanes\_frameset.XanesFrameset attribute)|hyperpage}{35}
-\indexentry{num\_timesteps (xanespy.xanes\_frameset.XanesFrameset attribute)|hyperpage}{35}
-\indexentry{particle() (xanespy.xanes\_frameset.XanesFrameset method)|hyperpage}{35}
-\indexentry{particle\_area\_spectrum() (xanespy.xanes\_frameset.XanesFrameset method)|hyperpage}{35}
-\indexentry{particle\_centroid\_spectrum() (xanespy.xanes\_frameset.XanesFrameset method)|hyperpage}{35}
-\indexentry{particle\_regions() (xanespy.xanes\_frameset.XanesFrameset method)|hyperpage}{36}
-\indexentry{particle\_series() (xanespy.xanes\_frameset.XanesFrameset method)|hyperpage}{36}
-\indexentry{pixel\_unit() (xanespy.xanes\_frameset.XanesFrameset method)|hyperpage}{36}
-\indexentry{plot\_edge\_jump() (xanespy.xanes\_frameset.XanesFrameset method)|hyperpage}{36}
-\indexentry{plot\_frame() (xanespy.xanes\_frameset.XanesFrameset method)|hyperpage}{36}
-\indexentry{plot\_goodness() (xanespy.xanes\_frameset.XanesFrameset method)|hyperpage}{36}
-\indexentry{plot\_histogram() (xanespy.xanes\_frameset.XanesFrameset method)|hyperpage}{36}
-\indexentry{plot\_map() (xanespy.xanes\_frameset.XanesFrameset method)|hyperpage}{36}
-\indexentry{plot\_map\_pixel\_spectra() (xanespy.xanes\_frameset.XanesFrameset method)|hyperpage}{36}
-\indexentry{plot\_mean\_image() (xanespy.xanes\_frameset.XanesFrameset method)|hyperpage}{36}
-\indexentry{plot\_signal\_map() (xanespy.xanes\_frameset.XanesFrameset method)|hyperpage}{36}
-\indexentry{plot\_signals() (xanespy.xanes\_frameset.XanesFrameset method)|hyperpage}{37}
-\indexentry{plot\_xanes\_edge() (xanespy.xanes\_frameset.XanesFrameset method)|hyperpage}{37}
-\indexentry{plot\_xanes\_spectrum() (xanespy.xanes\_frameset.XanesFrameset method)|hyperpage}{37}
-\indexentry{qt\_viewer() (xanespy.xanes\_frameset.XanesFrameset method)|hyperpage}{37}
-\indexentry{representations() (xanespy.xanes\_frameset.XanesFrameset method)|hyperpage}{37}
-\indexentry{save\_movie() (xanespy.xanes\_frameset.XanesFrameset method)|hyperpage}{37}
-\indexentry{spectra() (xanespy.xanes\_frameset.XanesFrameset method)|hyperpage}{37}
-\indexentry{spectrum() (xanespy.xanes\_frameset.XanesFrameset method)|hyperpage}{37}
-\indexentry{stage\_transformations() (xanespy.xanes\_frameset.XanesFrameset method)|hyperpage}{38}
-\indexentry{starttime() (xanespy.xanes\_frameset.XanesFrameset method)|hyperpage}{38}
-\indexentry{store() (xanespy.xanes\_frameset.XanesFrameset method)|hyperpage}{38}
-\indexentry{subtract\_surroundings() (xanespy.xanes\_frameset.XanesFrameset method)|hyperpage}{38}
-\indexentry{xanespy.xanes\_math (module)|hyperpage}{38}
-\indexentry{KEdgeParams (class in xanespy.xanes\_math)|hyperpage}{38}
-\indexentry{E0 (xanespy.xanes\_math.KEdgeParams attribute)|hyperpage}{39}
-\indexentry{ga (xanespy.xanes\_math.KEdgeParams attribute)|hyperpage}{39}
-\indexentry{gb (xanespy.xanes\_math.KEdgeParams attribute)|hyperpage}{39}
-\indexentry{gc (xanespy.xanes\_math.KEdgeParams attribute)|hyperpage}{39}
-\indexentry{pre\_b (xanespy.xanes\_math.KEdgeParams attribute)|hyperpage}{39}
-\indexentry{pre\_m (xanespy.xanes\_math.KEdgeParams attribute)|hyperpage}{39}
-\indexentry{scale (xanespy.xanes\_math.KEdgeParams attribute)|hyperpage}{39}
-\indexentry{sigw (xanespy.xanes\_math.KEdgeParams attribute)|hyperpage}{39}
-\indexentry{voffset (xanespy.xanes\_math.KEdgeParams attribute)|hyperpage}{39}
-\indexentry{apply\_internal\_reference() (in module xanespy.xanes\_math)|hyperpage}{39}
-\indexentry{apply\_references() (in module xanespy.xanes\_math)|hyperpage}{39}
-\indexentry{direct\_whitelines() (in module xanespy.xanes\_math)|hyperpage}{39}
-\indexentry{extract\_signals\_nmf() (in module xanespy.xanes\_math)|hyperpage}{40}
-\indexentry{fit\_kedge() (in module xanespy.xanes\_math)|hyperpage}{40}
-\indexentry{guess\_kedge() (in module xanespy.xanes\_math)|hyperpage}{40}
-\indexentry{iter\_indices() (in module xanespy.xanes\_math)|hyperpage}{40}
-\indexentry{k\_edge\_jump() (in module xanespy.xanes\_math)|hyperpage}{40}
-\indexentry{k\_edge\_mask() (in module xanespy.xanes\_math)|hyperpage}{40}
-\indexentry{l\_edge\_mask() (in module xanespy.xanes\_math)|hyperpage}{41}
-\indexentry{particle\_labels() (in module xanespy.xanes\_math)|hyperpage}{41}
-\indexentry{predict\_edge() (in module xanespy.xanes\_math)|hyperpage}{41}
-\indexentry{register\_correlations() (in module xanespy.xanes\_math)|hyperpage}{42}
-\indexentry{register\_template() (in module xanespy.xanes\_math)|hyperpage}{42}
-\indexentry{transform\_images() (in module xanespy.xanes\_math)|hyperpage}{42}
-\indexentry{transformation\_matrices() (in module xanespy.xanes\_math)|hyperpage}{43}
-\indexentry{xanespy.xradia (module)|hyperpage}{43}
-\indexentry{XRMFile (class in xanespy.xradia)|hyperpage}{43}
-\indexentry{aps\_old1\_regex (xanespy.xradia.XRMFile attribute)|hyperpage}{44}
-\indexentry{binning() (xanespy.xradia.XRMFile method)|hyperpage}{44}
-\indexentry{close() (xanespy.xradia.XRMFile method)|hyperpage}{44}
-\indexentry{endtime() (xanespy.xradia.XRMFile method)|hyperpage}{44}
-\indexentry{energy() (xanespy.xradia.XRMFile method)|hyperpage}{44}
-\indexentry{image\_data() (xanespy.xradia.XRMFile method)|hyperpage}{44}
-\indexentry{image\_dtype() (xanespy.xradia.XRMFile method)|hyperpage}{44}
-\indexentry{image\_shape() (xanespy.xradia.XRMFile method)|hyperpage}{44}
-\indexentry{ole\_value() (xanespy.xradia.XRMFile method)|hyperpage}{44}
-\indexentry{print\_ole() (xanespy.xradia.XRMFile method)|hyperpage}{44}
-\indexentry{sample\_position() (xanespy.xradia.XRMFile method)|hyperpage}{44}
-\indexentry{starttime() (xanespy.xradia.XRMFile method)|hyperpage}{44}
-\indexentry{um\_per\_pixel() (xanespy.xradia.XRMFile method)|hyperpage}{44}
-\indexentry{xanespy (module)|hyperpage}{44}
+\indexentry{xanespy.beamlines (module)|hyperpage}{15}
+\indexentry{Detector (class in xanespy.beamlines)|hyperpage}{15}
+\indexentry{DetectorPoint (class in xanespy.beamlines)|hyperpage}{15}
+\indexentry{energy (xanespy.beamlines.DetectorPoint attribute)|hyperpage}{15}
+\indexentry{x (xanespy.beamlines.DetectorPoint attribute)|hyperpage}{15}
+\indexentry{y (xanespy.beamlines.DetectorPoint attribute)|hyperpage}{15}
+\indexentry{z (xanespy.beamlines.DetectorPoint attribute)|hyperpage}{15}
+\indexentry{Zoneplate (class in xanespy.beamlines)|hyperpage}{15}
+\indexentry{position() (xanespy.beamlines.Zoneplate method)|hyperpage}{16}
+\indexentry{ZoneplatePoint (class in xanespy.beamlines)|hyperpage}{16}
+\indexentry{energy (xanespy.beamlines.ZoneplatePoint attribute)|hyperpage}{16}
+\indexentry{x (xanespy.beamlines.ZoneplatePoint attribute)|hyperpage}{16}
+\indexentry{y (xanespy.beamlines.ZoneplatePoint attribute)|hyperpage}{16}
+\indexentry{z (xanespy.beamlines.ZoneplatePoint attribute)|hyperpage}{16}
+\indexentry{monitor\_sector8() (in module xanespy.beamlines)|hyperpage}{16}
+\indexentry{sector8\_xanes\_script() (in module xanespy.beamlines)|hyperpage}{16}
+\indexentry{ssrl6\_xanes\_script() (in module xanespy.beamlines)|hyperpage}{16}
+\indexentry{write\_scaninfo\_header() (in module xanespy.beamlines)|hyperpage}{17}
+\indexentry{xanespy.edges (module)|hyperpage}{17}
+\indexentry{Edge (class in xanespy.edges)|hyperpage}{17}
+\indexentry{E\_0 (xanespy.edges.Edge attribute)|hyperpage}{17}
+\indexentry{regions (xanespy.edges.Edge attribute)|hyperpage}{17}
+\indexentry{name (xanespy.edges.Edge attribute)|hyperpage}{18}
+\indexentry{pre\_edge (xanespy.edges.Edge attribute)|hyperpage}{18}
+\indexentry{post\_edge (xanespy.edges.Edge attribute)|hyperpage}{18}
+\indexentry{map\_range (xanespy.edges.Edge attribute)|hyperpage}{18}
+\indexentry{edge\_range (xanespy.edges.Edge attribute)|hyperpage}{18}
+\indexentry{E\_0 (xanespy.edges.Edge attribute)|hyperpage}{18}
+\indexentry{all\_energies() (xanespy.edges.Edge method)|hyperpage}{18}
+\indexentry{edge\_range (xanespy.edges.Edge attribute)|hyperpage}{18}
+\indexentry{energies\_in\_range() (xanespy.edges.Edge method)|hyperpage}{18}
+\indexentry{map\_range (xanespy.edges.Edge attribute)|hyperpage}{18}
+\indexentry{post\_edge (xanespy.edges.Edge attribute)|hyperpage}{18}
+\indexentry{pre\_edge (xanespy.edges.Edge attribute)|hyperpage}{18}
+\indexentry{pre\_edge\_fit (xanespy.edges.Edge attribute)|hyperpage}{18}
+\indexentry{regions (xanespy.edges.Edge attribute)|hyperpage}{18}
+\indexentry{KEdge (class in xanespy.edges)|hyperpage}{18}
+\indexentry{annotate\_spectrum() (xanespy.edges.KEdge method)|hyperpage}{18}
+\indexentry{mask() (xanespy.edges.KEdge method)|hyperpage}{18}
+\indexentry{LEdge (class in xanespy.edges)|hyperpage}{18}
+\indexentry{annotate\_spectrum() (xanespy.edges.LEdge method)|hyperpage}{18}
+\indexentry{mask() (xanespy.edges.LEdge method)|hyperpage}{18}
+\indexentry{LMOMnKEdge (class in xanespy.edges)|hyperpage}{18}
+\indexentry{regions (xanespy.edges.LMOMnKEdge attribute)|hyperpage}{19}
+\indexentry{NCACobaltLEdge (class in xanespy.edges)|hyperpage}{19}
+\indexentry{E\_0 (xanespy.edges.NCACobaltLEdge attribute)|hyperpage}{19}
+\indexentry{edge\_range (xanespy.edges.NCACobaltLEdge attribute)|hyperpage}{19}
+\indexentry{map\_range (xanespy.edges.NCACobaltLEdge attribute)|hyperpage}{19}
+\indexentry{post\_edge (xanespy.edges.NCACobaltLEdge attribute)|hyperpage}{19}
+\indexentry{pre\_edge (xanespy.edges.NCACobaltLEdge attribute)|hyperpage}{19}
+\indexentry{regions (xanespy.edges.NCACobaltLEdge attribute)|hyperpage}{19}
+\indexentry{NCANickelKEdge (class in xanespy.edges)|hyperpage}{19}
+\indexentry{E\_0 (xanespy.edges.NCANickelKEdge attribute)|hyperpage}{19}
+\indexentry{edge\_range (xanespy.edges.NCANickelKEdge attribute)|hyperpage}{19}
+\indexentry{map\_range (xanespy.edges.NCANickelKEdge attribute)|hyperpage}{19}
+\indexentry{post\_edge (xanespy.edges.NCANickelKEdge attribute)|hyperpage}{19}
+\indexentry{pre\_edge (xanespy.edges.NCANickelKEdge attribute)|hyperpage}{19}
+\indexentry{regions (xanespy.edges.NCANickelKEdge attribute)|hyperpage}{19}
+\indexentry{shell (xanespy.edges.NCANickelKEdge attribute)|hyperpage}{19}
+\indexentry{NCANickelKEdge61 (class in xanespy.edges)|hyperpage}{19}
+\indexentry{regions (xanespy.edges.NCANickelKEdge61 attribute)|hyperpage}{19}
+\indexentry{NCANickelKEdge62 (class in xanespy.edges)|hyperpage}{19}
+\indexentry{regions (xanespy.edges.NCANickelKEdge62 attribute)|hyperpage}{19}
+\indexentry{NCANickelLEdge (class in xanespy.edges)|hyperpage}{19}
+\indexentry{E\_0 (xanespy.edges.NCANickelLEdge attribute)|hyperpage}{19}
+\indexentry{edge\_range (xanespy.edges.NCANickelLEdge attribute)|hyperpage}{19}
+\indexentry{map\_range (xanespy.edges.NCANickelLEdge attribute)|hyperpage}{19}
+\indexentry{post\_edge (xanespy.edges.NCANickelLEdge attribute)|hyperpage}{19}
+\indexentry{pre\_edge (xanespy.edges.NCANickelLEdge attribute)|hyperpage}{19}
+\indexentry{regions (xanespy.edges.NCANickelLEdge attribute)|hyperpage}{19}
+\indexentry{NMCNickelKEdge29 (class in xanespy.edges)|hyperpage}{19}
+\indexentry{regions (xanespy.edges.NMCNickelKEdge29 attribute)|hyperpage}{19}
+\indexentry{xanespy.exceptions (module)|hyperpage}{20}
+\indexentry{CreateGroupError|hyperpage}{20}
+\indexentry{DataFormatError|hyperpage}{20}
+\indexentry{DataNotFoundError|hyperpage}{20}
+\indexentry{DatasetExistsError|hyperpage}{20}
+\indexentry{FileExistsError|hyperpage}{20}
+\indexentry{FilenameParseError|hyperpage}{20}
+\indexentry{FrameFileNotFound|hyperpage}{20}
+\indexentry{GroupKeyError|hyperpage}{20}
+\indexentry{HDFScopeError|hyperpage}{20}
+\indexentry{NoParticleError|hyperpage}{20}
+\indexentry{RefinementError|hyperpage}{20}
+\indexentry{XanesMathError|hyperpage}{20}
+\indexentry{xanespy.importers (module)|hyperpage}{20}
+\indexentry{decode\_aps\_params() (in module xanespy.importers)|hyperpage}{20}
+\indexentry{decode\_ssrl\_params() (in module xanespy.importers)|hyperpage}{21}
+\indexentry{import\_aps\_8BM\_xanes\_dir() (in module xanespy.importers)|hyperpage}{21}
+\indexentry{import\_aps\_8BM\_xanes\_file() (in module xanespy.importers)|hyperpage}{21}
+\indexentry{import\_frameset() (in module xanespy.importers)|hyperpage}{21}
+\indexentry{import\_nanosurveyor\_frameset() (in module xanespy.importers)|hyperpage}{21}
+\indexentry{import\_ssrl\_xanes\_dir() (in module xanespy.importers)|hyperpage}{22}
+\indexentry{import\_stxm\_frameset() (in module xanespy.importers)|hyperpage}{22}
+\indexentry{magnification\_correction() (in module xanespy.importers)|hyperpage}{22}
+\indexentry{read\_metadata() (in module xanespy.importers)|hyperpage}{23}
+\indexentry{xanespy.plots (module)|hyperpage}{23}
+\indexentry{big\_axes() (in module xanespy.plots)|hyperpage}{23}
+\indexentry{draw\_colorbar() (in module xanespy.plots)|hyperpage}{23}
+\indexentry{draw\_histogram\_colorbar() (in module xanespy.plots)|hyperpage}{23}
+\indexentry{dual\_axes() (in module xanespy.plots)|hyperpage}{23}
+\indexentry{new\_axes() (in module xanespy.plots)|hyperpage}{23}
+\indexentry{new\_image\_axes() (in module xanespy.plots)|hyperpage}{23}
+\indexentry{plot\_composite\_map() (in module xanespy.plots)|hyperpage}{24}
+\indexentry{plot\_pixel\_spectra() (in module xanespy.plots)|hyperpage}{24}
+\indexentry{plot\_txm\_histogram() (in module xanespy.plots)|hyperpage}{24}
+\indexentry{plot\_txm\_intermediates() (in module xanespy.plots)|hyperpage}{24}
+\indexentry{plot\_txm\_map() (in module xanespy.plots)|hyperpage}{24}
+\indexentry{plot\_xanes\_spectrum() (in module xanespy.plots)|hyperpage}{24}
+\indexentry{remove\_extra\_spines() (in module xanespy.plots)|hyperpage}{25}
+\indexentry{set\_axes\_color() (in module xanespy.plots)|hyperpage}{25}
+\indexentry{set\_outside\_ticks() (in module xanespy.plots)|hyperpage}{25}
+\indexentry{xanespy.qt\_frame\_view (module)|hyperpage}{25}
+\indexentry{FrameAnimation (class in xanespy.qt\_frame\_view)|hyperpage}{25}
+\indexentry{stop() (xanespy.qt\_frame\_view.FrameAnimation method)|hyperpage}{25}
+\indexentry{FrameChangeSource (class in xanespy.qt\_frame\_view)|hyperpage}{25}
+\indexentry{add\_callback() (xanespy.qt\_frame\_view.FrameChangeSource method)|hyperpage}{25}
+\indexentry{callbacks (xanespy.qt\_frame\_view.FrameChangeSource attribute)|hyperpage}{25}
+\indexentry{remove\_callback() (xanespy.qt\_frame\_view.FrameChangeSource method)|hyperpage}{25}
+\indexentry{start() (xanespy.qt\_frame\_view.FrameChangeSource method)|hyperpage}{25}
+\indexentry{stop() (xanespy.qt\_frame\_view.FrameChangeSource method)|hyperpage}{25}
+\indexentry{QtFrameView (class in xanespy.qt\_frame\_view)|hyperpage}{25}
+\indexentry{add\_hdf\_tree\_item() (xanespy.qt\_frame\_view.QtFrameView method)|hyperpage}{25}
+\indexentry{clear\_axes() (xanespy.qt\_frame\_view.QtFrameView method)|hyperpage}{25}
+\indexentry{connect\_signals() (xanespy.qt\_frame\_view.QtFrameView method)|hyperpage}{25}
+\indexentry{create\_canvas() (xanespy.qt\_frame\_view.QtFrameView method)|hyperpage}{26}
+\indexentry{create\_status\_bar() (xanespy.qt\_frame\_view.QtFrameView method)|hyperpage}{26}
+\indexentry{disable\_frame\_controls() (xanespy.qt\_frame\_view.QtFrameView method)|hyperpage}{26}
+\indexentry{disable\_plotting\_controls() (xanespy.qt\_frame\_view.QtFrameView method)|hyperpage}{26}
+\indexentry{draw\_frames (xanespy.qt\_frame\_view.QtFrameView attribute)|hyperpage}{26}
+\indexentry{draw\_histogram (xanespy.qt\_frame\_view.QtFrameView attribute)|hyperpage}{26}
+\indexentry{draw\_spectrum() (xanespy.qt\_frame\_view.QtFrameView method)|hyperpage}{26}
+\indexentry{edge\_ax (xanespy.qt\_frame\_view.QtFrameView attribute)|hyperpage}{26}
+\indexentry{expand\_hdf\_tree (xanespy.qt\_frame\_view.QtFrameView attribute)|hyperpage}{26}
+\indexentry{fig (xanespy.qt\_frame\_view.QtFrameView attribute)|hyperpage}{26}
+\indexentry{frame\_changed (xanespy.qt\_frame\_view.QtFrameView attribute)|hyperpage}{26}
+\indexentry{frame\_controls (xanespy.qt\_frame\_view.QtFrameView attribute)|hyperpage}{26}
+\indexentry{hist\_ax (xanespy.qt\_frame\_view.QtFrameView attribute)|hyperpage}{26}
+\indexentry{hist\_cb (xanespy.qt\_frame\_view.QtFrameView attribute)|hyperpage}{26}
+\indexentry{plotting\_controls (xanespy.qt\_frame\_view.QtFrameView attribute)|hyperpage}{26}
+\indexentry{select\_active\_hdf\_item() (xanespy.qt\_frame\_view.QtFrameView method)|hyperpage}{26}
+\indexentry{set\_cmap() (xanespy.qt\_frame\_view.QtFrameView method)|hyperpage}{26}
+\indexentry{set\_cmap\_list() (xanespy.qt\_frame\_view.QtFrameView method)|hyperpage}{26}
+\indexentry{set\_component() (xanespy.qt\_frame\_view.QtFrameView method)|hyperpage}{26}
+\indexentry{set\_component\_list() (xanespy.qt\_frame\_view.QtFrameView method)|hyperpage}{26}
+\indexentry{set\_drawing\_status() (xanespy.qt\_frame\_view.QtFrameView method)|hyperpage}{26}
+\indexentry{set\_slider\_max() (xanespy.qt\_frame\_view.QtFrameView method)|hyperpage}{26}
+\indexentry{set\_status\_cursor() (xanespy.qt\_frame\_view.QtFrameView method)|hyperpage}{26}
+\indexentry{set\_status\_energy() (xanespy.qt\_frame\_view.QtFrameView method)|hyperpage}{26}
+\indexentry{set\_status\_index() (xanespy.qt\_frame\_view.QtFrameView method)|hyperpage}{26}
+\indexentry{set\_status\_pixel() (xanespy.qt\_frame\_view.QtFrameView method)|hyperpage}{26}
+\indexentry{set\_status\_shape() (xanespy.qt\_frame\_view.QtFrameView method)|hyperpage}{26}
+\indexentry{set\_status\_unit() (xanespy.qt\_frame\_view.QtFrameView method)|hyperpage}{26}
+\indexentry{set\_status\_value() (xanespy.qt\_frame\_view.QtFrameView method)|hyperpage}{26}
+\indexentry{set\_timestep() (xanespy.qt\_frame\_view.QtFrameView method)|hyperpage}{26}
+\indexentry{set\_timestep\_list() (xanespy.qt\_frame\_view.QtFrameView method)|hyperpage}{26}
+\indexentry{set\_ui\_enabled() (xanespy.qt\_frame\_view.QtFrameView method)|hyperpage}{26}
+\indexentry{set\_vmax() (xanespy.qt\_frame\_view.QtFrameView method)|hyperpage}{26}
+\indexentry{set\_vmax\_decimals() (xanespy.qt\_frame\_view.QtFrameView method)|hyperpage}{27}
+\indexentry{set\_vmax\_minimum() (xanespy.qt\_frame\_view.QtFrameView method)|hyperpage}{27}
+\indexentry{set\_vmax\_step() (xanespy.qt\_frame\_view.QtFrameView method)|hyperpage}{27}
+\indexentry{set\_vmin() (xanespy.qt\_frame\_view.QtFrameView method)|hyperpage}{27}
+\indexentry{set\_vmin\_decimals() (xanespy.qt\_frame\_view.QtFrameView method)|hyperpage}{27}
+\indexentry{set\_vmin\_maximum() (xanespy.qt\_frame\_view.QtFrameView method)|hyperpage}{27}
+\indexentry{set\_vmin\_step() (xanespy.qt\_frame\_view.QtFrameView method)|hyperpage}{27}
+\indexentry{set\_window\_title() (xanespy.qt\_frame\_view.QtFrameView method)|hyperpage}{27}
+\indexentry{setup() (xanespy.qt\_frame\_view.QtFrameView method)|hyperpage}{27}
+\indexentry{show() (xanespy.qt\_frame\_view.QtFrameView method)|hyperpage}{27}
+\indexentry{show\_status\_message() (xanespy.qt\_frame\_view.QtFrameView method)|hyperpage}{27}
+\indexentry{spectrum\_ax (xanespy.qt\_frame\_view.QtFrameView attribute)|hyperpage}{27}
+\indexentry{ui (xanespy.qt\_frame\_view.QtFrameView attribute)|hyperpage}{27}
+\indexentry{use\_busy\_cursor() (xanespy.qt\_frame\_view.QtFrameView method)|hyperpage}{27}
+\indexentry{window (xanespy.qt\_frame\_view.QtFrameView attribute)|hyperpage}{27}
+\indexentry{xanespy.qt\_frameset\_presenter (module)|hyperpage}{27}
+\indexentry{QtFramesetPresenter (class in xanespy.qt\_frameset\_presenter)|hyperpage}{27}
+\indexentry{app\_ready (xanespy.qt\_frameset\_presenter.QtFramesetPresenter attribute)|hyperpage}{27}
+\indexentry{busy\_status\_changed (xanespy.qt\_frameset\_presenter.QtFramesetPresenter attribute)|hyperpage}{27}
+\indexentry{map\_data\_changed (xanespy.qt\_frameset\_presenter.QtFramesetPresenter attribute)|hyperpage}{27}
+\indexentry{map\_data\_cleared (xanespy.qt\_frameset\_presenter.QtFramesetPresenter attribute)|hyperpage}{27}
+\indexentry{active\_component (xanespy.qt\_frameset\_presenter.QtFramesetPresenter attribute)|hyperpage}{27}
+\indexentry{active\_frame (xanespy.qt\_frameset\_presenter.QtFramesetPresenter attribute)|hyperpage}{27}
+\indexentry{active\_frames() (xanespy.qt\_frameset\_presenter.QtFramesetPresenter method)|hyperpage}{27}
+\indexentry{active\_map() (xanespy.qt\_frameset\_presenter.QtFramesetPresenter method)|hyperpage}{27}
+\indexentry{active\_representation (xanespy.qt\_frameset\_presenter.QtFramesetPresenter attribute)|hyperpage}{27}
+\indexentry{active\_timestep (xanespy.qt\_frameset\_presenter.QtFramesetPresenter attribute)|hyperpage}{27}
+\indexentry{add\_frame\_view() (xanespy.qt\_frameset\_presenter.QtFramesetPresenter method)|hyperpage}{27}
+\indexentry{add\_map\_view() (xanespy.qt\_frameset\_presenter.QtFramesetPresenter method)|hyperpage}{28}
+\indexentry{animate\_frames() (xanespy.qt\_frameset\_presenter.QtFramesetPresenter method)|hyperpage}{28}
+\indexentry{app\_ready (xanespy.qt\_frameset\_presenter.QtFramesetPresenter attribute)|hyperpage}{28}
+\indexentry{build\_hdf\_tree() (xanespy.qt\_frameset\_presenter.QtFramesetPresenter method)|hyperpage}{28}
+\indexentry{busy\_status\_changed (xanespy.qt\_frameset\_presenter.QtFramesetPresenter attribute)|hyperpage}{28}
+\indexentry{change\_cmap() (xanespy.qt\_frameset\_presenter.QtFramesetPresenter method)|hyperpage}{28}
+\indexentry{change\_component() (xanespy.qt\_frameset\_presenter.QtFramesetPresenter method)|hyperpage}{28}
+\indexentry{change\_hdf\_group() (xanespy.qt\_frameset\_presenter.QtFramesetPresenter method)|hyperpage}{28}
+\indexentry{change\_map\_cmap() (xanespy.qt\_frameset\_presenter.QtFramesetPresenter method)|hyperpage}{28}
+\indexentry{cmap\_list\_changed (xanespy.qt\_frameset\_presenter.QtFramesetPresenter attribute)|hyperpage}{28}
+\indexentry{component\_list\_changed (xanespy.qt\_frameset\_presenter.QtFramesetPresenter attribute)|hyperpage}{28}
+\indexentry{connect\_signals() (xanespy.qt\_frameset\_presenter.QtFramesetPresenter method)|hyperpage}{28}
+\indexentry{create\_app() (xanespy.qt\_frameset\_presenter.QtFramesetPresenter method)|hyperpage}{28}
+\indexentry{draw\_frame\_histogram() (xanespy.qt\_frameset\_presenter.QtFramesetPresenter method)|hyperpage}{28}
+\indexentry{draw\_frame\_spectra() (xanespy.qt\_frameset\_presenter.QtFramesetPresenter method)|hyperpage}{28}
+\indexentry{first\_frame() (xanespy.qt\_frameset\_presenter.QtFramesetPresenter method)|hyperpage}{28}
+\indexentry{frame\_cmap (xanespy.qt\_frameset\_presenter.QtFramesetPresenter attribute)|hyperpage}{28}
+\indexentry{frame\_norm() (xanespy.qt\_frameset\_presenter.QtFramesetPresenter method)|hyperpage}{28}
+\indexentry{frame\_pixel (xanespy.qt\_frameset\_presenter.QtFramesetPresenter attribute)|hyperpage}{28}
+\indexentry{hover\_frame\_pixel() (xanespy.qt\_frameset\_presenter.QtFramesetPresenter method)|hyperpage}{28}
+\indexentry{last\_frame() (xanespy.qt\_frameset\_presenter.QtFramesetPresenter method)|hyperpage}{28}
+\indexentry{launch() (xanespy.qt\_frameset\_presenter.QtFramesetPresenter method)|hyperpage}{28}
+\indexentry{map\_cmap (xanespy.qt\_frameset\_presenter.QtFramesetPresenter attribute)|hyperpage}{28}
+\indexentry{map\_cursor\_changed (xanespy.qt\_frameset\_presenter.QtFramesetPresenter attribute)|hyperpage}{28}
+\indexentry{map\_data\_changed (xanespy.qt\_frameset\_presenter.QtFramesetPresenter attribute)|hyperpage}{28}
+\indexentry{map\_data\_cleared (xanespy.qt\_frameset\_presenter.QtFramesetPresenter attribute)|hyperpage}{28}
+\indexentry{map\_limits\_changed (xanespy.qt\_frameset\_presenter.QtFramesetPresenter attribute)|hyperpage}{29}
+\indexentry{map\_norm() (xanespy.qt\_frameset\_presenter.QtFramesetPresenter method)|hyperpage}{29}
+\indexentry{map\_pixel\_changed (xanespy.qt\_frameset\_presenter.QtFramesetPresenter attribute)|hyperpage}{29}
+\indexentry{map\_spectrum\_changed (xanespy.qt\_frameset\_presenter.QtFramesetPresenter attribute)|hyperpage}{29}
+\indexentry{mean\_spectrum\_changed (xanespy.qt\_frameset\_presenter.QtFramesetPresenter attribute)|hyperpage}{29}
+\indexentry{move\_map\_pixel() (xanespy.qt\_frameset\_presenter.QtFramesetPresenter method)|hyperpage}{29}
+\indexentry{move\_slider() (xanespy.qt\_frameset\_presenter.QtFramesetPresenter method)|hyperpage}{29}
+\indexentry{next\_frame() (xanespy.qt\_frameset\_presenter.QtFramesetPresenter method)|hyperpage}{29}
+\indexentry{num\_frames (xanespy.qt\_frameset\_presenter.QtFramesetPresenter attribute)|hyperpage}{29}
+\indexentry{play\_frames() (xanespy.qt\_frameset\_presenter.QtFramesetPresenter method)|hyperpage}{29}
+\indexentry{prepare\_ui() (xanespy.qt\_frameset\_presenter.QtFramesetPresenter method)|hyperpage}{29}
+\indexentry{previous\_frame() (xanespy.qt\_frameset\_presenter.QtFramesetPresenter method)|hyperpage}{29}
+\indexentry{process\_events (xanespy.qt\_frameset\_presenter.QtFramesetPresenter attribute)|hyperpage}{29}
+\indexentry{refresh\_frames() (xanespy.qt\_frameset\_presenter.QtFramesetPresenter method)|hyperpage}{29}
+\indexentry{reset\_frame\_range() (xanespy.qt\_frameset\_presenter.QtFramesetPresenter method)|hyperpage}{29}
+\indexentry{reset\_map\_range() (xanespy.qt\_frameset\_presenter.QtFramesetPresenter method)|hyperpage}{29}
+\indexentry{set\_frame\_vmax() (xanespy.qt\_frameset\_presenter.QtFramesetPresenter method)|hyperpage}{29}
+\indexentry{set\_frame\_vmin() (xanespy.qt\_frameset\_presenter.QtFramesetPresenter method)|hyperpage}{29}
+\indexentry{set\_map\_cursor() (xanespy.qt\_frameset\_presenter.QtFramesetPresenter method)|hyperpage}{29}
+\indexentry{set\_map\_pixel() (xanespy.qt\_frameset\_presenter.QtFramesetPresenter method)|hyperpage}{29}
+\indexentry{set\_map\_vmax() (xanespy.qt\_frameset\_presenter.QtFramesetPresenter method)|hyperpage}{29}
+\indexentry{set\_map\_vmin() (xanespy.qt\_frameset\_presenter.QtFramesetPresenter method)|hyperpage}{29}
+\indexentry{set\_play\_speed() (xanespy.qt\_frameset\_presenter.QtFramesetPresenter method)|hyperpage}{29}
+\indexentry{set\_timestep() (xanespy.qt\_frameset\_presenter.QtFramesetPresenter method)|hyperpage}{30}
+\indexentry{show\_spectrum\_fit (xanespy.qt\_frameset\_presenter.QtFramesetPresenter attribute)|hyperpage}{30}
+\indexentry{timer (xanespy.qt\_frameset\_presenter.QtFramesetPresenter attribute)|hyperpage}{30}
+\indexentry{toggle\_edge\_mask() (xanespy.qt\_frameset\_presenter.QtFramesetPresenter method)|hyperpage}{30}
+\indexentry{toggle\_spectrum\_fit() (xanespy.qt\_frameset\_presenter.QtFramesetPresenter method)|hyperpage}{30}
+\indexentry{update\_frame\_range\_limits() (xanespy.qt\_frameset\_presenter.QtFramesetPresenter method)|hyperpage}{30}
+\indexentry{update\_map\_limits() (xanespy.qt\_frameset\_presenter.QtFramesetPresenter method)|hyperpage}{30}
+\indexentry{update\_maps() (xanespy.qt\_frameset\_presenter.QtFramesetPresenter method)|hyperpage}{30}
+\indexentry{update\_spectra() (xanespy.qt\_frameset\_presenter.QtFramesetPresenter method)|hyperpage}{30}
+\indexentry{update\_status\_frame() (xanespy.qt\_frameset\_presenter.QtFramesetPresenter method)|hyperpage}{30}
+\indexentry{update\_status\_shape() (xanespy.qt\_frameset\_presenter.QtFramesetPresenter method)|hyperpage}{30}
+\indexentry{update\_status\_unit() (xanespy.qt\_frameset\_presenter.QtFramesetPresenter method)|hyperpage}{30}
+\indexentry{update\_status\_value() (xanespy.qt\_frameset\_presenter.QtFramesetPresenter method)|hyperpage}{30}
+\indexentry{use\_edge\_mask (xanespy.qt\_frameset\_presenter.QtFramesetPresenter attribute)|hyperpage}{30}
+\indexentry{xanespy.qt\_map\_view (module)|hyperpage}{30}
+\indexentry{QtMapView (class in xanespy.qt\_map\_view)|hyperpage}{30}
+\indexentry{cmap\_changed (xanespy.qt\_map\_view.QtMapView attribute)|hyperpage}{30}
+\indexentry{limits\_applied (xanespy.qt\_map\_view.QtMapView attribute)|hyperpage}{30}
+\indexentry{limits\_reset (xanespy.qt\_map\_view.QtMapView attribute)|hyperpage}{30}
+\indexentry{cmap\_changed (xanespy.qt\_map\_view.QtMapView attribute)|hyperpage}{30}
+\indexentry{connect\_presenter() (xanespy.qt\_map\_view.QtMapView method)|hyperpage}{30}
+\indexentry{create\_canvas() (xanespy.qt\_map\_view.QtMapView method)|hyperpage}{31}
+\indexentry{crosshairs (xanespy.qt\_map\_view.QtMapView attribute)|hyperpage}{31}
+\indexentry{edge\_mask\_toggled (xanespy.qt\_map\_view.QtMapView attribute)|hyperpage}{31}
+\indexentry{fig (xanespy.qt\_map\_view.QtMapView attribute)|hyperpage}{31}
+\indexentry{hide() (xanespy.qt\_map\_view.QtMapView method)|hyperpage}{31}
+\indexentry{keyboard\_nav() (xanespy.qt\_map\_view.QtMapView method)|hyperpage}{31}
+\indexentry{latest\_cmap (xanespy.qt\_map\_view.QtMapView attribute)|hyperpage}{31}
+\indexentry{limits\_applied (xanespy.qt\_map\_view.QtMapView attribute)|hyperpage}{31}
+\indexentry{limits\_reset (xanespy.qt\_map\_view.QtMapView attribute)|hyperpage}{31}
+\indexentry{map\_clicked (xanespy.qt\_map\_view.QtMapView attribute)|hyperpage}{31}
+\indexentry{map\_hovered (xanespy.qt\_map\_view.QtMapView attribute)|hyperpage}{31}
+\indexentry{map\_moved (xanespy.qt\_map\_view.QtMapView attribute)|hyperpage}{31}
+\indexentry{map\_vmax\_changed (xanespy.qt\_map\_view.QtMapView attribute)|hyperpage}{31}
+\indexentry{map\_vmin\_changed (xanespy.qt\_map\_view.QtMapView attribute)|hyperpage}{31}
+\indexentry{mouse\_clicked\_canvas() (xanespy.qt\_map\_view.QtMapView method)|hyperpage}{31}
+\indexentry{mouse\_in\_canvas() (xanespy.qt\_map\_view.QtMapView method)|hyperpage}{31}
+\indexentry{plot\_histogram\_data() (xanespy.qt\_map\_view.QtMapView method)|hyperpage}{31}
+\indexentry{plot\_map\_data() (xanespy.qt\_map\_view.QtMapView method)|hyperpage}{31}
+\indexentry{plot\_spectrum() (xanespy.qt\_map\_view.QtMapView method)|hyperpage}{31}
+\indexentry{redraw\_canvas() (xanespy.qt\_map\_view.QtMapView method)|hyperpage}{31}
+\indexentry{redraw\_crosshairs() (xanespy.qt\_map\_view.QtMapView method)|hyperpage}{31}
+\indexentry{set\_cmap\_list() (xanespy.qt\_map\_view.QtMapView method)|hyperpage}{31}
+\indexentry{set\_map\_limits() (xanespy.qt\_map\_view.QtMapView method)|hyperpage}{31}
+\indexentry{setup\_ui() (xanespy.qt\_map\_view.QtMapView method)|hyperpage}{31}
+\indexentry{show() (xanespy.qt\_map\_view.QtMapView method)|hyperpage}{31}
+\indexentry{spectrum\_fit\_toggled (xanespy.qt\_map\_view.QtMapView attribute)|hyperpage}{31}
+\indexentry{ui (xanespy.qt\_map\_view.QtMapView attribute)|hyperpage}{31}
+\indexentry{update\_crosshair\_labels() (xanespy.qt\_map\_view.QtMapView method)|hyperpage}{31}
+\indexentry{update\_cursor\_labels() (xanespy.qt\_map\_view.QtMapView method)|hyperpage}{31}
+\indexentry{window (xanespy.qt\_map\_view.QtMapView attribute)|hyperpage}{31}
+\indexentry{xanespy.txmstore (module)|hyperpage}{32}
+\indexentry{TXMStore (class in xanespy.txmstore)|hyperpage}{32}
+\indexentry{VERSION (xanespy.txmstore.TXMStore attribute)|hyperpage}{32}
+\indexentry{absorbance\_mean (xanespy.txmstore.TXMStore attribute)|hyperpage}{32}
+\indexentry{absorbances (xanespy.txmstore.TXMStore attribute)|hyperpage}{32}
+\indexentry{close() (xanespy.txmstore.TXMStore method)|hyperpage}{32}
+\indexentry{cluster\_map (xanespy.txmstore.TXMStore attribute)|hyperpage}{32}
+\indexentry{data\_group() (xanespy.txmstore.TXMStore method)|hyperpage}{32}
+\indexentry{data\_name (xanespy.txmstore.TXMStore attribute)|hyperpage}{32}
+\indexentry{data\_tree() (xanespy.txmstore.TXMStore method)|hyperpage}{32}
+\indexentry{energies (xanespy.txmstore.TXMStore attribute)|hyperpage}{32}
+\indexentry{filenames (xanespy.txmstore.TXMStore attribute)|hyperpage}{32}
+\indexentry{fit\_parameters (xanespy.txmstore.TXMStore attribute)|hyperpage}{32}
+\indexentry{fork\_data\_group() (xanespy.txmstore.TXMStore method)|hyperpage}{32}
+\indexentry{get\_dataset() (xanespy.txmstore.TXMStore method)|hyperpage}{32}
+\indexentry{get\_frames() (xanespy.txmstore.TXMStore method)|hyperpage}{32}
+\indexentry{get\_map() (xanespy.txmstore.TXMStore method)|hyperpage}{33}
+\indexentry{has\_dataset() (xanespy.txmstore.TXMStore method)|hyperpage}{33}
+\indexentry{intensities (xanespy.txmstore.TXMStore attribute)|hyperpage}{33}
+\indexentry{latest\_data\_name (xanespy.txmstore.TXMStore attribute)|hyperpage}{33}
+\indexentry{original\_positions (xanespy.txmstore.TXMStore attribute)|hyperpage}{33}
+\indexentry{parent\_group() (xanespy.txmstore.TXMStore method)|hyperpage}{33}
+\indexentry{particle\_labels (xanespy.txmstore.TXMStore attribute)|hyperpage}{33}
+\indexentry{pixel\_sizes (xanespy.txmstore.TXMStore attribute)|hyperpage}{33}
+\indexentry{pixel\_unit (xanespy.txmstore.TXMStore attribute)|hyperpage}{33}
+\indexentry{references (xanespy.txmstore.TXMStore attribute)|hyperpage}{33}
+\indexentry{relative\_positions (xanespy.txmstore.TXMStore attribute)|hyperpage}{33}
+\indexentry{replace\_dataset() (xanespy.txmstore.TXMStore method)|hyperpage}{33}
+\indexentry{set\_frames() (xanespy.txmstore.TXMStore method)|hyperpage}{33}
+\indexentry{signal\_map (xanespy.txmstore.TXMStore attribute)|hyperpage}{33}
+\indexentry{signal\_method (xanespy.txmstore.TXMStore attribute)|hyperpage}{33}
+\indexentry{signal\_weights (xanespy.txmstore.TXMStore attribute)|hyperpage}{33}
+\indexentry{signals (xanespy.txmstore.TXMStore attribute)|hyperpage}{33}
+\indexentry{timestamps (xanespy.txmstore.TXMStore attribute)|hyperpage}{33}
+\indexentry{timestep\_names (xanespy.txmstore.TXMStore attribute)|hyperpage}{33}
+\indexentry{whiteline\_fit (xanespy.txmstore.TXMStore attribute)|hyperpage}{33}
+\indexentry{whiteline\_max (xanespy.txmstore.TXMStore attribute)|hyperpage}{34}
+\indexentry{xanespy.utilities (module)|hyperpage}{34}
+\indexentry{Extent (in module xanespy.utilities)|hyperpage}{34}
+\indexentry{Pixel (class in xanespy.utilities)|hyperpage}{34}
+\indexentry{horizontal (xanespy.utilities.Pixel attribute)|hyperpage}{34}
+\indexentry{vertical (xanespy.utilities.Pixel attribute)|hyperpage}{34}
+\indexentry{broadcast\_reverse() (in module xanespy.utilities)|hyperpage}{34}
+\indexentry{foreach() (in module xanespy.utilities)|hyperpage}{34}
+\indexentry{get\_component() (in module xanespy.utilities)|hyperpage}{34}
+\indexentry{is\_kernel() (in module xanespy.utilities)|hyperpage}{34}
+\indexentry{parallel\_map() (in module xanespy.utilities)|hyperpage}{34}
+\indexentry{pixel\_to\_xy() (in module xanespy.utilities)|hyperpage}{34}
+\indexentry{position (class in xanespy.utilities)|hyperpage}{34}
+\indexentry{x (xanespy.utilities.position attribute)|hyperpage}{34}
+\indexentry{y (xanespy.utilities.position attribute)|hyperpage}{34}
+\indexentry{z (xanespy.utilities.position attribute)|hyperpage}{34}
+\indexentry{prog() (in module xanespy.utilities)|hyperpage}{34}
+\indexentry{shape (class in xanespy.utilities)|hyperpage}{35}
+\indexentry{columns (xanespy.utilities.shape attribute)|hyperpage}{35}
+\indexentry{rows (xanespy.utilities.shape attribute)|hyperpage}{35}
+\indexentry{xy\_to\_pixel() (in module xanespy.utilities)|hyperpage}{35}
+\indexentry{xycoord (class in xanespy.utilities)|hyperpage}{35}
+\indexentry{x (xanespy.utilities.xycoord attribute)|hyperpage}{35}
+\indexentry{y (xanespy.utilities.xycoord attribute)|hyperpage}{35}
+\indexentry{xanespy.xanes\_frameset (module)|hyperpage}{35}
+\indexentry{PtychoFrameset (class in xanespy.xanes\_frameset)|hyperpage}{35}
+\indexentry{representations() (xanespy.xanes\_frameset.PtychoFrameset method)|hyperpage}{35}
+\indexentry{XanesFrameset (class in xanespy.xanes\_frameset)|hyperpage}{35}
+\indexentry{active\_group (xanespy.xanes\_frameset.XanesFrameset attribute)|hyperpage}{35}
+\indexentry{align\_frames() (xanespy.xanes\_frameset.XanesFrameset method)|hyperpage}{35}
+\indexentry{apply\_internal\_reference() (xanespy.xanes\_frameset.XanesFrameset method)|hyperpage}{36}
+\indexentry{apply\_transformations() (xanespy.xanes\_frameset.XanesFrameset method)|hyperpage}{36}
+\indexentry{calculate\_maps() (xanespy.xanes\_frameset.XanesFrameset method)|hyperpage}{37}
+\indexentry{calculate\_signals() (xanespy.xanes\_frameset.XanesFrameset method)|hyperpage}{37}
+\indexentry{calculate\_whitelines() (xanespy.xanes\_frameset.XanesFrameset method)|hyperpage}{37}
+\indexentry{clear\_caches() (xanespy.xanes\_frameset.XanesFrameset method)|hyperpage}{37}
+\indexentry{cmap (xanespy.xanes\_frameset.XanesFrameset attribute)|hyperpage}{37}
+\indexentry{components() (xanespy.xanes\_frameset.XanesFrameset method)|hyperpage}{37}
+\indexentry{data\_name (xanespy.xanes\_frameset.XanesFrameset attribute)|hyperpage}{37}
+\indexentry{data\_tree() (xanespy.xanes\_frameset.XanesFrameset method)|hyperpage}{37}
+\indexentry{edge\_mask (xanespy.xanes\_frameset.XanesFrameset attribute)|hyperpage}{37}
+\indexentry{endtime() (xanespy.xanes\_frameset.XanesFrameset method)|hyperpage}{37}
+\indexentry{energies (xanespy.xanes\_frameset.XanesFrameset attribute)|hyperpage}{38}
+\indexentry{extent (xanespy.xanes\_frameset.XanesFrameset attribute)|hyperpage}{38}
+\indexentry{extent\_array() (xanespy.xanes\_frameset.XanesFrameset method)|hyperpage}{38}
+\indexentry{fit\_spectra() (xanespy.xanes\_frameset.XanesFrameset method)|hyperpage}{38}
+\indexentry{fitted\_spectrum() (xanespy.xanes\_frameset.XanesFrameset method)|hyperpage}{38}
+\indexentry{fork\_data\_group() (xanespy.xanes\_frameset.XanesFrameset method)|hyperpage}{38}
+\indexentry{frame\_shape() (xanespy.xanes\_frameset.XanesFrameset method)|hyperpage}{39}
+\indexentry{frames (xanespy.xanes\_frameset.XanesFrameset attribute)|hyperpage}{39}
+\indexentry{has\_representation() (xanespy.xanes\_frameset.XanesFrameset method)|hyperpage}{39}
+\indexentry{hdf\_path() (xanespy.xanes\_frameset.XanesFrameset method)|hyperpage}{39}
+\indexentry{label\_particles() (xanespy.xanes\_frameset.XanesFrameset method)|hyperpage}{39}
+\indexentry{map\_data (xanespy.xanes\_frameset.XanesFrameset attribute)|hyperpage}{39}
+\indexentry{mean\_frame() (xanespy.xanes\_frameset.XanesFrameset method)|hyperpage}{39}
+\indexentry{normalize() (xanespy.xanes\_frameset.XanesFrameset method)|hyperpage}{40}
+\indexentry{num\_energies (xanespy.xanes\_frameset.XanesFrameset attribute)|hyperpage}{40}
+\indexentry{num\_timesteps (xanespy.xanes\_frameset.XanesFrameset attribute)|hyperpage}{40}
+\indexentry{particle\_regions() (xanespy.xanes\_frameset.XanesFrameset method)|hyperpage}{40}
+\indexentry{particle\_series() (xanespy.xanes\_frameset.XanesFrameset method)|hyperpage}{40}
+\indexentry{pixel\_unit() (xanespy.xanes\_frameset.XanesFrameset method)|hyperpage}{40}
+\indexentry{plot\_frame() (xanespy.xanes\_frameset.XanesFrameset method)|hyperpage}{40}
+\indexentry{plot\_histogram() (xanespy.xanes\_frameset.XanesFrameset method)|hyperpage}{40}
+\indexentry{plot\_map() (xanespy.xanes\_frameset.XanesFrameset method)|hyperpage}{40}
+\indexentry{plot\_map\_pixel\_spectra() (xanespy.xanes\_frameset.XanesFrameset method)|hyperpage}{40}
+\indexentry{plot\_mean\_image() (xanespy.xanes\_frameset.XanesFrameset method)|hyperpage}{41}
+\indexentry{plot\_signal\_map() (xanespy.xanes\_frameset.XanesFrameset method)|hyperpage}{41}
+\indexentry{plot\_signals() (xanespy.xanes\_frameset.XanesFrameset method)|hyperpage}{41}
+\indexentry{plot\_xanes\_spectrum() (xanespy.xanes\_frameset.XanesFrameset method)|hyperpage}{41}
+\indexentry{qt\_viewer() (xanespy.xanes\_frameset.XanesFrameset method)|hyperpage}{41}
+\indexentry{spectra() (xanespy.xanes\_frameset.XanesFrameset method)|hyperpage}{41}
+\indexentry{spectrum() (xanespy.xanes\_frameset.XanesFrameset method)|hyperpage}{41}
+\indexentry{stage\_transformations() (xanespy.xanes\_frameset.XanesFrameset method)|hyperpage}{42}
+\indexentry{starttime() (xanespy.xanes\_frameset.XanesFrameset method)|hyperpage}{42}
+\indexentry{store() (xanespy.xanes\_frameset.XanesFrameset method)|hyperpage}{43}
+\indexentry{subtract\_surroundings() (xanespy.xanes\_frameset.XanesFrameset method)|hyperpage}{43}
+\indexentry{xanespy.xanes\_math (module)|hyperpage}{43}
+\indexentry{KEdgeParams (class in xanespy.xanes\_math)|hyperpage}{43}
+\indexentry{E0 (xanespy.xanes\_math.KEdgeParams attribute)|hyperpage}{43}
+\indexentry{bg\_slope (xanespy.xanes\_math.KEdgeParams attribute)|hyperpage}{43}
+\indexentry{ga (xanespy.xanes\_math.KEdgeParams attribute)|hyperpage}{43}
+\indexentry{gb (xanespy.xanes\_math.KEdgeParams attribute)|hyperpage}{43}
+\indexentry{gc (xanespy.xanes\_math.KEdgeParams attribute)|hyperpage}{43}
+\indexentry{scale (xanespy.xanes\_math.KEdgeParams attribute)|hyperpage}{43}
+\indexentry{sigw (xanespy.xanes\_math.KEdgeParams attribute)|hyperpage}{43}
+\indexentry{voffset (xanespy.xanes\_math.KEdgeParams attribute)|hyperpage}{43}
+\indexentry{apply\_internal\_reference() (in module xanespy.xanes\_math)|hyperpage}{43}
+\indexentry{apply\_mosaic\_reference() (in module xanespy.xanes\_math)|hyperpage}{43}
+\indexentry{apply\_references() (in module xanespy.xanes\_math)|hyperpage}{44}
+\indexentry{direct\_whitelines() (in module xanespy.xanes\_math)|hyperpage}{44}
+\indexentry{extract\_signals\_nmf() (in module xanespy.xanes\_math)|hyperpage}{44}
+\indexentry{fit\_kedge() (in module xanespy.xanes\_math)|hyperpage}{44}
+\indexentry{fit\_kedge\_mpi() (in module xanespy.xanes\_math)|hyperpage}{45}
+\indexentry{guess\_kedge() (in module xanespy.xanes\_math)|hyperpage}{45}
+\indexentry{iter\_indices() (in module xanespy.xanes\_math)|hyperpage}{45}
+\indexentry{k\_edge\_jump() (in module xanespy.xanes\_math)|hyperpage}{45}
+\indexentry{k\_edge\_mask() (in module xanespy.xanes\_math)|hyperpage}{45}
+\indexentry{l\_edge\_mask() (in module xanespy.xanes\_math)|hyperpage}{46}
+\indexentry{particle\_labels() (in module xanespy.xanes\_math)|hyperpage}{46}
+\indexentry{predict\_edge() (in module xanespy.xanes\_math)|hyperpage}{46}
+\indexentry{register\_correlations() (in module xanespy.xanes\_math)|hyperpage}{47}
+\indexentry{register\_template() (in module xanespy.xanes\_math)|hyperpage}{47}
+\indexentry{transform\_images() (in module xanespy.xanes\_math)|hyperpage}{47}
+\indexentry{transformation\_matrices() (in module xanespy.xanes\_math)|hyperpage}{48}
+\indexentry{xanespy.xradia (module)|hyperpage}{48}
+\indexentry{TXRMFile (class in xanespy.xradia)|hyperpage}{48}
+\indexentry{energies() (xanespy.xradia.TXRMFile method)|hyperpage}{48}
+\indexentry{image\_stack() (xanespy.xradia.TXRMFile method)|hyperpage}{48}
+\indexentry{XRMFile (class in xanespy.xradia)|hyperpage}{48}
+\indexentry{aps\_old1\_regex (xanespy.xradia.XRMFile attribute)|hyperpage}{49}
+\indexentry{binning() (xanespy.xradia.XRMFile method)|hyperpage}{49}
+\indexentry{close() (xanespy.xradia.XRMFile method)|hyperpage}{49}
+\indexentry{endtime() (xanespy.xradia.XRMFile method)|hyperpage}{49}
+\indexentry{energy() (xanespy.xradia.XRMFile method)|hyperpage}{49}
+\indexentry{image\_data() (xanespy.xradia.XRMFile method)|hyperpage}{49}
+\indexentry{image\_dtype() (xanespy.xradia.XRMFile method)|hyperpage}{49}
+\indexentry{image\_shape() (xanespy.xradia.XRMFile method)|hyperpage}{49}
+\indexentry{is\_valid() (xanespy.xradia.XRMFile method)|hyperpage}{49}
+\indexentry{num\_images() (xanespy.xradia.XRMFile method)|hyperpage}{49}
+\indexentry{ole\_value() (xanespy.xradia.XRMFile method)|hyperpage}{49}
+\indexentry{print\_ole() (xanespy.xradia.XRMFile method)|hyperpage}{49}
+\indexentry{sample\_position() (xanespy.xradia.XRMFile method)|hyperpage}{49}
+\indexentry{starttime() (xanespy.xradia.XRMFile method)|hyperpage}{49}
+\indexentry{starttimes() (xanespy.xradia.XRMFile method)|hyperpage}{49}
+\indexentry{um\_per\_pixel() (xanespy.xradia.XRMFile method)|hyperpage}{50}
+\indexentry{xanespy (module)|hyperpage}{50}

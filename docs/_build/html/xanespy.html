@@ -6,7 +6,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>xanespy package &#8212; Xanespy 0.1.1 documentation</title>
+    <title>xanespy package &#8212; Xanespy 0.1.2 documentation</title>
     
     <link rel="stylesheet" href="_static/classic.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -14,7 +14,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    './',
-        VERSION:     '0.1.1',
+        VERSION:     '0.1.2',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true,
@@ -42,7 +42,7 @@
         <li class="right" >
           <a href="modules.html" title="xanespy"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">Xanespy 0.1.1 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Xanespy 0.1.2 documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="modules.html" accesskey="U">xanespy</a> &#187;</li> 
       </ul>
     </div>  
@@ -2108,6 +2108,11 @@ h5py.File constructor.</li>
 <dd></dd></dl>
 
 <dl class="attribute">
+<dt id="xanespy.txmstore.TXMStore.absorbance_mean">
+<code class="descname">absorbance_mean</code><a class="headerlink" href="#xanespy.txmstore.TXMStore.absorbance_mean" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
 <dt id="xanespy.txmstore.TXMStore.absorbances">
 <code class="descname">absorbances</code><a class="headerlink" href="#xanespy.txmstore.TXMStore.absorbances" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
@@ -2885,7 +2890,7 @@ deletes the existing group and copies symlinks from the current one.</p>
 
 <dl class="method">
 <dt id="xanespy.xanes_frameset.XanesFrameset.frame_shape">
-<code class="descname">frame_shape</code><span class="sig-paren">(</span><em>representation=’absorbances’</em><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.xanes_frameset.XanesFrameset.frame_shape" title="Permalink to this definition">¶</a></dt>
+<code class="descname">frame_shape</code><span class="sig-paren">(</span><em>representation=’intensities’</em><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.xanes_frameset.XanesFrameset.frame_shape" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return the shape of the individual energy frames.</p>
 </dd></dl>
 
@@ -3069,7 +3074,7 @@ the second is the first dimension of the map dataset (usually time).</p>
 
 <dl class="method">
 <dt id="xanespy.xanes_frameset.XanesFrameset.plot_histogram">
-<code class="descname">plot_histogram</code><span class="sig-paren">(</span><em>plotter=None</em>, <em>timeidx=None</em>, <em>ax=None</em>, <em>vmin=None</em>, <em>vmax=None</em>, <em>goodness_filter=False</em>, <em>representation=’whiteline_fit’</em>, <em>active_pixel=None</em>, <em>bins=’energies’</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.xanes_frameset.XanesFrameset.plot_histogram" title="Permalink to this definition">¶</a></dt>
+<code class="descname">plot_histogram</code><span class="sig-paren">(</span><em>plotter=None</em>, <em>timeidx=None</em>, <em>ax=None</em>, <em>vmin=None</em>, <em>vmax=None</em>, <em>goodness_filter=False</em>, <em>representation=’whiteline_fit’</em>, <em>component=’real’</em>, <em>active_pixel=None</em>, <em>bins=’energies’</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#xanespy.xanes_frameset.XanesFrameset.plot_histogram" title="Permalink to this definition">¶</a></dt>
 <dd><p>Use a default frameset plotter to draw a map of the chemical
 data.</p>
 </dd></dl>
@@ -4132,7 +4137,7 @@ is uniform and assumes a 40µm field-of-view.</p>
         <li class="right" >
           <a href="modules.html" title="xanespy"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">Xanespy 0.1.1 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Xanespy 0.1.2 documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="modules.html" >xanespy</a> &#187;</li> 
       </ul>
     </div>

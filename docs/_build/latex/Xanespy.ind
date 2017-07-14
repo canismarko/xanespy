@@ -1,4 +1,4 @@
-\begin{theindex}
+\begin{sphinxtheindex}
 \def\bigletter#1{{\Large\sffamily#1}\nopagebreak\vspace{1mm}}
 
   \bigletter A
@@ -554,4 +554,4 @@
   \item Zoneplate (class in xanespy.beamlines), \hyperpage{13}
   \item ZoneplatePoint (class in xanespy.beamlines), \hyperpage{13}
 
-\end{theindex}
+\end{sphinxtheindex}

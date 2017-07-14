@@ -31,9 +31,10 @@ dataset may be necessary:
    frameset.fork_data_group("aligned")
    frameset.align_frames(passes=3)
 
-The :py:meth:`~xanespy.xanes_frameset.XanesFrameset.fork_data_group` method can be slow for large datasets. Xanespy
-will raise exceptions for non-sensical requests for forking: trying to
-copy a group onto itself, using a datagroup that doesn't exist, etc.
+The :py:meth:`~xanespy.xanes_frameset.XanesFrameset.fork_data_group`
+method can be slow for large datasets. Xanespy will raise exceptions
+for non-sensical requests for forking: trying to copy a group onto
+itself, using a datagroup that doesn't exist, etc.
 
 
 Frame Alignment

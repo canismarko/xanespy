@@ -3,10 +3,10 @@
 from distutils.core import setup
 
 setup(name="xanespy",
-      version="0.1.1",
+      version="0.1.2",
       description="Tools for analyzing X-ray absorbance spectroscopy data",
       author="Mark Wolf",
-      author_email="mark.wolf.music@gmail.com",
+      author_email="canismarko@gmail.com",
       url="https://github.com/m3wolf/xanespy",
       keywords="XANES X-ray microscopy operando",
       install_requires=['pytz>=2013b', 'h5py', 'pandas', 'olefile',

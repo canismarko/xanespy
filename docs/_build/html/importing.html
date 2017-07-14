@@ -6,7 +6,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Importing Data into Xanespy &#8212; Xanespy 0.1.1 documentation</title>
+    <title>Importing Data into Xanespy &#8212; Xanespy 0.1.2 documentation</title>
     
     <link rel="stylesheet" href="_static/classic.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -14,7 +14,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    './',
-        VERSION:     '0.1.1',
+        VERSION:     '0.1.2',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true,
@@ -38,15 +38,12 @@
           <a href="genindex.html" title="General Index"
              accesskey="I">index</a></li>
         <li class="right" >
-          <a href="py-modindex.html" title="Python Module Index"
-             >modules</a> |</li>
-        <li class="right" >
           <a href="analysis.html" title="Analyzing the Data"
              accesskey="N">next</a> |</li>
         <li class="right" >
           <a href="intro.html" title="Introduction"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">Xanespy 0.1.1 documentation</a> &#187;</li> 
+        <li class="nav-item nav-item-0"><a href="index.html">Xanespy 0.1.2 documentation</a> &#187;</li> 
       </ul>
     </div>  
 
@@ -70,7 +67,7 @@ find this feature valuable, please <a class="reference external" href="https://g
 </div>
 <p>The Xradia microscope can save an entire stack in one <code class="docutils literal"><span class="pre">.txrm</span></code>
 file. This file can be imported using the
-<a class="reference internal" href="xanespy.html#xanespy.importers.import_aps_8BM_xanes_file" title="xanespy.importers.import_aps_8BM_xanes_file"><code class="xref py py-func docutils literal"><span class="pre">import_aps_8BM_xanes_file()</span></code></a> function. The
+<code class="xref py py-func docutils literal"><span class="pre">import_aps_8BM_xanes_file()</span></code> function. The
 list of energies is automatically extracted from the file. The
 reference frames will then reside in a different <code class="docutils literal"><span class="pre">.txrm</span></code> file.</p>
 <p>Example usage:</p>
@@ -88,9 +85,9 @@ reference frames will then reside in a different <code class="docutils literal">
 <p>In-house XANES scan scripts often save a directory full of <code class="docutils literal"><span class="pre">.xrm</span></code>
 files with the metadata coding in the filenames. From the Xradia TXM
 at sector 8-BM-B, this XANES scan script can be generated with
-<a class="reference internal" href="xanespy.html#xanespy.beamlines.sector8_xanes_script" title="xanespy.beamlines.sector8_xanes_script"><code class="xref py py-func docutils literal"><span class="pre">sector8_xanes_script()</span></code></a>, and the results
+<code class="xref py py-func docutils literal"><span class="pre">sector8_xanes_script()</span></code>, and the results
 can then be imported with
-<a class="reference internal" href="xanespy.html#xanespy.importers.import_aps_8BM_xanes_dir" title="xanespy.importers.import_aps_8BM_xanes_dir"><code class="xref py py-func docutils literal"><span class="pre">import_aps_8BM_xanes_dir()</span></code></a>. The list of
+<code class="xref py py-func docutils literal"><span class="pre">import_aps_8BM_xanes_dir()</span></code>. The list of
 energies is automatically extracted from the filenames. The reference
 frames will also be identified in the directory.</p>
 <p>Example usage:</p>
@@ -109,7 +106,7 @@ frames will also be identified in the directory.</p>
 files with the metadata coding in the filenames. From the Xradia TXM
 at SSRL beamline 6-2c, this XANES scan script can be generated with
 the in-house generator, and the results can then be imported with
-<a class="reference internal" href="xanespy.html#xanespy.importers.import_ssrl_xanes_dir" title="xanespy.importers.import_ssrl_xanes_dir"><code class="xref py py-func docutils literal"><span class="pre">import_ssrl_xanes_dir()</span></code></a>. The list of
+<code class="xref py py-func docutils literal"><span class="pre">import_ssrl_xanes_dir()</span></code>. The list of
 energies is automatically extracted from the filenames. The reference
 frames will also be identified in the directory.</p>
 <p>Example usage:</p>
@@ -164,7 +161,7 @@ a given directory. For example, if the last frame drifted out of the
 field-of-view and was re-collected in the next set of energies. The
 arguments <code class="docutils literal"><span class="pre">energy_range</span></code> and <code class="docutils literal"><span class="pre">exclude_re</span></code> can be used to fine-tune
 the list of importable files. See the documentation for
-<a class="reference internal" href="xanespy.html#xanespy.importers.import_nanosurveyor_frameset" title="xanespy.importers.import_nanosurveyor_frameset"><code class="xref py py-func docutils literal"><span class="pre">import_nanosurveyor_frameset()</span></code></a> for more
+<code class="xref py py-func docutils literal"><span class="pre">import_nanosurveyor_frameset()</span></code> for more
 details.</p>
 <table class="docutils footnote" frame="void" id="ole" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
@@ -185,8 +182,8 @@ languages. It even plays nicely with numpy out of the box.</td></tr>
 not easily read <a class="footnote-reference" href="#ole" id="id1">[1]</a>. Individual scan files are generally not that
 helpful anyway. But in case you need it, there are some adapters to
 <code class="docutils literal"><span class="pre">.xrm</span></code> and <code class="docutils literal"><span class="pre">.txrm</span></code> files, namely
-<a class="reference internal" href="xanespy.html#xanespy.xradia.XRMFile" title="xanespy.xradia.XRMFile"><code class="xref py py-class docutils literal"><span class="pre">xanespy.xradia.XRMFile</span></code></a> and
-<a class="reference internal" href="xanespy.html#xanespy.xradia.TXRMFile" title="xanespy.xradia.TXRMFile"><code class="xref py py-class docutils literal"><span class="pre">xanespy.xradia.TXRMFile</span></code></a>.</p>
+<code class="xref py py-class docutils literal"><span class="pre">xanespy.xradia.XRMFile</span></code> and
+<code class="xref py py-class docutils literal"><span class="pre">xanespy.xradia.TXRMFile</span></code>.</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
 <p class="last">The specification for <code class="docutils literal"><span class="pre">.xrm</span></code> files is not public, so these
@@ -218,10 +215,10 @@ perfect. If you encounter problems, please <a class="reference external" href="h
     <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">energies</span><span class="p">)</span> <span class="o">==</span> <span class="n">stack</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
 </pre></div>
 </div>
-<p>The <a class="reference internal" href="xanespy.html#xanespy.xradia.XRMFile" title="xanespy.xradia.XRMFile"><code class="xref py py-class docutils literal"><span class="pre">XRMFile</span></code></a> and
-<a class="reference internal" href="xanespy.html#xanespy.xradia.TXRMFile" title="xanespy.xradia.TXRMFile"><code class="xref py py-class docutils literal"><span class="pre">TXRMFile</span></code></a> classes accept an optional
+<p>The <code class="xref py py-class docutils literal"><span class="pre">XRMFile</span></code> and
+<code class="xref py py-class docutils literal"><span class="pre">TXRMFile</span></code> classes accept an optional
 <code class="docutils literal"><span class="pre">flavor</span></code> keyword argument. This option affects several pieces of
-metadata. See the <a class="reference internal" href="xanespy.html#xanespy.xradia.XRMFile" title="xanespy.xradia.XRMFile"><code class="xref py py-class docutils literal"><span class="pre">XRMFile</span></code></a> documentation
+metadata. See the <code class="xref py py-class docutils literal"><span class="pre">XRMFile</span></code> documentation
 for details.</p>
 </div>
 </div>
@@ -281,15 +278,12 @@ for details.</p>
           <a href="genindex.html" title="General Index"
              >index</a></li>
         <li class="right" >
-          <a href="py-modindex.html" title="Python Module Index"
-             >modules</a> |</li>
-        <li class="right" >
           <a href="analysis.html" title="Analyzing the Data"
              >next</a> |</li>
         <li class="right" >
           <a href="intro.html" title="Introduction"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">Xanespy 0.1.1 documentation</a> &#187;</li> 
+        <li class="nav-item nav-item-0"><a href="index.html">Xanespy 0.1.2 documentation</a> &#187;</li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">
