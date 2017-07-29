@@ -135,7 +135,8 @@ def read_metadata(filenames, flavor):
 
 def import_nanosurveyor_frameset(directory: str, quiet=False,
                                  hdf_filename=None, hdf_groupname=None,
-                                 energy_range=None, exclude_re=None, append=False):
+                                 energy_range=None, exclude_re=None, append=False,
+                                 frame_shape=None):
     """Import a set of images from reconstructed ptychography scanning microscope data.
     
     This generates ptychography chemical maps based on data collected
@@ -168,7 +169,11 @@ def import_nanosurveyor_frameset(directory: str, quiet=False,
     append : bool, optional
       If True, any existing dataset will be added to, rather
       than replaced (default False)
-
+    frame_shape : 2-tuple, optional
+      If given, images will be trimmed to this shape. Must be smaller
+      than the smallest frame. This may be useful if the frames are
+      slightly different shapes. Does not apply to STXM images.
+    
     """
     # Prepare logging info
     logstart = time()
@@ -242,7 +247,12 @@ def import_nanosurveyor_frameset(directory: str, quiet=False,
             filenames.append(os.path.relpath(filename))
             energies.append(energy)
             # Import complex reconstructed image
-            data = f['/entry_1/image_1/data'].value
+            if frame_shape is not None:
+                # User requested the frames be cropped
+                data = f['/entry_1/image_1/data'][:frame_shape[0], :frame_shape[1]]
+            else:
+                # No cropping, import full frames
+                data = f['/entry_1/image_1/data'].value
             intensities.append(data)
             # Import STXM interpretation
             stxm = f['entry_1/instrument_1/detector_1/STXM'].value
@@ -257,6 +267,11 @@ def import_nanosurveyor_frameset(directory: str, quiet=False,
         msg = "No files in directory {} pass import filters. "
         msg += "Consider changing `exclude_re` or `energy_range` parameters."
         raise exceptions.DataNotFoundError(msg.format(directory))
+    # Check that all the frames are the same shape
+    shapes = [d.shape for d in intensities]
+    if len(set(shapes)) > 1:
+        msg = "Frames are different shapes: {}".format(shapes)
+        raise exceptions.DataFormatError(msg)
     # Helper function to save image data to the HDF file
     def replace_ds(name, parent, *args, **kwargs):
         if name in parent.keys():

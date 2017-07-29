@@ -173,6 +173,19 @@ class PtychographyImportTest(TestCase):
             ## means for STXM data
             self.assertIn('original_positions', keys)
             self.assertEqual(group['original_positions'].shape, (1, 3, 3))
+
+    def test_frame_shape(self):
+        """In some cases, frames are different shapes. Specifying a shape in
+        the importer can fix this.
+        
+        """
+        expected_shape = (220, 220)
+        import_nanosurveyor_frameset(PTYCHO_DIR,
+                                     hdf_filename=self.hdf,
+                                     frame_shape=expected_shape)
+        with h5py.File(self.hdf, mode='r') as f:
+            real_shape = f['NS_160406074/imported/intensities'].shape
+        self.assertEqual(real_shape, (1, 3, *expected_shape))
     
     def test_partial_import(self):
         """Sometimes the user may want to specify that only a subset of

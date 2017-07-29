@@ -12,4 +12,11 @@ htmlcov
 build/
 .cache/
 
+# Temporary test files
+tests/imported-ssrl-data.h5
+tests/aps_script.tsv
+
 xanespy.egg-info/
+
+# Documentation
+docs/_build/
