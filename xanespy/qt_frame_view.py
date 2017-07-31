@@ -94,7 +94,7 @@ class QtFrameView(QtCore.QObject):  # pragma: no cover
     hist_cb = None
     edge_ax = None
     _frame_animation = None
-
+    
     # Signals
     expand_hdf_tree = QtCore.pyqtSignal()
     frame_changed = QtCore.pyqtSignal(int)
@@ -103,7 +103,7 @@ class QtFrameView(QtCore.QObject):  # pragma: no cover
         arguments=('frames', 'energies', 'norm', 'cmap', 'extent'))
     draw_histogram = QtCore.pyqtSignal(object, object, 'QString',
                                        arguments=('data', 'norm', 'cmap'))
-
+    
     def setup(self):
         # Load the Qt Designer .ui file
         Ui_FrameWindow, QMainWindow = uic.loadUiType(UI_FILE)
@@ -196,7 +196,7 @@ class QtFrameView(QtCore.QObject):  # pragma: no cover
         self.ui.btnApplyLimits.clicked.connect(presenter.refresh_frames)
         self.ui.cmbTimestep.currentIndexChanged.connect(presenter.set_timestep)
         self.ui.cmbCmap.currentTextChanged.connect(presenter.change_cmap)
-        self.ui.cmbComponent.currentTextChanged.connect(presenter.change_component)
+        self.ui.cmbComponent.currentTextChanged.connect(presenter.change_frame_component)
         self.ui.sldFrameSlider.valueChanged.connect(presenter.move_slider)
         self.ui.btnRefresh.clicked.connect(presenter.refresh_frames)
         self.ui.hdfTree.currentItemChanged.connect(presenter.change_hdf_group)
@@ -313,7 +313,7 @@ class QtFrameView(QtCore.QObject):  # pragma: no cover
         self.fig.canvas.draw_idle()
         # User feedback and logging
         log.debug("Artist creation took %d sec", time() - start)
-
+    
     def draw_spectrum(self, spectrum, energies, norm, cmap, edge_range):
         self.spectrum_ax.clear()
         plots.plot_xanes_spectrum(spectrum=spectrum,
@@ -331,7 +331,7 @@ class QtFrameView(QtCore.QObject):  # pragma: no cover
                                   color="y",
                                   ax=self.edge_ax)
         self.edge_ax.set_xlim(*edge_range)
-
+    
     def _draw_histogram(self, data, norm, cmap):
         # Update the histogram
         self.hist_ax.clear()
@@ -341,32 +341,32 @@ class QtFrameView(QtCore.QObject):  # pragma: no cover
         # Update the colorbar
         mappable = cm.ScalarMappable(norm=norm, cmap=cmap)
         self.cbar.on_mappable_changed(mappable)
-
+    
     def show(self):
         self.window.show()
-
+    
     def clear_axes(self):
         self.img_ax.clear()
         self.spectrum_ax.clear()
         self.hist_ax.clear()
         self.edge_ax.clear()
         self.fig.canvas.draw()
-
+    
     def set_slider_max(self, val):
         self.ui.sldFrameSlider.setRange(0, val)
-
+    
     def set_vmin(self, val):
         self.ui.spnVMin.setValue(val)
-
+    
     def set_vmax(self, val):
         self.ui.spnVMax.setValue(val)
-
+    
     def set_vmin_decimals(self, val):
         self.ui.spnVMin.setDecimals(val)
-
+    
     def set_vmax_decimals(self, val):
         self.ui.spnVMax.setDecimals(val)
-
+    
     def set_vmin_step(self, val):
         self.ui.spnVMin.setSingleStep(val)
 

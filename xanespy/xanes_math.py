@@ -18,8 +18,9 @@
 # along with Xanespy. If not, see <http://www.gnu.org/licenses/>.
 
 """Module containing all the computationally demanding functions. This
-allows for easy optimization of parallelizable algorithms. Most
-functions will operate on large arrays of data.
+allows for easy optimization of parallelizable algorithms and better
+test isolation. Most functions will operate on large arrays of data.
+
 """
 
 import warnings
@@ -47,11 +48,11 @@ def iter_indices(data, leftover_dims=1, desc=None):
     """Accept an array of frames, indices, etc. and generate slices for
     each frame. Assumes the last two dimensions of `data` are rows and
     columns. All other dimensions will be iterated over.
-
+    
     - leftover_dims : Integer describing which dimensions should not
       be iterated over. Eg. if data is 3D array and leftover_dims == 1,
       only first two dimenions will be iterated.
-
+    
     - desc : String to put in the progress bar.
     """
     fs_shape = np.asarray(data.shape[:-leftover_dims])
@@ -95,6 +96,7 @@ def apply_internal_reference(intensities, out=None):
     the last two dimensions are image rows and column.
     """
     is_complex = np.iscomplexobj(intensities)
+    j = complex(0, 1)
     if is_complex:
         intensities = intensities.astype(np.complex128)
         component = "modulus"
@@ -115,30 +117,38 @@ def apply_internal_reference(intensities, out=None):
             direct_img = frame
         threshold = filters.threshold_yen(direct_img)
         graymask = direct_img > threshold
-        background = get_component(frame, component)[graymask]
-        I_0 = np.median(background)  # Median of each image
-        log.debug("I0 for frame %s = %f", idx, I_0)
-        # Calculate absorbance based on background
-        absorbance = np.log(I_0 / np.abs(frame))
+        background = frame[graymask]
+        # Calculate an I_0 based on median modulus and phase
         if is_complex:
-            # Calculate relative phase shift if complex data is required
-            phase = np.angle(frame)
-            phase - np.median((phase * graymask)[graymask > 0])
-            # The phase data has a gradient in the background, so remove it
-            x, y = np.meshgrid(np.arange(phase.shape[-1]),
-                               np.arange(phase.shape[-2]))
-            A = np.column_stack([y.flatten(),
-                                 x.flatten(),
-                                 np.ones_like(x.flatten())])
-            p, residuals, rank, s = linalg.lstsq(A, phase.flatten())
-            bg = p[0] * y + p[1] * x + p[2]
-            # Prepare the complex output data
-            phase = phase - bg
+            mod = np.median(np.abs(background))
+            angle = np.median(np.angle(background))
             j = complex(0, 1)
-            out[idx] = phase + j*absorbance
+            I_0 = mod * np.cos(angle) + j * mod * np.sin(angle)
         else:
-            # Real data (optical-depth) only
-            out[idx] = absorbance
+            I_0 = np.median(background)
+        log.debug("I0 for frame %s = %f", idx, I_0)
+        # Calculate optical depth based on background
+        od = np.log(I_0 / frame)
+        # if is_complex:
+        #     # Calculate relative phase shift if complex data is required
+        #     phase = np.angle(frame)
+        #     phase - np.median((phase * graymask)[graymask > 0])
+        #     # The phase data has a gradient in the background, so remove it
+        #     x, y = np.meshgrid(np.arange(phase.shape[-1]),
+        #                        np.arange(phase.shape[-2]))
+        #     A = np.column_stack([y.flatten(),
+        #                          x.flatten(),
+        #                          np.ones_like(x.flatten())])
+        #     p, residuals, rank, s = linalg.lstsq(A, phase.flatten())
+        #     bg = p[0] * y + p[1] * x + p[2]
+        #     # Prepare the complex output data
+        #     phase = phase - bg
+        #     j = complex(0, 1)
+        #     out[idx] = phase + j*optical_depth
+        # else:
+        #     # Real data (optical-depth) only
+        #     out[idx] = optical_depth
+        out[idx] = od
         log.debug("Applied internal reference for frame %s", idx)
     # Call the actual function for each frame
     iter_frames = iter_indices(intensities, leftover_dims=2,
@@ -153,20 +163,23 @@ def extract_signals_nmf(spectra, n_components, nmf_kwargs=None, mask=None):
     """Extract the signal components present in the given spectra using
     non-negative matrix factorization. Input data can be negative, but
     it will be shifted up, processed, then shifted down again.
-
+    
     Arguments
     ---------
-    - spectra : A numpy array of observations where the last axis is energy.
-
-    - n_components : How many components to extract from the data.
-
-    - nmf_kwargs : Dictionary of keyword arguments to be passed to
-      the constructor of the estimator.
-
+    spectra : numpy.ndarray
+      A numpy array of observations where the last axis is energy.
+    n_components : int
+      How many components to extract from the data.
+    nmf_kwargs : dict, optional
+      Keyword arguments to be passed to the constructor of the
+      estimator.
+    
     Returns
     -------
-    2-tuple of arrays (components, weights)
-
+    components, weights : numpy.ndarray
+      Extracted components and weights for each pixel-component
+    combination.
+    
     """
     if nmf_kwargs is None:
         _nmf_kwargs = {}
@@ -267,7 +280,7 @@ def l_edge_mask(frames: np.ndarray, energies: np.ndarray, edge,
         Es = np.mean(energies.reshape(-1, frames.shape[-E_dim]), axis=0)
     elif frames.ndim == 3:
         Es = energies
-    # Convert absorbances into spectra -> (spectrum, energy) shape
+    # Convert optical depths into spectra -> (spectrum, energy) shape
     frame_shape = frames.shape[-frame_dims:]
     spectra = As.reshape(-1, np.prod(frame_shape))
     spectra = np.moveaxis(spectra, 0, 1)
@@ -418,7 +431,7 @@ def particle_labels(frames: np.ndarray, energies: np.ndarray, edge,
 kedge_params = (
     'scale', 'voffset', 'E0',  # Global parameters
     'sigw',  # Sharpness of the edge sigmoid
-    'bg_slope', # Linear reduction in background absorbance
+    'bg_slope', # Linear reduction in background optical_depth
     'ga', 'gb', 'gc',  # Gaussian height, center and width
 )
 KEdgeParams = namedtuple('KEdgeParams', kedge_params)
@@ -426,7 +439,7 @@ KEdgeParams = namedtuple('KEdgeParams', kedge_params)
 
 def predict_edge(energies, *params):
     """Defines the curve function that gets fit to the data for an
-    absorbance K-edge.
+    optical_depth K-edge.
 
     The predicted curve is a combination of a straight line (for
     background), an arctan function (for the edge), and a gaussian
@@ -443,7 +456,7 @@ def predict_edge(energies, *params):
     Returns
     -------
     curve : np.ndarray
-      The predicted absorbance values based on the input
+      The predicted optical_depth values based on the input
       parameters. Shape will match `energies`.
 
     """
@@ -472,7 +485,7 @@ def guess_kedge(spectrum, energies, edge):
     Arguments
     ---------
 
-    - spectrum : An array containing absorbance data that represents a
+    - spectrum : An array containing optical_depth data that represents a
       K-edge spectrum. Only 1-dimensional data are currently accepted.
 
     - energies : An array containing X-ray energies corresponding to
@@ -522,7 +535,7 @@ class _fit_spectrum():
 
 def fit_kedge(spectra, energies, p0):
     """Use least squares to fit a set of curves to the data. Currently
-    this is a line for the baseline absorbance decreasing at higher
+    this is a line for the baseline optical_depth decreasing at higher
     energies, plus a sigmoid for the edge and a gaussian for the
     whiteline.
 
@@ -533,7 +546,7 @@ def fit_kedge(spectra, energies, p0):
     Arguments
     ---------
 
-    - spectra : An array containing absorbance data. Assumes that the
+    - spectra : An array containing optical_depth data. Assumes that the
       index is energy. This can be a multi-dimensional array, which
       allows calculation of image frames, etc. The last axis should be
       X-ray energy.
@@ -578,7 +591,7 @@ def fit_kedge_mpi(spectra, energies, p0):
     Parameters
     ==========
     spectra : np.ndarray
-      An array containing absorbance data. Assumes that the index is
+      An array containing optical_depth data. Assumes that the index is
       energy. This can be a multi-dimensional array, which allows
       calculation of image frames, etc. The last axis should be X-ray
       energy.
@@ -614,26 +627,26 @@ def fit_kedge_mpi(spectra, energies, p0):
 
 
 def direct_whitelines(spectra, energies, edge):
-    """Takes an array of X-ray absorbance spectra and calculates the
+    """Takes an array of X-ray optical_depth spectra and calculates the
     positions of maximum intensities over the near-edge region.
 
     Arguments
     ---------
     spectra : np.array
-      2D numpy array of absorbance spectra where the last dimension is
+      2D numpy array of optical_depth spectra where the last dimension is
       energy.
     energies : np.array
       Array of X-ray energies in electron-volts. Must be broadcastable
       to the shape of spectra.
     edge
-      An XAS Edge object that describes the absorbance edge in
+      An XAS Edge object that describes the absorbtion edge in
       question.
-
+    
     Returns
     -------
     out : np.ndarray
       Array with the whiteline position of each spectrum.
-
+    
     """
     # Broadcast energies to be same shape as spectra
     # Cut down to only those values on the edge
@@ -756,17 +769,17 @@ def transform_images(data, transformations, out=None, mode='median'):
 def transformation_matrices(translations=None, rotations=None, scales=None, center=(0, 0)):
     """Takes array of operations and calculates (3, 3) transformation
     matrices.
-
+    
     This function operates by calculating an AffineTransform similar
     to that described in the scikit-image package.
-
+    
     All three arguments (`translations`, `rotations`, and `scales`,
     should have shapes that are compatible with the frame data, though
     this is not strictly enforced for now. Rotation will necessarily
     have one less degree of freedom than translation/scale values.
-
+    
     Example Shapes:
-
+    
     +----------------------------+--------------+-------------+-------------+
     | Frames                     | Translations | Rotations   | Scales      |
     +============================+==============+=============+=============+
@@ -774,29 +787,29 @@ def transformation_matrices(translations=None, rotations=None, scales=None, cent
     +----------------------------+--------------+-------------+-------------+
     | (10, 48, 1024, 1024, 1024) | (10, 48, 3)  | (10, 48, 2) | (10, 48, 3) |
     +----------------------------+--------------+-------------+-------------+
-
+    
     Parameters
     ----------
     translations : np.ndarray, optional
       How much to move each axis (x, y[, z]).
-
+    
     rotations : np.ndarray, optional
       How much to rotate around the origin (0, 0) pixel.
-
+    
     center : np.ndarray, optional
       Where to set the origin of rotation. Default is the
       first pixel (0, 0).
-
+    
     scales : np.ndarray, optional
       How much to scale the image by in each dimension
       (x, y[, z]).
-
+    
     Returns
     -------
     new_transforms : np.ndarray
       Resulting transformation matrices. Will have the same shape as the
       input arrays but with the last dimension replaced by (3, 3).
-
+    
     """
     spatial_dims = 2
     assert spatial_dims == 2 # Only can handle 2D data for now
@@ -819,7 +832,6 @@ def transformation_matrices(translations=None, rotations=None, scales=None, cent
         scales = np.ones((*matrix_shape[0:-2], spatial_dims))
     # Calculate values for transformation matrix
     #   Values taken from skimage documentations for transform.AffineTransform
-    # import pdb; pdb.set_trace()
     sx, sy = np.moveaxis(scales, -1, 0)
     tx, ty = np.moveaxis(translations, -1, 0)
     r, = np.moveaxis(rotations, -1, 0)

@@ -146,7 +146,7 @@ class XanesFrameset():
            # The 'r+' creates the file or appends if one exists
            with self.store(mode='r+') as store:
                # Do stuff with the store...
-               img = store.absorbances[0,0]
+               img = store.optical_depths[0,0]
         """
         return TXMStore(hdf_filename=self.hdf_filename,
                         parent_name=self.parent_name,
@@ -250,23 +250,24 @@ class XanesFrameset():
         """Take any transformations staged with `self.stage_transformations()`
         and apply them. If commit is truthy, the staged
         transformations are reset.
-
-        Returns: Transformed array of the absorbances frames.
-
+        
+        Returns
+        -------
+        out : np.ndarray
+          Transformed array of the optical depth frames.
+        
         Arguments
         ---------
-        - crop : If truthy, the images will be cropped after being
-        translated, so there are not edges. If falsy, the images will
-        be wrapped.
-
-        - commit : If truthy, the changes will be saved to the HDF5
-          store for absorbances, intensities and references, and the
-          staged transformations will be cleared. Otherwise, only the
-          absorbance data will be transformed and returned.
-
-        - frames_name : Name of the frame group to apply this
-          transformation too (eg. 'absorbances')
-
+        crop : bool, optional
+          If truthy, the images will be cropped after being
+          translated, so there are not edges. If falsy, the images
+          will be wrapped.
+        commit : bool, optional
+          If truthy, the changes will be saved to the HDF5 store for
+          optical depths, intensities and references, and the staged
+          transformations will be cleared. Otherwise, only the
+          optical_depth data will be transformed and returned.
+        
         """
         # First, see if there's anything to do
         if self._transformations is None:
@@ -277,12 +278,12 @@ class XanesFrameset():
             # Nothing to apply, so no-op
             log.debug("No transformations to apply, skipping.")
             with self.store() as store:
-                out = store.get_frames('absorbances').value
+                out = store.get_frames('optical_depths').value
         else:
             if commit:
-                names = ['intensities', 'references', 'absorbances'] # Order matters
+                names = ['intensities', 'references', 'optical_depths'] # Order matters
             else:
-                names = ['absorbances']
+                names = ['optical_depths']
             # Apply the transformations
             for frames_name in names:
                 with self.store() as store:
@@ -317,25 +318,25 @@ class XanesFrameset():
             log.debug("Clearing staged transformations")
             self._transformations = None
         return out
-
+ 
     def stage_transformations(self, translations=None, rotations=None, center=(0, 0),
                               scales=None):
         """Allows for deferred transformation of the frame data.
-
+        
         Since each transformation introduces interpolation error, the
         best results occur when the translations are saved up and then
         applied all in one shot. Takes a combination of arrays of
         translations (x, y), rotations and/or scales and saves them
         for later application. This method should be used in
         conjunction apply_transformations().
-
+        
         All three arguments should have shapes that are compatible
         with the frame data, though this is not strictly enforced for
         now. Rotation will necessarily have one less degree of freedom
         than translation/scale values.
-
+        
         Example Shapes:
-
+        
         +----------------------------+--------------+-------------+-------------+
         | Frames                     | Translations | Rotations   | Scales      |
         +============================+==============+=============+=============+
@@ -343,7 +344,7 @@ class XanesFrameset():
         +----------------------------+--------------+-------------+-------------+
         | (10, 48, 1024, 1024, 1024) | (10, 48, 3)  | (10, 48, 2) | (10, 48, 3) |
         +----------------------------+--------------+-------------+-------------+
-
+        
         Parameters
         ----------
         translations : np.ndarray
@@ -356,7 +357,7 @@ class XanesFrameset():
         scales : np.ndarray
           How much to scale the image by in each dimension (x, y[,
           z]).
-
+        
         """
         # Compute the new transformation matrics for the given transformations
         new_transforms = xm.transformation_matrices(scales=scales,
@@ -368,7 +369,7 @@ class XanesFrameset():
             new_transforms =  self._transformations @ new_transforms
         # Save transformation matrix for later
         self._transformations = new_transforms
-
+    
     def align_frames(self,
                      reference_frame="mean",
                      blur=None,
@@ -395,7 +396,7 @@ class XanesFrameset():
           which all other frames should be aligned. If None, the frame
           of highest intensity will be used. If "mean" (default) or
           "median", the average or median of all frames will be
-          used. If "max", the frame with highest absorbance is
+          used. If "max", the frame with highest optical_depth is
           used. This attribute has no effect if template matching is
           used.
         blur : A type of filter to apply to each frame of the data
@@ -417,7 +418,7 @@ class XanesFrameset():
           'phase', 'imag' or 'real'.
         plot_results : If truthy (default), plot the root-mean-square of the
           translation distance for each pass.
-
+        
         """
         logstart = time()
         log.info("Aligning frames with %s algorithm over %d passes",
@@ -499,10 +500,10 @@ class XanesFrameset():
             log.info("Committing final translations to disk")
             self.apply_transformations(crop=True, commit=True)
         log.info("Aligned %d passes in %d seconds", passes, time() - logstart)
-
+    
     def label_particles(self, min_distance=20):
         """Use watershed segmentation to identify particles.
-
+        
         Arguments
         ---------
         - min_distance : Controls how selective the algorithm is at
@@ -511,7 +512,7 @@ class XanesFrameset():
         """
         with self.store('r+') as store:
             logstart = time()
-            frames = store.absorbances.value
+            frames = store.optical_depths.value
             # Average across all timesteps
             frames = np.median(frames, axis=0)
             Es = np.median(store.energies, axis=0)
@@ -520,7 +521,7 @@ class XanesFrameset():
                                            min_distance=min_distance)
             store.particle_labels = particles
             if hasattr(store.particle_labels, 'attrs'):
-                store.particle_labels.attrs['frame_source'] = 'absorbances'
+                store.particle_labels.attrs['frame_source'] = 'optical_depths'
         # Logging
         log.info("Calculated particle labels in %d sec", time() - logstart)
     
@@ -550,7 +551,7 @@ class XanesFrameset():
         method described in DOI 10.1038/ncomms7883: fit line against
         material that fails edge_jump_filter and use this line to
         correct entire frame.
-
+        
         Arguments
         ---------
         - plot_fit: If True, will plot the background spectrum and the
@@ -564,7 +565,7 @@ class XanesFrameset():
         regression.fit(x, spectrum.values)
         goodness_of_fit = regression.score(x, spectrum.values)
         # Subtract regression line from each frame
-
+        
         def remove_offset(payload):
             offset = regression.predict(payload['energy'])
             original_data = payload['data']
@@ -572,7 +573,7 @@ class XanesFrameset():
             # Remove labels since we don't need to save it
             payload.pop('labels', None)
             return payload
-
+        
         description = "Normalizing background (R²={:.3f})"
         description = description.format(goodness_of_fit)
         process_with_smp(frameset=self,
@@ -583,7 +584,7 @@ class XanesFrameset():
             ax = plots.new_axes()
             ax.plot(x, spectrum.values, marker="o", linestyle="None")
             ax.plot(x, regression.predict(x))
-
+    
     def particle_regions(self, intensity_image=None, labels=None):
         """Return a list of regions (1 for each particle) sorted by area.
         (largest first). This requires that the `label_particles`
@@ -613,19 +614,19 @@ class XanesFrameset():
         if ax is None:
             ax = plots.new_image_axes()
         with self.store() as store:
-            absorbances = np.reshape(store.absorbances,
-                                     (-1, *store.absorbances.shape[-2:]))
-            data = np.mean(absorbances, axis=0)
+            optical_depths = np.reshape(store.optical_depths,
+                                     (-1, *store.optical_depths.shape[-2:]))
+            data = np.mean(optical_depths, axis=0)
             ax_unit = store.pixel_unit
         data = get_component(data, component)
         artist = ax.imshow(data,
-                           extent=self.extent(representation='absorbances'),
+                           extent=self.extent(representation='optical_depths'),
                            cmap=cmap, *args, **kwargs)
         ax.set_xlabel(ax_unit)
         ax.set_ylabel(ax_unit)
         return artist
     
-    def mean_frame(self, representation="absorbances"):
+    def mean_frame(self, representation="optical_depths"):
         """Return the mean value with the same shape as an individual
         frame.
         
@@ -662,7 +663,7 @@ class XanesFrameset():
             calculated with a more conservative threshold.
         """
         with self.store() as store:
-            As = store.absorbances
+            As = store.optical_depths
             # Mangle axes to be in (pixel, energy) order
             img_shape = As.shape[-2:]
             spectra = np.reshape(As, (-1, np.prod(img_shape)))
@@ -718,7 +719,7 @@ class XanesFrameset():
         return fit
     
     def spectrum(self, pixel=None, edge_jump_filter=False,
-                       representation="absorbances", index=0):
+                       representation="optical_depths", index=0):
         """Collapse the frameset down to an energy spectrum.
         
         Any dimensions (besides the energy dimension) that remain
@@ -748,7 +749,7 @@ class XanesFrameset():
           will be passed to TXMStore.get_map()
         index : int, optional
           Which step in the frameset to use. When used to index
-          store().absorbances, this should return a 3D array like
+          store().optical_depths, this should return a 3D array like
           (energy, rows, columns).
         
         """
@@ -781,7 +782,7 @@ class XanesFrameset():
     
     def plot_xanes_spectrum(self, ax=None, pixel=None,
                             norm_range=None, normalize=False,
-                            representation="absorbances",
+                            representation="optical_depths",
                             show_fit=False, edge_jump_filter=False,
                             linestyle=":",
                             *args, **kwargs):
@@ -850,12 +851,12 @@ class XanesFrameset():
         
         """
         with self.store() as store:
-            if not store.has_dataset('absorbances'):
-                # Store has no absorbance data so just return a blank array
+            if not store.has_dataset('optical_depths'):
+                # Store has no optical_depth data so just return a blank array
                 mask = np.zeros(shape=store.intensities.shape[-2:])
             else:
-                # Check for complex values and convert to absorbances only
-                As = store.absorbances.value
+                # Check for complex values and convert to optical_depths only
+                As = store.optical_depths.value
                 if np.iscomplexobj(As):
                     As = np.imag(As)
                 mask = self.edge.mask(frames=As,
@@ -890,7 +891,7 @@ class XanesFrameset():
         if comm.rank == 0:
             log.debug("Retrieving full spectra.")
             with self.store() as store:
-                frames = store.absorbances
+                frames = store.optical_depths
                 energies = store.energies.value
                 # Get a mask to select only some pixels
                 if edge_mask:
@@ -965,13 +966,13 @@ class XanesFrameset():
             with self.store(mode='r+') as store:
                 store.fit_parameters = fit_maps
                 store.whiteline_fit = wl_maps
-                store.whiteline_fit.attrs['frame_source'] = 'absorbances'
+                store.whiteline_fit.attrs['frame_source'] = 'optical_depths'
             log.info('Finished fitting %d spectra in %d seconds',
                      spectra.shape[0], time() - logstart)
     
     def calculate_whitelines(self, edge_mask=False):
         """Calculate and save a map of the whiteline position of each pixel by
-        calculating the energy of simple maximum absorbance.
+        calculating the energy of simple maximum optical_depth.
         
         Arguments
         ---------
@@ -981,7 +982,7 @@ class XanesFrameset():
         
         """
         with self.store() as store:
-            frames = store.absorbances
+            frames = store.optical_depths
             # Insert two axes into energies for image row/cols
             energies = store.energies.value[:, np.newaxis, np.newaxis, :]
             # Convert numpy axes to be in (pixel, energy) form
@@ -993,7 +994,7 @@ class XanesFrameset():
         # Save results to disk
         with self.store(mode='r+') as store:
             store.whiteline_max = whitelines
-            store.whiteline_max.attrs['frame_source'] = 'absorbances'
+            store.whiteline_max.attrs['frame_source'] = 'optical_depths'
     
     def calculate_maps(self, fit_spectra=False):
         """Generate a set of maps based on pixel-wise Xanes spectra: whiteline
@@ -1011,8 +1012,9 @@ class XanesFrameset():
         # Calculate the mean and median maps
         with self.store(mode="r+") as store:
             energy_axis = -3
-            mean = np.mean(store.absorbances, axis=energy_axis)
-            store.absorbance_mean = mean
+            mean = np.mean(store.optical_depths, axis=energy_axis)
+            store.optical_depth_mean = mean
+            store.optical_depth_mean.attrs['frame_source'] = 'optical_depths'
         # Calculate particle_labels
         self.label_particles()
     
@@ -1039,7 +1041,7 @@ class XanesFrameset():
         w_inv = np.linalg.pinv(weights.reshape((-1, n_signals)))
         predicted_signals = np.dot(w_inv, self.spectra())
         # Plot each signal and weight
-        extent = self.extent(representation="absorbances")
+        extent = self.extent(representation="optical_depths")
         for idx, signal in enumerate(signals):
             ax1, ax2 = ax_list[idx]
             plots.remove_extra_spines(ax2)
@@ -1094,7 +1096,7 @@ class XanesFrameset():
             signals_idx = slice(0, n_signals, 1)
         composite = composite[..., signals_idx]
         # Do the plotting
-        extent = self.extent(representation="absorbances")
+        extent = self.extent(representation="optical_depth")
         artist = plots.plot_composite_map(composite, extent=extent,
                                           ax=ax, interpolation=interpolation)
         ax = artist.axes
@@ -1103,7 +1105,7 @@ class XanesFrameset():
         ax.set_title("Composite of signals {}".format(signals_idx))
     
     def calculate_signals(self, n_components=2, method="nmf",
-                          frame_source='absorbances',
+                          frame_source='optical_depths',
                           edge_mask=True):
         """Extract signals and assign each pixel to a group, then save the
         resulting RGB cluster map.
@@ -1126,11 +1128,11 @@ class XanesFrameset():
           filter will be considered.
         
         """
-        frame_source = "absorbances"
+        frame_source = "optical_depths"
         msg = "Performing {} signal extraction with {} components"
         log.info(msg.format(method, n_components))
         frame_shape = self.frame_shape()
-        # Retrieve the absorbances and convert to spectra
+        # Retrieve the optical_depths and convert to spectra
         with self.store() as store:
             As = store.get_frames(frame_source)
             # Collapse to (frame, pixel) shape
@@ -1193,7 +1195,7 @@ class XanesFrameset():
             store.cluster_map = label_frame
     
     @functools.lru_cache(maxsize=2)
-    def map_data(self, timeidx=0, representation="absorbances"):
+    def map_data(self, timeidx=0, representation="optical_depths"):
         """Return map data for the given time index and representation.
         
         If `representation` is really mapping data, then the result
@@ -1206,7 +1208,7 @@ class XanesFrameset():
           the underlying map data has only 2 dimensions, this
           parameter is ignored.
         representation : str
-          The group name for these data. Eg "absorbances",
+          The group name for these data. Eg "optical_depths",
           "whiteline_map", "intensities"
         
         Returns
@@ -1224,7 +1226,7 @@ class XanesFrameset():
         return map_data
     
     @functools.lru_cache(maxsize=2)
-    def frames(self, timeidx=0, representation="absorbances"):
+    def frames(self, timeidx=0, representation="optical_depths"):
         """Return the frames for the given time index.
         
         If `representation` is really mapping data, then the source
@@ -1235,7 +1237,7 @@ class XanesFrameset():
         timeidx : int
           Index for the first dimension of the combined data array.
         representation : str
-          The group name for these data. Eg "absorbances",
+          The group name for these data. Eg "optical_depths",
           "whiteline_map", "intensities"
         
         
@@ -1265,7 +1267,7 @@ class XanesFrameset():
     
     def subtract_surroundings(self):
         """Use the edge mask to separate "surroundings" from "sample", then
-        subtract the average surrounding absorbance from each
+        subtract the average surrounding optical_depth from each
         frame. This effectively removes effects where the entire frame
         is brighter from one energy to the next.
         
@@ -1273,18 +1275,18 @@ class XanesFrameset():
         with self.store(mode='r+') as store:
             log.debug('Subtracting surroundings')
             # Get the mask and make it compatible with XANES shape
-            mask = np.broadcast_to(self.edge_mask(), store.absorbances.shape[1:])
+            mask = np.broadcast_to(self.edge_mask(), store.optical_depths.shape[1:])
             # Go through each timestep one at a time (to avoid using all the memory)
-            for timestep in range(store.absorbances.shape[0]):
-                bg = store.absorbances[timestep][mask]
-                bg = bg.reshape((*store.absorbances.shape[1:2], -1))
+            for timestep in range(store.optical_depths.shape[0]):
+                bg = store.optical_depths[timestep][mask]
+                bg = bg.reshape((*store.optical_depths.shape[1:2], -1))
                 bg = bg.mean(axis=-1)
                 msg = "Background intensities calculated: {}"
                 log.debug(msg.format(bg))
-                bg = broadcast_reverse(bg, store.absorbances.shape[1:])
+                bg = broadcast_reverse(bg, store.optical_depths.shape[1:])
                 # Save the resultant data to disk
-                store.absorbances[timestep] = store.absorbances[timestep] - bg
-
+                store.optical_depths[timestep] = store.optical_depths[timestep] - bg
+    
     def extent_array(self, representation='intensities'):
         raise NotImplementedError()
         #     # Include all frames
@@ -1319,7 +1321,7 @@ class XanesFrameset():
         extent : tuple
           The spatial extent for the frame with order specified by
           ``utilities.Extent``
-
+        
         """
         with self.store() as store:
             imshape = self.frame_shape()
@@ -1344,7 +1346,7 @@ class XanesFrameset():
             ax = plots.new_image_axes()
         # Plot image data
         with self.store() as store:
-            artist = ax.imshow(store.absorbances[idx],
+            artist = ax.imshow(store.optical_depths[idx],
                                extent=self.extent(idx),
                                cmap=cmap, origin="lower",
                                *args, **kwargs)
@@ -1358,7 +1360,7 @@ class XanesFrameset():
     @property
     def num_timesteps(self):
         with self.store() as store:
-            val = store.absorbances.shape[0]
+            val = store.optical_depths.shape[0]
         return val
     
     @property
@@ -1366,14 +1368,14 @@ class XanesFrameset():
         with self.store() as store:
             val = store.energies.shape[-1]
         return val
-
+    
     def plot_map(self, ax=None, map_name="whiteline_fit", timeidx=0,
                  vmin=None, vmax=None, median_size=0):
         """Prepare data and plot a map of whiteline positions.
-
+        
         Parameters
         ==========
-
+        
         median_size : int
           Kernel size for the median rank filter.
         
@@ -1392,7 +1394,7 @@ class XanesFrameset():
                                ax=ax,
                                norm=norm,
                                edge=self.edge,
-                               extent=self.extent(representation='absorbances'))
+                               extent=self.extent(representation='optical_depths'))
     
     def plot_map_pixel_spectra(self, pixels, map_ax=None,
                                spectra_ax=None,
@@ -1430,13 +1432,13 @@ class XanesFrameset():
         # Get the necessary data
         with self.store() as store:
             energies = store.energies[timeidx]
-            spectra = store.absorbances[timeidx]
+            spectra = store.optical_depths[timeidx]
             # Put energy as the last axis
             spectra = np.moveaxis(spectra, 0, -1)
         if map_name:
             self.plot_map(ax=map_ax, map_name=map_name, timeidx=timeidx)
         plots.plot_pixel_spectra(pixels=pixels,
-                                 extent=self.extent('absorbances'),
+                                 extent=self.extent('optical_depths'),
                                  spectra=spectra,
                                  energies=energies,
                                  map_ax=map_ax,
@@ -1476,106 +1478,55 @@ class XanesFrameset():
         from qt_frame_view import QtFrameView
         from qt_map_view import QtMapView
         log.debug("Launching Qt viewer from frameset")
-        presenter = QtFramesetPresenter(frameset=self,
-                                        frame_view=QtFrameView())
-        presenter.add_map_view(QtMapView())
-        presenter.prepare_ui()
-        presenter.launch()
-
-    def apply_internal_reference(self, plot_background=True, ax=None):
-        """Use a portion of each frame for internal reference correction. The
-        result is the complex refraction for each pixel: the real
-        component describes the phase shift, and the imaginary
-        component is exponential decay, ie. absorbance.
+        # Save data pointers for later
+        init_parent_name = self.parent_name
+        init_data_name = self.data_name
+        try:
+            # Lauch the Qt viewer
+            presenter = QtFramesetPresenter(frameset=self,
+                                            frame_view=QtFrameView())
+            presenter.add_map_view(QtMapView())
+            presenter.prepare_ui()
+            ret = presenter.launch()
+        finally:
+            # Restore original values
+            self.parent_name = init_parent_name
+            self.data_name = init_data_name
+            
+    def apply_internal_reference(self):
+        """Use a portion of each frame for internal reference correction.
         
-        Arguments
-        ---------
-        
-        plot_background : If truthy, the values of I_0 are plotted as
-          a function of energy.
-        
-        ax : The axes to use for plotting if `plot_background` is
-          truthy.
+        This function will extract an $I_0$ from the background by
+        thresholding. Then calculate the optical depth by
+          $$ OD = ln(\frac{I_0}{I}) $$
+        This method is compatible with complex intensity data.
         
         """
-        # Array for holding background correction for plotting
-        if plot_background:
-            Es = []
-            I_0s = []
         with self.store() as store:
             Is = store.intensities.value
-            refraction = xm.apply_internal_reference(Is)
-            Es = store.energies.value
+            ODs = xm.apply_internal_reference(Is)
         # Save complex image as refractive index (real part is phase change)
         with self.store('r+') as store:
-            store.absorbances = refraction
-        # Plot background for evaluation
-        # if plot_background:
-        #     if ax is None:
-        #         ax = plots.new_axes()
-        #     ax.plot(Es, np.abs(I_0.squeeze()))
-        #     ax.set_title("Background Intensity used for Reference Correction")
-        #     ax.set_xlabel("Energy (eV)")
-        #     ax.set_ylabel("$I_0$")
-        return
-
-        # Step through each frame and apply reference correction
-        for frame in prog(self, "Reference correction"):
-            img = frame.get_data("modulus")
-            if mask is None:
-                # Calculate background intensity using thresholding
-                threshold = filters.threshold_yen(img)
-                graymask = img > threshold
-                background = img[img > threshold]
-                I_0 = np.median(background)
-            else:
-                data = np.ma.array(img, mask=graymask)
-                I_0 = np.ma.median(data)
-            # Save values for plotting
-            if plot_background:
-                Es.append(frame.energy)
-                I_0s.append(I_0)
-            # Calculate absorbance based on background
-            absorbance = np.log(I_0 / frame.image_data)
-            # Calculate relative phase shift
-            phase = frame.get_data('phase')
-            phase - np.median((phase * graymask)[graymask > 0])
-            # The phase data has a gradient in the background, so remove it
-            x,y = np.meshgrid(np.arange(phase.shape[1]),np.arange(phase.shape[0]))
-            A = np.column_stack([y.flatten(), x.flatten(), np.ones_like(x.flatten())])
-            p, residuals, rank, s = linalg.lstsq(A, phase.flatten())
-            bg = p[0] * y + p[1] * x + p[2]
-            phase = phase - bg
-            # Save complex image
-            frame.image_data = phase + absorbance * complex(0, 1)
-
-        # Plot background for evaluation
-        if plot_background:
-            if ax is None:
-                ax = plots.new_axes()
-            ax.plot(Es, I_0s)
-            ax.set_title("Background Intensity used for Reference Correction")
-            ax.set_xlabel("Energy (eV)")
-            ax.set_ylabel("$I_0$")
+            store.optical_depths = ODs
 
 
 
-class PtychoFrameset(XanesFrameset):
-    """A set of images ("frames") at different energies moving across an
-    absorption edge. The individual frames should be generated by
-    ptychographic reconstruction of scanning transmission X-ray
-    microscopy (STXM) to produce an array complex intensity
-    values. This class does *not* include any code responsible for the
-    collection and reconstruction of such data, only for the analysis
-    in the context of X-ray absorption near edge spectroscopy."""
+# class PtychoFrameset(XanesFrameset):
+#     """A set of images ("frames") at different energies moving across an
+#     absorption edge. The individual frames should be generated by
+#     ptychographic reconstruction of scanning transmission X-ray
+#     microscopy (STXM) to produce an array complex intensity
+#     values. This class does *not* include any code responsible for the
+#     collection and reconstruction of such data, only for the analysis
+#     in the context of X-ray absorption near edge spectroscopy."""
     
-    def representations(self):
-        """Retrieve a list of valid representations for these data, such as
-        modulus or phase data for ptychography."""
-        reps = super().representations()
-        reps += ['modulus', 'phase', 'real', 'imag']
-        # Complex image data cannot be properly displayed
-        if 'image_data' in reps:
-            reps.remove('image_data')
-        return reps
+#     def representations(self):
+#         """Retrieve a list of valid representations for these data, such as
+#         modulus or phase data for ptychography."""
+#         reps = super().representations()
+#         reps += ['modulus', 'phase', 'real', 'imag']
+#         # Complex image data cannot be properly displayed
+#         if 'image_data' in reps:
+#             reps.remove('image_data')
+#         return reps
    

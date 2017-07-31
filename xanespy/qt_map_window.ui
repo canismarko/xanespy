@@ -50,6 +50,22 @@
          <widget class="QComboBox" name="cmbCmap"/>
         </item>
         <item>
+         <widget class="QComboBox" name="cmbComponent"/>
+        </item>
+        <item>
+         <widget class="QLabel" name="lblComponent">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="text">
+           <string>Component:</string>
+          </property>
+         </widget>
+        </item>
+        <item>
          <widget class="Line" name="line_3">
           <property name="orientation">
            <enum>Qt::Vertical</enum>
@@ -381,7 +397,7 @@
      <x>0</x>
      <y>0</y>
      <width>1420</width>
-     <height>33</height>
+     <height>19</height>
     </rect>
    </property>
   </widget>

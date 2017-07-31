@@ -163,13 +163,18 @@ def broadcast_reverse(array, shape, *args, **kwargs):
 
 
 def get_component(data, name):
-    """If complex, turn to given component, otherwise return original data."""
+    """If complex, turn to given component, otherwise return original data.
+    
+    Phase data is return as a fraction of tau. Eg. a value of 0.25
+    means τ/4 or π/2, and is unwrapped to be between -π and +π.
+    
+    """
     if np.iscomplexobj(data):
         # Sort out complex components
         if name == "modulus":
             data = np.abs(data)
         elif name == "phase":
-            data = np.angle(data)
+            data = np.angle(data) / 2 / np.pi
         elif name == "real":
             data = np.real(data)
         elif name == "imag":

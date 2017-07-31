@@ -42,6 +42,11 @@ class GroupKeyError(KeyError):
     pass
 
 
+class FrameSourceError(KeyError):
+    """The frame-source attribute is not present."""
+    pass
+
+
 class DataFormatError(RuntimeError):
     """The raw data are arranged in a way that the importers or TXM classes do
     not understand.

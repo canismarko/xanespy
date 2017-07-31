@@ -261,7 +261,6 @@ def import_nanosurveyor_frameset(directory: str, quiet=False,
             px_size = float(f['/entry_1/process_1/Param/pixnm'].value)
             log.debug("Scan %s has pixel size %f", filename, px_size)
             pixel_sizes.append(px_size)
-    
     # Check that we have actual data to import
     if len(intensities) == 0:
         msg = "No files in directory {} pass import filters. "

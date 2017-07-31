@@ -1,5 +1,26 @@
+# -*- coding: utf-8 -*-
+#
+# Copyright © 2016 Mark Wolf
+#
+# This file is part of Xanespy.
+#
+# Xanespy is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# Xanespy is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with Xanespy. If not, see <http://www.gnu.org/licenses/>.
+
+
 import logging
 import math
+import sys
 
 from PyQt5 import QtWidgets, QtCore, QtGui
 from matplotlib.colors import Normalize
@@ -14,7 +35,7 @@ from utilities import xy_to_pixel, pixel_to_xy, xycoord, Pixel, get_component
 
 CMAPS = ['plasma', 'viridis', 'inferno', 'magma', 'gray', 'bone',
          'copper', 'autumn', 'spring', 'summer', 'winter', 'spectral',
-         'rainbow', 'gnuplot']
+         'rainbow', 'gnuplot', 'jet']
 COMPS = ['real', 'imag', 'modulus', 'phase']
 log = logging.getLogger(__name__)
 
@@ -42,7 +63,8 @@ class QtFramesetPresenter(QtCore.QObject):
     active_frame = 0
     active_timestep = 0
     active_representation = None
-    active_component = "real"
+    active_frame_component = 'real'
+    active_map_component = 'real'
     frame_pixel = None
     num_frames = 0
     timer = None
@@ -65,7 +87,7 @@ class QtFramesetPresenter(QtCore.QObject):
         pd.Series, object, object, 'QString', object,
         arguments=['spectrum', 'fitted_spectrum', 'norm', 'cmap', 'edge_range'])
     map_spectrum_changed = QtCore.pyqtSignal(
-        pd.Series, object, object, 'QString', object,
+        object, object, object, 'QString', object,
         arguments=['spectrum', 'fitted_spectrum', 'norm', 'cmap', 'edge_range'])
     map_limits_changed = QtCore.pyqtSignal(
         float, float, float, int,
@@ -99,7 +121,7 @@ class QtFramesetPresenter(QtCore.QObject):
           If true, this view will be added to its own thread before
           signals get connected, giving a snapier UI. Disabling makes
           testing more straightforward.
-
+        
         """
         self.map_views.append(view)
         # Let the view connect to this presenters signals
@@ -111,6 +133,7 @@ class QtFramesetPresenter(QtCore.QObject):
             self.map_thread.start()
         # Connect to the view's signals
         view.cmap_changed.connect(self.change_map_cmap)
+        view.component_changed.connect(self.change_map_component)
         view.edge_mask_toggled.connect(self.toggle_edge_mask)
         view.spectrum_fit_toggled.connect(self.toggle_spectrum_fit)
         view.map_vmin_changed.connect(self.set_map_vmin)
@@ -123,7 +146,7 @@ class QtFramesetPresenter(QtCore.QObject):
         view.map_hovered.connect(self.set_map_cursor)
         view.map_clicked.connect(self.set_map_pixel)
         view.map_moved.connect(self.move_map_pixel)
-
+    
     def toggle_spectrum_fit(self, state):
         if self.show_spectrum_fit != state:
             self.show_spectrum_fit = state
@@ -162,7 +185,7 @@ class QtFramesetPresenter(QtCore.QObject):
         self.frame_view.set_cmap_list(CMAPS)
         self.frame_view.set_cmap(self.frame_cmap)
         self.frame_view.set_component_list(COMPS)
-        self.frame_view.set_component(self.active_component)
+        self.frame_view.set_component(self.active_frame_component)
         # Set the list of possible timesteps
         with self.frameset.store() as store:
             tslist = ["{} - {}".format(idx, ts)
@@ -195,7 +218,7 @@ class QtFramesetPresenter(QtCore.QObject):
         log.debug("Creating QApplication")
         self.app = QtWidgets.QApplication([])
         self.app.setApplicationName("Xanespy")
-        self.app.setStyle("cleanlooks")
+        # self.app.setStyle("cleanlooks")
         self.process_events.connect(self.app.processEvents)
     
     def launch(self):  # pragma: no cover
@@ -328,7 +351,7 @@ class QtFramesetPresenter(QtCore.QObject):
             p_upper = self._map_vmin
         self.update_map_limits()
         return (p_lower, p_upper)
-
+    
     def set_map_cursor(self, x, y):
         log.debug("New cursor xy: {}, {}".format(x, y))
         if None in [x, y]:
@@ -351,7 +374,7 @@ class QtFramesetPresenter(QtCore.QObject):
                 pixel = xy_to_pixel(xy, extent=extent, shape=shape)
                 value = self.active_map()[pixel]
         self.map_cursor_changed.emit(xy, pixel, value)
-
+    
     def set_map_pixel(self, x, y):
         log.debug("New map pixel xy: {}, {}".format(x, y))
         if None in [x, y]:
@@ -368,10 +391,10 @@ class QtFramesetPresenter(QtCore.QObject):
         self._map_pixel = pixel
         self.map_pixel_changed.emit(xy, pixel, value)
         self.update_spectra()
-
+    
     def move_map_pixel(self, vert, horiz):
         """Move the active pixel by the given amount in each direction.
-
+        
         If the current pixel is not active, this is a no-op.
         """
         curr_px = self._map_pixel
@@ -397,11 +420,12 @@ class QtFramesetPresenter(QtCore.QObject):
     
     def draw_frame_spectra(self):
         frame_spectrum = self.frameset.spectrum(
-            edge_jump_filter=True,
+            edge_jump_filter=False,
             representation=self.active_representation,
             index=self.active_timestep)
-        self.frame_view.draw_spectrum(frame_spectrum.values,
-                                      energies=frame_spectrum.index,
+        energies = frame_spectrum.index
+        ODs = get_component(frame_spectrum, self.active_frame_component)
+        self.frame_view.draw_spectrum(ODs, energies=energies,
                                       cmap=self.frame_cmap,
                                       norm=self.frame_norm(),
                                       edge_range=self.frameset.edge.edge_range)
@@ -412,12 +436,20 @@ class QtFramesetPresenter(QtCore.QObject):
                                             self.frame_norm(),
                                             self.frame_cmap)
     
-    def change_component(self, new_comp):
-        if not self.active_component == new_comp:
-            log.debug("Changing comp from %s to %s", self.active_component, new_comp)
-            self.active_component = new_comp
+    def change_frame_component(self, new_comp):
+        if not self.active_frame_component == new_comp:
+            log.debug("Changing frame component from %s to %s", self.active_frame_component, new_comp)
+            self.active_frame_component = new_comp
             self.reset_frame_range()
             self.refresh_frames()
+    
+    def change_map_component(self, new_comp):
+        if not self.active_map_component == new_comp:
+            log.debug("Changing map component from %s to %s", self.active_map_component, new_comp)
+            self.active_map_component = new_comp
+            self.reset_map_range()
+            self.update_maps()
+            self.update_spectra()
     
     def change_cmap(self, new_cmap):
         if not self.frame_cmap == new_cmap:
@@ -464,9 +496,6 @@ class QtFramesetPresenter(QtCore.QObject):
         # Start building the tree
         for child in self.frameset.data_tree():
             new_root_item = tree_item(child)
-            # Disable any items that are outside this parent group
-            if child['name'] != self.frameset.parent_name:
-                new_root_item.setDisabled(True)
             # Now add the new root to the tree
             self.frame_view.add_hdf_tree_item(new_root_item)
         # Expand the full tree to make it easier for the user to browse
@@ -488,7 +517,7 @@ class QtFramesetPresenter(QtCore.QObject):
     def active_frames(self):
         frames = self.frameset.frames(timeidx=self.active_timestep,
                                       representation=self.active_representation)
-        frames = get_component(frames, self.active_component)
+        frames = get_component(frames, self.active_frame_component)
         return frames
     
     def active_map(self):
@@ -503,6 +532,8 @@ class QtFramesetPresenter(QtCore.QObject):
             )
         except exceptions.GroupKeyError:
             return None
+        # Retrieve only active complex component
+        map_data = get_component(map_data, self.active_map_component)
         # Apply a mask to show only the XAS edge
         if self.use_edge_mask:
             mask = self.frameset.edge_mask()
@@ -627,6 +658,8 @@ class QtFramesetPresenter(QtCore.QObject):
         path_nodes = path.split('/')
         if len(path_nodes) > 2:
             self.frameset.data_name = path_nodes[2]
+        # Change the active datagroup if requested
+        self.frameset.parent_name = path_nodes[1]
         # Set the active representation and data groups
         if context in ["frameset", 'map']:
             # A valid representation was chosen, so save it for future plotting
@@ -681,17 +714,21 @@ class QtFramesetPresenter(QtCore.QObject):
         except exceptions.GroupKeyError:
             pass
         else:
+            # Convert to active component
+            energies = map_spectrum.index
+            map_spectrum = get_component(map_spectrum, self.active_map_component)
+            map_spectrum = pd.Series(map_spectrum, index=energies)
             # Get the fitted spectrum if available
             if self.show_spectrum_fit:
                 fit = self.frameset.fitted_spectrum(
                     pixel=self._map_pixel, index=self.active_timestep)
             else:
                 fit = None
-            self.mean_spectrum_changed.emit(mean_spectrum,
-                                            fit,
-                                            self.map_norm(),
-                                            self.map_cmap,
-                                            self.frameset.edge.edge_range)
+            # self.mean_spectrum_changed.emit(mean_spectrum,
+            #                                 fit,
+            #                                 self.map_norm(),
+            #                                 self.map_cmap,
+            #                                 self.frameset.edge.edge_range)
             self.map_spectrum_changed.emit(map_spectrum,
                                            fit,
                                            self.map_norm(),
@@ -706,6 +743,7 @@ class QtFramesetPresenter(QtCore.QObject):
         representation of the map. Examples:
         
         - Changing the active representation
+        - Changing the active complex component (real, imag, etc)
         - Changing the colormap
         - Changing the map normalization limits
         - Changing whether the XAS edge mask is applied

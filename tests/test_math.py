@@ -89,11 +89,11 @@ class XanesMathTest(unittest.TestCase):
         # Predict the expected result for arctan function
         expected = np.arctan(x-8353) / np.pi + 1/2
         np.testing.assert_equal(result, expected)
-
+    
     def test_mosiac_reference(self):
         """Check that a repeated mosaic of images is converted to optical
         depth.
-
+        
         """
         # Prepare data
         coins = data.coins()
@@ -104,7 +104,7 @@ class XanesMathTest(unittest.TestCase):
         # Call the reference correction function
         result = apply_mosaic_reference(mosaic, ref)
         np.testing.assert_almost_equal(result, expected)
-
+    
     def test_register_template(self):
         # Prepare some sample data arrays for registration
         frame0 = np.array([
@@ -132,8 +132,7 @@ class XanesMathTest(unittest.TestCase):
         # Compare results
         expected = np.array([[0, 0], [1, 1]])
         np.testing.assert_equal(results, expected)
-
-
+    
     def test_fit_spectrum(self):
         params = KEdgeParams(
             scale=1, voffset=0, E0=8353,
@@ -179,23 +178,35 @@ class XanesMathTest(unittest.TestCase):
         ]], dtype='float64')
         np.testing.assert_almost_equal(result, expected, decimal=2)
         # With complex data
-        d = np.array([[
+        j = complex(0, 1)
+        pi = np.pi
+        in_modulus = np.array([[
             [1., 1.,  1.,   1.,  1.],
             [1., 0.5, 0.5,  0.5, 1.],
             [1., 0.5, 0.05, 0.5, 1.],
             [1., 0.5, 0.5,  0.5, 1.],
             [1., 1.,  1.,   1.,  1.],
-        ]], dtype='complex128')
-        result = apply_internal_reference(d)
-        expected = np.array([[
+        ]])
+        in_phase = np.pi * np.array([[
+            [1/4, 1/4, 1/4, 1/4, 1/4,],
+            [1/4, 1/2, 1/2, 1/2, 1/4,],
+            [1/4, 3/4, 3/4, 3/4, 1/4,],
+            [1/4, 1/2, 1/2, 1/2, 1/4,],
+            [1/4, 1/4, 1/4, 1/4, 1/4,],
+        ]])
+        in_data = in_modulus * (np.cos(in_phase) + j * np.sin(in_phase))
+        result = apply_internal_reference(in_data)
+        mod_expected = np.array([[
             [0., 0.,  0.,   0.,  0.],
             [0., 0.7, 0.7,  0.7, 0.],
             [0., 0.7, 3,    0.7, 0.],
             [0., 0.7, 0.7,  0.7, 0.],
             [0., 0.,  0.,   0.,  0.],
         ]], dtype='float64')
-        expected = np.zeros_like(expected) + complex(0, 1) * expected
-        np.testing.assert_almost_equal(result, expected, decimal=2)
+        # expected = np.zeros_like(expected) + complex(0, 1) * expected
+        print(np.abs(result))
+        print(mod_expected)
+        np.testing.assert_almost_equal(np.abs(result), mod_expected, decimal=2)
 
     def test_transformation_matrices(self):
         r = np.array([math.pi/2])
@@ -316,7 +327,7 @@ class XanesMathTest(unittest.TestCase):
         # plt.plot(new_Es, predict_edge(new_Es, *out_params), marker="+", linestyle="-")
         # plt.show()
         self.assertAlmostEqual(out_params.E0 + out_params.gb, 8350.50, places=2)
-
+    
     def test_particle_labels(self):
         """Check image segmentation on a set of frames. These tests just check
         that input and output are okay and datatypes are correct; the
@@ -328,10 +339,9 @@ class XanesMathTest(unittest.TestCase):
         result = particle_labels(frames=coins, energies=self.K_Es, edge=self.KEdge())
         expected_shape = coins.shape[-2:]
         self.assertEqual(result.shape, expected_shape)
-        self.assertEqual(result.dtype, np.int)
-
+        self.assertEqual(result.dtype, np.int32)
+    
     def test_edge_jump(self):
-
         """Check image masking based on the difference between the pre-edge
         and post-edge."""
         frames = self.coins()

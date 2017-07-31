@@ -37,10 +37,10 @@ class TXMStore():
     TXMStore().attribute.value pattern can be used to get pure numpy
     arrays. These objects should be used as a context manager to ensure
     that the file is closed, especially if using a writing mode:
-
+    
         with TXMStore() as store:
             # Do stuff with store here
-
+    
     Parameters
     ----------
     hdf_filename : str
@@ -53,11 +53,11 @@ class TXMStore():
     mode : str
       Eg. 'r' for read-only, 'r+' for read-write. Passed directly to
       h5py.File constructor.
-
+    
     """
     VERSION = 1
     _data_name = None
-
+    
     def __init__(self, hdf_filename: str,
                  parent_name: str, data_name=None,
                  mode='r'):
@@ -123,7 +123,7 @@ class TXMStore():
         """Turn on different active data group for this store. This method
         deletes the existing group and copies symlinks from the
         current one.
-    
+        
         """
         # Switch to the group given by `src`
         if src is not None:
@@ -165,18 +165,18 @@ class TXMStore():
             msg = msg.format(group=self.parent_name, choices=choices)
             raise exceptions.GroupKeyError(msg)
         return group
-
+    
     def data_group(self):
         """Retrieve the currently active second-level HDF5 group object for
         this file and groupname. Ex. "imported" or "aligned_frames".
         """
         return self.parent_group()[self.data_name]
-
+    
     def replace_dataset(self, name, data, context=None, attrs={},
                         compression=None, *args, **kwargs):
         """Wrapper for h5py.create_dataset that removes the existing dataset
         if it exists.
-
+        
         Parameters
         ----------
         name : str
@@ -208,19 +208,24 @@ class TXMStore():
             ds.attrs['context'] = context
         for key, val in attrs.items():
             ds.attrs[key] = val
-
+    
     def get_frames(self, name):
         """Get a set of frames, specified by the value of `name`."""
         frames = self.get_dataset(name)
         # If it's a map, then return the source frames
         if frames.attrs['context'] == 'map':
-            frames = self.get_dataset(frames.attrs['frame_source'])
+            try:
+                frames = self.get_dataset(frames.attrs['frame_source'])
+            except KeyError:
+                msg = "Invalid frame source {} specified for group {}"
+                msg = msg.format(frames.attrs.get('frame_source', 'None'), name)
+                raise exceptions.FrameSourceError(msg)
         return frames
-
+    
     def set_frames(self, name, val):
         """Set data for a set of frames, specificied by the value of `name`."""
         return self.replace_dataset(name, val, context='frameset')
-
+    
     def get_map(self, name):
         """Get a map of the frames, specified by the value of `name`."""
         map_ds = self.get_dataset(name)
@@ -232,15 +237,15 @@ class TXMStore():
             raise exceptions.GroupKeyError(msg)
         # Return the data
         return map_ds
-
+    
     def get_dataset(self, name):
         """Attempt to open the requested dataset.
-
+        
         Returns
         -------
         data : hyp5.Dataset
           An open HDF5 dataset
-
+        
         Raises
         ------
         exceptions.GroupKeyError
@@ -252,13 +257,13 @@ class TXMStore():
             msg = msg.format(self.hdf_filename)
             raise exceptions.GroupKeyError(msg)
         elif name not in self.data_group().keys():
-            msg = "dataset '{}' not found in file '{}'"
-            msg = msg.format(name, self.hdf_filename)
+            msg = "dataset '{}' not found in group '{}' file '{}'"
+            msg = msg.format(name, self.data_group().name, self.hdf_filename)
             raise exceptions.GroupKeyError(msg)
         else:
             data = self.data_group()[name]
         return data
-
+    
     def has_dataset(self, name):
         """Return a boolean indicated whether this dataset exists in the HDF
         file."""
@@ -267,82 +272,81 @@ class TXMStore():
         except TypeError:
             result = False
         return result
-
+    
     @property
     def timestep_names(self):
         return self.data_group()['timestep_names']
-
+    
     @timestep_names.setter
     def timestep_names(self, val):
         self.replace_dataset('timestep_names', val, context='metadata')
-
+    
     @property
     def pixel_sizes(self):
         return self.data_group()['pixel_sizes']
-
+    
     @pixel_sizes.setter
     def pixel_sizes(self, val):
         self.replace_dataset('pixel_sizes', val, context='metadata')
-
+    
     @property
     def relative_positions(self):
         """(x, y, z) position values for each frame."""
         return self.data_group()['relative_positions']
-
+    
     @relative_positions.setter
     def relative_positions(self, val):
         self.replace_dataset('relative_positions', val, context='metadata')
         self.data_group()['relative_positions'].attrs['order'] = "(x, y, z)"
-
+    
     @property
     def original_positions(self):
         return self.get_dataset('original_positions')
-
+    
     @original_positions.setter
     def original_positions(self, val):
         self.replace_dataset('original_positions', val, context='metadata')
-
+    
     @property
     def pixel_unit(self):
         return self.data_group()['pixel_sizes'].attrs['unit']
-
+    
     @pixel_unit.setter
     def pixel_unit(self, val):
         self.data_group()['pixel_sizes'].attrs['unit'] = val
-
+    
     @property
     def intensities(self):
         return self.data_group()['intensities']
-
+    
     @intensities.setter
     def intensities(self, val):
         self.replace_dataset('intensities', val, context='frameset')
-
+    
     @property
     def references(self):
         return self.data_group()['references']
-
+    
     @references.setter
     def references(self, val):
         self.replace_dataset('references', val, context='frameset')
-
+    
     @property
-    def absorbances(self):
-        return self.get_frames('absorbances')
-
-    @absorbances.setter
-    def absorbances(self, val):
-        self.replace_dataset('absorbances', val, context="frameset")
-
+    def optical_depths(self):
+        return self.get_frames('optical_depths')
+    
+    @optical_depths.setter
+    def optical_depths(self, val):
+        self.replace_dataset('optical_depths', val, context="frameset")
+    
     @property
-    def absorbance_mean(self):
-        return self.get_map('absorbance_mean')
-
-    @absorbance_mean.setter
-    def absorbance_mean(self, val):
-        self.replace_dataset('absorbance_mean', val, context='map')
-
-
+    def optical_depth_mean(self):
+        return self.get_map('optical_depth_mean')
+    
+    @optical_depth_mean.setter
+    def optical_depth_mean(self, val):
+        self.replace_dataset('optical_depth_mean', val, context='map')
+    
     @property
     def energies(self):
         return self.data_group()['energies']

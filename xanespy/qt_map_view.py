@@ -55,9 +55,10 @@ class QtMapView(QtCore.QObject):
     fig = None
     crosshairs = None
     latest_cmap = "plasma"
-
+    
     # Signals
     cmap_changed = QtCore.pyqtSignal('QString')
+    component_changed = QtCore.pyqtSignal('QString')
     edge_mask_toggled = QtCore.pyqtSignal(bool)
     spectrum_fit_toggled = QtCore.pyqtSignal(bool)
     map_vmin_changed = QtCore.pyqtSignal(float)
@@ -67,7 +68,7 @@ class QtMapView(QtCore.QObject):
     map_hovered = QtCore.pyqtSignal(object, object)
     map_clicked = QtCore.pyqtSignal(object, object)
     map_moved = QtCore.pyqtSignal(int, int)
-
+    
     def setup_ui(self):  # pragma: no cover
         Ui_FrameWindow, QMainWindow = uic.loadUiType(UI_FILE)
         log.debug("Built map window using uic")
@@ -79,6 +80,7 @@ class QtMapView(QtCore.QObject):
         self.create_canvas()
         # Connect the UI signals to the view signals
         self.ui.cmbCmap.currentTextChanged.connect(self.cmap_changed)
+        self.ui.cmbComponent.currentTextChanged.connect(self.component_changed)
         self.ui.chkEdgeMask.toggled.connect(self.edge_mask_toggled)
         self.ui.chkFitSpectrum.toggled.connect(self.spectrum_fit_toggled)
         self.ui.spnVMin.valueChanged.connect(self.map_vmin_changed)
@@ -88,7 +90,7 @@ class QtMapView(QtCore.QObject):
         self.fig.canvas.mpl_connect('motion_notify_event', self.mouse_in_canvas)
         self.fig.canvas.mpl_connect('button_release_event', self.mouse_clicked_canvas)
         self.fig.canvas.mpl_connect('key_press_event', self.keyboard_nav)
-
+    
     def keyboard_nav(self, event):
         # Holds descriptions of how much to move for each key in pixels
         moves = {
@@ -111,20 +113,20 @@ class QtMapView(QtCore.QObject):
         }
         if event.key in moves.keys():
             self.map_moved.emit(*moves[event.key])
-
+    
     def mouse_in_canvas(self, mouse_event):
         if mouse_event.inaxes is self.map_ax:
             self.map_hovered.emit(mouse_event.xdata, mouse_event.ydata)
         else:
             self.map_hovered.emit(None, None)
-
+    
     def mouse_clicked_canvas(self, mouse_event):
         if mouse_event.inaxes is self.map_ax:
             log.debug("Clicked map: x=%f, y=%f", mouse_event.xdata, mouse_event.ydata)
             self.map_clicked.emit(mouse_event.xdata, mouse_event.ydata)
         else:
             self.map_clicked.emit(None, None)
-
+    
     def update_cursor_labels(self, xy, pixel, value):
         xy_s, pixel_s, value_s = "", "", ""
         if xy is not None:
@@ -148,7 +150,7 @@ class QtMapView(QtCore.QObject):
         self.ui.lblCrosshairsXY.setText(xy_s)
         self.ui.lblCrosshairsPixel.setText(pixel_s)
         self.ui.lblCrosshairsValue.setText(value_s)
-
+    
     def redraw_crosshairs(self, xy):  # pragma: no cover
         """Draw a set of crosshairs on the map at location given by `xy`."""
         # Remove the old crosshairs first
@@ -243,6 +245,7 @@ class QtMapView(QtCore.QObject):
         presenter.map_data_cleared.connect(self.hide)
         presenter.map_spectrum_changed.connect(self.plot_spectrum)
         presenter.cmap_list_changed.connect(self.set_cmap_list)
+        presenter.component_list_changed.connect(self.set_component_list)
         presenter.map_limits_changed.connect(self.set_map_limits)
         presenter.map_cursor_changed.connect(self.update_cursor_labels)
         presenter.map_pixel_changed.connect(self.update_crosshair_labels)
@@ -278,11 +281,21 @@ class QtMapView(QtCore.QObject):
         # Adjust the margins
         self.fig.tight_layout(pad=0)
         self.fig.canvas.draw_idle()
-
+    
     def set_cmap_list(self, new_list):
         self.ui.cmbCmap.clear()
         self.ui.cmbCmap.addItems(new_list)
-
+        # Check for, and disable, jet colormaps
+        jet_idxs = [i for i, x in enumerate(new_list) if x == "jet"]
+        for idx in jet_idxs:
+            item = self.ui.cmbCmap.model().item(idx)
+            item.setEnabled(False)
+            item.setToolTip("Sorry, Brian...")
+    
+    def set_component_list(self, new_list):
+        self.ui.cmbComponent.clear()
+        self.ui.cmbComponent.addItems(new_list)
+    
     def set_map_limits(self, vmin, vmax, step, decimals):
         log.debug('map view received map limits vmin=%f, vmax=%f, step=%f, decimals=%d',
                   vmin, vmax, step, decimals)

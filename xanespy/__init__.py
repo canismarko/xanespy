@@ -38,7 +38,7 @@ from importers import (import_frameset,
                        import_aps_8BM_xanes_file,
                        import_nanosurveyor_frameset,
                        import_stxm_frameset)
-from xanes_frameset import XanesFrameset, PtychoFrameset
+from xanes_frameset import XanesFrameset
 import edges
 from edges import k_edges, l_edges
 from plots import (dual_axes, new_axes, new_image_axes, plot_txm_map,

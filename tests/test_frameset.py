@@ -352,11 +352,6 @@ class XanesFramesetTest(TestCase):
         np.testing.assert_equal(result.index, energies)
         np.testing.assert_almost_equal(result.values, spectrum)
     
-    def test_has_representation(self):
-        fs = self.create_frameset()
-        fs.has_representation('some data')
-        self.store.has_dataset.assert_called_once_with('some data')
-    
     def test_fork_group(self):
         """Tests that the XanesFrameset.fork_group properly hands off to
         TXMStore.fork_data_group.
