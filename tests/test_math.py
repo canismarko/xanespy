@@ -196,17 +196,14 @@ class XanesMathTest(unittest.TestCase):
         ]])
         in_data = in_modulus * (np.cos(in_phase) + j * np.sin(in_phase))
         result = apply_internal_reference(in_data)
-        mod_expected = np.array([[
+        OD_expected = np.array([[
             [0., 0.,  0.,   0.,  0.],
             [0., 0.7, 0.7,  0.7, 0.],
             [0., 0.7, 3,    0.7, 0.],
             [0., 0.7, 0.7,  0.7, 0.],
             [0., 0.,  0.,   0.,  0.],
         ]], dtype='float64')
-        # expected = np.zeros_like(expected) + complex(0, 1) * expected
-        print(np.abs(result))
-        print(mod_expected)
-        np.testing.assert_almost_equal(np.abs(result), mod_expected, decimal=2)
+        np.testing.assert_almost_equal(np.real(result), OD_expected, decimal=2)
 
     def test_transformation_matrices(self):
         r = np.array([math.pi/2])

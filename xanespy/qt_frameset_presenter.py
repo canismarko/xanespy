@@ -651,7 +651,7 @@ class QtFramesetPresenter(QtCore.QObject):
         energy = self.frameset.energies(self.active_timestep)[new_frame]
         s = "{:.2f} eV".format(energy)
         self.frame_view.set_status_energy(s)
-
+    
     def change_hdf_file(self, filename):
         print("Opening filename %s" % filename)
     
@@ -664,11 +664,13 @@ class QtFramesetPresenter(QtCore.QObject):
         # Figure out the path for this group and set the new data_name
         path = new_item.text(2)
         path_nodes = path.split('/')
+        # Sanity checks for the HDF path
         if len(path_nodes) > 2:
             self.frameset.data_name = path_nodes[2]
         # Change the active datagroup if requested
-        self.frameset.parent_name = path_nodes[1]
-        # Set the active representation and data groups
+        if len(path_nodes) > 1:
+            self.frameset.parent_name = path_nodes[1]
+            # Set the active representation and data groups
         if context in ["frameset", 'map']:
             # A valid representation was chosen, so save it for future plotting
             active_representation = new_item.text(0)

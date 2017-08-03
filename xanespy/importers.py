@@ -727,7 +727,7 @@ def import_aps_8BM_xanes_file(filename, ref_filename, hdf_filename, groupname=No
     timestamps = np.array([timestamps], dtype='S32')
     timestamp_ds = imp_group.create_dataset('timestamps', data=timestamps)
     # Apply reference correction
-    abs_ds = imp_group.create_dataset('absorbances', shape=ds_shape,
+    abs_ds = imp_group.create_dataset('optical_depths', shape=ds_shape,
                               dtype=np.float32, maxshape=ds_shape)
     abs_ds.attrs['context'] = 'frameset'
     apply_references(int_ds, ref_ds, out=abs_ds)
@@ -871,7 +871,7 @@ def import_frameset(directory, flavor, hdf_filename, return_val=None):
                                          chunks=True,
                                          dtype=np.uint16)
         int_ds.attrs['context'] = 'frameset'
-        abs_ds = h5group.require_dataset('absorbances',
+        abs_ds = h5group.require_dataset('optical_depths',
                                          shape=ds_shape,
                                          maxshape=ds_shape,
                                          dtype=np.float32)

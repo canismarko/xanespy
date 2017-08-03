@@ -74,9 +74,16 @@ SSRL_DIR = os.path.join(TEST_DIR, 'txm-data-ssrl')
 APS_DIR = os.path.join(TEST_DIR, 'txm-data-aps')
 PTYCHO_DIR = os.path.join(TEST_DIR, 'ptycho-data-als/NS_160406074')
 
+try:
+    import mpi4py
+except ImportError:
+    mpi_support = False
+else:
+    mpi_support = True
 
 class TXMStoreTest(XanespyTestCase):
     hdfname = os.path.join(SSRL_DIR, 'txmstore-test.h5')
+    
     @classmethod
     def setUpClass(cls):
         # Delete temporary HDF5 files
@@ -104,7 +111,7 @@ class TXMStoreTest(XanespyTestCase):
         store = self.store()
         self.assertEqual(store.intensities.shape, (1, 2, 1024, 1024))
         self.assertEqual(store.references.shape, (1, 2, 1024, 1024))
-        self.assertEqual(store.absorbances.shape, (1, 2, 1024, 1024))
+        self.assertEqual(store.optical_depths.shape, (1, 2, 1024, 1024))
         self.assertEqual(store.pixel_sizes.shape, (1, 2,))
         self.assertEqual(store.energies.shape, (1, 2,))
         self.assertEqual(store.timestamps.shape, (1, 2, 2))
@@ -153,8 +160,8 @@ class TXMStoreTest(XanespyTestCase):
         # Check that all top-level groups are accounted for
         tree = store.data_tree()
         self.assertEqual(len(f.keys()), len(tree))
-        # Check properties of a specific entry (absorbance data)
-        abs_dict = tree[0]['children'][0]['children'][0]
+        # Check properties of a specific entry (optical depth data)
+        abs_dict = [d for d in tree[0]['children'][0]['children'] if 'optical_depths' in d['path']][0]
         self.assertEqual(abs_dict['level'], 2)
         self.assertEqual(abs_dict['context'], 'frameset')
 
@@ -170,13 +177,13 @@ class TXMStoreTest(XanespyTestCase):
     def test_setters(self):
         store = self.store('r+')
         # Check that the "type" attribute is set
-        store.absorbances = np.zeros((2, 1024, 1024))
-        self.assertEqual(store.absorbances.attrs['context'], 'frameset')
+        store.optical_depths = np.zeros((2, 1024, 1024))
+        self.assertEqual(store.optical_depths.attrs['context'], 'frameset')
     
     def test_get_frames(self):
         store = self.store()
         # Check that the method returns data
-        self.assertEqual(store.get_frames('absorbances').shape, (1, 2, 1024, 1024))
+        self.assertEqual(store.get_frames('optical_depths').shape, (1, 2, 1024, 1024))
         
 
 class XrayEdgeTest(unittest.TestCase):
@@ -209,8 +216,9 @@ MockStore = mock.MagicMock(TXMStore)
 
 class XanesFramesetTest(TestCase):
     """Set of python tests that work on full framesets and require data
-    from multiple frames to make sense."""
+    from multiple frames to make sense.
     
+    """
     def dummy_frame_data(self, shape=(5, 5, 128, 128)):
         """Create some dummy data with a given shape. It's pretty much just an
         arange with reshaping."""
@@ -233,10 +241,12 @@ class XanesFramesetTest(TestCase):
         self.store = store
         return fs
     
+    @unittest.skipIf(not mpi_support, 'No support for MPI.')
     def test_fit_spectra(self):
         """This test does not evaluate the quality of the fit, only that the
         method selects the correct data and passes it on to the
         correct math routine.
+        
         """
         FRAME_SHAPE = (16, 16)
         # Prepare some fake data
@@ -244,7 +254,7 @@ class XanesFramesetTest(TestCase):
         fake_Es = np.linspace(8250, 8640, num=10)
         fake_Es = np.broadcast_to(fake_Es, (2, 10))
         store = MockStore()
-        store.absorbances = fake_As
+        store.optical_depths = fake_As
         type(store).whiteline_fit = mock.PropertyMock()
         store.energies.value = fake_Es
         # Prepare a fake frameset
@@ -286,13 +296,13 @@ class XanesFramesetTest(TestCase):
                [0, 3, 3, 0],
                [0, 0, 0, 0]]]]
         )
-        store.absorbances = od
+        store.optical_depths = od
         fs = self.create_frameset(store=store)
         fs.edge_mask = mock.Mock(return_value=mask)
         # Do the calculation
         fs.subtract_surroundings()
         # Check that the subtraction happened properly
-        np.testing.assert_equal(store.absorbances, expectation)
+        np.testing.assert_equal(store.optical_depths, expectation)
 
     def test_edge_mask(self):
         store = MockStore()
@@ -380,13 +390,13 @@ class XanesFramesetTest(TestCase):
     
     def test_label_particle(self):
         store = MockStore()
-        store.absorbances = mock.MagicMock()
+        store.optical_depths = mock.MagicMock()
         fs = self.create_frameset()
         # Prepare dummy frame data
         num_E = 10
         E_step = 50
         frames = np.random.rand(5, num_E, 128, 128)
-        store.absorbances.value = frames
+        store.optical_depths.value = frames
         store.get_frames = mock.Mock(return_value=frames)
         # Prepare fake range of energies
         energies = np.arange(8250, 8250 + E_step * num_E, step=E_step)
@@ -414,8 +424,8 @@ class XanesFramesetTest(TestCase):
         self.assertEqual(fs.data_tree(), data_tree)
         # Test `has_representation()` method
         store.has_dataset = mock.Mock(return_value=True)
-        self.assertTrue(fs.has_representation("absorbances"))
-        store.has_dataset.assert_called_with('absorbances')
+        self.assertTrue(fs.has_representation("optical_depths"))
+        store.has_dataset.assert_called_with('optical_depths')
         # Test `starttime()` and `endtime()` methods
         timestamps = np.array([
             # Index-0 timstep is the *fake* timestamps
@@ -498,11 +508,11 @@ class XanesFramesetTest(TestCase):
         store.pixel_sizes = px_sizes
         fs = self.create_frameset(store=store)        
         # Check that passing multi-frame index gives the median
-        actual = fs.extent('absorbances')
+        actual = fs.extent('optical_depths')
         expected = (-16.6800896, 16.6800896, -16.6800896, 16.6800896)
         np.testing.assert_almost_equal(actual, expected)
         # Check that passing an index gives that frame
-        actual = fs.extent('absorbances', idx=(0, 0))
+        actual = fs.extent('optical_depths', idx=(0, 0))
         expected = (-16.1680896, 16.1680896, -16.1680896, 16.1680896)
         np.testing.assert_almost_equal(actual, expected)
     
@@ -517,11 +527,11 @@ class XanesFramesetTest(TestCase):
         store.pixel_sizes = px_sizes
         fs = self.create_frameset(store=store)        
         # Check that passing multi-frame index gives the median
-        actual = fs.extent('absorbances')
+        actual = fs.extent('optical_depths')
         expected = (-16.6800896, 16.6800896, -16.6800896, 16.6800896)
         np.testing.assert_almost_equal(actual, expected)
         # Check that passing an index gives that frame
-        actual = fs.extent('absorbances', idx=(0, 0))
+        actual = fs.extent('optical_depths', idx=(0, 0))
         expected = (-16.1680896, 16.1680896, -16.1680896, 16.1680896)
         np.testing.assert_almost_equal(actual, expected)
     
@@ -540,13 +550,13 @@ class XanesFramesetTest(TestCase):
         store.frames.assert_not_called()
         # Test a specific representation's path
         class DummyDataGroup():
-            name = '/ssrl-test-data/imported/absorbances'
+            name = '/ssrl-test-data/imported/optical_depths'
         store.get_frames.return_value = DummyDataGroup()
         self.assertEqual(
-            fs.hdf_path('absorbances'),
-            '/ssrl-test-data/imported/absorbances'
+            fs.hdf_path('optical_depths'),
+            '/ssrl-test-data/imported/optical_depths'
         )
-        store.get_frames.assert_called_with(representation="absorbances")
+        store.get_frames.assert_called_with(representation="optical_depths")
     
     def test_switch_groups(self):
         """Test that switching between HDF5 groups works robustly."""
@@ -603,13 +613,13 @@ class OldXanesFramesetTest(XanespyTestCase):
         # Perform an excessive translation to ensure data are correctable
         with self.frameset.store(mode='r+') as store:
             Ts = np.identity(3)
-            Ts = np.copy(np.broadcast_to(Ts, (*store.absorbances.shape[0:2], 3, 3)))
+            Ts = np.copy(np.broadcast_to(Ts, (*store.optical_depths.shape[0:2], 3, 3)))
             Ts[0, 1, 0, 2] = 100
             Ts[0, 1, 1, 2] = 100
-            transform_images(store.absorbances,
+            transform_images(store.optical_depths,
                              transformations=Ts,
-                             out=store.absorbances)
-            old_imgs = store.absorbances.value
+                             out=store.optical_depths)
+            old_imgs = store.optical_depths.value
         # Check that reference_frame arguments of the wrong shape are rejected
         with self.assertRaisesRegex(Exception, "does not match shape"):
             self.frameset.align_frames(commit=False,
@@ -619,12 +629,12 @@ class OldXanesFramesetTest(XanespyTestCase):
                                    plot_results=False)
         # Check that the translations weren't applied yet
         with self.frameset.store() as store:
-            hasnotchanged = np.all(np.equal(old_imgs, store.absorbances.value))
+            hasnotchanged = np.all(np.equal(old_imgs, store.optical_depths.value))
         self.assertTrue(hasnotchanged)
         # Apply the translations
         self.frameset.apply_transformations(crop=True, commit=True)
         with self.frameset.store() as store:
-            new_shape = store.absorbances.shape
+            new_shape = store.optical_depths.shape
         # Test for inequality by checking shapes
         self.assertEqual(old_imgs.shape[:-2], new_shape[:-2])
         self.assertNotEqual(old_imgs.shape[-2:], new_shape[-2:])
@@ -633,7 +643,7 @@ class OldXanesFramesetTest(XanespyTestCase):
         """Test that the system properly stores data transformations for later
         processing."""
         with self.frameset.store() as store:
-            data_shape = store.absorbances.shape
+            data_shape = store.optical_depths.shape
         # Check that staged transforms are initially None
         self.assertTrue(self.frameset._transformations is None)
         # Stage some transformations
@@ -671,7 +681,7 @@ class OldXanesFramesetTest(XanespyTestCase):
         self.assertEqual(self.frameset._transformations, None)
         # # Check that cropping was successfully applied
         with self.frameset.store() as store:
-            new_shape = store.absorbances.shape
+            new_shape = store.optical_depths.shape
         self.assertEqual(new_shape, (1, 2, 1023, 1023))
 
     def test_calculate_clusters(self):
@@ -684,7 +694,7 @@ class OldXanesFramesetTest(XanespyTestCase):
                                             method="nmf")
         # Check that nmf signals and weights are saved
         with self.frameset.store() as store:
-            n_energies = store.absorbances.shape[1]  # Expecting: 2
+            n_energies = store.optical_depths.shape[1]  # Expecting: 2
             good_shape = (N_COMPONENTS, n_energies)
             self.assertEqual(store.signals.shape, good_shape)
             self.assertEqual(

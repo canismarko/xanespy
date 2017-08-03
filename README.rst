@@ -1,8 +1,8 @@
 Xanespy
 =======
 
-.. image:: https://travis-ci.org/m3wolf/xanespy.svg?branch=master
-   :target: https://travis-ci.org/m3wolf/xanespy
+.. image:: https://travis-ci.org/canismarko/xanespy.svg?branch=master
+   :target: https://travis-ci.org/canismarko/xanespy
    :alt: Build status
 .. image:: https://coveralls.io/repos/github/m3wolf/xanespy/badge.svg?branch=master
    :target: https://coveralls.io/github/m3wolf/xanespy?branch=master
