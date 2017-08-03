@@ -279,36 +279,42 @@ def plot_pixel_spectra(pixels, extent, spectra, energies, map_ax,
 def plot_xanes_spectrum(spectrum, energies, norm=Normalize(),
                         show_fit=False, ax=None, ax2=None,
                         linestyle=':', color="blue", cmap="plasma",
+                        polar_coords=False,
                         *args, **kwargs):  # pragma: no cover
     """Plot a XANES spectrum on an axes. Applies some color formatting if
     `edge` is a valid XANES Edge object.
-
+    
     Arguments
     ---------
-
-    - spectrum : Array of intensity values.
-
-    - energies : Array of energy values.
-
-    - norm : Matplotlib Normalize() object that shows the map
+    spectrum : np.ndarray
+      Array of intensity values.
+    energies : np.ndarray
+      Array of energy values.
+    norm : optional
+      Matplotlib Normalize() object that shows the map
       range. This will be used to annotate the plot if it is give.
-
-    - show_fit : Whether to plot lines showing the best fit.
-
-    - ax : Matplotlib Axes on which to plot. If not given, a new axes
+    show_fit : bool, optional
+      Whether to plot lines showing the best fit.
+    ax : mpl.Axes, optional
+      Matplotlib Axes on which to plot. If not given, a new axes
       will be generated.
-
-    - ax2 : A second y-axes for plotting the imaginary component if
+    ax2 : mpl.Axes, optional
+      A second y-axes for plotting the imaginary component if
       the data are complex.
-
-    - linestyle : Passed on to matplotlib.
-
-    - cmap : Colormap, passed on to matplotlib
-
-    - color : Specifies the color for the circles plotted. Either "x"
+    linestyle : optional
+      Passed on to matplotlib.
+    cmap : str, optional
+      Colormap, passed on to matplotlib
+    color : optional
+      Specifies the color for the circles plotted. Either "x"
       or "y" will decide based on the numerical value, `norm` and
       `cmap` arguments. Anything else will be passed as a color spec
       to the matplotlib commands.
+    polar_coords : bool, optional
+      If truthy, the spectrum will be plotted as modulus-phase instead
+      of real-imag. For purely real data this is equivalent to taking
+      the absolute value.
+    
     """
     if ax is None:
         ax = new_axes()
@@ -327,12 +333,20 @@ def plot_xanes_spectrum(spectrum, energies, norm=Normalize(),
         colors = [color] * len(energies)
     # Remove secondary axes and re-add them for complex values
     if is_complex:
+        # Check if modulus-phase or real-imag components
+        if polar_coords:
+            comp0, comp1 = (np.abs, np.angle)
+            label0, label1 = ('Modulus', 'Phase')
+        else:
+            comp0, comp1 = (np.real, np.imag)
+            label0, label1 = ('Real', 'Imag')
+        # Create a secondary axis
         if ax2 is None:
             ax2 = ax.twinx()
         # Convert complex values to two lines
         ys = spectrum
-        artist = ax.plot(energies, np.real(ys), linestyle=linestyle, color="C0")
-        artist.extend(ax2.plot(energies, np.imag(ys),
+        artist = ax.plot(energies, comp0(ys), linestyle=linestyle, color="C0")
+        artist.extend(ax2.plot(energies, comp1(ys),
                                linestyle=linestyle, color="C1", *args, **kwargs))
     else:
         # Just plot the real numbers
@@ -343,12 +357,12 @@ def plot_xanes_spectrum(spectrum, energies, norm=Normalize(),
     ylim = ax.get_ylim()
     # Draw scatter plot of data points
     if is_complex:
-        ax.scatter(energies, np.real(ys), c="C0", s=25, alpha=0.5)
-        ax.set_ylabel("Real", color="C0")
+        ax.scatter(energies, comp0(ys), c="C0", s=25, alpha=0.5)
+        ax.set_ylabel(label0, color="C0")
         for t1 in ax.get_yticklabels():
             t1.set_color("C0")
-        ax2.scatter(energies, np.imag(ys), c="C1", s=25, alpha=0.5)
-        ax2.set_ylabel("Imag", color="C1")
+        ax2.scatter(energies, comp1(ys), c="C1", s=25, alpha=0.5)
+        ax2.set_ylabel(label1, color="C1")
         for t1 in ax2.get_yticklabels():
             t1.set_color("C1")
     else:

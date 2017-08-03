@@ -93,8 +93,7 @@ class TXMStore():
     def data_tree(self):
         """Create a tree of the possible groups this store could access. The
         first level is samples, then data_groups (ie. same sample but
-        different analysis status), then representations. Maps are not
-        included in this tree.
+        different analysis status), then representations.
         """
         # Define a recursive function to walk the groups in the file
         def walk_groups(parent, level):

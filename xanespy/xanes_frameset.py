@@ -32,6 +32,7 @@ from time import time
 import logging
 from collections import namedtuple
 import math
+import subprocess
 
 import pandas as pd
 from matplotlib import pyplot, cm, pyplot as plt
@@ -802,6 +803,9 @@ class XanesFrameset():
         
         edge_jump_filter - If truthy, will only include those values
           that show a strong absorbtion jump across this edge.
+
+        *args, **kwargs :
+          Passed to plotting functions.
         """
         if show_fit:
             raise NotImplementedError("`show_fit` parameter coming soon")
@@ -821,7 +825,7 @@ class XanesFrameset():
         scatter = plots.plot_xanes_spectrum(spectrum=spectrum,
                                             ax=ax,
                                             energies=spectrum.index,
-                                            norm=Normalize(*self.edge.map_range))
+                                            norm=Normalize(*self.edge.map_range), *args, **kwargs)
         # if pixel is not None:
         #     # xy = pixel_to_xy(pixel, extent=self.extent(), shape=self.map_shape())
         #     # title = 'XANES Spectrum at ({x}, {y}) = {val}'
@@ -856,10 +860,10 @@ class XanesFrameset():
                 mask = np.zeros(shape=store.intensities.shape[-2:])
             else:
                 # Check for complex values and convert to optical_depths only
-                As = store.optical_depths.value
-                if np.iscomplexobj(As):
-                    As = np.imag(As)
-                mask = self.edge.mask(frames=As,
+                ODs = np.real(store.optical_depths.value)
+                # if np.iscomplexobj(ODs):
+                #     ODs = np.(ODs)
+                mask = self.edge.mask(frames=ODs,
                                       energies=store.energies.value,
                                       sensitivity=sensitivity,
                                       min_size=min_size)
@@ -1062,10 +1066,11 @@ class XanesFrameset():
                 'linestyle': '--',
                 'marker': "None",
             }
+            ax2.plot(energies, np.abs(cmplx_signal), **cmplx_kwargs)
+            ax2.plot(energies, np.angle(cmplx_signal), **cmplx_kwargs)
             ax2.plot(energies, np.real(cmplx_signal), **cmplx_kwargs)
             ax2.plot(energies, np.imag(cmplx_signal), **cmplx_kwargs)
-            ax2.plot(energies, np.abs(cmplx_signal), **cmplx_kwargs)
-            ax2.legend(["Obs Mod", "Real", "Imag", "Abs"], fontsize=8)
+            ax2.legend(["Refined Mod", "Predicted Mod", "Phase", "Real", "Imag"], fontsize=8)
             # ax2.set_ylim(*specrange)
             ax2.set_title("Signal Component {idx}".format(idx=idx))
     
@@ -1473,27 +1478,28 @@ class XanesFrameset():
         ax.set_xlabel(representation)
         return artists
    
-    def qt_viewer(self):
-        from qt_frameset_presenter import QtFramesetPresenter
-        from qt_frame_view import QtFrameView
-        from qt_map_view import QtMapView
-        log.debug("Launching Qt viewer from frameset")
-        # Save data pointers for later
-        init_parent_name = self.parent_name
-        init_data_name = self.data_name
-        try:
-            # Lauch the Qt viewer
-            presenter = QtFramesetPresenter(frameset=self,
-                                            frame_view=QtFrameView())
-            presenter.add_map_view(QtMapView())
-            presenter.prepare_ui()
-            ret = presenter.launch()
-        finally:
-            # Restore original values
-            self.parent_name = init_parent_name
-            self.data_name = init_data_name
+    def gui_viewer(self):
+        """Launch a Qt GUI for inspecting the data."""
+        cmd = os.path.join(os.path.split(__file__)[0], 'xanes_viewer.py')
+        guiargs = [
+            'env', 'python', cmd,
+            self.hdf_filename,
+            '--groupname', self.parent_name,
+        ]
+        if self.edge.shell == "K":
+            guiargs.append('--k-edge')
+        elif self.edge.shell == "L":
+            guiargs.append('--l-edge')
+        guiargs.append(self.edge.name)
+        # Launch the GUI in a subprocess
+        subprocess.run(guiargs)
+        # finally:
+        #     # Restore original values
+        #     self.parent_name = init_parent_name
+        #     self.data_name = init_data_name
             
     def apply_internal_reference(self):
+
         """Use a portion of each frame for internal reference correction.
         
         This function will extract an $I_0$ from the background by

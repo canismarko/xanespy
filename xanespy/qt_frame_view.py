@@ -26,7 +26,7 @@ log = logging.getLogger(__name__)
 class FrameAnimation(animation.ArtistAnimation):  # pragma: no cover
     """Performs the animation for scrolling through frames arbitarily.
     """
-
+    
     def __init__(self, fig, artists, *args, **kwargs):
         self.fig = fig
         self.artists = artists
@@ -34,13 +34,13 @@ class FrameAnimation(animation.ArtistAnimation):  # pragma: no cover
         # Call parent init methods
         animation.ArtistAnimation.__init__(self, *args, fig=fig,
                                            artists=artists, **kwargs)
-
+    
     def _step(self, current_idx):
         log.debug("Animating to frame {}".format(current_idx))
         artists = self.artists[current_idx]
         self._draw_next_frame(artists, self._blit)
         return True
-
+    
     def stop(self):
         log.debug("Stopping animation in thread %d", threading.get_ident())
         return self._stop()
@@ -49,16 +49,16 @@ class FrameAnimation(animation.ArtistAnimation):  # pragma: no cover
 class FrameChangeSource(QtCore.QObject):
     _is_running = False
     callbacks = []
-
+    
     def __init__(self, view, *args, **kwargs):
         log.debug('creating source')
         self.callbacks = [] # To avoid a Borg callback list
         self.view = view
         super().__init__(*args, **kwargs)
-
+    
     def add_callback(self, func, *args, **kwargs):
         self.callbacks.append((func, args, kwargs))
-
+    
     def remove_callback(self, func, *args, **kwargs):
         if args or kwargs:
             self.callbacks.remove((func, args, kwargs))
@@ -66,20 +66,20 @@ class FrameChangeSource(QtCore.QObject):
             funcs = [c[0] for c in self.callbacks]
             if func in funcs:
                 self.callbacks.pop(funcs.index(func))
-
+    
     def start(self):
         if not self._is_running:
             log.debug("Starting FrameChangeSource in thread %d", threading.get_ident())
             # Listen to the frame adjustment signals
             self.view.frame_changed.connect(self._on_change)
             self._is_running = True
-
+    
     def stop(self):
         if self._is_running:
             log.debug("Stopping FrameChangeSource in thread %d", threading.get_ident())
             self.view.frame_changed.disconnect(self._on_change)
             self._is_running = False
-
+    
     def _on_change(self, new_idx):
         for func, args, kwargs in self.callbacks:
             func(new_idx, *args, **kwargs)
@@ -96,6 +96,7 @@ class QtFrameView(QtCore.QObject):  # pragma: no cover
     _frame_animation = None
     
     # Signals
+    file_opened = QtCore.pyqtSignal('QString', arguments=('filename',))
     expand_hdf_tree = QtCore.pyqtSignal()
     frame_changed = QtCore.pyqtSignal(int)
     draw_frames = QtCore.pyqtSignal(
@@ -123,7 +124,7 @@ class QtFrameView(QtCore.QObject):  # pragma: no cover
         self.source = FrameChangeSource(view=self)
         self.draw_frames.connect(self._animate_frames)
         self.draw_histogram.connect(self._draw_histogram)
-
+    
     def create_status_bar(self):
         self.status_layout = QtWidgets.QVboxLayout()
         self.ui.statusbar.layout().addItem(QtWidgets.QSpacerItem(100, 20))
@@ -157,7 +158,7 @@ class QtFrameView(QtCore.QObject):  # pragma: no cover
         self.lblValue = QtWidgets.QLabel()
         self.lblValue.setMinimumWidth(100)
         self.ui.statusbar.addWidget(self.lblValue)
-
+    
     def create_canvas(self):
         # Add the canvas to the UI
         self.fig = Figure()
@@ -185,7 +186,7 @@ class QtFrameView(QtCore.QObject):  # pragma: no cover
         # Adjust the margins
         self.fig.tight_layout(pad=0)
         self.fig.canvas.draw_idle()
-
+    
     def connect_signals(self, presenter):
         # Connect internal signals and slots
         self.expand_hdf_tree.connect(self.ui.hdfTree.expandAll)
@@ -209,6 +210,9 @@ class QtFrameView(QtCore.QObject):  # pragma: no cover
         self.ui.sldPlaySpeed.valueChanged.connect(presenter.set_play_speed)
         # Update the UI from the presenter
         self.frame_changed.connect(self.ui.sldFrameSlider.setValue)
+        self.file_opened.connect(presenter.change_hdf_file)
+        # Opening a new HDF file
+        self.ui.actionOpen.triggered.connect(self.open_hdf_file)
         # Connect a handler for when the user hovers over the frame
         def hover_frame(event):
             if event.inaxes is self.img_ax:
@@ -217,7 +221,16 @@ class QtFrameView(QtCore.QObject):  # pragma: no cover
                 xy = None
             presenter.hover_frame_pixel(xy)
         self.fig.canvas.mpl_connect('motion_notify_event', hover_frame)
-
+    
+    def open_hdf_file(self):
+        # Ask the user for an HDF file to open
+        filename, _ = QtWidgets.QFileDialog.getOpenFileName(
+            self.window, "QFileDialog.getOpenFileName()", "",
+            "All Files (*);;HDF5 Files (*.h5 *.hdf *.hdf5)",
+            'HDF5 Files (*.h5 *.hdf *.hdf5)')
+        self.file_opened.emit(filename)
+        return filename
+    
     @property
     def frame_controls(self):
         """Gives a list of all the UI buttons that are associated with
@@ -314,7 +327,7 @@ class QtFrameView(QtCore.QObject):  # pragma: no cover
         # User feedback and logging
         log.debug("Artist creation took %d sec", time() - start)
     
-    def draw_spectrum(self, spectrum, energies, norm, cmap, edge_range):
+    def draw_spectrum(self, spectrum, energies, norm, cmap, edge_range=None):
         self.spectrum_ax.clear()
         plots.plot_xanes_spectrum(spectrum=spectrum,
                                   energies=energies,
@@ -330,7 +343,8 @@ class QtFrameView(QtCore.QObject):  # pragma: no cover
                                   cmap=cmap,
                                   color="y",
                                   ax=self.edge_ax)
-        self.edge_ax.set_xlim(*edge_range)
+        if edge_range is not None:
+            self.edge_ax.set_xlim(*edge_range)
     
     def _draw_histogram(self, data, norm, cmap):
         # Update the histogram

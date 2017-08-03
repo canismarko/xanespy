@@ -93,9 +93,9 @@ class Edge():
 class LEdge(Edge):
     """An X-ray absorption K-edge corresponding to a 2s or 2p
     transition.
-
+    
     """
-
+    shell = 'L'
     def annotate_spectrum(self, ax):
         """Draw lines on the axes to indicate the position of the edge."""
         ax.axvline(x=np.max(self.pre_edge), linestyle='-', color="0.55",
@@ -103,18 +103,19 @@ class LEdge(Edge):
         ax.axvline(x=np.min(self.post_edge), linestyle='-', color="0.55",
                    alpha=0.4)
         return ax
-
+    
     def mask(self, *args, **kwargs):
         """Return a numpy array mask for material that's active at this
         edge. Calculations are done in `xanes_math.l_edge_mask()`.
-
+        
         """
         return l_edge_mask(*args, edge=self, **kwargs)
 
 
 class KEdge(Edge):
+    shell = 'K'
     """An X-ray absorption K-edge corresponding to a 1s transition."""
-
+    
     def annotate_spectrum(self, ax):
         """Draw lines on the axes to indicate the position of the edge."""
         ax.axvline(x=self.edge_range[0], linestyle='-', color="0.55",
@@ -122,16 +123,17 @@ class KEdge(Edge):
         ax.axvline(x=self.edge_range[1], linestyle='-', color="0.55",
                    alpha=0.4)
         return ax
-
+    
     def mask(self, *args, **kwargs):
         """Return a numpy array mask for material that's active at this
         edge. Calculations are done in ``xanes_math.l_edge_mask()``.
-
+        
         """
         return k_edge_mask(*args, edge=self, **kwargs)
 
 
 class NCACobaltLEdge(LEdge):
+    name = "Co_NCA"
     E_0 = 793.2
     regions = [
         (770, 775, 1),
@@ -146,6 +148,7 @@ class NCACobaltLEdge(LEdge):
 
 
 class NCANickelLEdge(LEdge):
+    name = "Ni_NCA"
     E_0 = 853
     regions = [
         (844, 848, 1),
@@ -161,6 +164,7 @@ class NCANickelLEdge(LEdge):
 
 
 class LMOMnKEdge(KEdge):
+    name = "Mn_LMO"
     regions = [
         (6450, 6510, 20),
         (6524, 6542, 2),
@@ -173,6 +177,7 @@ class LMOMnKEdge(KEdge):
 
 
 class NCANickelKEdge(KEdge):
+    name = "Ni_NCA"
     E_0 = 8333
     shell = 'K'
     regions = [

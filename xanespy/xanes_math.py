@@ -273,16 +273,16 @@ def l_edge_mask(frames: np.ndarray, energies: np.ndarray, edge,
     `frames` where True pixels are likely to be background material.
     """
     # Take the mean over all timesteps
-    As = frames
+    ODs = frames
     if frames.ndim > 3:
         E_dim = frame_dims + 1
-        As = np.mean(frames.reshape(-1, *frames.shape[-E_dim:]), axis=0)
+        ODs = np.mean(frames.reshape(-1, *frames.shape[-E_dim:]), axis=0)
         Es = np.mean(energies.reshape(-1, frames.shape[-E_dim]), axis=0)
     elif frames.ndim == 3:
         Es = energies
     # Convert optical depths into spectra -> (spectrum, energy) shape
     frame_shape = frames.shape[-frame_dims:]
-    spectra = As.reshape(-1, np.prod(frame_shape))
+    spectra = ODs.reshape(-1, np.prod(frame_shape))
     spectra = np.moveaxis(spectra, 0, 1)
     assert spectra.ndim == 2
     # Compute normalized global average spectrum

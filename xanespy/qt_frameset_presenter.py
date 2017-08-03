@@ -176,7 +176,7 @@ class QtFramesetPresenter(QtCore.QObject):
     def connect_signals(self):
         pass
     
-    def prepare_ui(self):
+    def prepare_ui(self, expand_tree=True):
         self.create_app()
         # Get the frame_view prepared and running
         self.frame_view.setup()
@@ -197,7 +197,7 @@ class QtFramesetPresenter(QtCore.QObject):
         self.frame_view.frame_changed.connect(self.update_status_frame)
         self.frame_view.frame_changed.connect(self.update_status_value)
         # Prepare data for the HDF tree view
-        self.build_hdf_tree()
+        self.build_hdf_tree(expand_tree=expand_tree)
         # Create a timer for playing through all the frames
         self.play_timer = QtCore.QTimer()
         self.play_timer.timeout.connect(self.next_frame)
@@ -425,10 +425,11 @@ class QtFramesetPresenter(QtCore.QObject):
             index=self.active_timestep)
         energies = frame_spectrum.index
         ODs = get_component(frame_spectrum, self.active_frame_component)
+        edge_range = getattr(self.frameset.edge, 'edge_range', None)
         self.frame_view.draw_spectrum(ODs, energies=energies,
                                       cmap=self.frame_cmap,
                                       norm=self.frame_norm(),
-                                      edge_range=self.frameset.edge.edge_range)
+                                      edge_range=edge_range)
     
     def draw_frame_histogram(self):
         frames = self.active_frames()
@@ -464,7 +465,7 @@ class QtFramesetPresenter(QtCore.QObject):
             self.update_maps()
             self.update_spectra()
     
-    def build_hdf_tree(self):
+    def build_hdf_tree(self, expand_tree):
         """Build the items and insert them into the view's HDF tree based on
         the structure of the frameset's HDF file.
         
@@ -490,16 +491,20 @@ class QtFramesetPresenter(QtCore.QObject):
                 new_item = tree_item(child)
                 child_item = tree_item(child)
                 ret = item.addChild(child_item)
-                child_item.setExpanded(True)
             return item
         
         # Start building the tree
         for child in self.frameset.data_tree():
+            # Recursively create the tree item and its children
             new_root_item = tree_item(child)
             # Now add the new root to the tree
             self.frame_view.add_hdf_tree_item(new_root_item)
+            # Flag for expanding the active tree auotmatically
+            child_name = child['path'].split('/')[1]
+            _expand =  expand_tree and (child_name == self.frameset.parent_name)
+            if _expand:
+                new_root_item.treeWidget().expandItem(new_root_item)
         # Expand the full tree to make it easier for the user to browse
-        self.frame_view.expand_hdf_tree.emit()
     
     def refresh_frames(self):
         if self.active_representation is not None:
@@ -646,6 +651,9 @@ class QtFramesetPresenter(QtCore.QObject):
         energy = self.frameset.energies(self.active_timestep)[new_frame]
         s = "{:.2f} eV".format(energy)
         self.frame_view.set_status_energy(s)
+
+    def change_hdf_file(self, filename):
+        print("Opening filename %s" % filename)
     
     def change_hdf_group(self, new_item, old_item):
         self.busy_status_changed.emit(True)
@@ -729,14 +737,14 @@ class QtFramesetPresenter(QtCore.QObject):
             #                                 self.map_norm(),
             #                                 self.map_cmap,
             #                                 self.frameset.edge.edge_range)
+            edge_range = getattr(self.frameset.edge, 'edge_range', None)
             self.map_spectrum_changed.emit(map_spectrum,
                                            fit,
                                            self.map_norm(),
                                            self.map_cmap,
-                                           self.frameset.edge.edge_range)
+                                           edge_range)
     
     def update_maps(self):
-        
         """Send the current mapping data to the `map_data_changed` signal.
         
         This method should be called after anything changes the visual
