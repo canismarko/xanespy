@@ -101,7 +101,6 @@ class QtFramesetPresenter(QtCore.QObject):
     
     def __init__(self, frameset, frame_view, *args, **kwargs):
         self.frameset = frameset
-        self.num_frames = frameset.num_energies
         self.frame_view = frame_view
         # Set the list of views to be empty to start
         self.map_views = []
@@ -680,6 +679,7 @@ class QtFramesetPresenter(QtCore.QObject):
         log.debug("Changing frame representation %s -> %s",
                   self.active_representation, active_representation)
         self.active_representation = active_representation
+        self.num_frames = self.frameset.num_energies
         log.debug("New HDF data path: %s", path)
         self.reset_frame_range()
         self.reset_map_range()

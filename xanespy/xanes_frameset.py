@@ -44,7 +44,7 @@ from skimage import morphology, filters, transform,  measure
 from sklearn import linear_model, cluster
 
 from utilities import (prog, xycoord, Pixel, Extent, pixel_to_xy,
-                       get_component, broadcast_reverse)
+                       get_component, broadcast_reverse, xy_to_pixel)
 from txmstore import TXMStore
 import plots
 import exceptions
@@ -669,6 +669,42 @@ class XanesFrameset():
             img_shape = As.shape[-2:]
             spectra = np.reshape(As, (-1, np.prod(img_shape)))
             spectra = np.moveaxis(spectra, 0, -1)
+        return spectra
+    
+    def line_spectra(self, xy0, xy1, representation="optical_depths", timestep=0):
+        """Return an array of spectra on a line between two points.
+        
+        This is effectively nearest neighbor interpolation between two (x,
+        y) pairs on the frames.
+        
+        Returns
+        -------
+        spectra : np.ndarray
+          An array of spectra, one for each point on the line.
+        
+        Parameters
+        ----------
+        xy0 : 2-tuple
+          Starting point for the line.
+        xy1 : 2-tuple
+          Ending point for the line.
+        
+        """
+        xy0 = xycoord(*xy0)
+        xy1 = xycoord(*xy1)
+        # Convert xy to pixels
+        shape = self.frame_shape(representation=representation)
+        px0 = xy_to_pixel(xy0, extent=self.extent(representation), shape=shape)
+        px1 = xy_to_pixel(xy1, extent=self.extent(representation), shape=shape)
+        # Make a line with the right number of points
+        length = int(np.hypot(px1.horizontal-px0.horizontal, px1.vertical-px0.vertical))
+        x = np.linspace(px0.horizontal, px1.horizontal, length)
+        y = np.linspace(px0.vertical, px1.vertical, length)
+        # Extract the values along the line
+        frames = self.frames(representation=representation)
+        spectra = frames[:,y.astype(np.int), x.astype(np.int)]
+        spectra = np.swapaxes(spectra, 0, 1)
+        # And we're done
         return spectra
     
     def fitted_spectrum(self, energies=None, pixel=None, index=0,
@@ -1375,7 +1411,7 @@ class XanesFrameset():
         return val
     
     def plot_map(self, ax=None, map_name="whiteline_fit", timeidx=0,
-                 vmin=None, vmax=None, median_size=0):
+                 vmin=None, vmax=None, median_size=0, component="real", *args, **kwargs):
         """Prepare data and plot a map of whiteline positions.
         
         Parameters
@@ -1388,18 +1424,25 @@ class XanesFrameset():
         # Do the plotting
         with self.store() as store:
             # Add bounds for the colormap if given
-            vmin = self.edge.map_range[0] if vmin is None else vmin
-            vmax = self.edge.map_range[1] if vmax is None else vmax
-            norm = Normalize(vmin=vmin, vmax=vmax)
+            # vmin = self.edge.map_range[0] if vmin is None else vmin
+            # vmax = self.edge.map_range[1] if vmax is None else vmax
+            # norm = Normalize(vmin=vmin, vmax=vmax)
             # Do the actual plotting
             data = store.get_map(name=map_name)[timeidx]
+            data = get_component(data, component)
             if median_size > 0:
                 data = median_filter(data, median_size)
+            # Get default value ranges
+            vmin = np.min(data) if vmin is None else vmin
+            vmax = np.max(data) if vmax is None else vmax
+            norm = Normalize(vmin=vmin, vmax=vmax)
+            # Plot the data
             plots.plot_txm_map(data=data,
                                ax=ax,
                                norm=norm,
                                edge=self.edge,
-                               extent=self.extent(representation='optical_depths'))
+                               extent=self.extent(representation='optical_depths'),
+                               *args, **kwargs)
     
     def plot_map_pixel_spectra(self, pixels, map_ax=None,
                                spectra_ax=None,

@@ -47,6 +47,7 @@ from plots import (dual_axes, new_axes, new_image_axes, plot_txm_map,
 import plots
 import xanes_math as xanes_math
 import utilities
+from utilities import get_component, xy_to_pixel, pixel_to_xy, xycoord, Pixel
 # from qt_frameset_presenter import QtFramesetPresenter
 # from qt_frame_view import QtFrameView
 # from qt_map_view import QtMapView

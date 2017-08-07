@@ -393,7 +393,8 @@ def plot_composite_map(data, ax=None, origin="upper", *args, **kwargs):  # pragm
 
 
 def plot_txm_map(data, edge=None, norm=None, ax=None, cmap='plasma',
-                 origin="upper", vmin=None, vmax=None, *args, **kwargs):  # pragma: no cover
+                 origin="upper", vmin=None, vmax=None,
+                 *args, **kwargs):  # pragma: no cover
     # Get a default normalizer
     if norm is None:
         norm = Normalize(vmin, vmax)
