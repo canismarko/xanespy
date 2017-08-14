@@ -35,6 +35,7 @@ from scipy.optimize import curve_fit
 import numpy as np
 from skimage import transform, feature, filters, morphology, exposure, measure
 from sklearn import decomposition
+import matplotlib.pyplot as plt
 
 from utilities import prog, foreach, get_component
 import exceptions
@@ -246,31 +247,33 @@ def l_edge_mask(frames: np.ndarray, energies: np.ndarray, edge,
     edge. This is done by comparing each spectrum to the overall
     spectrum using the dot product. A normalization is first applied
     to mitigate differences in total intensity.
-
-    Arguments
+    
+    Parameters
     ---------
-    - frames : Array with images at different energies.
-
-    - energies : X-ray energies corresponding to images in
-      `frames`. Must have the same shape along the first dimenion as
-      `frames`.
-
-    - edge : An Edge object that contains a description of the
-      elemental edge being studied.
-
-    - sensitivity : A multiplier for the otsu value to determine
-      the actual threshold.
-
-    - frame_dims : The number of dimensions that each frame has. Eg, 2
-      means each frame is a two-dimensional image.
-
-    - min_size : Objects below this size (in pixels) will be
+    frames : np.ndarray
+      Array with images at different energies.
+    energies : np.ndarray
+      X-ray energies corresponding to images in `frames`. Must have
+      the same shape along the first dimenion as `frames`.
+    edge : xanespy.edges.Edge
+      An Edge object that contains a description of the elemental edge
+      being studied.
+    sensitivity : float, optional
+      A multiplier for the otsu value to determine the actual
+      threshold.
+    frame_dims : int, optional
+      The number of dimensions that each frame has. Eg, 2 means each
+      frame is a two-dimensional image.
+    min_size : float, optional
+      Objects below this size (in pixels) will be
       removed. Passing zero (default) will result in no effect.
-
+    
     Returns
     -------
-    - A boolean mask with the same shape as the last two dimensions of
-    `frames` where True pixels are likely to be background material.
+    mask : np.ndarray
+      A boolean mask with the same shape as the last two dimensions of
+      `frames` where True pixels are likely to be background material.
+    
     """
     # Take the mean over all timesteps
     ODs = frames
@@ -302,6 +305,11 @@ def l_edge_mask(frames: np.ndarray, energies: np.ndarray, edge,
         np.min(edge.post_edge) <= Es,
         Es <= np.max(edge.post_edge),
     )
+    # Check the pre- and post-edge regions are in the data
+    if not (np.any(pre_edge_mask) and np.any(post_edge_mask)):
+        msg = "Cannot find pre and post edges for L-edge: {}"
+        msg = msg.format(edge)
+        warnings.warn(msg, RuntimeWarning)
     baseline_idx = np.logical_or(pre_edge_mask, post_edge_mask)
     baseline = np.mean(spectrum[baseline_idx])
     # Normalize all the pixel spectra based on the baselines and maxima
@@ -310,7 +318,7 @@ def l_edge_mask(frames: np.ndarray, energies: np.ndarray, edge,
     # Compute the overlap between the global and pixel spectra
     overlap = np.dot(spectrum, pixels)
     # Threshold the pixel overlap to find foreground vs background
-    threshold = filters.threshold_otsu(np.abs(overlap))
+    threshold = filters.threshold_otsu(overlap)
     mask = overlap > threshold
     # Recreate the original image shape as a boolean array
     mask = np.reshape(mask, frame_shape)
@@ -327,7 +335,7 @@ def k_edge_mask(frames: np.ndarray, energies: np.ndarray, edge,
     edge. This is done by comparing the edge-jump to the standard
     deviation. Foreground material will be identified when the
     edge-jump accounts for most of the standard deviation.
-
+    
     Arguments
     ---------
     frames : numpy.ndarray

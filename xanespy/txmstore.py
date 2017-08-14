@@ -347,6 +347,14 @@ class TXMStore():
         self.replace_dataset('optical_depth_mean', val, context='map')
     
     @property
+    def intensity_mean(self):
+        return self.get_map('intensity_mean')
+    
+    @intensity_mean.setter
+    def intensity_mean(self, val):
+        self.replace_dataset('intensity_mean', val, context='map')
+    
+    @property
     def energies(self):
         return self.data_group()['energies']
 

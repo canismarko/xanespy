@@ -1047,16 +1047,23 @@ class XanesFrameset():
          maximum. This is likely to be very slow.
         """
         self.calculate_whitelines()
+        self.calculate_mean_frames()
         if fit_spectra:
             self.fit_spectra()
+        # Calculate particle_labels
+        self.label_particles()
+    
+    def calculate_mean_frames(self):
         # Calculate the mean and median maps
         with self.store(mode="r+") as store:
             energy_axis = -3
             mean = np.mean(store.optical_depths, axis=energy_axis)
             store.optical_depth_mean = mean
             store.optical_depth_mean.attrs['frame_source'] = 'optical_depths'
-        # Calculate particle_labels
-        self.label_particles()
+            # Intensities
+            mean = np.mean(store.intensities, axis=energy_axis)
+            store.intensity_mean = mean
+            store.intensity_mean.attrs['frame_source'] = 'intensities'
     
     def plot_signals(self, cmap="viridis"):
         """Plot the signals from the previously extracted data. Requires that
