@@ -162,7 +162,7 @@ class TXMStore():
             msg = 'Cannot load parent group "{group}". Valid choices are {choices}'
             choices = list(self._file.keys())
             msg = msg.format(group=self.parent_name, choices=choices)
-            raise exceptions.GroupKeyError(msg)
+            raise exceptions.GroupKeyError(msg) from None
         return group
     
     def data_group(self):

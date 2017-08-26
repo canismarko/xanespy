@@ -453,7 +453,7 @@ class XanesFrameset():
             elif reference_frame == 'median':
                 ref_image = np.median(frames, axis=(0, 1))
             else:
-                ref_image = frames[reference_frame]
+                ref_image = frames[:,reference_frame]
                 # Check that the argument results in 2D image_data
                 if len(ref_image.shape) != 2:
                     msg = "refrence_frame ({}) does not match"
@@ -1547,9 +1547,8 @@ class XanesFrameset():
         #     # Restore original values
         #     self.parent_name = init_parent_name
         #     self.data_name = init_data_name
-            
+    
     def apply_internal_reference(self):
-
         """Use a portion of each frame for internal reference correction.
         
         This function will extract an $I_0$ from the background by

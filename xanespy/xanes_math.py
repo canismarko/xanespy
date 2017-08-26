@@ -88,7 +88,6 @@ def apply_mosaic_reference(intensity, reference):
 
 
 def apply_internal_reference(intensities, out=None):
-    
     """Apply a reference correction to complex data to convert intensities
     into refractive index. :math:`I_0` is determined by separating the pixels
     into background and foreground using Otsu's method.
