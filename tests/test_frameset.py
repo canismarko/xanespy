@@ -82,23 +82,23 @@ else:
     mpi_support = True
 
 class TXMStoreTest(XanespyTestCase):
-    hdfname = os.path.join(SSRL_DIR, 'txmstore-test.h5')
+    hdfname = os.path.join(TEST_DIR, 'txmstore-test-temp.h5')
     
-    @classmethod
-    def setUpClass(cls):
+    def setUp(self):
         # Delete temporary HDF5 files
-        if os.path.exists(cls.hdfname):
-            os.remove(cls.hdfname)
-        # Prepare an HDF5 file that these tests can use.
-        with warnings.catch_warnings() as w:
-            warnings.simplefilter('ignore', RuntimeWarning, 103)
-            import_ssrl_xanes_dir(SSRL_DIR, hdf_filename=cls.hdfname)
+        if os.path.exists(self.hdfname):
+            os.remove(self.hdfname)
+        src_hdfname = os.path.join(TEST_DIR, 'txmstore-test.h5')
+        shutil.copy2(src_hdfname, self.hdfname)
+        # # Prepare an HDF5 file that these tests can use.
+        # with warnings.catch_warnings() as w:
+        #     warnings.simplefilter('ignore', RuntimeWarning, 103)
+        #     import_ssrl_xanes_dir(SSRL_DIR, hdf_filename=self.hdfname)
     
-    @classmethod
-    def tearDownClass(cls):
+    def tearDown(self):
         # Delete temporary HDF5 files
-        if os.path.exists(cls.hdfname):
-            os.remove(cls.hdfname)
+        if os.path.exists(self.hdfname):
+            os.remove(self.hdfname)
     
     def store(self, mode='r'):
         store = TXMStore(hdf_filename=self.hdfname,
@@ -118,11 +118,9 @@ class TXMStoreTest(XanespyTestCase):
         self.assertEqual(store.original_positions.shape, (1, 2, 3))
         # Raises exception for non-existent datasets
         with self.assertRaises(exceptions.GroupKeyError):
-            store.get_map('madeup_data')
+            store.get_dataset('madeup_data')
         with self.assertRaises(exceptions.GroupKeyError):
-            store.get_frames('madeup_data')
-        with self.assertRaises(exceptions.GroupKeyError):
-            store.get_frames(None)
+            store.get_dataset(None)
         # Check that `get_frames()` returns the frames associated with a map
     
     def test_data_group(self):
@@ -164,7 +162,7 @@ class TXMStoreTest(XanespyTestCase):
         abs_dict = [d for d in tree[0]['children'][0]['children'] if 'optical_depths' in d['path']][0]
         self.assertEqual(abs_dict['level'], 2)
         self.assertEqual(abs_dict['context'], 'frameset')
-
+    
     def test_data_name(self):
         store = self.store('r+')
         store.data_name = 'imported'
@@ -173,18 +171,26 @@ class TXMStoreTest(XanespyTestCase):
         with self.assertRaises(exceptions.CreateGroupError):
             store.data_name = 'new_group'
         store.close()
-
+    
     def test_setters(self):
         store = self.store('r+')
         # Check that the "type" attribute is set
         store.optical_depths = np.zeros((2, 1024, 1024))
         self.assertEqual(store.optical_depths.attrs['context'], 'frameset')
+        # Check that new data are saved in HDF file
+        store.intensities = np.ones((256, 256))
+        ds = store.parent_group()[store.data_name]['intensities']
+        self.assertEqual(ds.shape, (256, 256))
     
-    def test_get_frames(self):
-        store = self.store()
-        # Check that the method returns data
-        self.assertEqual(store.get_frames('optical_depths').shape, (1, 2, 1024, 1024))
-        
+    def test_delete(self):
+        store = self.store('r+')
+        del store.intensities
+        group = store.parent_group()[store.data_name]
+        self.assertNotIn('intensities', group.keys())
+        # Now check that it throws the right exception on the getter
+        with self.assertRaises(exceptions.GroupKeyError):
+            store.intensities
+
 
 class XrayEdgeTest(unittest.TestCase):
     def setUp(self):

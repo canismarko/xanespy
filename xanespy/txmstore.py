@@ -31,12 +31,48 @@ import xanes_math as xm
 log = logging.getLogger(__name__)
 
 
+class TXMDataset():
+    """Data descriptor for accessing HDF datasets.
+    
+    Parameters
+    ----------
+    name : str
+      The dataset name in the HDF file.
+    context : str, optional
+      Type of dataset this is: frameset, map, metadata, etc.
+    
+    """
+    def __init__(self, name, context=None):
+        self.name = name
+        self.context = context
+    
+    def __get__(self, store, type=None):
+        dataset = store.get_dataset(self.name)
+        # If it's a map, then return the source frames instead
+        if dataset.attrs['context'] == 'map' and self.context == 'frameset':
+            try:
+                dataset = store.get_dataset(dataset.attrs['frame_source'])
+            except KeyError:
+                msg = "Invalid frame source {} specified for group {}"
+                msg = msg.format(dataset.attrs.get('frame_source', 'None'), self.name)
+                raise exceptions.FrameSourceError(msg)
+        return dataset
+    
+    def __set__(self, store, value):
+        store.replace_dataset(self.name, value, context=self.context)
+    
+    def __delete__(self, store):
+        del store.data_group()[self.name]
+
+
 class TXMStore():
-    """Wrapper around HDF5 file that stores TXM data. It has a series of
-    properties that return the corresponding HDF5 dataset object; the
-    TXMStore().attribute.value pattern can be used to get pure numpy
-    arrays. These objects should be used as a context manager to ensure
-    that the file is closed, especially if using a writing mode:
+    """Wrapper around HDF5 file that stores TXM data.
+    
+    It has a series of descriptors and properties that return the
+    corresponding HDF5 dataset object; the TXMStore().attribute.value
+    pattern can be used to get pure numpy arrays directly. These
+    objects should be used as a context manager to ensure that the
+    file is closed, especially if using a writing mode:
     
         with TXMStore() as store:
             # Do stuff with store here
@@ -57,6 +93,27 @@ class TXMStore():
     """
     VERSION = 1
     _data_name = None
+    
+    # HDF5 Descriptors
+    # ----------------
+    energies = TXMDataset('energies', context='metadata')
+    signals = TXMDataset('extracted_signals', context='metadata')
+    original_positions = TXMDataset('original_positions', context='metadata')
+    timestep_names = TXMDataset('timestep_names', context='metadata')
+    pixel_sizes = TXMDataset('pixel_sizes', context='metadata')
+    intensities = TXMDataset('intensities', context='frameset')
+    
+    optical_depths = TXMDataset('optical_depths', context='frameset')
+    references = TXMDataset('references', context='frameset')
+    signal_weights = TXMDataset('extracted_signal_weights', context='frameset')
+    
+    optical_depth_mean = TXMDataset('optical_depth_mean', context='map')
+    intensity_mean = TXMDataset('intensity_mean', context='map')
+    signal_map = TXMDataset('signal_map', context='map')
+    whiteline_max = TXMDataset('whiteline_max', context='map')
+    whiteline_fit = TXMDataset('whiteline_fit', context='map')
+    cluster_fit = TXMDataset('cluster_fit', context='map')
+    particle_labels = TXMDataset('particle_labels', context='map')
     
     def __init__(self, hdf_filename: str,
                  parent_name: str, data_name=None,
@@ -208,35 +265,6 @@ class TXMStore():
         for key, val in attrs.items():
             ds.attrs[key] = val
     
-    def get_frames(self, name):
-        """Get a set of frames, specified by the value of `name`."""
-        frames = self.get_dataset(name)
-        # If it's a map, then return the source frames
-        if frames.attrs['context'] == 'map':
-            try:
-                frames = self.get_dataset(frames.attrs['frame_source'])
-            except KeyError:
-                msg = "Invalid frame source {} specified for group {}"
-                msg = msg.format(frames.attrs.get('frame_source', 'None'), name)
-                raise exceptions.FrameSourceError(msg)
-        return frames
-    
-    def set_frames(self, name, val):
-        """Set data for a set of frames, specificied by the value of `name`."""
-        return self.replace_dataset(name, val, context='frameset')
-    
-    def get_map(self, name):
-        """Get a map of the frames, specified by the value of `name`."""
-        map_ds = self.get_dataset(name)
-        # If it's not a map, throw an exception
-        context = map_ds.attrs['context']
-        if context != "map":
-            msg = "Expected {name} to be a map, but was a {context}."
-            msg = msg.format(name=name, context=context)
-            raise exceptions.GroupKeyError(msg)
-        # Return the data
-        return map_ds
-    
     def get_dataset(self, name):
         """Attempt to open the requested dataset.
         
@@ -273,22 +301,6 @@ class TXMStore():
         return result
     
     @property
-    def timestep_names(self):
-        return self.data_group()['timestep_names']
-    
-    @timestep_names.setter
-    def timestep_names(self, val):
-        self.replace_dataset('timestep_names', val, context='metadata')
-    
-    @property
-    def pixel_sizes(self):
-        return self.data_group()['pixel_sizes']
-    
-    @pixel_sizes.setter
-    def pixel_sizes(self, val):
-        self.replace_dataset('pixel_sizes', val, context='metadata')
-    
-    @property
     def relative_positions(self):
         """(x, y, z) position values for each frame."""
         return self.data_group()['relative_positions']
@@ -297,15 +309,7 @@ class TXMStore():
     def relative_positions(self, val):
         self.replace_dataset('relative_positions', val, context='metadata')
         self.data_group()['relative_positions'].attrs['order'] = "(x, y, z)"
-    
-    @property
-    def original_positions(self):
-        return self.get_dataset('original_positions')
-    
-    @original_positions.setter
-    def original_positions(self, val):
-        self.replace_dataset('original_positions', val, context='metadata')
-    
+   
     @property
     def pixel_unit(self):
         return self.data_group()['pixel_sizes'].attrs['unit']
@@ -315,121 +319,41 @@ class TXMStore():
         self.data_group()['pixel_sizes'].attrs['unit'] = val
     
     @property
-    def intensities(self):
-        return self.data_group()['intensities']
-    
-    @intensities.setter
-    def intensities(self, val):
-        self.replace_dataset('intensities', val, context='frameset')
-    
-    @property
-    def references(self):
-        return self.data_group()['references']
-    
-    @references.setter
-    def references(self, val):
-        self.replace_dataset('references', val, context='frameset')
-    
-    @property
-    def optical_depths(self):
-        return self.get_frames('optical_depths')
-    
-    @optical_depths.setter
-    def optical_depths(self, val):
-        self.replace_dataset('optical_depths', val, context="frameset")
-    
-    @property
-    def optical_depth_mean(self):
-        return self.get_map('optical_depth_mean')
-    
-    @optical_depth_mean.setter
-    def optical_depth_mean(self, val):
-        self.replace_dataset('optical_depth_mean', val, context='map')
-    
-    @property
-    def intensity_mean(self):
-        return self.get_map('intensity_mean')
-    
-    @intensity_mean.setter
-    def intensity_mean(self, val):
-        self.replace_dataset('intensity_mean', val, context='map')
-    
-    @property
-    def energies(self):
-        return self.data_group()['energies']
-
-    @energies.setter
-    def energies(self, val):
-        self.replace_dataset('energies', val, context='metadata')
-
-    @property
-    def signals(self):
-        """Get the previously extracted signals using any one of a variety of
-        decomposition methods, saved as `signal_method`.
-        """
-        return self.data_group()['extracted_signals']
-
-    @signals.setter
-    def signals(self, val):
-        self.replace_dataset('extracted_signals', val, context="metadata")
-
-    @property
     def signal_method(self):
         """String describing how the previously extracted signals were
         calculated.
         """
         return self.data_group()['extracted_signals'].attrs['method']
-
+    
     @signal_method.setter
     def signal_method(self, val):
         self.data_group()['extracted_signals'].attrs['method'] = val
-
-    @property
-    def signal_weights(self):
-        """Get the pixel weights of the previously extracted signals using any
-        one of a variety of decomposition methods, saved as
-        `signal_method`.
-        """
-        return self.data_group()['extracted_signal_weights']
-
-    @signal_weights.setter
-    def signal_weights(self, val):
-        self.replace_dataset('extracted_signal_weights', val,
-                             context="frameset")
-
-    @property
-    def signal_map(self):
-        return self.get_map('signal_map')
-
-    @signal_map.setter
-    def signal_map(self, val):
-        self.replace_dataset('signal_map', val, context='map')
-
+    
     @property
     def timestamps(self):
         return self.data_group()['timestamps']
-
+    
     @timestamps.setter
     def timestamps(self, val):
         # S32 is the 32-character ACSII string type for numpy
         val = np.array(val, dtype="S32")
         self.replace_dataset('timestamps', val, dtype="S32", context='metadata',
                              attrs={'timezone', "UTC"})
-
+    
     @property
     def filenames(self):
         return self.data_group()['filenames']
-
+    
     @filenames.setter
     def filenames(self, val):
         # S100 is the 100-character ACSII string type for numpy
         val = np.array(val, dtype="S100")
         self.replace_dataset('filenames', val, dtype="S100", context='metadata')
-
+    
     @property
     def fit_parameters(self):
-        return self.get_map('fit_parameters')
-
+        return self.get_dataset('fit_parameters')
+    
     @fit_parameters.setter
     def fit_parameters(self, val):
         attrs = {
@@ -438,35 +362,3 @@ class TXMStore():
         return self.replace_dataset('fit_parameters', val,
                                     attrs=attrs, context="metadata",
                                     dtype=np.float64)
-
-    @property
-    def whiteline_max(self):
-        return self.get_map('whiteline_max')
-
-    @whiteline_max.setter
-    def whiteline_max(self, val):
-        self.replace_dataset('whiteline_max', val, context='map')
-
-    @property
-    def whiteline_fit(self):
-        return self.get_map('whiteline_fit')
-
-    @whiteline_fit.setter
-    def whiteline_fit(self, val):
-        self.replace_dataset('whiteline_fit', val, context='map')
-
-    @property
-    def cluster_map(self):
-        return self.get_map('cluster_map')
-
-    @cluster_map.setter
-    def cluster_map(self, val):
-        self.replace_dataset('cluster_map', val, context='map')
-
-    @property
-    def particle_labels(self):
-        return self.get_map('particle_labels')
-
-    @particle_labels.setter
-    def particle_labels(self, val):
-        self.replace_dataset('particle_labels', val, context='map')
