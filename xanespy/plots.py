@@ -20,11 +20,27 @@
 """Helper functions for setting up and displaying plots using matplotlib."""
 
 import numpy as np
-from matplotlib import pyplot, cm
+from matplotlib import pyplot, cm, rcParams
 from matplotlib.colors import Normalize
 from matplotlib.ticker import ScalarFormatter
 
 from utilities import pixel_to_xy, Extent, Pixel
+
+
+def latexify():
+    """Set some custom options for saving matplotlib graphics in PGF
+    format."""
+    # Set default LaTeX PGF style
+    pgf_with_custom_preamble = {
+        "font.family": "serif", # use serif/main font for text elements
+        "pgf.preamble": [
+            r"\usepackage[per-mode=reciprocal]{siunitx}",         # load additional packages
+            r"\usepackage{mhchem}",
+        ]
+    }
+    rcParams.update(pgf_with_custom_preamble)
+    # Default to tight bounding box
+    rcParams['savefig.bbox'] = "tight"
 
 
 def remove_extra_spines(ax):

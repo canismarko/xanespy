@@ -540,6 +540,32 @@ class _fit_spectrum():
         return popt
 
 
+def fit_linear_combinations(spectra, signals):
+    """Fit spectra as if they are a linear combination of signals.
+    
+    Find the best linear combinations of signals that approximates the
+    given spectra. Assumes each spectrum can be reasonably
+    approximated by some combination of signals plus an offset and
+    that each signal weight is non-zero.
+    
+    Parameters
+    ----------
+    spectra : numpy.ndarray
+      An N x L array with observed spectra for fitting against.
+    signals : numpy.ndarray
+      An M x L array with the different signals to combine for fitting.
+    
+    Returns
+    -------
+    weights : numpy.ndarray
+      An N x (M+1) array with the weights for each spectrum/signal
+      combination. The last value in each row is the offset.
+    
+    """
+    weights = np.empty(shape=(spectra.shape[0], signals.shape[0]+1))
+    return weights
+
+
 def fit_kedge(spectra, energies, p0):
     """Use least squares to fit a set of curves to the data. Currently
     this is a line for the baseline optical_depth decreasing at higher
@@ -578,6 +604,7 @@ def fit_kedge(spectra, energies, p0):
     f = _fit_spectrum(p0=p0)
     with mp.Pool() as pool:
         chunksize = 223  # Prime number just for kicks
+        [print(np.any(np.isnan(s))) for s in spectra_iter]
         result = pool.starmap(f, spectra_iter, chunksize=chunksize)
         # result.wait()
         pool.close()

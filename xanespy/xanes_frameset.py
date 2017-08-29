@@ -1296,7 +1296,7 @@ class XanesFrameset():
         
         """
         with self.store() as store:
-            frames = store.get_frames(name=representation)[timeidx]
+            frames = store.get_dataset(name=representation)[timeidx]
         return frames
     
     @functools.lru_cache(maxsize=2)

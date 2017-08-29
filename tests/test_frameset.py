@@ -246,6 +246,10 @@ class XanesFramesetTest(TestCase):
         fs.store = mock.Mock(return_value=store)
         self.store = store
         return fs
+
+    def test_lc_fitting(self):
+        fs = self.create_frameset()
+        fs.fit_linear_combinations(sources=)
     
     @unittest.skipIf(not mpi_support, 'No support for MPI.')
     def test_fit_spectra(self):
@@ -484,11 +488,11 @@ class XanesFramesetTest(TestCase):
         # Make mocked data
         store = MockStore
         data = self.dummy_frame_data()
-        store.get_frames.return_value = data
+        store.get_dataset.return_value = data
         fs = self.create_frameset(store=store)
         # Check that the method returns the right data
         result = fs.frames(timeidx=3, representation='marbles')
-        store.get_frames.assert_called_once_with(name='marbles')
+        store.get_dataset.assert_called_once_with(name='marbles')
         np.testing.assert_equal(result, data[3])
     
     def test_energies(self):
