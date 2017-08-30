@@ -49,7 +49,7 @@ class TXMDataset():
     def __get__(self, store, type=None):
         dataset = store.get_dataset(self.name)
         # If it's a map, then return the source frames instead
-        if dataset.attrs['context'] == 'map' and self.context == 'frameset':
+        if dataset.attrs.get('context', None) == 'map' and self.context == 'frameset':
             try:
                 dataset = store.get_dataset(dataset.attrs['frame_source'])
             except KeyError:

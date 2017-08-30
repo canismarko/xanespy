@@ -31,11 +31,12 @@ from itertools import product
 from collections import namedtuple
 
 from scipy import ndimage, linalg, stats
-from scipy.optimize import curve_fit
+from scipy.optimize import curve_fit, leastsq
 import numpy as np
 from skimage import transform, feature, filters, morphology, exposure, measure
 from sklearn import decomposition
 import matplotlib.pyplot as plt
+from tqdm import tqdm
 
 from utilities import prog, foreach, get_component
 import exceptions
@@ -562,7 +563,38 @@ def fit_linear_combinations(spectra, signals):
       combination. The last value in each row is the offset.
     
     """
-    weights = np.empty(shape=(spectra.shape[0], signals.shape[0]+1))
+    signals = np.array(signals)
+    spectra = np.array(spectra)
+    # Prepare an empty array for the result
+    n_signals = signals.shape[0]
+    weights = np.empty(shape=(spectra.shape[0], n_signals+1))
+    # Prepare an itial guess (equal weight per signal)
+    weights[:,0:n_signals] = 1 # / n_signals
+    weights[:,-1] = 0
+    # Prepare error function
+    def errfun(guess, obs, *signals):
+        if np.any(guess[0:n_signals] < 0):
+            # Punish negative weights
+            diff = np.empty_like(obs)
+            diff[:] = 1e20
+        else:
+            # Calculate error for this guess
+            predicted = guess[:-1].reshape(1, -1) @ signals
+            predicted = np.sum(predicted, axis=0)
+            predicted = predicted + guess[-1] # Add offset
+            # print(predicted, 'hello')
+            # Compare predicted with observed values
+            diff = obs - predicted
+        return np.abs(diff.ravel())
+    # Execute fitting for each spectrum
+    indices = iter_indices(spectra, desc="Fitting signals", leftover_dims=1)
+    def fit_signals(idx):
+        spectrum = spectra[idx]
+        guess = weights[idx]
+        results = leastsq(errfun, guess, args=(spectrum, *signals), full_output=True)
+        x, cov_x, infodict, mesg, status = results
+        weights[idx] = x
+    foreach(fit_signals, indices, threads=1)
     return weights
 
 
@@ -571,27 +603,24 @@ def fit_kedge(spectra, energies, p0):
     this is a line for the baseline optical_depth decreasing at higher
     energies, plus a sigmoid for the edge and a gaussian for the
     whiteline.
-
+    
     Returns an array with a similar shape to spectra but the last axis
     is replaced with fitting parameters, describe by the named tupled
     `KParams` defined in this module.
-
+    
     Arguments
     ---------
-
-    - spectra : An array containing optical_depth data. Assumes that the
+    spectra : numpy.array
+      An array containing optical_depth data. Assumes that the
       index is energy. This can be a multi-dimensional array, which
       allows calculation of image frames, etc. The last axis should be
       X-ray energy.
-
-    - energies : Array of X-ray energies. Must have same shape as `spectra`.
-
-    - p0 : A tuple with the initial guess. The correct order is
-      described by kedge_params.
-
-    - out : Numpy array to hold the results. If omitted, a new array
-    will be created.
-
+    energies : numpy.array
+      Array of X-ray energies. Must have same shape as `spectra`.
+    p0 : tuple
+      A tuple with the initial guess. The correct order is described
+      by kedge_params.
+    
     """
     assert energies.shape == spectra.shape
     # Empty array to hold the results
@@ -604,7 +633,6 @@ def fit_kedge(spectra, energies, p0):
     f = _fit_spectrum(p0=p0)
     with mp.Pool() as pool:
         chunksize = 223  # Prime number just for kicks
-        [print(np.any(np.isnan(s))) for s in spectra_iter]
         result = pool.starmap(f, spectra_iter, chunksize=chunksize)
         # result.wait()
         pool.close()

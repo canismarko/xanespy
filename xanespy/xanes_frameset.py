@@ -111,7 +111,7 @@ class XanesFrameset():
             if representation is None:
                 group = store.data_group()
             else:
-                group = store.get_frames(representation=representation)
+                group = store.get_dataset(representation=representation)
             path = group.name
         return path
     
@@ -279,7 +279,7 @@ class XanesFrameset():
             # Nothing to apply, so no-op
             log.debug("No transformations to apply, skipping.")
             with self.store() as store:
-                out = store.get_frames('optical_depths').value
+                out = store.get_dataset('optical_depths').value
         else:
             if commit:
                 names = ['intensities', 'references', 'optical_depths'] # Order matters
@@ -291,9 +291,9 @@ class XanesFrameset():
                     if not store.has_dataset(frames_name):
                         continue
                     # Prepare an array to hold results
-                    out = np.zeros_like(store.get_frames(frames_name))
+                    out = np.zeros_like(store.get_dataset(frames_name))
                     # Apply transformation
-                    xm.transform_images(data=store.get_frames(frames_name),
+                    xm.transform_images(data=store.get_dataset(frames_name),
                                         transformations=self._transformations,
                                         out=out)
                 # Calculate and apply cropping bounds for the image stack
@@ -633,7 +633,7 @@ class XanesFrameset():
         
         """
         with self.store() as store:
-            Is = store.get_frames(representation)
+            Is = store.get_dataset(representation)
             frame_shape = self.frame_shape(representation)
             Is = np.reshape(Is, (-1, *frame_shape))
             mean = np.mean(Is, axis=0)
@@ -642,7 +642,7 @@ class XanesFrameset():
     def frame_shape(self, representation="intensities"):
         """Return the shape of the individual energy frames."""
         with self.store() as store:
-            imshape = store.get_frames(representation).shape[-2:]
+            imshape = store.get_dataset(representation).shape[-2:]
         return imshape
     
     def pixel_unit(self):
@@ -742,7 +742,7 @@ class XanesFrameset():
             Es = energies
         # Get the fitting parameters (previously calculated)
         with self.store() as store:
-            params = store.get_frames(representation)[index]
+            params = store.get_dataset(representation)[index]
         # Filter to the individual pixel if necessary
         if pixel is None:
             mean_axes = tuple(range(params.ndim-1))
@@ -797,9 +797,9 @@ class XanesFrameset():
                 pixel = Pixel(*pixel)
                 # Get a spectrum for a single pixel
                 spectrum_idx = (index, ..., pixel.vertical, pixel.horizontal)
-                spectrum = store.get_frames(representation)[spectrum_idx]
+                spectrum = store.get_dataset(representation)[spectrum_idx]
             else:
-                frames = store.get_frames(representation)[index]
+                frames = store.get_dataset(representation)[index]
                 if edge_jump_filter:
                     # Filter out background pixels using edge mask
                     try:
@@ -1182,7 +1182,7 @@ class XanesFrameset():
         frame_shape = self.frame_shape()
         # Retrieve the optical_depths and convert to spectra
         with self.store() as store:
-            As = store.get_frames(frame_source)
+            As = store.get_dataset(frame_source)
             # Collapse to (frame, pixel) shape
             n_timesteps = As.shape[0]
             assert n_timesteps == 1  # We can't currently handle timesteps

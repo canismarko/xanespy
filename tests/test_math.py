@@ -52,7 +52,7 @@ SSRL_DIR = os.path.join(TEST_DIR, 'txm-data-ssrl')
 
 
 class XanesMathTest(unittest.TestCase):
-
+    
     def setUp(self):
         # Prepare energies of the right dimensions
         self.KEdge = edges.NCANickelKEdge
@@ -65,7 +65,7 @@ class XanesMathTest(unittest.TestCase):
         L_Es = np.repeat(L_Es.reshape(1, 61), repeats=3, axis=0)
         self.L_Es = L_Es
         prog.quiet = True
-
+    
     def coins(self):
         """Prepare some example frames using images from the skimage
         library."""
@@ -77,7 +77,7 @@ class XanesMathTest(unittest.TestCase):
         # Add some noise otherwise some functions div by zero.
         coins = coins * (0.975 + np.random.rand(*coins.shape)/20)
         return coins
-
+    
     def test_predict_edge(self):
         params = KEdgeParams(
             scale=1, voffset=0, E0=8353,
@@ -158,8 +158,7 @@ class XanesMathTest(unittest.TestCase):
         func = _fit_spectrum(params)
         result = func(predicted, Es)
         np.testing.assert_equal(result, [np.nan] * 8)
-
-
+    
     def test_apply_internal_reference(self):
         # With real data
         d = np.array([[
@@ -205,7 +204,7 @@ class XanesMathTest(unittest.TestCase):
             [0., 0.,  0.,   0.,  0.],
         ]], dtype='float64')
         np.testing.assert_almost_equal(np.real(result), OD_expected, decimal=2)
-
+    
     def test_transformation_matrices(self):
         r = np.array([math.pi/2])
         s = np.array([0.5, 0.75])
@@ -237,9 +236,8 @@ class XanesMathTest(unittest.TestCase):
         # No transformations should raise a value error
         with self.assertRaises(ValueError):
             transformation_matrices()
-
+    
     def test_iter_indices(self):
-
         """Check that frame_indices method returns the right slices."""
         indata = np.zeros(shape=(3, 13, 256, 256))
         indices = iter_indices(indata, leftover_dims=1)
@@ -254,7 +252,7 @@ class XanesMathTest(unittest.TestCase):
         t = np.linspace(0, 2*np.pi, num=360)
         s1 = np.sin(t)
         s2 = np.sin(4*t)
-        noise = 0.3 * np.random.rand(360)
+        noise = 0.2 * np.random.rand(360)
         spectra = np.array([
             1*s1 + 0.5*s2 + noise + 4,
             0.3*s1 + 0.1*s2 + noise + 2,
@@ -263,8 +261,11 @@ class XanesMathTest(unittest.TestCase):
         weights = fit_linear_combinations(spectra, np.array([s1, s2]))
         # Check that the calculated weights are correct
         self.assertEqual(weights.shape, (2, 3))
-        expected = np.array([[1, 0.5],[0.3, 0.1]])
-        np.testing.assert_equal(weights, expected)
+        expected = np.array([
+            [1, 0.5, 4],
+            [0.3, 0.1, 2]
+        ])
+        np.testing.assert_almost_equal(weights, expected, decimal=1)
     
     def test_guess_kedge_params(self):
         """Given an arbitrary K-edge spectrum, can we guess reasonable
@@ -303,7 +304,7 @@ class XanesMathTest(unittest.TestCase):
         self.assertEqual(As.shape, Is.shape)
         calculated = -np.log(Is/refs)
         self.assertTrue(np.array_equal(As, calculated))
-
+    
     def test_direct_whiteline(self):
         """Check the algorithm for calculating the whiteline position of a
         XANES spectrum using the maximum value."""
@@ -316,7 +317,7 @@ class XanesMathTest(unittest.TestCase):
                                     energies=np.array([spectrum.index]),
                                     edge=edges.k_edges['Ni_NCA'])
         self.assertEqual(results, [8350.])
-
+    
     def test_fit_kedge(self):
         prog.quiet = True
         # Load some test data
@@ -373,7 +374,7 @@ class XanesMathTest(unittest.TestCase):
             ej = k_edge_jump(frames[..., 0:20],
                              energies=self.K_Es[..., 0:20],
                              edge=self.KEdge())
-
+    
     def test_k_edge_mask(self):
         """Check that the edge jump filter can be successfully turned into a
         boolean."""
@@ -382,7 +383,7 @@ class XanesMathTest(unittest.TestCase):
         # Check that frames are reduced to a 2D image
         self.assertEqual(ej.shape, frames.shape[-2:])
         self.assertEqual(ej.dtype, np.bool)
-
+    
     def test_l_edge_mask(self):
         """Check that the edge jump filter works for l edges."""
         frames = self.coins()  # NB: This mimics a K-edge, not an L-edge
@@ -391,7 +392,7 @@ class XanesMathTest(unittest.TestCase):
         # Check that frames are reduced to a 2D image
         self.assertEqual(ej.shape, frames.shape[-2:])
         self.assertEqual(ej.dtype, np.bool)
-
+    
     def test_transform_images(self):
         data = self.coins().astype('int')
         Ts = np.identity(3)
