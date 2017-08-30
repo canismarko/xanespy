@@ -541,7 +541,7 @@ class _fit_spectrum():
         return popt
 
 
-def fit_linear_combinations(spectra, signals):
+def fit_linear_combinations(spectra, sources):
     """Fit spectra as if they are a linear combination of signals.
     
     Find the best linear combinations of signals that approximates the
@@ -553,8 +553,8 @@ def fit_linear_combinations(spectra, signals):
     ----------
     spectra : numpy.ndarray
       An N x L array with observed spectra for fitting against.
-    signals : numpy.ndarray
-      An M x L array with the different signals to combine for fitting.
+    sources : numpy.ndarray
+      An M x L array with the different sources to combine for fitting.
     
     Returns
     -------
@@ -563,23 +563,23 @@ def fit_linear_combinations(spectra, signals):
       combination. The last value in each row is the offset.
     
     """
-    signals = np.array(signals)
+    sources = np.array(sources)
     spectra = np.array(spectra)
     # Prepare an empty array for the result
-    n_signals = signals.shape[0]
-    weights = np.empty(shape=(spectra.shape[0], n_signals+1))
+    n_sources = sources.shape[0]
+    weights = np.empty(shape=(spectra.shape[0], n_sources+1))
     # Prepare an itial guess (equal weight per signal)
-    weights[:,0:n_signals] = 1 # / n_signals
+    weights[:,0:n_sources] = 1 # / n_sources
     weights[:,-1] = 0
     # Prepare error function
-    def errfun(guess, obs, *signals):
-        if np.any(guess[0:n_signals] < 0):
+    def errfun(guess, obs, *sources):
+        if np.any(guess[0:n_sources] < 0):
             # Punish negative weights
             diff = np.empty_like(obs)
             diff[:] = 1e20
         else:
             # Calculate error for this guess
-            predicted = guess[:-1].reshape(1, -1) @ signals
+            predicted = guess[:-1].reshape(1, -1) @ sources
             predicted = np.sum(predicted, axis=0)
             predicted = predicted + guess[-1] # Add offset
             # print(predicted, 'hello')
@@ -587,14 +587,14 @@ def fit_linear_combinations(spectra, signals):
             diff = obs - predicted
         return np.abs(diff.ravel())
     # Execute fitting for each spectrum
-    indices = iter_indices(spectra, desc="Fitting signals", leftover_dims=1)
-    def fit_signals(idx):
+    indices = iter_indices(spectra, desc="Fitting sources", leftover_dims=1)
+    def fit_sources(idx):
         spectrum = spectra[idx]
         guess = weights[idx]
-        results = leastsq(errfun, guess, args=(spectrum, *signals), full_output=True)
+        results = leastsq(errfun, guess, args=(spectrum, *sources), full_output=True)
         x, cov_x, infodict, mesg, status = results
         weights[idx] = x
-    foreach(fit_signals, indices, threads=1)
+    foreach(fit_sources, indices, threads=1)
     return weights
 
 

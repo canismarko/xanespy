@@ -536,7 +536,7 @@ class XanesFrameset():
         """
         steps = []
         with self.store() as store:
-            data = store.get_map(map_name)
+            data = store.get_dataset(map_name)
             for stepdata in data:
                 particles = self.particle_regions(intensity_image=stepdata)
                 imgs = [p.intensity_image for p in particles]
@@ -783,7 +783,7 @@ class XanesFrameset():
           conservative threshold.
         representation : str, optional
           What kind of data to use for creating the spectrum. This
-          will be passed to TXMStore.get_map()
+          will be passed to TXMstore.get_dataset()
         index : int, optional
           Which step in the frameset to use. When used to index
           store().optical_depths, this should return a 3D array like
@@ -905,12 +905,49 @@ class XanesFrameset():
                                       min_size=min_size)
         return mask
     
+    def fit_linear_combinations(self, sources, component='real', representation="optical_depths"):
+        """Take a set of sources and fit the spectra with them.
+        
+        Saves to the representation "linear_combinations".
+        
+        Parameters
+        ----------
+        sources : numpy.ndarray
+          Sources to use for fitting the combinations.
+        component : str, optional
+          Complex component to use before fitting.
+        
+        Returns
+        -------
+        weights : numpy.ndarray
+          The weights (as frames) for each source.
+        
+        """
+        # Convert from complex number
+        sources = get_component(sources, component)
+        # Get data
+        with self.store() as store:
+            frames = get_component(store.get_dataset(representation), component)
+        # Reshape to have energy last
+        spectra = np.moveaxis(frames, 1, -1)
+        map_shape = spectra.shape[:-1]
+        spectra = spectra.reshape((-1, spectra.shape[-1]))
+        # Do linear fitting
+        fits = xm.fit_linear_combinations(spectra, sources)
+        # reshape to have maps of LC source weight
+        fits = fits.reshape((*map_shape, -1))
+        fits = np.moveaxis(fits, -1, 1)
+        # Save data to disk
+        with self.store('r+') as store:
+            store.linear_combinations = fits
+        return fits
+    
     def fit_spectra(self, edge_mask=True):
         """Fit a series of curves to the spectrum at each pixel.
         
         For anything other than trivially small data-sets, this method
         can take a very long time. To speed up processing, MPI calls
-        are used. Calling this function with mpiexec will allow for
+        are used. Calling this function with mpiexec17 will allow for
         more parallel processing.
         
         Arguments
@@ -1266,7 +1303,7 @@ class XanesFrameset():
         
         """
         with self.store() as store:
-            map_data = store.get_map(representation)
+            map_data = store.get_dataset(representation)
             if map_data.ndim > 2:
                 map_data = map_data[timeidx]
             else:
@@ -1274,7 +1311,7 @@ class XanesFrameset():
         return map_data
     
     @functools.lru_cache(maxsize=2)
-    def frames(self, timeidx=0, representation="optical_depths"):
+    def frames(self, representation="optical_depths", timeidx=0):
         """Return the frames for the given time index.
         
         If `representation` is really mapping data, then the source
@@ -1435,7 +1472,7 @@ class XanesFrameset():
             # vmax = self.edge.map_range[1] if vmax is None else vmax
             # norm = Normalize(vmin=vmin, vmax=vmax)
             # Do the actual plotting
-            data = store.get_map(name=map_name)[timeidx]
+            data = store.get_dataset(name=map_name)[timeidx]
             data = get_component(data, component)
             if median_size > 0:
                 data = median_filter(data, median_size)
@@ -1508,7 +1545,7 @@ class XanesFrameset():
         """Use a default frameset plotter to draw a map of the chemical
         data."""
         with self.store() as store:
-            map_ds = store.get_map(representation)
+            map_ds = store.get_dataset(representation)
             if timeidx is None:
                 data = map_ds.value
             else:

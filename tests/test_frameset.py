@@ -246,10 +246,22 @@ class XanesFramesetTest(TestCase):
         fs.store = mock.Mock(return_value=store)
         self.store = store
         return fs
-
+    
     def test_lc_fitting(self):
-        fs = self.create_frameset()
-        fs.fit_linear_combinations(sources=)
+        # Prepare stubbed data
+        store = MockStore()
+        od_data = np.random.rand(1, 6, 16, 16)
+        store.get_dataset = mock.MagicMock(return_value=od_data)
+        Es = [np.linspace(840, 862, num=6)]
+        store.energies = Es
+        fs = self.create_frameset(store=store)
+        spectrum = fs.spectrum()
+        # DO the actual fitting
+        weights = fs.fit_linear_combinations(sources=[spectrum])
+        self.assertEqual(weights.shape, (1, 2, 16, 16))
+        # Check that the data were saved
+        np.testing.assert_equal(store.linear_combinations, weights)
+        # store.replace_dataset.assert_called_with()
     
     @unittest.skipIf(not mpi_support, 'No support for MPI.')
     def test_fit_spectra(self):

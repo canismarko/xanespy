@@ -63,8 +63,8 @@ def foreach(f, l, threads=CPU_COUNT, return_=False):
             i = zip(count(),l.__iter__())
         else:
             i = l.__iter__()
-
-
+        
+        
         def runall():
             while True:
                 iteratorlock.acquire()
@@ -112,6 +112,7 @@ def foreach(f, l, threads=CPU_COUNT, return_=False):
                 f(v)
             return
 
+
 def parallel_map(f,l,threads=CPU_COUNT):
     return foreach(f,l,threads=threads,return_=True)
 
@@ -145,7 +146,7 @@ def broadcast_reverse(array, shape, *args, **kwargs):
     `shape`. Similar to numpy's broadcast_to function, but starts with
     the most significant axis. For example, if `array` has shape (7,
     29), it can be broadcast to (7, 29, 1024, 1024).
-
+    
     """
     def reverse_axes(array):
         ndims = array.ndim
