@@ -29,7 +29,7 @@ class Edge():
     ranges. All energies are assumed to be in units of
     electron-volts. This class is intended to be extended into K-edge,
     L-edge, etc.
-
+    
     Attributes
     ----------
     E_0 : float
@@ -51,7 +51,7 @@ class Edge():
     edge_range : 2-tuple
       Energy range (start, stop) used to determine the official
       beginning and edge of the edge itself.
-
+    
     """
     regions = []
     E_0 = None
@@ -60,7 +60,7 @@ class Edge():
     map_range = None
     edge_range = None
     pre_edge_fit = None
-
+    
     def all_energies(self):
         """Combine all the regions into one array.
         
@@ -80,7 +80,7 @@ class Edge():
         energies = np.concatenate(energies)
         energies = sorted(list(set(energies)))
         return energies
-
+    
     def energies_in_range(self, norm_range=None):
         if norm_range is None:
             norm_range = (self.map_range[0],

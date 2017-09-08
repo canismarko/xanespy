@@ -35,6 +35,7 @@ import math
 import subprocess
 
 import pandas as pd
+from scipy.optimize import leastsq
 from matplotlib import pyplot, cm, pyplot as plt
 from matplotlib.colors import Normalize
 import h5py
@@ -905,10 +906,13 @@ class XanesFrameset():
                                       min_size=min_size)
         return mask
     
-    def fit_linear_combinations(self, sources, component='real', representation="optical_depths"):
+    def fit_linear_combinations(self, sources, component='real',
+                                representation="optical_depths"):
         """Take a set of sources and fit the spectra with them.
         
-        Saves to the representation "linear_combinations".
+        Saves to the representation "linear_combinations". Also
+        creates "linear_combination_sources" and
+        "linear_combination_residuals" datasets.
         
         Parameters
         ----------
@@ -919,8 +923,10 @@ class XanesFrameset():
         
         Returns
         -------
-        weights : numpy.ndarray
+        fits : numpy.ndarray
           The weights (as frames) for each source.
+        residuals : numpy.ndarray
+          Residual error after fitting, as maps.
         
         """
         # Convert from complex number
@@ -933,119 +939,208 @@ class XanesFrameset():
         map_shape = spectra.shape[:-1]
         spectra = spectra.reshape((-1, spectra.shape[-1]))
         # Do linear fitting
-        fits = xm.fit_linear_combinations(spectra, sources)
-        # reshape to have maps of LC source weight
+        fits, residuals = xm.fit_linear_combinations(spectra, sources)
+        # Reshape to have maps of LC source weight
         fits = fits.reshape((*map_shape, -1))
         fits = np.moveaxis(fits, -1, 1)
+        residuals = residuals.reshape(map_shape)
         # Save data to disk
         with self.store('r+') as store:
             store.linear_combinations = fits
-        return fits
+            store.linear_combination_residuals = residuals
+            store.linear_combination_sources = sources
+        return fits, residuals
     
-    def fit_spectra(self, edge_mask=True):
+    def fit_spectra(self, func, p0=None, pnames=None, name="fit", component='real',
+                    representation='optical_depths'):
+        """Fit a given function to the spectra at each pixel.
+        
+        The fit parameters will be saved in the HDF dataset
+        "{name}_params" based on the parameter ``name``. RMS residuals
+        for each pixel will be saved in "{name}_residuals".
+        
+        Parameters
+        ----------
+        func : callable, str
+          The function that will be used for fitting. It should match
+          ``func(p0, p1, ...)`` where p0, p1, etc are the fitting
+          parameters. Some useful functions can be found in the
+          ``xanespy.fitting`` module.
+        p0 : np.ndarray
+          Initial guess for parameters, with similar dimensions to a
+          frameset. Required unless a pre-defined function is used.
+        name : str
+          What to call this fit in the HDF5 file. Use this to allow
+          subsequent fits against the same dataset to be saved.
+        pnames : str
+          An object with __str__ that will be saved as metadata giving
+          the parameters' names.
+        component : str, optional
+          What to use for complex-valued functions.
+        representation : str, optional
+          Which set of frames to use for fitting.
+        
+        Returns
+        -------
+        params : numpy.ndarray
+          The fit parameters (as frames) for each source.
+        residuals : numpy.ndarray
+          Residual error after fitting, as maps.
+
+        """
+        # Get data
+        with self.store() as store:
+            frames = get_component(store.get_dataset(representation), component)
+        # Reshape to have energy last
+        spectra = np.moveaxis(frames, 1, -1)
+        map_shape = spectra.shape[:-1]
+        spectra = spectra.reshape((-1, spectra.shape[-1]))
+        residuals = np.zeros(shape=(spectra.shape[0],))
+        p0 = np.moveaxis(p0, 1, -1)
+        p0 = p0.reshape((-1, p0.shape[-1]))
+        params = np.empty_like(p0)
+        # Prepare error function
+        def errfun(guess, obs):
+            # Calculate error for this guess
+            predicted = func(*guess)
+            predicted = np.sum(predicted, axis=0)
+            predicted = predicted + guess[-1] # Add offset
+            # print(predicted, 'hello')
+            # Compare predicted with observed values
+            diff = obs - predicted
+            return np.abs(diff.ravel())
+        # Execute fitting for each spectrum
+        indices = xm.iter_indices(spectra, desc="Fitting spectra", leftover_dims=1)
+        def fit_sources(idx):
+            spectrum = spectra[idx]
+            guess = p0[idx]
+            results = leastsq(errfun, guess, args=(spectrum,), full_output=True)
+            x, cov_x, infodict, mesg, status = results
+            params[idx] = x
+            # Calculate residual errors
+            res_ = (spectrum - func(*x))
+            res_ = np.sqrt(np.mean(np.power(res_, 2)))
+            residuals[idx] = res_
+        xm.foreach(fit_sources, indices, threads=1)
+        # Reshape to have maps of LC source weight
+        params = params.reshape((*map_shape, -1))
+        params = np.moveaxis(params, -1, 1)
+        residuals = residuals.reshape(map_shape)
+        # Save data to disk
+        with self.store('r+') as store:
+            store.replace_dataset("%s_parameters" % name, params,
+                                  context='frameset',
+                                  attrs={'parameter_names' : pnames})
+            store.replace_dataset("%s_residuals" % name, residuals,
+                                  context='map')
+        # Return the results to the user
+        return params, residuals
+    
+    # def fit_spectra(self, edge_mask=True):
+    #
+
         """Fit a series of curves to the spectrum at each pixel.
         
-        For anything other than trivially small data-sets, this method
-        can take a very long time. To speed up processing, MPI calls
-        are used. Calling this function with mpiexec17 will allow for
-        more parallel processing.
+    #     For large data-sets, this method can take a very long time. To
+    #     speed up processing, MPI calls are used. Calling this function
+    #     with ``mpiexec`` will allow for more parallel processing.
         
-        Arguments
-        ---------
-        edge_mask : bool, optional
-          If true, only pixels passing the edge_mask will be fit and
-          the remaning pixels will be set to a default value. This can
-          help reduce computing time.
+    #     Arguments
+    #     ---------
+    #     edge_mask : bool, optional
+    #       If true, only pixels passing the edge_mask will be fit and
+    #       the remaning pixels will be set to a default value. This can
+    #       help reduce computing time.
         
-        """
-        from mpi4py import MPI
-        # Prepare MPI environment
-        comm = MPI.COMM_WORLD
-        if comm.rank == 0:
-            log.debug("Starting spectrum fitting on {} nodes.".format(comm.size))
-            logstart = time()
-        # Retrieve source data
-        if comm.rank == 0:
-            log.debug("Retrieving full spectra.")
-            with self.store() as store:
-                frames = store.optical_depths
-                energies = store.energies.value
-                # Get a mask to select only some pixels
-                if edge_mask:
-                    # Active material pixels only
-                    mask = self.edge_mask()
-                else:
-                    # All pixels
-                    mask = np.zeros(self.frame_shape()).astype(bool)
-                frames_mask = np.broadcast_to(mask, frames.shape)
-                # Convert numpy axes to be in (pixel, energy) form
-                frames_mask = np.moveaxis(frames_mask, 1, -1)
-                spectra = np.moveaxis(frames, 1, -1)
-                map_shape = (*spectra.shape[:-1], len(xm.kedge_params))
-                fit_maps = np.empty(map_shape)  # To hold output
-                # Make sure spectra and energies have the same shape
-                energies = broadcast_reverse(energies, frames.shape)
-                spectra = spectra[~frames_mask].reshape((-1, spectra.shape[-1]))
-                spectra_shape = spectra.shape
-                energies = np.moveaxis(energies, 1, -1)
-                energies = energies[~frames_mask].reshape(spectra.shape)
-                # Do a preliminary fitting to get good parameters
-                I = np.median(spectra, axis=0)[np.newaxis, ...]
-                E = np.median(energies, axis=0)[np.newaxis, ...]
-                guess = xm.guess_kedge(I[0], E[0], edge=self.edge)
-                p0 = xm.fit_kedge(spectra=I, energies=E, p0=guess)[0]
-        else:
-            # Just a regular worker node
-            spectra = None
-            spectra_shape = None
-            energies = None
-            p0 = None
-        # Calculate shapes for distributing
-        p0 = comm.bcast(p0, root=0)
-        spectra_shape = comm.bcast(spectra_shape, root=0)
-        num_spectra = spectra_shape[0]
-        chunk_size = math.ceil(num_spectra / comm.size)
-        recvcounts = [chunk_size] * comm.size
-        recvcounts[-1] = num_spectra - (comm.size - 1) * chunk_size
-        local_shape = (recvcounts[comm.rank], *spectra_shape[1:])
-        # Distribute the  to all the nodes
-        local_spectra = np.empty(local_shape, dtype=np.float)
-        comm.Scatterv([spectra, recvcounts, MPI.DOUBLE],
-                      [local_spectra, recvcounts[comm.rank], MPI.DOUBLE], root=0)
-        local_energies = np.empty(local_shape, dtype=np.float)
-        comm.Scatterv([energies, recvcounts, MPI.DOUBLE],
-                      [local_energies, recvcounts[comm.rank], MPI.DOUBLE], root=0)
-        # Perform full fitting for individual pixels
-        log.debug("[%d] Fitting spectra", comm.rank)
-        local_params = xm.fit_kedge(spectra=local_spectra,
-                                    energies=local_energies, p0=p0)
-        # local_params = np.ascontiguousarray(local_spectra[:, :8])
-        # Re-capture all the calculated data from MPI
-        if comm.rank == 0:
-            all_params = np.zeros((num_spectra, len(xm.kedge_params)),
-                                  dtype=np.float)
-        else:
-            all_params = None
-        log.debug("[%d] Finished fitting %d spectra", comm.rank, len(local_spectra))
-        comm.Gatherv([local_params, recvcounts[comm.rank], MPI.DOUBLE],
-                     [all_params, recvcounts, MPI.DOUBLE], root=0)
-        if comm.rank == 0:
-            # Set actual calculate values
-            map_mask = np.broadcast_to(mask, fit_maps.shape[:-1])
-            # Set default values
-            fit_maps[map_mask] = np.nan
-            fit_maps[~map_mask] = all_params
-            # Calculate whiteline position
-            E0 = fit_maps[..., xm.kedge_params.index('E0')]
-            gaus_center = fit_maps[..., xm.kedge_params.index('gb')]
-            wl_maps = E0 + gaus_center
-            # Save results to disk
-            with self.store(mode='r+') as store:
-                store.fit_parameters = fit_maps
-                store.whiteline_fit = wl_maps
-                store.whiteline_fit.attrs['frame_source'] = 'optical_depths'
-            log.info('Finished fitting %d spectra in %d seconds',
-                     spectra.shape[0], time() - logstart)
+    #     """
+    #     from mpi4py import MPI
+    #     # Prepare MPI environment
+    #     comm = MPI.COMM_WORLD
+    #     if comm.rank == 0:
+    #         log.debug("Starting spectrum fitting on {} nodes.".format(comm.size))
+    #         logstart = time()
+    #     # Retrieve source data
+    #     if comm.rank == 0:
+    #         log.debug("Retrieving full spectra.")
+    #         with self.store() as store:
+    #             frames = store.optical_depths
+    #             energies = store.energies.value
+    #             # Get a mask to select only some pixels
+    #             if edge_mask:
+    #                 # Active material pixels only
+    #                 mask = self.edge_mask()
+    #             else:
+    #                 # All pixels
+    #                 mask = np.zeros(self.frame_shape()).astype(bool)
+    #             frames_mask = np.broadcast_to(mask, frames.shape)
+    #             # Convert numpy axes to be in (pixel, energy) form
+    #             frames_mask = np.moveaxis(frames_mask, 1, -1)
+    #             spectra = np.moveaxis(frames, 1, -1)
+    #             map_shape = (*spectra.shape[:-1], len(xm.kedge_params))
+    #             fit_maps = np.empty(map_shape)  # To hold output
+    #             # Make sure spectra and energies have the same shape
+    #             energies = broadcast_reverse(energies, frames.shape)
+    #             spectra = spectra[~frames_mask].reshape((-1, spectra.shape[-1]))
+    #             spectra_shape = spectra.shape
+    #             energies = np.moveaxis(energies, 1, -1)
+    #             energies = energies[~frames_mask].reshape(spectra.shape)
+    #             # Do a preliminary fitting to get good parameters
+    #             I = np.median(spectra, axis=0)[np.newaxis, ...]
+    #             E = np.median(energies, axis=0)[np.newaxis, ...]
+    #             guess = xm.guess_kedge(I[0], E[0], edge=self.edge)
+    #             p0 = xm.fit_kedge(spectra=I, energies=E, p0=guess)[0]
+    #     else:
+    #         # Just a regular worker node
+    #         spectra = None
+    #         spectra_shape = None
+    #         energies = None
+    #         p0 = None
+    #     # Calculate shapes for distributing
+    #     p0 = comm.bcast(p0, root=0)
+    #     spectra_shape = comm.bcast(spectra_shape, root=0)
+    #     num_spectra = spectra_shape[0]
+    #     chunk_size = math.ceil(num_spectra / comm.size)
+    #     recvcounts = [chunk_size] * comm.size
+    #     recvcounts[-1] = num_spectra - (comm.size - 1) * chunk_size
+    #     local_shape = (recvcounts[comm.rank], *spectra_shape[1:])
+    #     # Distribute the  to all the nodes
+    #     local_spectra = np.empty(local_shape, dtype=np.float)
+    #     comm.Scatterv([spectra, recvcounts, MPI.DOUBLE],
+    #                   [local_spectra, recvcounts[comm.rank], MPI.DOUBLE], root=0)
+    #     local_energies = np.empty(local_shape, dtype=np.float)
+    #     comm.Scatterv([energies, recvcounts, MPI.DOUBLE],
+    #                   [local_energies, recvcounts[comm.rank], MPI.DOUBLE], root=0)
+    #     # Perform full fitting for individual pixels
+    #     log.debug("[%d] Fitting spectra", comm.rank)
+    #     local_params = xm.fit_kedge(spectra=local_spectra,
+    #                                 energies=local_energies, p0=p0)
+    #     # local_params = np.ascontiguousarray(local_spectra[:, :8])
+    #     # Re-capture all the calculated data from MPI
+    #     if comm.rank == 0:
+    #         all_params = np.zeros((num_spectra, len(xm.kedge_params)),
+    #                               dtype=np.float)
+    #     else:
+    #         all_params = None
+    #     log.debug("[%d] Finished fitting %d spectra", comm.rank, len(local_spectra))
+    #     comm.Gatherv([local_params, recvcounts[comm.rank], MPI.DOUBLE],
+    #                  [all_params, recvcounts, MPI.DOUBLE], root=0)
+    #     if comm.rank == 0:
+    #         # Set actual calculate values
+    #         map_mask = np.broadcast_to(mask, fit_maps.shape[:-1])
+    #         # Set default values
+    #         fit_maps[map_mask] = np.nan
+    #         fit_maps[~map_mask] = all_params
+    #         # Calculate whiteline position
+    #         E0 = fit_maps[..., xm.kedge_params.index('E0')]
+    #         gaus_center = fit_maps[..., xm.kedge_params.index('gb')]
+    #         wl_maps = E0 + gaus_center
+    #         # Save results to disk
+    #         with self.store(mode='r+') as store:
+    #             store.fit_parameters = fit_maps
+    #             store.whiteline_fit = wl_maps
+    #             store.whiteline_fit.attrs['frame_source'] = 'optical_depths'
+    #         log.info('Finished fitting %d spectra in %d seconds',
+    #                  spectra.shape[0], time() - logstart)
     
     def calculate_whitelines(self, edge_mask=False):
         """Calculate and save a map of the whiteline position of each pixel by

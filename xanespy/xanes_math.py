@@ -448,11 +448,11 @@ KEdgeParams = namedtuple('KEdgeParams', kedge_params)
 def predict_edge(energies, *params):
     """Defines the curve function that gets fit to the data for an
     optical_depth K-edge.
-
+    
     The predicted curve is a combination of a straight line (for
     background), an arctan function (for the edge), and a gaussian
     peak (for the whiteline).
-
+    
     Arguments
     ---------
     energies : np.ndarray
@@ -460,13 +460,13 @@ def predict_edge(energies, *params):
     *params : tuple(int)
       The curve parameters that should be used for the
       prediction. Their order is described by kedge_params variable.
-
+    
     Returns
     -------
     curve : np.ndarray
       The predicted optical_depth values based on the input
       parameters. Shape will match `energies`.
-
+    
     """
     # Named tuple to help keep track of parameters
     Params = namedtuple('Params', kedge_params)
@@ -568,9 +568,18 @@ def fit_linear_combinations(spectra, sources):
     # Prepare an empty array for the result
     n_sources = sources.shape[0]
     weights = np.empty(shape=(spectra.shape[0], n_sources+1))
+    residuals = np.zeros(shape=(spectra.shape[0],))
     # Prepare an itial guess (equal weight per signal)
     weights[:,0:n_sources] = 1 # / n_sources
     weights[:,-1] = 0
+    # Function for predicting spectra
+    def predict(guess, sources):
+        # Calculate error for this guess
+        predicted = guess[:-1].reshape(1, -1) @ sources
+        predicted = np.sum(predicted, axis=0)
+        predicted = predicted + guess[-1] # Add offset
+        return predicted
+    
     # Prepare error function
     def errfun(guess, obs, *sources):
         if np.any(guess[0:n_sources] < 0):
@@ -579,13 +588,12 @@ def fit_linear_combinations(spectra, sources):
             diff[:] = 1e20
         else:
             # Calculate error for this guess
-            predicted = guess[:-1].reshape(1, -1) @ sources
-            predicted = np.sum(predicted, axis=0)
-            predicted = predicted + guess[-1] # Add offset
+            predicted = predict(guess, sources)
             # print(predicted, 'hello')
             # Compare predicted with observed values
             diff = obs - predicted
         return np.abs(diff.ravel())
+    
     # Execute fitting for each spectrum
     indices = iter_indices(spectra, desc="Fitting sources", leftover_dims=1)
     def fit_sources(idx):
@@ -594,8 +602,15 @@ def fit_linear_combinations(spectra, sources):
         results = leastsq(errfun, guess, args=(spectrum, *sources), full_output=True)
         x, cov_x, infodict, mesg, status = results
         weights[idx] = x
+        # Calculate error for this guess
+        predicted = predict(x, sources)
+        # Calculate residual errors
+        res_ = (spectrum - predicted)
+        res_ = np.sqrt(np.mean(np.power(res_, 2)))
+        residuals[idx] = res_
+    
     foreach(fit_sources, indices, threads=1)
-    return weights
+    return weights, residuals
 
 
 def fit_kedge(spectra, energies, p0):

@@ -217,7 +217,6 @@ class XrayEdgeTest(unittest.TestCase):
             [8291, 8292, 8293]
         )
 
-
 MockStore = mock.MagicMock(TXMStore)
 
 class XanesFramesetTest(TestCase):
@@ -247,6 +246,30 @@ class XanesFramesetTest(TestCase):
         self.store = store
         return fs
     
+    # @unittest.skipIf(not mpi_support, 'No support for MPI.')
+    # def test_fit_spectra(self):
+    #     """This test does not evaluate the quality of the fit, only that the
+    #     method selects the correct data and passes it on to the
+    #     correct math routine.
+        
+    #     """
+    #     FRAME_SHAPE = (16, 16)
+    #     # Prepare some fake data
+    #     fake_As = np.zeros((2, 10, *FRAME_SHAPE))
+    #     fake_Es = np.linspace(8250, 8640, num=10)
+    #     fake_Es = np.broadcast_to(fake_Es, (2, 10))
+    #     store = MockStore()
+    #     store.optical_depths = fake_As
+    #     type(store).whiteline_fit = mock.PropertyMock()
+    #     store.energies.value = fake_Es
+    #     # Prepare a fake frameset
+    #     fs = self.create_frameset(store=store)
+    #     fs.frame_shape = mock.Mock(return_value=FRAME_SHAPE)
+    #     # Call the method begin tested
+    #     fs.fit_spectra(edge_mask=False)
+    #     # No results are specified, but at least the function was
+    #     # called.
+    
     def test_lc_fitting(self):
         # Prepare stubbed data
         store = MockStore()
@@ -257,40 +280,37 @@ class XanesFramesetTest(TestCase):
         fs = self.create_frameset(store=store)
         spectrum = fs.spectrum()
         # DO the actual fitting
-        weights = fs.fit_linear_combinations(sources=[spectrum])
+        weights, residuals = fs.fit_linear_combinations(sources=[spectrum])
         self.assertEqual(weights.shape, (1, 2, 16, 16))
+        self.assertEqual(residuals.shape, (1, 16, 16))
         # Check that the data were saved
         np.testing.assert_equal(store.linear_combinations, weights)
-        # store.replace_dataset.assert_called_with()
+        np.testing.assert_equal(store.linear_combination_residuals, residuals)
+        np.testing.assert_equal(store.linear_combination_sources, np.array([spectrum]))
     
-    @unittest.skipIf(not mpi_support, 'No support for MPI.')
     def test_fit_spectra(self):
-        """This test does not evaluate the quality of the fit, only that the
-        method selects the correct data and passes it on to the
-        correct math routine.
-        
-        """
-        FRAME_SHAPE = (16, 16)
-        # Prepare some fake data
-        fake_As = np.zeros((2, 10, *FRAME_SHAPE))
-        fake_Es = np.linspace(8250, 8640, num=10)
-        fake_Es = np.broadcast_to(fake_Es, (2, 10))
         store = MockStore()
-        store.optical_depths = fake_As
-        type(store).whiteline_fit = mock.PropertyMock()
-        store.energies.value = fake_Es
-        # Prepare a fake frameset
+        od_data = np.random.rand(1, 6, 16, 16)
+        store.get_dataset = mock.MagicMock(return_value=od_data)
+        Es = [np.linspace(840, 862, num=6)]
+        store.energies = Es
         fs = self.create_frameset(store=store)
-        fs.frame_shape = mock.Mock(return_value=FRAME_SHAPE)
-        # Call the method begin tested
-        fs.fit_spectra(edge_mask=False)
-        # No results are specified, but at least the function was
-        # called.
+        x = np.linspace(0, 1, num=6)
+        line = lambda a, b: a * x + b
+        params, residuals = fs.fit_spectra(line, p0=np.zeros((1, 2, 16, 16)),
+                                           pnames=('slope', 'intercept'))
+        self.assertEqual(params.shape, (1, 2, 16, 16))
+        self.assertEqual(residuals.shape, (1, 16, 16))
+        # Check that the data were saved
+        store.replace_dataset.assert_any_call(
+            'fit_parameters', params, context='frameset',
+            attrs={'parameter_names': ('slope', 'intercept')})
+        store.replace_dataset.assert_any_call('fit_residuals', residuals, context='map')
     
     def test_particle_series(self):
         store = MockStore()
         fake_data = np.random.rand(4, 256, 256)
-        store.get_map = mock.Mock(return_value=fake_data)
+        store.get_dataset = mock.Mock(return_value=fake_data)
         particle_map = np.random.choice([0, 1, 2, 3], size=(256,256))
         store.particle_labels = particle_map
         fs = self.create_frameset(store=store)
@@ -377,7 +397,7 @@ class XanesFramesetTest(TestCase):
         spectrum = np.sin((energies-8300)*4*np.pi/100)
         frames = np.broadcast_to(spectrum, (10, 128, 128, 51))
         frames = np.swapaxes(frames, 3, 1)
-        store.get_frames = mock.Mock(return_value=frames)
+        store.get_dataset = mock.Mock(return_value=frames)
         fs = self.create_frameset(store=store)
         # Check that the return value is correct
         result = fs.spectrum()
@@ -471,13 +491,13 @@ class XanesFramesetTest(TestCase):
         # Prepare frameset and mock store
         frames = self.dummy_frame_data()
         store = MockStore()
-        store.get_frames.return_value = frames
+        store.get_dataset.return_value = frames
         fs = self.create_frameset(store=store)
         # Call the `mean_frames` method
         result = fs.mean_frame(representation="intensities")
         # Check that the result is correct
         self.assertEqual(result.ndim, 2)
-        store.get_frames.assert_called_with('intensities')
+        store.get_dataset.assert_called_with('intensities')
         expected = np.mean(frames, axis=(0, 1))
         np.testing.assert_equal(result, expected)
     
@@ -486,12 +506,12 @@ class XanesFramesetTest(TestCase):
         frameset = self.create_frameset(store=store)
         # Check on getting data by timeidx
         data = self.dummy_frame_data((10, 128, 128))
-        store.get_map.return_value = data
+        store.get_dataset.return_value = data
         result = frameset.map_data(timeidx=5)
         np.testing.assert_equal(result, data[5])
         # Check on getting and already 2D map
         data = self.dummy_frame_data((128, 128))
-        store.get_map.return_value = data
+        store.get_dataset.return_value = data
         frameset.clear_caches()
         result = frameset.map_data(timeidx=5)
         np.testing.assert_equal(result, data)
@@ -524,7 +544,7 @@ class XanesFramesetTest(TestCase):
         # Create mock data source
         store = MockStore()
         data = self.dummy_frame_data((5, 8, 128, 128))
-        store.get_frames.return_value = data
+        store.get_dataset.return_value = data
         px_sizes = np.linspace(0.0315783 * 8, 0.0335783 * 8, num=8)
         px_sizes = np.broadcast_to(px_sizes, (5, 8))
         store.pixel_sizes = px_sizes
@@ -573,12 +593,12 @@ class XanesFramesetTest(TestCase):
         # Test a specific representation's path
         class DummyDataGroup():
             name = '/ssrl-test-data/imported/optical_depths'
-        store.get_frames.return_value = DummyDataGroup()
+        store.get_dataset.return_value = DummyDataGroup()
         self.assertEqual(
             fs.hdf_path('optical_depths'),
             '/ssrl-test-data/imported/optical_depths'
         )
-        store.get_frames.assert_called_with(representation="optical_depths")
+        store.get_dataset.assert_called_with(representation="optical_depths")
     
     def test_switch_groups(self):
         """Test that switching between HDF5 groups works robustly."""

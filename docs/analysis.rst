@@ -105,8 +105,20 @@ frame, giving a better spectrum::
 
    The effect of the ``subtract_surroundings()`` method.
 
-Spectrum Fitting - K-Edge
--------------------------
+Fitting Spectra
+---------------
 
-Spectrum Fitting - L-Edge
--------------------------
+When numerical methods are insufficient, it may be necessary to fit
+the pixel spectra with a model function and extract parameters from
+the model. Xanespy provides several common models for various edges,
+and also allows for fitting of arbitrary functions.
+
+.. code:: python
+
+   Es = np.linspace(845, 865, num=1000)
+   l3 = xp.fitting.L3Edge(Es)
+
+   ODs = l3(1.1, 853, 0.6, 1, 855, 0.6, 0.15, 854, 10, 3)
+   plt.plot(Es, ODs)
+
+.. figure:: images/l3-curve.svg

@@ -101,8 +101,9 @@ class TXMStore():
     original_positions = TXMDataset('original_positions', context='metadata')
     timestep_names = TXMDataset('timestep_names', context='metadata')
     pixel_sizes = TXMDataset('pixel_sizes', context='metadata')
-    intensities = TXMDataset('intensities', context='frameset')
+    linear_combination_sources = TXMDataset('linear_combination_sources', context='metadata')
     
+    intensities = TXMDataset('intensities', context='frameset')
     optical_depths = TXMDataset('optical_depths', context='frameset')
     references = TXMDataset('references', context='frameset')
     signal_weights = TXMDataset('extracted_signal_weights', context='frameset')
@@ -115,6 +116,7 @@ class TXMStore():
     whiteline_fit = TXMDataset('whiteline_fit', context='map')
     cluster_fit = TXMDataset('cluster_fit', context='map')
     particle_labels = TXMDataset('particle_labels', context='map')
+    linear_combination_residuals = TXMDataset('linear_combination_residuals', context='map')
     
     def __init__(self, hdf_filename: str,
                  parent_name: str, data_name=None,
