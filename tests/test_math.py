@@ -44,8 +44,7 @@ from xanespy.xanes_math import (transform_images, direct_whitelines,
                                 guess_kedge, transformation_matrices,
                                 apply_internal_reference,
                                 apply_mosaic_reference,
-                                register_template, _fit_spectrum,
-                                fit_linear_combinations)
+                                register_template, _fit_spectrum)
 
 TEST_DIR = os.path.dirname(__file__)
 SSRL_DIR = os.path.join(TEST_DIR, 'txm-data-ssrl')
@@ -245,27 +244,6 @@ class XanesMathTest(unittest.TestCase):
         # Test with two leftover dimensions
         indices = iter_indices(indata, leftover_dims=2)
         self.assertEqual(len(list(indices)), 3*13)
-    
-    def test_lc_fitting(self):
-        """Can we fit a linear combination of functions to the given spectra."""
-        # Prepare a combination of component spectra
-        t = np.linspace(0, 2*np.pi, num=360)
-        s1 = np.sin(t)
-        s2 = np.sin(4*t)
-        noise = 0.2 * np.random.rand(360)
-        spectra = np.array([
-            1*s1 + 0.5*s2 + noise + 4,
-            0.3*s1 + 0.1*s2 + noise + 2,
-        ])
-        # Execute the test
-        weights = fit_linear_combinations(spectra, np.array([s1, s2]))
-        # Check that the calculated weights are correct
-        self.assertEqual(weights.shape, (2, 3))
-        expected = np.array([
-            [1, 0.5, 4],
-            [0.3, 0.1, 2]
-        ])
-        np.testing.assert_almost_equal(weights, expected, decimal=1)
     
     def test_guess_kedge_params(self):
         """Given an arbitrary K-edge spectrum, can we guess reasonable

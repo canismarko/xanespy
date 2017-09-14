@@ -163,26 +163,32 @@ def draw_histogram_colorbar(ax, *args, **kwargs):  # pragma: no cover
     return cbar
 
 
-def draw_colorbar(ax, cmap, norm, energies, orientation="vertical",
+def draw_colorbar(ax, cmap, norm, energies=None, orientation="vertical",
                   *args, **kwargs):  # pragma: no cover
     """Draw a colorbar on the side of a mapping axes to show the range of
     colors used. Returns the newly created colorbar object.
 
-    Arguments
+    Parameters
     ---------
-    - ax : Matplotlib axes object against which to plot.
-
-    - cmap : String or mpl Colormap instance indicating which colormap
-      to use.
-
-    - norm : mpl Normalize object that describes the range of values to
+    ax
+      Matplotlib axes object against which to plot.
+    cmap : str
+      String or mpl Colormap instance indicating which colormap to
       use.
-
-    - energies : Iterable of values to put as the tick marks on the
-      colorbar.
+    norm : matplotlib.Normalize
+      Describes the range of values to use.
+    energies : iterable, optional
+      Values to put as the tick marks on the colorbar. If not given, 3
+      points across ``norm`` will be used.
+    orientation : str, optional
+      "horizontal" or "vertical" (default)
+    
     """
     mappable = cm.ScalarMappable(norm=norm, cmap=cmap)
     mappable.set_array(np.arange(0, 3))
+    # Prepare default energies if necessary
+    if energies is None:
+        energies = np.linspace(norm.vmin, norm.vmax, num=3)
     # Add the colorbar to the axes
     cbar = pyplot.colorbar(mappable,
                            ax=ax,

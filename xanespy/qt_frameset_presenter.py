@@ -624,7 +624,7 @@ class QtFramesetPresenter(QtCore.QObject):
         self.frame_view.frame_changed.emit(self.active_frame)
     
     def last_frame(self):
-        self.active_frame = self.num_frames - 1
+        self.active_frame = max(0, self.num_frames - 1)
         self.frame_view.frame_changed.emit(self.active_frame)
     
     def update_status_shape(self):

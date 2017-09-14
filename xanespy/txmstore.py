@@ -107,7 +107,7 @@ class TXMStore():
     optical_depths = TXMDataset('optical_depths', context='frameset')
     references = TXMDataset('references', context='frameset')
     signal_weights = TXMDataset('extracted_signal_weights', context='frameset')
-    linear_combinations = TXMDataset('linear_combinations', context='frameset')
+    linear_combination_parameters = TXMDataset('linear_combination_parameters', context='frameset')
     
     optical_depth_mean = TXMDataset('optical_depth_mean', context='map')
     intensity_mean = TXMDataset('intensity_mean', context='map')

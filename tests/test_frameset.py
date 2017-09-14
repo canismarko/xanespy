@@ -284,27 +284,39 @@ class XanesFramesetTest(TestCase):
         self.assertEqual(weights.shape, (1, 2, 16, 16))
         self.assertEqual(residuals.shape, (1, 16, 16))
         # Check that the data were saved
-        np.testing.assert_equal(store.linear_combinations, weights)
-        np.testing.assert_equal(store.linear_combination_residuals, residuals)
-        np.testing.assert_equal(store.linear_combination_sources, np.array([spectrum]))
+        # np.testing.assert_equal(store.linear_combination_parameters, weights)
+        expected_names = ('c0', 'c1', 'offset')
+        store.replace_dataset.assert_any_call(
+            'linear_combination_parameters', weights,
+            context='frameset', attrs={'parameter_names': expected_names}
+        )
+        store.replace_dataset.assert_any_call(
+            'linear_combination_residuals', residuals, context='map')
+        # store.replace_dataset.assert_any_call(
+        #     'linear_combination_sources', [spectrum.values], context='metadata')
+        # np.testing.assert_equal(store.linear_combination_sources, np.array([spectrum]))
     
     def test_fit_spectra(self):
         store = MockStore()
         od_data = np.random.rand(1, 6, 16, 16)
         store.get_dataset = mock.MagicMock(return_value=od_data)
-        Es = [np.linspace(840, 862, num=6)]
+        Es = np.array([np.linspace(840, 862, num=6, dtype=np.float32)])
         store.energies = Es
         fs = self.create_frameset(store=store)
         x = np.linspace(0, 1, num=6)
         line = lambda a, b: a * x + b
+        line.dtype = np.float32
         params, residuals = fs.fit_spectra(line, p0=np.zeros((1, 2, 16, 16)),
+                                           nonnegative=True,
                                            pnames=('slope', 'intercept'))
+        self.assertFalse(np.any(params<0))
+        self.assertEqual(residuals.dtype, Es.dtype)
         self.assertEqual(params.shape, (1, 2, 16, 16))
         self.assertEqual(residuals.shape, (1, 16, 16))
         # Check that the data were saved
         store.replace_dataset.assert_any_call(
             'fit_parameters', params, context='frameset',
-            attrs={'parameter_names': ('slope', 'intercept')})
+            attrs={'parameter_names': str(('slope', 'intercept'))})
         store.replace_dataset.assert_any_call('fit_residuals', residuals, context='map')
     
     def test_particle_series(self):
@@ -752,7 +764,7 @@ class OldXanesFramesetTest(XanespyTestCase):
         # Check that k-means cluster map is saved
         with self.frameset.store() as store:
             good_shape = (1, *self.frameset.frame_shape())
-            self.assertEqual(store.cluster_map.shape, good_shape)
+            self.assertEqual(store.cluster_fit.shape, good_shape)
 
 
 # Launch the tests if this is run as a script

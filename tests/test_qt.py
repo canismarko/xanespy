@@ -478,7 +478,7 @@ class OldFrameViewerTestcase(QtTestCase):
         frameset.has_representation.return_value = True
         presenter = self.create_presenter(frameset=frameset)
         self.assertEqual(presenter.active_representation, None)
-
+    
     def test_prepare_ui(self):
         # Prepare a frameset object to test the presenter
         frameset = MockFrameset()
@@ -487,11 +487,8 @@ class OldFrameViewerTestcase(QtTestCase):
         frameset.num_energies = 20
         # Create the presenter
         presenter = self.create_presenter(frameset=frameset)
-        # Check that the number of energies is set properly
-        self.assertEqual(presenter.num_frames, 20)
         # Run the actual code
         presenter.prepare_ui()
-        presenter.frame_view.set_slider_max.assert_called_with(9)
         self.assertTrue(presenter.frame_view.set_cmap_list.called)
         self.assertTrue(presenter.frame_view.set_timestep_list.called)
         presenter.frame_view.set_timestep.assert_called_with(0)
@@ -626,6 +623,7 @@ class OldFrameViewerTestcase(QtTestCase):
     
     def test_next_frame(self):
         presenter = self.create_presenter()
+        presenter.num_frames = 20
         self.assertEqual(presenter.active_frame, 0)
         # Move to next frame
         presenter.next_frame()
@@ -639,6 +637,7 @@ class OldFrameViewerTestcase(QtTestCase):
     
     def test_previous_frame(self):
         presenter = self.create_presenter()
+        presenter.num_frames = 20
         self.assertEqual(presenter.active_frame, 0)
         # Move to previous frame (with wrapping)
         presenter.previous_frame()
@@ -659,6 +658,7 @@ class OldFrameViewerTestcase(QtTestCase):
     def test_last_frame(self):
         presenter = self.create_presenter()
         presenter.active_frame = 10
+        presenter.num_frames = 20
         presenter.last_frame()
         self.assertEqual(presenter.active_frame, 19)
         presenter.frame_view.frame_changed.emit.assert_called_with(19)
