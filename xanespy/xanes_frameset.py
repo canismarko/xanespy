@@ -932,6 +932,10 @@ class XanesFrameset():
           Sources to use for fitting the combinations.
         component : str, optional
           Complex component to use before fitting.
+        name : str, optional
+          What to call the resulting dataset in the hdf file.
+        representation : str, optional
+          What dataset to use as input for fitting.
         *args, **kwargs : optional
           Passed on to ``self.fit_spectra``.
         
