@@ -169,13 +169,13 @@ class QtMapView(QtCore.QObject):
         
     def show(self):  # pragma: no cover
         self.window.show()
-
+    
     def hide(self):  # pragma: no cover
         self.window.hide()
-
+    
     def redraw_canvas(self):  # pragma: no cover
         self.fig.canvas.draw()
-
+    
     def plot_map_data(self, map_data, norm, cmap, extent):  # pragma: no cover
         # First clear the currently selected cursor
         self.map_clicked.emit(None, None)
@@ -190,7 +190,7 @@ class QtMapView(QtCore.QObject):
         elif map_data.ndim == 3:
             # RGB map showing different components
             plots.plot_composite_map(map_data, ax=self.map_ax, extent=extent)
-
+    
     def plot_histogram_data(self, map_data, norm, cmap, extent):  # pragma: no cover
         log.debug("Plotting new map histogram")
         self.hist_ax.clear()
@@ -198,7 +198,7 @@ class QtMapView(QtCore.QObject):
                                  cmap=cmap, add_cbar=False)
         mappable = cm.ScalarMappable(norm=norm, cmap=cmap)
         self.cbar.on_mappable_changed(mappable)
-
+    
     def plot_spectrum(self, spectrum, fitted_spectrum, norm, cmap,
                       edge_range):  # pragma: no cover
         log.debug("Plotting new map spectrum")
@@ -235,7 +235,7 @@ class QtMapView(QtCore.QObject):
         # Set axes limits on the edge axes
         self.edge_ax.set_xlim(norm.vmin, norm.vmax)
         self.redraw_canvas()
-
+    
     def connect_presenter(self, presenter):  # pragma: no cover
         """Connect to signals for changed presenter state."""
         presenter.map_data_changed.connect(self.show)
@@ -253,7 +253,7 @@ class QtMapView(QtCore.QObject):
         # Connect to signal for when we can draw the UI elements
         presenter.app_ready.connect(self.setup_ui)
         # `map_view` signals received when data changes
-
+    
     def create_canvas(self):  # pragma: no cover
         self.fig = Figure()
         canvas = FigureCanvas(self.fig)

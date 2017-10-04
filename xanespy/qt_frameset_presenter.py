@@ -536,12 +536,13 @@ class QtFramesetPresenter(QtCore.QObject):
             )
         except exceptions.GroupKeyError:
             return None
-        # Retrieve only active complex component
-        map_data = get_component(map_data, self.active_map_component)
-        # Apply a mask to show only the XAS edge
-        if self.use_edge_mask:
-            mask = self.frameset.edge_mask()
-            map_data = np.ma.array(map_data, mask=mask)
+        if map_data is not None:
+            # Retrieve only active complex component
+            map_data = get_component(map_data, self.active_map_component)
+            # Apply a mask to show only the XAS edge
+            if self.use_edge_mask:
+                mask = self.frameset.edge_mask()
+                map_data = np.ma.array(map_data, mask=mask)
         return map_data
     
     def animate_frames(self):

@@ -595,7 +595,7 @@ def magnification_correction(frames, pixel_sizes):
     return (scales2D, translations)
 
 
-def import_ssrl_xanes_dir(directory, hdf_filename):
+def import_ssrl_xanes_dir(directory, hdf_filename, groupname=None):
     """Import all files in the given directory collected at SSRL beamline
     6-2c and process into framesets. Images are assumed to full-field
     transmission X-ray micrographs and repetitions will be
@@ -607,9 +607,13 @@ def import_ssrl_xanes_dir(directory, hdf_filename):
       Where to look for files to import.
     hdf_filename : str
       Path to an HDF5 to receive the data.
+    groupname : str, optional
+      HDF group name to use for saving these data. If omitted, try to
+      guess from directory path.
     """
     imp_group = import_frameset(directory, hdf_filename=hdf_filename,
-                                flavor='ssrl', return_val="group")
+                                flavor='ssrl', return_val="group",
+                                groupname=groupname)
     # Set some beamline specific metadata
     imp_group.parent.attrs['technique'] = 'Full-field TXM'
     imp_group.parent.attrs['beamline'] = 'SSRL 6-2c'
@@ -764,7 +768,7 @@ def import_aps_8BM_xanes_dir(directory, hdf_filename, quiet=False):
     return imp_group
 
 
-def import_frameset(directory, flavor, hdf_filename, return_val=None):
+def import_frameset(directory, flavor, hdf_filename, groupname=None, return_val=None):
     """Import all files in the given directory collected at an X-ray
     microscope beamline.
     
@@ -784,11 +788,14 @@ def import_frameset(directory, flavor, hdf_filename, return_val=None):
       assume. See documentation for ``xanespy.xradia.XRMFile`` for
       possible choice.
     hdf_filename : str
-      Where to save the output to. An exception is throw if this file
-      already exists.
-    return_val : str
+      Where to save the output to. Will overwrite previous data-sets
+      with the same name.
+    groupname : str, optional
+      What to use as the name for HDF group storing the data. If
+      omitted, guess the name from the directory path.
+    return_val : str, optional
       Request a specific return value.
-      - None: No return value
+      - None: No return value (default)
       - "group": The open HDF5 group for this experiment.
     
     """
@@ -797,9 +804,6 @@ def import_frameset(directory, flavor, hdf_filename, return_val=None):
     if return_val not in valid_return_vals:
         msg = "Invalid `return_val`: {}. Choices are {}"
         raise ValueError(msg.format(return_val, valid_return_vals))
-    # Check that file does not exist
-    if os.path.exists(hdf_filename):
-        raise OSError("File {} exists".format(hdf_filename))
     # Get list of all possible files in the directory tree
     files = [os.path.join(dp, f) for dp, dn, filenames in
              os.walk(directory) for f in filenames]
@@ -827,7 +831,9 @@ def import_frameset(directory, flavor, hdf_filename, return_val=None):
     # Import reference frames
     assert len(reference_files.groupby('position_name')) == 1
     ref_groups = reference_files.groupby('timestep_name')
-    imp_group = h5file.require_group("{}/imported".format(pos_name))
+    imp_name = pos_name if groupname is None else groupname
+    log.info('Saving imported data to group "%s"', imp_name)
+    imp_group = h5file.require_group("{}/imported".format(imp_name))
     ref_ds = imp_group.require_dataset('references', shape=ds_shape,
                                        maxshape=ds_shape,
                                        chunks=chunk_shape,
@@ -863,8 +869,8 @@ def import_frameset(directory, flavor, hdf_filename, return_val=None):
             num_samples = len(pos_df.groupby('timestep_name'))
             num_energies = len(pos_df.groupby('energy'))
         ds_shape = (num_samples, num_energies, *im_shape)
-        h5group = h5file.require_group("{}/imported".format(pos_name))
-        h5file["{}".format(pos_name)].attrs['latest_data_name'] = 'imported'
+        h5group = h5file.require_group("{}/imported".format(imp_name))
+        h5file["{}".format(imp_name)].attrs['latest_data_name'] = 'imported'
         int_ds = h5group.require_dataset('intensities',
                                          shape=ds_shape,
                                          maxshape=ds_shape,
@@ -977,7 +983,7 @@ def import_frameset(directory, flavor, hdf_filename, return_val=None):
         h5group.parent.attrs['original_directory'] = directory
         # Write logging output
         log.info("Imported %s (%d files) in %f sec",
-                 pos_name, len(pos_df), time() - logstart)
+                 imp_name, len(pos_df), time() - logstart)
     # Clean up and sort out the return value
     if return_val == "group":
         ret = imp_group

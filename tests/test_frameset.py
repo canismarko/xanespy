@@ -527,6 +527,14 @@ class XanesFramesetTest(TestCase):
         frameset.clear_caches()
         result = frameset.map_data(timeidx=5)
         np.testing.assert_equal(result, data)
+        # Check that a non-map returns None
+        class Data():
+            attrs = {'context': 'frameset'}
+            ndim = 4
+        data = Data()
+        store.get_dataset.return_value = data
+        result = frameset.map_data()
+        self.assertIs(result, None)
     
     def test_frames(self):
         # Make mocked data

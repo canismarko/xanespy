@@ -70,15 +70,18 @@ class Edge():
           Flat array with the energies for this edge.
         """
         energies = []
-        for region in self.regions:
-            start = region[0]
-            stop = region[1]
-            step = region[2]
-            rng = int(stop - start)
-            num = int(rng / step + 1)
-            energies.append(np.linspace(region[0], region[1], num))
-        energies = np.concatenate(energies)
-        energies = sorted(list(set(energies)))
+        if self.regions == []:
+            energies = np.linspace(self.edge_range[0], self.edge_range[1], num=20)
+        else:
+            for region in self.regions:
+                start = region[0]
+                stop = region[1]
+                step = region[2]
+                rng = int(stop - start)
+                num = int(rng / step + 1)
+                energies.append(np.linspace(region[0], region[1], num))
+            energies = np.concatenate(energies)
+            energies = sorted(list(set(energies)))
         return energies
     
     def energies_in_range(self, norm_range=None):
@@ -176,6 +179,16 @@ class LMOMnKEdge(KEdge):
     ]
 
 
+class NCACobaltKEdge(KEdge):
+    name = "Co_NCA"
+    E_0 = 7712
+    shell = 'K'
+    pre_edge = (7600, 7715)
+    post_edge = (7780, 7900)
+    map_range = (7725, 7735)
+    edge_range = (7715, 7740)
+
+
 class NCANickelKEdge(KEdge):
     name = "Ni_NCA"
     E_0 = 8333
@@ -230,6 +243,7 @@ class NMCNickelKEdge29(NCANickelKEdge):
 k_edges = {
     'Ni_NCA': NCANickelKEdge(),
     'Ni_NMC': NCANickelKEdge(), # They're pretty much the same
+    'Co_NCA': NCACobaltKEdge(),
     'Mn_LMO': LMOMnKEdge(),
 }
 

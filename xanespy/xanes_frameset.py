@@ -1348,7 +1348,10 @@ class XanesFrameset():
         """
         with self.store() as store:
             map_data = store.get_dataset(representation)
-            if map_data.ndim > 2:
+            if getattr(map_data, 'attrs', {}).get('context', None):
+                # Not actually a map, so return none
+                map_data = None
+            elif map_data.ndim > 2:
                 map_data = map_data[timeidx]
             else:
                 map_data = np.array(map_data)
