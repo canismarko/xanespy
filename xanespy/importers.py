@@ -63,7 +63,7 @@ def _average_frames(*frames):
     return new_frame
 
 
-def read_metadata(filenames, flavor):
+def read_metadata(filenames, flavor, quiet=False):
     """Take a list of filenames and return a pandas dataframe with all the
     metadata.
     
@@ -73,14 +73,15 @@ def read_metadata(filenames, flavor):
       Iterable of filenames to use for extracting metadata.
     flavor : str
       Same as in ``import_frameset``.
-    
+    quiet : bool, optional
+      Whether to suppress the progress bar, etc.
     """
     log.info("Importing metadata with flavor %s", flavor)
     logstart = time()
     columns = ('timestep_name', 'position_name', 'is_background',
                'energy', 'shape', 'starttime')
     df = pd.DataFrame(columns=columns)
-    for filename in prog(filenames, desc="Reading"):
+    for filename in prog(filenames, desc="Reading", disable=quiet):
         log.debug("Reading metadata for {}".format(filename))
         ext = os.path.splitext(filename)[-1]
         if ext not in format_classes.keys():
@@ -595,7 +596,7 @@ def magnification_correction(frames, pixel_sizes):
     return (scales2D, translations)
 
 
-def import_ssrl_xanes_dir(directory, hdf_filename, groupname=None):
+def import_ssrl_xanes_dir(directory, hdf_filename, groupname=None, *args, **kwargs):
     """Import all files in the given directory collected at SSRL beamline
     6-2c and process into framesets. Images are assumed to full-field
     transmission X-ray micrographs and repetitions will be
@@ -610,10 +611,14 @@ def import_ssrl_xanes_dir(directory, hdf_filename, groupname=None):
     groupname : str, optional
       HDF group name to use for saving these data. If omitted, try to
       guess from directory path.
+    *args, **kwargs
+      Arguments and keyword arguments passed on to
+    ``import_frameset``.
+    
     """
     imp_group = import_frameset(directory, hdf_filename=hdf_filename,
                                 flavor='ssrl', return_val="group",
-                                groupname=groupname)
+                                groupname=groupname, *args, **kwargs)
     # Set some beamline specific metadata
     imp_group.parent.attrs['technique'] = 'Full-field TXM'
     imp_group.parent.attrs['beamline'] = 'SSRL 6-2c'
@@ -677,7 +682,8 @@ def decode_aps_params(filename):
     return result
 
 
-def import_aps_8BM_xanes_file(filename, ref_filename, hdf_filename, groupname=None):
+def import_aps_8BM_xanes_file(filename, ref_filename, hdf_filename,
+                              groupname=None, quiet=False):
     """Extract an entire xanes framestack from one xradia file.
     
     A single TXRM file can contain multiple frames at different
@@ -703,6 +709,8 @@ def import_aps_8BM_xanes_file(filename, ref_filename, hdf_filename, groupname=No
       included and will receive the position name using the
       ``format()`` method. The '{}' is required if more than one field
       of view exists and a groupname is given.
+    quiet : bool, optional
+      Whether to suppress the progress bar, etc.
     
     """
     log.debug("Starting import of APS 8-BM frameset.")
@@ -737,7 +745,7 @@ def import_aps_8BM_xanes_file(filename, ref_filename, hdf_filename, groupname=No
     abs_ds = imp_group.create_dataset('optical_depths', shape=ds_shape,
                               dtype=np.float32, maxshape=ds_shape)
     abs_ds.attrs['context'] = 'frameset'
-    apply_references(int_ds, ref_ds, out=abs_ds)
+    apply_references(int_ds, ref_ds, out=abs_ds, quiet=quiet)
     # Set some other metadata
     h5file[groupname].attrs["original_file"] = filename
     h5file[groupname].attrs["xanespy_version"] = CURRENT_VERSION
@@ -760,10 +768,11 @@ def import_aps_8BM_xanes_file(filename, ref_filename, hdf_filename, groupname=No
     h5file.close()
 
 
-def import_aps_8BM_xanes_dir(directory, hdf_filename, quiet=False, groupname=None):
+def import_aps_8BM_xanes_dir(directory, hdf_filename, groupname=None,
+                             *args, **kwargs):
     imp_group = import_frameset(directory=directory, flavor="aps",
                                 hdf_filename=hdf_filename, return_val="group",
-                                groupname=groupname)
+                                groupname=groupname, *args, **kwargs)
     # Set some beamline specific metadata
     imp_group.parent.attrs['technique'] = 'Full-field TXM'
     imp_group.parent.attrs['beamline'] = 'APS 8-BM-B'
@@ -772,7 +781,8 @@ def import_aps_8BM_xanes_dir(directory, hdf_filename, quiet=False, groupname=Non
     return imp_group
 
 
-def import_frameset(directory, flavor, hdf_filename, groupname=None, return_val=None):
+def import_frameset(directory, flavor, hdf_filename, groupname=None, return_val=None,
+                    quiet=False):
     """Import all files in the given directory collected at an X-ray
     microscope beamline.
     
@@ -804,6 +814,8 @@ def import_frameset(directory, flavor, hdf_filename, groupname=None, return_val=
       Request a specific return value.
       - None: No return value (default)
       - "group": The open HDF5 group for this experiment.
+    quiet : bool, optional
+      Whether to suppress the progress bar
     
     """
     # Check arguments for sanity
@@ -815,7 +827,7 @@ def import_frameset(directory, flavor, hdf_filename, groupname=None, return_val=
     files = [os.path.join(dp, f) for dp, dn, filenames in
              os.walk(directory) for f in filenames]
     # Process filename metadata into separate dataframes
-    metadata = read_metadata(files, flavor=flavor)
+    metadata = read_metadata(files, flavor=flavor, quiet=quiet)
     reference_files = metadata[metadata['is_background'] == True]
     sample_files = metadata[metadata['is_background'] == False]
     total_files = sample_files.count()['is_background']
@@ -852,7 +864,8 @@ def import_frameset(directory, flavor, hdf_filename, groupname=None, return_val=
                                        maxshape=ds_shape,
                                        chunks=chunk_shape,
                                        dtype=np.uint16)
-    progbar = prog(desc="Importing", total=len(metadata), unit="files")
+    progbar = prog(desc="Importing", total=len(metadata),
+                   unit="files", disable=quiet)
     ref_ds.attrs['context'] = 'frameset'
     median_kernel = np.array([[0, 1, 0], [1, 1, 1], [0, 1, 0]])
     for ts_idx, (ts_name, ts_df) in enumerate(ref_groups):
@@ -977,7 +990,7 @@ def import_frameset(directory, flavor, hdf_filename, groupname=None, return_val=
         progbar.close()
         # Convert to absorbance values
         abs_start = time()
-        apply_references(int_ds, ref_ds, out=abs_ds)
+        apply_references(int_ds, ref_ds, out=abs_ds, quiet=quiet)
         log.info("Applied reference correction in %f seconds.", time() - abs_start)
         # Correct magnification from different energy focusing
         if flavor == 'ssrl':
@@ -987,9 +1000,9 @@ def import_frameset(directory, flavor, hdf_filename, groupname=None, return_val=
             tmatrices = transformation_matrices(scales=scales,
                                                 translations=translations)
             transform_images(abs_ds, transformations=tmatrices,
-                             out=abs_ds)
+                             out=abs_ds, quiet=quiet)
         # Remove dead or hot pixels
-        progbar = prog(desc="Median filter", total=1)
+        progbar = prog(desc="Median filter", total=1, disable=quiet)
         progbar.update(0)
         median_filter(abs_ds, size=1, output=abs_ds)
         progbar.update(1)

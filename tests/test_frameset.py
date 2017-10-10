@@ -300,7 +300,7 @@ class XanesFramesetTest(TestCase):
         fs = self.create_frameset(store=store)
         spectrum = fs.spectrum()
         # DO the actual fitting
-        weights, residuals = fs.fit_linear_combinations(sources=[spectrum])
+        weights, residuals = fs.fit_linear_combinations(sources=[spectrum], quiet=True)
         self.assertEqual(weights.shape, (1, 2, 16, 16))
         self.assertEqual(residuals.shape, (1, 16, 16))
         # Check that the data were saved
@@ -329,7 +329,7 @@ class XanesFramesetTest(TestCase):
         line.dtype = np.float32
         params, residuals = fs.fit_spectra(line, p0=np.zeros((1, 2, 16, 16)),
                                            nonnegative=True,
-                                           pnames=('slope', 'intercept'))
+                                           pnames=('slope', 'intercept'), quiet=True)
         self.assertFalse(np.any(params<0))
         self.assertEqual(residuals.dtype, Es.dtype)
         self.assertEqual(params.shape, (1, 2, 16, 16))
@@ -638,8 +638,9 @@ class OldXanesFramesetTest(XanespyTestCase):
         if os.path.exists(cls.originhdf):
             os.remove(cls.originhdf)
         with warnings.catch_warnings() as w:
-            warnings.simplefilter('ignore', RuntimeWarning, 103)
-            import_ssrl_xanes_dir(SSRL_DIR, hdf_filename=cls.originhdf)
+            warnings.filterwarnings('ignore', message="Ignoring invalid file .*",
+                                    category=RuntimeWarning)
+            import_ssrl_xanes_dir(SSRL_DIR, hdf_filename=cls.originhdf, quiet=True)
 
     def setUp(self):
         # Copy the HDF5 file so we can safely make changes
@@ -667,7 +668,8 @@ class OldXanesFramesetTest(XanespyTestCase):
             Ts[0, 1, 1, 2] = 100
             transform_images(store.optical_depths,
                              transformations=Ts,
-                             out=store.optical_depths)
+                             out=store.optical_depths,
+                             quiet=True)
             old_imgs = store.optical_depths.value
         # Check that reference_frame arguments of the wrong shape are rejected
         with self.assertRaisesRegex(Exception, "does not match shape"):
@@ -675,13 +677,13 @@ class OldXanesFramesetTest(XanespyTestCase):
                                        reference_frame=0, plot_results=False)
         # Perform an alignment but don't commit to disk
         self.frameset.align_frames(commit=False, reference_frame=(0, 0),
-                                   plot_results=False)
+                                   plot_results=False, quiet=True)
         # Check that the translations weren't applied yet
         with self.frameset.store() as store:
             hasnotchanged = np.all(np.equal(old_imgs, store.optical_depths.value))
         self.assertTrue(hasnotchanged)
         # Apply the translations
-        self.frameset.apply_transformations(crop=True, commit=True)
+        self.frameset.apply_transformations(crop=True, commit=True, quiet=True)
         with self.frameset.store() as store:
             new_shape = store.optical_depths.shape
         # Test for inequality by checking shapes
@@ -726,7 +728,7 @@ class OldXanesFramesetTest(XanespyTestCase):
             cumulative
         )
         # Check that transformations are reset after being applied
-        self.frameset.apply_transformations(commit=True, crop=True)
+        self.frameset.apply_transformations(commit=True, crop=True, quiet=True)
         self.assertEqual(self.frameset._transformations, None)
         # # Check that cropping was successfully applied
         with self.frameset.store() as store:

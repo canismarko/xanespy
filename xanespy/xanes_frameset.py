@@ -250,7 +250,7 @@ class XanesFrameset():
             store.fork_data_group(dest=dest, src=src)
         self.data_name = dest
     
-    def apply_transformations(self, crop=True, commit=True):
+    def apply_transformations(self, crop=True, commit=True, quiet=False):
         """Take any transformations staged with `self.stage_transformations()`
         and apply them. If commit is truthy, the staged
         transformations are reset.
@@ -271,6 +271,8 @@ class XanesFrameset():
           optical depths, intensities and references, and the staged
           transformations will be cleared. Otherwise, only the
           optical_depth data will be transformed and returned.
+        quiet : bool, optional
+          Whether to suppress the progress bar, etc.
         
         """
         # First, see if there's anything to do
@@ -298,7 +300,7 @@ class XanesFrameset():
                     # Apply transformation
                     xm.transform_images(data=store.get_dataset(frames_name),
                                         transformations=self._transformations,
-                                        out=out)
+                                        out=out, quiet=quiet)
                 # Calculate and apply cropping bounds for the image stack
                 if crop:
                     tx = self._transformations[..., 0, 2]
@@ -382,7 +384,8 @@ class XanesFrameset():
                      passes=1,
                      commit=True,
                      component="modulus",
-                     plot_results=True):
+                     plot_results=True,
+                     quiet=False):
         """Use cross correlation algorithm to line up the frames. All frames
         will have their sample position set to (0, 0) since we don't
         know which one is the real position. This operation will
@@ -422,6 +425,8 @@ class XanesFrameset():
           'phase', 'imag' or 'real'.
         plot_results : If truthy (default), plot the root-mean-square of the
           translation distance for each pass.
+        quiet : bool, optional
+          Whether to suppress the progress bar, etc.
         
         """
         logstart = time()
@@ -448,7 +453,7 @@ class XanesFrameset():
         for pass_ in range(0, passes):
             log.debug("Starting alignment pass %d of %d", pass_, passes)
             # Get data from store
-            frames = self.apply_transformations(crop=True, commit=False)
+            frames = self.apply_transformations(crop=True, commit=False, quiet=quiet)
             frames = get_component(frames, component)
             # Calculate axes to use for proper reference image
             if reference_frame == 'mean':
@@ -476,13 +481,14 @@ class XanesFrameset():
             if method == "cross_correlation":
                 translations = xm.register_correlations(frames=frames,
                                                         reference=ref_image,
-                                                        desc=desc)
+                                                        desc=desc, quiet=quiet)
             elif method == "template_match":
                 template_ = get_component(template, component)
                 translations = xm.register_template(frames=frames,
                                                     reference=ref_image,
                                                     template=template_,
-                                                    desc=desc)
+                                                    desc=desc,
+                                                    quiet=quiet)
             # Add the root-mean-square to the list of distances translated
             rms = np.sqrt((translations**2).sum(axis=-1).mean())
             log.info("RMS of translations for pass %d = %f", pass_, rms)
@@ -918,7 +924,7 @@ class XanesFrameset():
         return results
     
     def fit_spectra(self, func, p0, pnames=None, name=None, nonnegative=True, component='real',
-                    representation='optical_depths', dtype=None):
+                    representation='optical_depths', dtype=None, quiet=False):
         """Fit a given function to the spectra at each pixel.
         
         The fit parameters will be saved in the HDF dataset
@@ -958,6 +964,8 @@ class XanesFrameset():
           Specify a datatype to convert all values to. This helps
           avoid fit failure due to precision errors. If omitted, the
           function will also check for ``func.dtype``.
+        quiet : bool, optional
+          Whether to suppress the progress bar, etc.
         
         Returns
         -------
@@ -1001,7 +1009,8 @@ class XanesFrameset():
             assert not np.any(np.isnan(diff))
             return diff
         # Execute fitting for each spectrum
-        indices = xm.iter_indices(spectra, desc="Fitting spectra", leftover_dims=1)
+        indices = xm.iter_indices(spectra, desc="Fitting spectra",
+                                  leftover_dims=1, quiet=quiet)
         def fit_sources(idx):
             spectrum = spectra[idx]
             guess = tuple(p0[idx])

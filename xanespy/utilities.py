@@ -232,7 +232,7 @@ def prog(iterable=None, leave=None, dynamic_ncols=True, *args, **kwargs):
       Positional arguments passed directly to ``tqdm`` or ``tqdm_notebook``.
     kwargs
       Keyword arguments passed directly to ``tqdm`` or ``tqdm_notebook``.
-
+    
     """
     if not HAS_TQDM:
         # No progress bar will be displayed

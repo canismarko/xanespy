@@ -262,7 +262,8 @@ class APSFileImportTest(TestCase):
     
     def test_imported_hdf(self):
         import_aps_8BM_xanes_file(self.txrm_file,
-                                  ref_filename=self.txrm_ref, hdf_filename=self.hdf)
+                                  ref_filename=self.txrm_ref, hdf_filename=self.hdf,
+                                  quiet=True)
         # Check that the file was created
         self.assertTrue(os.path.exists(self.hdf))
         with h5py.File(self.hdf, mode='r') as f:
@@ -315,7 +316,9 @@ class APSDirImportTest(TestCase):
         try:
             with self.assertRaisesRegex(exceptions.DataNotFoundError,
                                         '/temp-empty-dir'):
-                import_aps_8BM_xanes_dir(EMPTY_DIR, hdf_filename="test-file.hdf")
+                import_aps_8BM_xanes_dir(EMPTY_DIR,
+                                         hdf_filename="test-file.hdf",
+                                         quiet=True)
         finally:
             # Clean up by deleting any temporary files/directories
             if os.path.exists('test-file.hdf'):
@@ -389,7 +392,7 @@ class APSDirImportTest(TestCase):
 
     def test_file_metadata(self):
         filenames = [os.path.join(APS_DIR, 'fov03_xanessoc01_8353_0eV.xrm')]
-        df = read_metadata(filenames=filenames, flavor='aps')
+        df = read_metadata(filenames=filenames, flavor='aps', quiet=True)
         self.assertIsInstance(df, pd.DataFrame)
         row = df.iloc[0]
         self.assertIn('shape', row.keys())
@@ -417,8 +420,11 @@ class SSRLImportTest(TestCase):
     
     def test_imported_hdf(self):
         with warnings.catch_warnings() as w:
-            warnings.simplefilter('ignore', RuntimeWarning, 103)
-            import_ssrl_xanes_dir(SSRL_DIR, hdf_filename=self.hdf)
+            # warnings.simplefilter('ignore', RuntimeWarning, 104)
+            warnings.filterwarnings('ignore',
+                                    message='Ignoring invalid file .*',
+                                    category=RuntimeWarning)
+            import_ssrl_xanes_dir(SSRL_DIR, hdf_filename=self.hdf, quiet=True)
         # Check that the file was created
         self.assertTrue(os.path.exists(self.hdf))
         with h5py.File(self.hdf, mode='r') as f:
@@ -517,9 +523,10 @@ class SSRLImportTest(TestCase):
         # Check that the importer warns the user of the bad file
         with warnings.catch_warnings(record=True) as ws:
             warnings.simplefilter('always')
-            result = read_metadata(filenames, flavor='ssrl')
-            self.assertEqual(len(ws), 1)
-            [self.assertEqual(RuntimeWarning, w.category) for w in ws]
+            result = read_metadata(filenames, flavor='ssrl', quiet=True)
+            self.assertTrue(len(ws) > 0)
+            self.assertTrue(any([w.category == RuntimeWarning for w in ws]))
+            self.assertTrue(any(['Ignoring invalid file' in str(w.message) for w in ws]))
         # Check that the bad entries was excluded from the processed list
         self.assertEqual(len(result), 1)
 

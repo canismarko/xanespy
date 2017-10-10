@@ -46,21 +46,33 @@ log = logging.getLogger(__name__)
 
 
 # Helpers for parallelizable code
-def iter_indices(data, leftover_dims=1, desc=None):
+def iter_indices(data, leftover_dims=1, desc=None, quiet=False):
     """Accept an array of frames, indices, etc. and generate slices for
-    each frame. Assumes the last two dimensions of `data` are rows and
+    each frame.
+    
+    Assumes the last two dimensions of `data` are rows and
     columns. All other dimensions will be iterated over.
     
-    - leftover_dims : Integer describing which dimensions should not
-      be iterated over. Eg. if data is 3D array and leftover_dims == 1,
-      only first two dimenions will be iterated.
+    Parameters
+    ----------
+    data : np.ndarray
+      Data to iterate over.
+    leftover_dims : int, optional
+      Integer describing which dimensions should not be iterated
+      over. Eg. if data is 3D array and leftover_dims == 1, only first
+      two dimenions will be iterated.
+    desc : str, optional
+      String to put in the progress bar.
+    quiet : bool, optional
+      Whether to suppress the progress bar, etc.
     
-    - desc : String to put in the progress bar.
     """
     fs_shape = np.asarray(data.shape[:-leftover_dims])
     ranges = [range(0, s) for s in fs_shape]
     indices = product(*ranges)
-    return prog(indices, desc=desc, total=np.product(fs_shape))
+    if not quiet:
+        indices = prog(indices, desc=desc, total=np.product(fs_shape))
+    return indices
 
 
 def apply_mosaic_reference(intensity, reference):
@@ -88,7 +100,7 @@ def apply_mosaic_reference(intensity, reference):
     return od
 
 
-def apply_internal_reference(intensities, out=None):
+def apply_internal_reference(intensities, out=None, quiet=False):
     """Apply a reference correction to complex data to convert intensities
     into refractive index. :math:`I_0` is determined by separating the pixels
     into background and foreground using Otsu's method.
@@ -153,7 +165,7 @@ def apply_internal_reference(intensities, out=None):
         log.debug("Applied internal reference for frame %s", idx)
     # Call the actual function for each frame
     iter_frames = iter_indices(intensities, leftover_dims=2,
-                               desc="Apply reference")
+                               desc="Apply reference", quiet=quiet)
     foreach(apply_ref, iter_frames)
     log.info("Internal reference applied in %f seconds",
              (time() - logstart))
@@ -201,16 +213,15 @@ def extract_signals_nmf(spectra, n_components, nmf_kwargs=None, mask=None):
     return signals, weights
 
 
-def apply_references(intensities, references, out=None):
-
+def apply_references(intensities, references, out=None, quiet=False):
     """Apply a reference correction to convert intensity values to optical
     depth.
-
+    
     The formula :math:`-ln\\frac{intensities}{references}` is used to
     calculate the new values. Arrays ``intensities``, ``references``
     and ``out`` must all have the same shape where the last two
     dimensions are image rows and columns.
-
+    
     Parameters
     ----------
     intensities : np.ndarray
@@ -220,7 +231,8 @@ def apply_references(intensities, references, out=None):
       intensities.
     out : np.ndarray, optional
       Array to receive the results.
-
+    quiet : bool, optional
+      Whether to suppress progress bar, etc.
     """
     logstart = time()
     # Create an empty array to hold the results
@@ -236,7 +248,8 @@ def apply_references(intensities, references, out=None):
     def calc(idx):
         out_idx = np.unravel_index(idx, out_shape)
         out[out_idx] = -np.log(np.divide(Is[idx], refs[idx]))
-    prog_iter = prog(range(0, Is.shape[0]), desc="Calc'ing OD")
+    prog_iter = prog(range(0, Is.shape[0]), desc="Calc'ing OD",
+                     disable=quiet)
     foreach(calc, prog_iter)
     return out
 
@@ -631,7 +644,7 @@ def fit_kedge_mpi(spectra, energies, p0):
 
 
 
-def direct_whitelines(spectra, energies, edge):
+def direct_whitelines(spectra, energies, edge, quiet=False):
     """Takes an array of X-ray optical_depth spectra and calculates the
     positions of maximum intensities over the near-edge region.
 
@@ -646,6 +659,8 @@ def direct_whitelines(spectra, energies, edge):
     edge
       An XAS Edge object that describes the absorbtion edge in
       question.
+    quiet : bool, optional
+      Whether to suppress the progress bar, etc.
     
     Returns
     -------
@@ -671,13 +686,14 @@ def direct_whitelines(spectra, energies, edge):
         whiteline_idx = np.argmax(subspectra[frame_idx])
         whiteline = Es[frame_idx][whiteline_idx]
         out[frame_idx] = whiteline
-    indices = iter_indices(spectra, desc="Finding maxima", leftover_dims=1)
+    indices = iter_indices(spectra, desc="Finding maxima",
+                           leftover_dims=1, quiet=quiet)
     foreach(get_whiteline, indices)
     # Return results
     return out
 
 
-def transform_images(data, transformations, out=None, mode='median'):
+def transform_images(data, transformations, out=None, mode='median', quiet=False):
     """Takes image data and applies the given translation matrices.
 
     It is assumed that the first dimension of `data` is the same as
@@ -703,13 +719,15 @@ def transform_images(data, transformations, out=None, mode='median'):
       Describes how to deal with edges. See scikit-image documentation
       for options. Special value "median" (default), takes the median
       pixel intensity of that frame and uses it as the constant value.
-
+    quiet : bool, optional
+      Whether to suppress the progress bar, etc.
+    
     Returns
     -------
     out : np.ndarray
       A new array with similar dimensions to `data` but with
       transformations applied and converted to float datatype.
-
+    
     """
     logstart = time()
     # Create a new array if one is not given
@@ -765,7 +783,7 @@ def transform_images(data, transformations, out=None, mode='median'):
             out[idx] = do_transform(frame, transformation)
     # Loop through the images and apply each transformation
     log.debug("Starting transformations")
-    indices = iter_indices(data, desc='Transforming', leftover_dims=2)
+    indices = iter_indices(data, desc='Transforming', leftover_dims=2, quiet=quiet)
     foreach(apply_transform, indices)
     log.debug("Finished transformations in %d sec", time() - logstart)
     return out
@@ -852,13 +870,13 @@ def transformation_matrices(translations=None, rotations=None, scales=None, cent
 
 
 def register_correlations(frames, reference, upsample_factor=10,
-                          desc="Registering"):
+                          desc="Registering", quiet=False):
     """Calculate the relative translation between the reference image and
     a series of frames.
-
+    
     This uses phase correlation through scikit-image's
     `register_translation` function.
-
+    
     Parameters
     ----------
     frames : np.ndarray
@@ -870,6 +888,8 @@ def register_correlations(frames, reference, upsample_factor=10,
       Factor controls subpixel registration via scikit-image.
     desc : str, optional
       Description for putting in the progress bar.
+    quiet : bool, optional
+      Whether to suppress the progress bar, etc.
 
     Returns
     -------
@@ -890,17 +910,17 @@ def register_correlations(frames, reference, upsample_factor=10,
         log.debug("Translation for frame %s = %s", str(idx), str(shift))
         # Convert (row, col) to (x, y)
         translations[idx] = (shift[1], shift[0])
-    indices = iter_indices(frames, desc=desc, leftover_dims=2)
+    indices = iter_indices(frames, desc=desc, leftover_dims=2, quiet=quiet)
     foreach(get_translation, indices)
     # Negative in order to properly register with transform_images method
     translations = -translations
     return translations
 
 
-def register_template(frames, reference, template, desc="Registering"):
+def register_template(frames, reference, template, desc="Registering", quiet=False):
     """Calculate the relative translation between the reference image and
     a series of frames.
-
+    
     This uses template cross correlation through scikit-image's
     `match_template` function.
     
@@ -908,9 +928,9 @@ def register_template(frames, reference, template, desc="Registering"):
     cases but sometimes results in unreasonable results; in those
     cases, this method can be more reliable to achieve a first
     approximation.
-
-    Arguments
-    ---------
+    
+    Parameters
+    ----------
     frames : np.ndarray
       Array where the last two dimensions are (column, row) of images
       to be registered.
@@ -921,13 +941,15 @@ def register_template(frames, reference, template, desc="Registering"):
       identified in each frame and used for alignment.
     desc : str, optional
       Description for putting in the progress bar.
-
+    quiet : bool, optional
+      Whether to suppress the progress bar, etc.
+    
     Returns
     -------
     translations : np.ndarray
       Array with same dimensions as 0-th axis of `frames` containing
       (x, y) translations for each frame.
-
+    
     """
     t_shape = (*frames.shape[:-2], 2)
     translations = np.empty(shape=t_shape, dtype=np.float)
@@ -942,7 +964,7 @@ def register_template(frames, reference, template, desc="Registering"):
         shift = ref_center - np.array(center)
         # Convert (row, col) to (x, y)
         translations[idx] = (shift[1], shift[0])
-    indices = iter_indices(frames, desc=desc, leftover_dims=2)
+    indices = iter_indices(frames, desc=desc, leftover_dims=2, quiet=quiet)
     foreach(get_translation, indices)
     # Negative in order to properly register with transform_images method
     translations = -translations

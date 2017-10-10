@@ -129,7 +129,8 @@ class XanesMathTest(unittest.TestCase):
             [2, 2, 2],
         ])
         # Do the actual registration
-        results = register_template(frames, reference=frame0, template=template)
+        results = register_template(frames, reference=frame0,
+                                    template=template, quiet=True)
         # Compare results
         expected = np.array([[0, 0], [1, 1]])
         np.testing.assert_equal(results, expected)
@@ -168,7 +169,7 @@ class XanesMathTest(unittest.TestCase):
             [1., 0.5, 0.5,  0.5, 1.],
             [1., 1.,  1.,   1.,  1.],
         ]], dtype='float64')
-        result = apply_internal_reference(d)
+        result = apply_internal_reference(d, quiet=True)
         expected = np.array([[
             [0., 0.,  0.,   0.,  0.],
             [0., 0.7, 0.7,  0.7, 0.],
@@ -195,7 +196,7 @@ class XanesMathTest(unittest.TestCase):
             [1/4, 1/4, 1/4, 1/4, 1/4,],
         ]])
         in_data = in_modulus * (np.cos(in_phase) + j * np.sin(in_phase))
-        result = apply_internal_reference(in_data)
+        result = apply_internal_reference(in_data, quiet=True)
         OD_expected = np.array([[
             [0., 0.,  0.,   0.,  0.],
             [0., 0.7, 0.7,  0.7, 0.],
@@ -240,10 +241,10 @@ class XanesMathTest(unittest.TestCase):
     def test_iter_indices(self):
         """Check that frame_indices method returns the right slices."""
         indata = np.zeros(shape=(3, 13, 256, 256))
-        indices = iter_indices(indata, leftover_dims=1)
+        indices = iter_indices(indata, leftover_dims=1, quiet=True)
         self.assertEqual(len(list(indices)), 3*13*256)
         # Test with two leftover dimensions
-        indices = iter_indices(indata, leftover_dims=2)
+        indices = iter_indices(indata, leftover_dims=2, quiet=True)
         self.assertEqual(len(list(indices)), 3*13)
     
     def test_guess_kedge_params(self):
@@ -279,7 +280,7 @@ class XanesMathTest(unittest.TestCase):
         refs = refs.reshape(1, 2, 2, 2)
         # out = np.zeros_like(Is)
         # Apply actual reference function
-        As = apply_references(Is, refs)
+        As = apply_references(Is, refs, quiet=True)
         self.assertEqual(As.shape, Is.shape)
         calculated = -np.log(Is/refs)
         self.assertTrue(np.array_equal(As, calculated))
@@ -294,7 +295,7 @@ class XanesMathTest(unittest.TestCase):
         intensities = np.array([[spectrum['Absorbance'].values]])
         results = direct_whitelines(spectra=intensities,
                                     energies=np.array([spectrum.index]),
-                                    edge=edges.k_edges['Ni_NCA'])
+                                    edge=edges.k_edges['Ni_NCA'], quiet=True)
         self.assertEqual(results, [8350.])
     
     def test_fit_kedge(self):
@@ -376,12 +377,12 @@ class XanesMathTest(unittest.TestCase):
         Ts = np.identity(3)
         # Check that datatypes are handled properly
         Ts = np.broadcast_to(Ts, shape=(*data.shape[0:2], 3, 3))
-        ret = transform_images(data, transformations=Ts)
+        ret = transform_images(data, transformations=Ts, quiet=True)
         self.assertEqual(ret.dtype, np.float)
         # Test complex images
         coins = self.coins()
         data_imag = coins + coins * complex(0, 1)
-        ret = transform_images(data_imag, transformations=Ts)
+        ret = transform_images(data_imag, transformations=Ts, quiet=True)
         self.assertEqual(ret.dtype, np.complex)
 
     # def test_extract_signals(self):
