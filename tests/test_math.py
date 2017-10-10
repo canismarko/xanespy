@@ -75,6 +75,7 @@ class XanesMathTest(unittest.TestCase):
         coins = (coins * S.reshape(3, 61,1,1))
         # Add some noise otherwise some functions div by zero.
         coins = coins * (0.975 + np.random.rand(*coins.shape)/20)
+        coins = coins.astype(np.int32)
         return coins
     
     def test_predict_edge(self):
@@ -334,7 +335,6 @@ class XanesMathTest(unittest.TestCase):
         result = particle_labels(frames=coins, energies=self.K_Es, edge=self.KEdge())
         expected_shape = coins.shape[-2:]
         self.assertEqual(result.shape, expected_shape)
-        self.assertEqual(result.dtype, np.int32)
     
     def test_edge_jump(self):
         """Check image masking based on the difference between the pre-edge

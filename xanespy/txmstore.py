@@ -40,11 +40,15 @@ class TXMDataset():
       The dataset name in the HDF file.
     context : str, optional
       Type of dataset this is: frameset, map, metadata, etc.
+    dtype : np.dtype, optional
+      The data-type to use when saving new data to disk. Using lower
+      precision datatypes can save significant disk space.
     
     """
-    def __init__(self, name, context=None):
+    def __init__(self, name, context=None, dtype=None):
         self.name = name
         self.context = context
+        self.dtype = dtype
     
     def __get__(self, store, type=None):
         dataset = store.get_dataset(self.name)
@@ -59,7 +63,8 @@ class TXMDataset():
         return dataset
     
     def __set__(self, store, value):
-        store.replace_dataset(self.name, value, context=self.context)
+        store.replace_dataset(name=self.name, data=value,
+                              context=self.context, dtype=self.dtype)
     
     def __delete__(self, store):
         del store.data_group()[self.name]
@@ -122,7 +127,7 @@ class TXMStore():
                  parent_name: str, data_name=None,
                  mode='r'):
         self.hdf_filename = hdf_filename
-        self._file = h5py.File(self.hdf_filename, mode=mode)
+        self._file = self.open_file(self.hdf_filename, mode=mode)
         self.parent_name = parent_name
         self.mode = mode
         # Use the latest_data_name if one isn't provided
@@ -135,6 +140,9 @@ class TXMStore():
     
     def __exit__(self, type, value, traceback):
         self.close()
+
+    def open_file(self, filename, mode):
+        return h5py.File(filename, mode=mode)
     
     def close(self):
         self._file.close()

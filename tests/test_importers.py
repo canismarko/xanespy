@@ -327,6 +327,16 @@ class APSDirImportTest(TestCase):
         with h5py.File(self.hdf, mode='r') as f:
             self.assertIn('references', f['fov03/imported'].keys())
     
+    def test_groupname_kwarg(self):
+        """The groupname keyword argument needs some special attention."""
+        with self.assertRaisesRegex(exceptions.CreateGroupError, 'Invalid groupname'):
+            import_aps_8BM_xanes_dir(APS_DIR, hdf_filename=self.hdf,
+                                     quiet=True, groupname="Wawa")
+        # Now does it work with the {} inserted
+        import_aps_8BM_xanes_dir(APS_DIR, hdf_filename=self.hdf,
+                                 quiet=True, groupname="Wawa{}")
+        
+    
     def test_imported_hdf(self):
         import_aps_8BM_xanes_dir(APS_DIR, hdf_filename=self.hdf, quiet=True)
         # Check that the file was created

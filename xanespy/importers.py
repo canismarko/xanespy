@@ -699,7 +699,10 @@ def import_aps_8BM_xanes_file(filename, ref_filename, hdf_filename, groupname=No
       imported data.
     groupname : str, optional
       The name for the top-level HDF group. If omitted, a group name
-      will be generated from the ``filename`` parameter.
+      will be generated from the ``filename`` parameter. '{}' can be
+      included and will receive the position name using the
+      ``format()`` method. The '{}' is required if more than one field
+      of view exists and a groupname is given.
     
     """
     log.debug("Starting import of APS 8-BM frameset.")
@@ -757,9 +760,10 @@ def import_aps_8BM_xanes_file(filename, ref_filename, hdf_filename, groupname=No
     h5file.close()
 
 
-def import_aps_8BM_xanes_dir(directory, hdf_filename, quiet=False):
+def import_aps_8BM_xanes_dir(directory, hdf_filename, quiet=False, groupname=None):
     imp_group = import_frameset(directory=directory, flavor="aps",
-                                hdf_filename=hdf_filename, return_val="group")
+                                hdf_filename=hdf_filename, return_val="group",
+                                groupname=groupname)
     # Set some beamline specific metadata
     imp_group.parent.attrs['technique'] = 'Full-field TXM'
     imp_group.parent.attrs['beamline'] = 'APS 8-BM-B'
@@ -792,7 +796,10 @@ def import_frameset(directory, flavor, hdf_filename, groupname=None, return_val=
       with the same name.
     groupname : str, optional
       What to use as the name for HDF group storing the data. If
-      omitted, guess the name from the directory path.
+      omitted, guess the name from the directory path.  '{}' can be
+      included and will receive the position name using the
+      ``format()`` method. The '{}' is required if more than one field
+      of view exists and a groupname is given.
     return_val : str, optional
       Request a specific return value.
       - None: No return value (default)
@@ -824,15 +831,22 @@ def import_frameset(directory, flavor, hdf_filename, groupname=None, return_val=
     shapes = metadata['shape'].unique()
     assert len(shapes) == 1
     num_samples = len(reference_files['timestep_name'].unique())
+    num_positions = len(sample_files['position_name'].unique())
     pos_name = sample_files['position_name'].unique()[0]
     num_energies = len(reference_files['energy'].unique())
     ds_shape = (num_samples, num_energies, *shapes[0])
     chunk_shape = (1, 1, *shapes[0])
+    # Sanity check that we have a usable groupname that is format()-able
+    groupname_is_valid = (num_positions == 1) or (groupname is None) or ("{}" in groupname)
+    if not groupname_is_valid:
+        msg = 'Invalid groupname "{}" for {} position names.'
+        msg = msg.format(groupname, num_positions)
+        msg += ' Please include a "{}" to receive the position name.'
+        raise exceptions.CreateGroupError(msg)
     # Import reference frames
     assert len(reference_files.groupby('position_name')) == 1
     ref_groups = reference_files.groupby('timestep_name')
     imp_name = pos_name if groupname is None else groupname
-    log.info('Saving imported data to group "%s"', imp_name)
     imp_group = h5file.require_group("{}/imported".format(imp_name))
     ref_ds = imp_group.require_dataset('references', shape=ds_shape,
                                        maxshape=ds_shape,
@@ -861,6 +875,8 @@ def import_frameset(directory, flavor, hdf_filename, groupname=None, return_val=
         ref_ds[ts_idx] = np.array(Is)
     pos_groups = enumerate(sample_files.groupby('position_name'))
     for pos_idx, (pos_name, pos_df) in pos_groups:
+        imp_name = pos_name if groupname is None else groupname.format(pos_name)
+        log.info('Saving imported data to group "%s"', imp_name)
         logstart = time()
         # Create HDF5 datasets to hold the data
         Importer = format_classes[os.path.splitext(pos_df.index[0])[-1]]

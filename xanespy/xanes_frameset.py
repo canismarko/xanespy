@@ -249,7 +249,7 @@ class XanesFrameset():
         with self.store(mode='r+') as store:
             store.fork_data_group(dest=dest, src=src)
         self.data_name = dest
-
+    
     def apply_transformations(self, crop=True, commit=True):
         """Take any transformations staged with `self.stage_transformations()`
         and apply them. If commit is truthy, the staged
@@ -710,54 +710,6 @@ class XanesFrameset():
         spectra = np.swapaxes(spectra, 0, 1)
         # And we're done
         return spectra
-    
-    def fitted_spectrum(self, energies=None, pixel=None, index=0,
-                        representation="fit_parameters"):
-        """Take the previously calculated fitting parameters from
-        `fit_spectra` and predict the XANES spectrum.
-        
-        Parameters
-        ----------
-        energies : np.ndarray, optional
-          The input values to give to the predictor function. If
-          omitted, a np.linspace will be created covering the range of
-          energies.
-        pixel : 2-tuple, optional.
-          The specific pixel to use for getting fit parameters. If
-          omitted, the average for each parameter calculated.
-        index : int, optional
-          The timeindex to use for retrieving fit parameters.
-        representation : str, optional
-          Which dataset name to use for accessing the fit
-          parameters. The default value ("fit_parameters") is the one
-          used by ``fit_spectra`` to save the results.
-        
-        Returns
-        -------
-        fit : pd.Series
-          The predicted spectrum based on the previously calculated
-          fit parameters.
-        """
-        # Get a default energy range in necessary
-        if energies is None:
-            Es = self.energies()
-            Es = np.linspace(np.min(Es), np.max(Es), num=500)
-        else:
-            Es = energies
-        # Get the fitting parameters (previously calculated)
-        with self.store() as store:
-            params = store.get_dataset(representation)[index]
-        # Filter to the individual pixel if necessary
-        if pixel is None:
-            mean_axes = tuple(range(params.ndim-1))
-            params = np.mean(params, axis=mean_axes)
-        else:
-            params = params[pixel]
-        # Do the predicting
-        predicted_As = xm.predict_edge(Es, *params)
-        # Create the pandas series
-        fit = pd.Series(predicted_As, index=Es)
-        return fit
     
     def fitting_param_names(self, representation="fit_parameters"):
         """Get the human-readable names of the fit parameters."""
