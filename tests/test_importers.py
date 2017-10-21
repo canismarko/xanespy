@@ -42,14 +42,109 @@ from xanespy.importers import (magnification_correction,
                                import_nanosurveyor_frameset,
                                import_aps_8BM_xanes_dir,
                                import_aps_8BM_xanes_file,
+                               import_aps32idc_xanes_files,
+                               import_aps32idc_xanes_file,
                                read_metadata)
 
 
 TEST_DIR = os.path.dirname(__file__)
 SSRL_DIR = os.path.join(TEST_DIR, 'txm-data-ssrl')
 APS_DIR = os.path.join(TEST_DIR, 'txm-data-aps')
+APS32_DIR = os.path.join(TEST_DIR, 'txm-data-32-idc')
 PTYCHO_DIR = os.path.join(TEST_DIR, 'ptycho-data-als/NS_160406074')
 SXSTM_DIR = os.path.join(TEST_DIR, "sxstm-data-4idc/")
+
+
+class APS32IDCImportTest(TestCase):
+    """Check that the program can import a collection of SSRL frames from
+    a directory."""
+    src_data = os.path.join(APS32_DIR, 'nca_32idc_xanes.h5')
+    
+    def setUp(self):
+        self.hdf = os.path.join(APS32_DIR, 'testdata.h5')
+        if os.path.exists(self.hdf):
+            os.remove(self.hdf)
+    
+    def tearDown(self):
+        if os.path.exists(self.hdf):
+            os.remove(self.hdf)
+    
+    def test_imported_hdf(self):
+        # Run the import function
+        import_aps32idc_xanes_file(self.src_data, hdf_filename=self.hdf, hdf_groupname='experiment1')
+        # Check that the file was created
+        self.assertTrue(os.path.exists(self.hdf))
+        with h5py.File(self.hdf, mode='r') as f:
+            self.assertNotIn('experiment2', list(f.keys()))
+            parent_group = f['experiment1']
+            data_group = f['experiment1/imported']
+            # Check metadata about beamline
+            self.assertEqual(parent_group.attrs['technique'], 'Full-field TXM')
+            self.assertEqual(parent_group.attrs['xanespy_version'], CURRENT_VERSION)
+            self.assertEqual(parent_group.attrs['beamline'], "APS 32-ID-C")
+            self.assertEqual(parent_group.attrs['original_directory'], os.path.dirname(self.src_data))
+            # Check h5 data structure
+            keys = list(data_group.keys())
+            self.assertIn('intensities', keys)
+            self.assertTrue(np.any(data_group['intensities']))
+            self.assertEqual(data_group['intensities'].shape, (1, 3, 512, 612))
+            self.assertIn('flat_fields', keys)
+            self.assertTrue(np.any(data_group['flat_fields']))
+            self.assertIn('dark_fields', keys)
+            self.assertEqual(data_group['dark_fields'].shape, (1, 2, 512, 612))
+            self.assertTrue(np.any(data_group['dark_fields']))
+            self.assertIn('optical_depths', keys)
+            self.assertTrue(np.any(data_group['optical_depths']))
+            self.assertEqual(data_group['pixel_sizes'].attrs['unit'], 'µm')
+            self.assertEqual(data_group['pixel_sizes'].shape, (1, 3))
+            self.assertTrue(np.any(data_group['pixel_sizes'].value > 0))
+            self.assertEqual(data_group['energies'].shape, (1, 3))
+            expected_Es = np.array([[8.34, 8.35, 8.36]])
+            np.testing.assert_array_almost_equal(data_group['energies'].value, expected_Es, decimal=3)
+            self.assertIn('timestamps', keys)
+            expected_timestamp = np.empty(shape=(1, 3, 2), dtype="S32")
+            # expected_timestamp = np.array([
+            #     [[b'2016-10-07 18:24:42', b'2016-10-07 '],
+            #      [b'2016-10-07 18:24:42', b'2016-10-07 22:51:25']],
+            #     [[b'2016-10-07 18:24:42', b'2016-10-07 03:19:58'],
+            #      [b'2016-10-07 18:24:42', b'2016-10-07 04:21:56']],
+            # ], dtype="S32")
+            expected_timestamp[...,0] = b'2016-10-07 18:24:42'
+            expected_timestamp[...,1] = b'2016-10-07 18:37:42'
+            np.testing.assert_equal(data_group['timestamps'].value,
+                                    expected_timestamp)
+            self.assertIn('filenames', keys)
+            self.assertEqual(data_group['filenames'].shape, (1, 3))
+            self.assertEqual(data_group['filenames'][0, 0], self.src_data.encode('ascii'))
+            # self.assertIn('original_positions', keys)
+    
+    def test_import_multiple_hdfs(self):
+        import_aps32idc_xanes_files([self.src_data, self.src_data],
+                                    hdf_filename=self.hdf, hdf_groupname='experiment1')
+        with h5py.File(self.hdf, mode='r') as f:
+            g = f['/experiment1/imported']
+            self.assertEqual(g['intensities'].shape, (2, 3, 512, 612))
+            self.assertTrue(np.any(g['intensities'][0]))
+            self.assertTrue(np.any(g['intensities'][1]))
+            # They should be equal since we have import the same data twice
+            np.testing.assert_equal(g['intensities'][0], g['intensities'][1])
+    
+    def test_import_second_hdf(self):
+        # Run the import function
+        import_aps32idc_xanes_file(self.src_data,
+                                   hdf_filename=self.hdf, hdf_groupname='experiment1',
+                                   total_timesteps=2)
+        import_aps32idc_xanes_file(self.src_data,
+                                   hdf_filename=self.hdf, hdf_groupname='experiment1',
+                                   total_timesteps=2, timestep=1, append=True)
+        with h5py.File(self.hdf, mode='r') as f:
+            g = f['/experiment1/imported']
+            self.assertEqual(g['intensities'].shape, (2, 3, 512, 612))
+            self.assertTrue(np.any(g['intensities'][0]))
+            self.assertTrue(np.any(g['intensities'][1]))
+            # They should be equal since we have import the same data twice
+            np.testing.assert_equal(g['intensities'][0], g['intensities'][1])
+
 
 
 class XradiaTest(TestCase):
@@ -248,7 +343,7 @@ class PtychographyImportTest(TestCase):
             np.testing.assert_array_equal(saved_files, sorted_files)
 
 
-class APSFileImportTest(TestCase):
+class APS8BMFileImportTest(TestCase):
     txrm_file = os.path.join(TEST_DIR, 'aps-8BM-sample.txrm')
     txrm_ref = os.path.join(TEST_DIR, 'aps-8BM-reference.txrm')
     def setUp(self):
@@ -296,7 +391,7 @@ class APSFileImportTest(TestCase):
             self.assertEqual(group['original_positions'].shape, (1, 3, 3))
 
 
-class APSDirImportTest(TestCase):
+class APS8BMDirImportTest(TestCase):
     """Check that the program can import a collection of SSRL frames from
     a directory."""
     def setUp(self):

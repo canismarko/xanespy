@@ -26,11 +26,19 @@ matching "test*.py"."""
 import unittest
 import os
 import sys
+import warnings
 
 
 if __name__ == '__main__':
     start_dir = os.path.dirname(__file__)
     tests = unittest.defaultTestLoader.discover(start_dir)
     runner = unittest.runner.TextTestRunner(buffer=False)
-    result = runner.run(tests)
+    with warnings.catch_warnings():
+        # Suppress chatty matplotlib warnings
+        warn_msg = "Matplotlib is building the font cache using fc-list"
+        warnings.filterwarnings(action='ignore', message=warn_msg, category=UserWarning)
+        warn_msg = "This call to matplotlib.use() has no effect"
+        warnings.filterwarnings(action='ignore', message=warn_msg, category=UserWarning)
+        # Run tests
+        result = runner.run(tests)
     sys.exit(not result.wasSuccessful())

@@ -24,12 +24,14 @@ from time import time
 from collections import namedtuple
 import warnings
 import logging
+import datetime as dt
 
 import pandas as pd
 from tqdm import tqdm
 import numpy as np
 from scipy.constants import physical_constants
 from scipy.ndimage.filters import median_filter
+import pytz
 
 from xradia import XRMFile, TXRMFile
 from utilities import prog
@@ -61,6 +63,125 @@ def _average_frames(*frames):
     new_frame = frames[0]
     new_frame.image_data = new_image
     return new_frame
+
+
+def import_aps32idc_xanes_files(filenames, hdf_filename, hdf_groupname):
+    """Import XANES data from a HDF5 file produced at APS beamline 32-ID-C.
+    
+    This is used for importing a full operando experiment at once.
+    
+    Parameters
+    ----------
+    filenames : str
+      List of paths to the HDF5 files containing the source data.
+    hdf_filename : str
+      The path to the HDF5 file that will receive the imported
+      data. Will be created if it doesn't exist.
+    hdf_groupname : str, optional
+      A description of the dataset that will be used to form the HDF
+      data group.
+    
+    """
+    append = False
+    for idx, filename in enumerate(filenames):
+        import_aps32idc_xanes_file(filename, hdf_filename, hdf_groupname,
+                                   timestep=idx, total_timesteps=len(filenames),
+                                   append=append)
+        append = True
+
+
+def import_aps32idc_xanes_file(filename, hdf_filename, hdf_groupname,
+                               timestep=0, total_timesteps=1, append=False):
+    """Import XANES data from a HDF5 file produced at APS beamline 32-ID-C.
+    
+    This is used for importing a single XANES dataset.
+    
+    Parameters
+    ----------
+    filename : str
+      The path to the HDF5 file containing the source data.
+    hdf_filename : str
+      The path to the HDF5 file that will receive the imported
+      data. Will be created if it doesn't exist.
+    hdf_groupname : str, optional
+      A description of the dataset that will be used to form the HDF
+      data group.
+    timestep : int, optional
+      Which timestep index to use for saving data.
+    total_timesteps : int, optional
+      How many timesteps to use for creating new datasteps. Only
+      meaningful if ``append`` is truthy.
+    append : bool, optional
+      If true, existing datasets will be saved and only the timestep
+      will be overwritten.
+    
+    """
+    # Open the source HDF file
+    src_file = h5py.File(filename, mode='r')
+    # Prepare the destination HDF file and create datasets if needed
+    log.info("Importing APS 32-ID-C file %s", filename)
+    with h5py.File(hdf_filename) as h5file:
+        # Prepare an HDF5 group with metadata for this experiment
+        if append:
+            parent_group = h5file[hdf_groupname]
+            data_group = parent_group['imported']
+        else:
+            # Check for existing HDF5 group
+            if hdf_groupname in h5file.keys():
+                log.warning("Overwriting old HDF group {}".format(hdf_groupname))
+                del h5file[hdf_groupname]
+            # Create new group
+            parent_group = h5file.create_group(hdf_groupname)
+            metadata = {
+                'technique': 'Full-field TXM',
+                'xanespy_version': CURRENT_VERSION,
+                'beamline': 'APS 32-ID-C',
+                'original_directory': os.path.dirname(filename),
+            }
+            parent_group.attrs.update(metadata)
+            # Prepare an HDF5 sub-group for this dataset
+            data_group = parent_group.create_group('imported')
+        src_data = src_file['/exchange/data']
+        src_flat = src_file['/exchange/data_white']
+        src_dark = src_file['/exchange/data_dark']
+        shape = (total_timesteps, *src_data.shape)
+        time_idx = timestep
+        data_group.require_dataset('intensities', shape=shape, dtype=src_data.dtype)
+        data_group.require_dataset('optical_depths', shape=shape, dtype='float32')
+        data_group.require_dataset('flat_fields', shape=shape, dtype=src_flat.dtype)
+        dark_shape = (total_timesteps, *src_dark.shape)
+        data_group.require_dataset('dark_fields', shape=dark_shape, dtype=src_dark.dtype)
+        # Create datasets for metadata
+        pixels_shape = (total_timesteps, src_data.shape[0])
+        data_group.require_dataset('pixel_sizes', shape=pixels_shape, dtype='float32')
+        data_group['pixel_sizes'][time_idx] = 1
+        data_group['pixel_sizes'].attrs['unit'] = 'µm'
+        data_group.require_dataset('energies', shape=shape[0:2], dtype='float32')
+        timestamp_shape = (*shape[0:2], 2)
+        data_group.require_dataset('timestamps', shape=timestamp_shape, dtype="S32")
+        data_group.require_dataset('filenames', shape=shape[0:2], dtype="S100")
+        # Import start and end dates
+        fmt = "%Y-%m-%dT%H:%M:%S%z"
+        end_str = bytes(src_file['/process/acquisition/end_date'][0][:24])
+        end_dt = dt.datetime.strptime(end_str.decode('ascii'), fmt)
+        end_dt = end_dt.astimezone(pytz.utc)
+        start_str = bytes(src_file['/process/acquisition/start_date'][0][:24])
+        start_dt = dt.datetime.strptime(start_str.decode('ascii'), fmt)
+        start_dt = start_dt.astimezone(pytz.utc)
+        out_fmt = "%Y-%m-%d %H:%M:%S"
+        data_group['timestamps'][time_idx,:,0] = bytes(start_dt.strftime(out_fmt), encoding='ascii')
+        data_group['timestamps'][time_idx,:,1] = bytes(end_dt.strftime(out_fmt), encoding='ascii')
+        # Import actual datasets
+        data_group['intensities'][time_idx] = src_file['/exchange/data']
+        data_group['flat_fields'][time_idx] = src_file['/exchange/data_white']
+        data_group['dark_fields'][time_idx] = src_file['/exchange/data_dark']
+        data_group['energies'][time_idx] = src_file['/exchange/energy']
+        data_group['filenames'][time_idx,:] = filename.encode('ascii')
+        # Convert the intensity data to optical depth
+        Is, ff, df = [data_group[key][time_idx] for key in ('intensities', 'flat_fields', 'dark_fields')]
+        dark = np.mean(data_group['dark_fields'][time_idx], axis=0)
+        ODs = -np.log((ff - dark) / (Is - dark))
+        data_group['optical_depths'][time_idx] = ODs
 
 
 def read_metadata(filenames, flavor, quiet=False):
