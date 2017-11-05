@@ -389,7 +389,7 @@ def plot_xanes_spectrum(spectrum, energies, norm=Normalize(),
             t1.set_color("C1")
     else:
         ax.scatter(energies, ys, c=colors, s=25)
-        ax.set_ylabel('Absorbance')
+        ax.set_ylabel('Optical Depth')
     ax.set_xlim(*xlim)
     ax.set_ylim(*ylim)
     ax.set_xlabel('Energy /eV')
