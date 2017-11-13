@@ -52,14 +52,6 @@ class TXMDataset():
     
     def __get__(self, store, type=None):
         dataset = store.get_dataset(self.name)
-        # If it's a map, then return the source frames instead
-        if dataset.attrs.get('context', None) == 'map' and self.context == 'frameset':
-            try:
-                dataset = store.get_dataset(dataset.attrs['frame_source'])
-            except KeyError:
-                msg = "Invalid frame source {} specified for group {}"
-                msg = msg.format(dataset.attrs.get('frame_source', 'None'), self.name)
-                raise exceptions.FrameSourceError(msg)
         return dataset
     
     def __set__(self, store, value):
@@ -121,6 +113,7 @@ class TXMStore():
     whiteline_fit = TXMDataset('whiteline_fit', context='map')
     cluster_fit = TXMDataset('cluster_fit', context='map')
     particle_labels = TXMDataset('particle_labels', context='map')
+    segments = TXMDataset('segments', context='map')
     linear_combination_residuals = TXMDataset('linear_combination_residuals', context='map')
     
     def __init__(self, hdf_filename: str,
@@ -304,15 +297,48 @@ class TXMStore():
     
     def has_dataset(self, name):
         """Return a boolean indicated whether this dataset exists in the HDF
-        file."""
+        file.
+        
+        """
         try:
             result = name in self.data_group().keys()
         except TypeError:
             result = False
         return result
+
+    def get_frames(self, name):
+        """Return the source frame data for the given data name.
+        
+        This is similar to ``get_dataset`` except that if the
+        data are a map, then get the frames that went into making it.
+        
+        Parameters
+        ----------
+        name : str
+          The dataset name for which to retrieve frames.
+        
+        Returns
+        -------
+        dataset : h5py.Dataset
+          The requested frameset. If the dataset is actually a map, as
+          determined by the "context" attribute, then the related
+          frame source attribute will be retrieved.
+        
+        """
+        dataset = self.get_dataset(name)
+        # If it's a map, then return the source frames instead
+        if dataset.attrs.get('context', None) == 'map':
+            try:
+                dataset = self.get_dataset(dataset.attrs['frame_source'])
+            except KeyError:
+                msg = "Invalid frame source {} specified for group {}"
+                msg = msg.format(dataset.attrs.get('frame_source', 'None'), self.name)
+                raise exceptions.FrameSourceError(msg)
+        return dataset
     
     @property
     def relative_positions(self):
+
         """(x, y, z) position values for each frame."""
         return self.data_group()['relative_positions']
     

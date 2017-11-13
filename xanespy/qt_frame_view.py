@@ -99,9 +99,9 @@ class QtFrameView(QtCore.QObject):  # pragma: no cover
     file_opened = QtCore.pyqtSignal('QString', arguments=('filename',))
     expand_hdf_tree = QtCore.pyqtSignal()
     frame_changed = QtCore.pyqtSignal(int)
-    draw_frames = QtCore.pyqtSignal(
-        object, np.ndarray, object, 'QString', tuple,
-        arguments=('frames', 'energies', 'norm', 'cmap', 'extent'))
+    # draw_frames = QtCore.pyqtSignal(
+    #     object, np.ndarray, object, 'QString', tuple,
+    #     arguments=('frames', 'energies', 'norm', 'cmap', 'extent'))
     draw_histogram = QtCore.pyqtSignal(object, object, 'QString',
                                        arguments=('data', 'norm', 'cmap'))
     
@@ -122,7 +122,6 @@ class QtFrameView(QtCore.QObject):  # pragma: no cover
         self.create_canvas()
         # Create animations from the collected artists
         self.source = FrameChangeSource(view=self)
-        self.draw_frames.connect(self._animate_frames)
         self.draw_histogram.connect(self._draw_histogram)
     
     def create_status_bar(self):
@@ -187,6 +186,9 @@ class QtFrameView(QtCore.QObject):  # pragma: no cover
         self.fig.tight_layout(pad=0)
         self.fig.canvas.draw_idle()
     
+    def connect_presenter(self, presenter):
+        presenter.frame_data_changed.connect(self._animate_frames)
+    
     def connect_signals(self, presenter):
         # Connect internal signals and slots
         self.expand_hdf_tree.connect(self.ui.hdfTree.expandAll)
@@ -221,6 +223,7 @@ class QtFrameView(QtCore.QObject):  # pragma: no cover
                 xy = None
             presenter.hover_frame_pixel(xy)
         self.fig.canvas.mpl_connect('motion_notify_event', hover_frame)
+        
     
     def open_hdf_file(self):
         # Ask the user for an HDF file to open

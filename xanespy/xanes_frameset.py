@@ -512,14 +512,61 @@ class XanesFrameset():
             self.apply_transformations(crop=True, commit=True)
         log.info("Aligned %d passes in %d seconds", passes, time() - logstart)
     
+    def segment_materials(self, thresholds,
+                          representation='optical_depths',
+                          component='real'):
+        """Split the frames into different materials based on mean values.
+        
+        This is most useful with a metric that is unique to a given
+        material. For example, the phase representation of
+        ptychography data can be used to determine which material is
+        which. Results will be stored in
+        ``XanesFrameset().store().segments``.
+        
+        Parameters
+        ----------
+        thresholds : tuple
+          The boundary values to use for segmentation. If N tresholds
+          are given, the data will be split into N+1 segments.
+        representation : str, optional
+          What kind of data the thresholds represent.
+        component : str, optional
+          Complex-value representation to use. Default is real
+          value. For ptychography data, 'phase' is probably better.
+        
+        """
+        # Load the intensity data
+        with self.store() as store:
+            Is = store.get_dataset(representation)
+            Is = np.mean(Is, axis=1)
+        Is = get_component(Is, component)
+        print(Is)
+        out = np.empty_like(Is, dtype='uint16')
+        # Segment values below the first treshold
+        out[Is<thresholds[0]] = 0
+        # Segment values between two thresholds
+        for idx, th in enumerate(thresholds[:-1]):
+            next_th = thresholds[idx+1]
+            is_th = np.logical_and(th <= Is, Is < next_th)
+            out[is_th] = idx + 1
+        # Segment values above the last threshold
+        out[Is > thresholds[-1]] = len(thresholds)
+        print(thresholds[-1], len(thresholds))
+        print(np.count_nonzero(out))
+        # Save data to data store
+        with self.store(mode='r+') as store:
+            store.segments = out
+    
     def label_particles(self, min_distance=20):
         """Use watershed segmentation to identify particles.
         
-        Arguments
-        ---------
-        - min_distance : Controls how selective the algorithm is at
-          grouping areas into particles. Lower numbers means more
-          particles, but might split large particles into two.
+        Parameters
+        ----------
+        min_distance : int, optional
+          Controls how selective the algorithm is at grouping areas
+          into particles. Lower numbers means more particles, but
+          might split large particles into two.
+        
         """
         with self.store('r+') as store:
             logstart = time()
@@ -1288,8 +1335,8 @@ class XanesFrameset():
     def map_data(self, timeidx=0, representation="optical_depths"):
         """Return map data for the given time index and representation.
         
-        If `representation` is really mapping data, then the result
-        will have more dimensions than expected.
+        If `representation` is not really mapping data, then the
+        result will have more dimensions than expected.
         
         Parameters
         ----------
@@ -1309,7 +1356,9 @@ class XanesFrameset():
         """
         with self.store() as store:
             map_data = store.get_dataset(representation)
-            if getattr(map_data, 'attrs', {}).get('context', None):
+            # Validate map data
+            is_map_data = getattr(map_data, 'attrs', {}).get('context', None) == 'map'
+            if not is_map_data:
                 # Not actually a map, so return none
                 map_data = None
             elif map_data.ndim > 2:
@@ -1341,7 +1390,7 @@ class XanesFrameset():
         
         """
         with self.store() as store:
-            frames = store.get_dataset(name=representation)[timeidx]
+            frames = store.get_frames(name=representation)[timeidx]
         return frames
     
     @functools.lru_cache(maxsize=2)

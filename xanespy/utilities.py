@@ -189,6 +189,9 @@ def get_component(data, name):
             data = np.real(data)
         elif name == "imag":
             data = np.imag(data)
+        else:
+            raise ValueError("Unrecognized component {}, choices are "
+                             "'modulus', 'phase', 'real', 'imag'".format(name))
     else:
         # Real data so return the real part
         data = np.real(data)

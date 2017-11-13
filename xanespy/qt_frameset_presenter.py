@@ -98,15 +98,46 @@ class QtFramesetPresenter(QtCore.QObject):
     map_pixel_changed = QtCore.pyqtSignal(
         object, object, object,
         arguments=['xy', 'pixel', 'value'])
+    frame_data_changed = QtCore.pyqtSignal(
+        object, np.ndarray, object, 'QString', tuple,
+        arguments=('frames', 'energies', 'norm', 'cmap', 'extent'))
     
     def __init__(self, frameset, frame_view, *args, **kwargs):
         self.frameset = frameset
         self.frame_view = frame_view
         # Set the list of views to be empty to start
         self.map_views = []
+        self.map_threads = []
         self.frame_views = []
+        self.frame_threads = []
         super().__init__(*args, **kwargs)
         self.connect_signals()
+    
+    def add_frame_view(self, view, threaded=True):
+        """Attach a view to this presenter.
+        
+        Parameters
+        ----------
+        view : QObject
+          The view will be connected to signals that describe changes in
+          frame data.
+        threaded : bool, optional
+          If true, this view will be added to its own thread before
+          signals get connected
+        
+        """
+        warnings.warn("add_frame_view is not yet complete")
+        self.frame_views.append(view)
+        # Let the view connect to this presenters signals
+        view.connect_presenter(presenter=self)
+        # Get the map_view prepared and running in its own thread
+        if threaded:
+            thread = QtCore.QThread()
+            view.moveToThread(thread)
+            thread.start()
+            self.frame_threads.append(thread)
+        # Connect to the view's signals
+        pass
     
     def add_map_view(self, view, threaded=True):
         """Attach a view to this presenter.
@@ -127,9 +158,10 @@ class QtFramesetPresenter(QtCore.QObject):
         view.connect_presenter(presenter=self)
         # Get the map_view prepared and running in its own thread
         if threaded:
-            self.map_thread = QtCore.QThread()
-            view.moveToThread(self.map_thread)
-            self.map_thread.start()
+            thread = QtCore.QThread()
+            view.moveToThread(thread)
+            thread.start()
+            self.map_threads.append(thread)
         # Connect to the view's signals
         view.cmap_changed.connect(self.change_map_cmap)
         view.component_changed.connect(self.change_map_component)
@@ -156,21 +188,6 @@ class QtFramesetPresenter(QtCore.QObject):
             self.use_edge_mask = state
             self.update_maps()
             self.update_spectra()
-    
-    def add_frame_view(self, view, threaded=True):
-        """Attach a view to this presenter.
-        
-        Parameters
-        ----------
-        view : QObject
-          The view will be connected to signals that describe changes in
-          frame data.
-        threaded : bool, optional
-          If true, this view will be added to its own thread before
-          signals get connected
-        
-        """
-        raise NotImplementedError("Coming soon!")
     
     def connect_signals(self):
         pass
@@ -224,7 +241,9 @@ class QtFramesetPresenter(QtCore.QObject):
         # Show the graphs and launch to event loop
         self.frame_view.show()
         ret = self.app.exec_()
-        self.map_thread.quit()
+        # Quit threads after execution
+        [thread.quit() for thread in self.map_threads]
+        [thread.quit() for thread in self.frame_threads]
         return ret
     
     def set_timestep(self, new_timestep):
@@ -550,11 +569,10 @@ class QtFramesetPresenter(QtCore.QObject):
         extent = self.frameset.extent(self.active_representation)
         energies = self.frameset.energies(timeidx=self.active_timestep)
         log.debug("Animating frames from presenter")
-        self.frame_view.draw_frames.emit(frames,
-                                         energies,
-                                         self.frame_norm(),
-                                         self.frame_cmap,
-                                         extent)
+        self.frame_data_changed.emit(frames,
+                                     energies,
+                                     self.frame_norm(),
+                                     self.frame_cmap, extent)
     
     def hover_frame_pixel(self, xy):
         # Validate that the pixel's on the graph, and has data
