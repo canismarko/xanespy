@@ -815,9 +815,9 @@ class XanesFrameset():
                 pixel = Pixel(*pixel)
                 # Get a spectrum for a single pixel
                 spectrum_idx = (index, ..., pixel.vertical, pixel.horizontal)
-                spectrum = store.get_dataset(representation)[spectrum_idx]
+                spectrum = store.get_frames(representation)[spectrum_idx]
             else:
-                frames = store.get_dataset(representation)[index]
+                frames = store.get_frames(representation)[index]
                 if edge_jump_filter:
                     # Filter out background pixels using edge mask
                     try:
@@ -832,7 +832,11 @@ class XanesFrameset():
                 flat = (*frames.shape[:frames.ndim-2], -1) # Collapse image dimension
                 spectrum = np.mean(np.reshape(frames, flat), axis=-1)
             # Combine into a series
-            series = pd.Series(spectrum, index=energies)
+            if len(spectrum) == len(energies):
+                # If the spectrum is actually an energy spectrum
+                series = pd.Series(spectrum, index=energies)
+            else:
+                series = pd.Series(spectrum)
         return series
     
     def plot_xanes_spectrum(self, ax=None, pixel=None,
@@ -1091,7 +1095,8 @@ class XanesFrameset():
                                   context='frameset',
                                   attrs={'parameter_names' : str(pnames)})
             store.replace_dataset("%s_residuals" % name, residuals,
-                                  context='map')
+                                  context='map',
+                                  attrs={'frame_source': representation})
             # Logging
             msg = "Saving fit data to '{name}_parameters' and '{name}_residuals'."
             msg = msg.format(name=name)

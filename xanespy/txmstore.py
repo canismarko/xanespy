@@ -331,9 +331,10 @@ class TXMStore():
             try:
                 dataset = self.get_dataset(dataset.attrs['frame_source'])
             except KeyError:
-                msg = "Invalid frame source {} specified for group {}"
-                msg = msg.format(dataset.attrs.get('frame_source', 'None'), self.name)
-                raise exceptions.FrameSourceError(msg)
+                source_desc = dataset.attrs.get('frame_source', 'None')
+                raise exceptions.FrameSourceError(
+                    "Invalid frame source {} specified for group {}"
+                    "".format(source_desc, self.data_name))
         return dataset
     
     @property

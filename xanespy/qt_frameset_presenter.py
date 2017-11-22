@@ -21,6 +21,7 @@
 import logging
 import math
 import sys
+import warnings
 
 from PyQt5 import QtWidgets, QtCore, QtGui
 from matplotlib.colors import Normalize
@@ -126,7 +127,7 @@ class QtFramesetPresenter(QtCore.QObject):
           signals get connected
         
         """
-        warnings.warn("add_frame_view is not yet complete")
+        log.warning("add_frame_view is not yet complete")
         self.frame_views.append(view)
         # Let the view connect to this presenters signals
         view.connect_presenter(presenter=self)
@@ -136,6 +137,8 @@ class QtFramesetPresenter(QtCore.QObject):
             view.moveToThread(thread)
             thread.start()
             self.frame_threads.append(thread)
+        else:
+            log.warning("Frame view not threaded")
         # Connect to the view's signals
         pass
     
@@ -162,6 +165,8 @@ class QtFramesetPresenter(QtCore.QObject):
             view.moveToThread(thread)
             thread.start()
             self.map_threads.append(thread)
+        else:
+            log.warning('Map view not threaded.')
         # Connect to the view's signals
         view.cmap_changed.connect(self.change_map_cmap)
         view.component_changed.connect(self.change_map_component)
@@ -740,6 +745,7 @@ class QtFramesetPresenter(QtCore.QObject):
                 pixel=self._map_pixel,
                 edge_jump_filter=self.use_edge_mask,
                 representation=self.active_representation)
+            log.debug("the map spectrum:", map_spectrum)
         except exceptions.GroupKeyError:
             pass
         else:
@@ -759,6 +765,7 @@ class QtFramesetPresenter(QtCore.QObject):
             #                                 self.map_cmap,
             #                                 self.frameset.edge.edge_range)
             edge_range = getattr(self.frameset.edge, 'edge_range', None)
+            log.debug("Emitting map spectrum:", map_spectrum)
             self.map_spectrum_changed.emit(map_spectrum,
                                            fit,
                                            self.map_norm(),
