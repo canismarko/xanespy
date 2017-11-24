@@ -141,16 +141,21 @@ def import_aps32idc_xanes_file(filename, hdf_filename, hdf_groupname,
             parent_group.attrs.update(metadata)
             # Prepare an HDF5 sub-group for this dataset
             data_group = parent_group.create_group('imported')
+            parent_group.attrs['latest_data_name'] = 'imported'
         src_data = src_file['/exchange/data']
         src_flat = src_file['/exchange/data_white']
         src_dark = src_file['/exchange/data_dark']
         shape = (total_timesteps, *src_data.shape)
         time_idx = timestep
         data_group.require_dataset('intensities', shape=shape, dtype=src_data.dtype)
+        data_group['intensities'].attrs['context'] = 'frameset'
         data_group.require_dataset('optical_depths', shape=shape, dtype='float32')
+        data_group['optical_depths'].attrs['context'] = 'frameset'
         data_group.require_dataset('flat_fields', shape=shape, dtype=src_flat.dtype)
+        data_group['flat_fields'].attrs['context'] = 'frameset'
         dark_shape = (total_timesteps, *src_dark.shape)
         data_group.require_dataset('dark_fields', shape=dark_shape, dtype=src_dark.dtype)
+        data_group['dark_fields'].attrs['context'] = 'frameset'
         # Create datasets for metadata
         pixels_shape = (total_timesteps, src_data.shape[0])
         data_group.require_dataset('pixel_sizes', shape=pixels_shape, dtype='float32')
@@ -160,6 +165,7 @@ def import_aps32idc_xanes_file(filename, hdf_filename, hdf_groupname,
         timestamp_shape = (*shape[0:2], 2)
         data_group.require_dataset('timestamps', shape=timestamp_shape, dtype="S32")
         data_group.require_dataset('filenames', shape=shape[0:2], dtype="S100")
+        data_group.require_dataset('timestep_names', shape=(shape[0],), dtype="S100")
         # Import start and end dates
         fmt = "%Y-%m-%dT%H:%M:%S%z"
         end_str = bytes(src_file['/process/acquisition/end_date'][0][:24])
@@ -169,18 +175,24 @@ def import_aps32idc_xanes_file(filename, hdf_filename, hdf_groupname,
         start_dt = dt.datetime.strptime(start_str.decode('ascii'), fmt)
         start_dt = start_dt.astimezone(pytz.utc)
         out_fmt = "%Y-%m-%d %H:%M:%S"
-        data_group['timestamps'][time_idx,:,0] = bytes(start_dt.strftime(out_fmt), encoding='ascii')
-        data_group['timestamps'][time_idx,:,1] = bytes(end_dt.strftime(out_fmt), encoding='ascii')
+        start_bytes = bytes(start_dt.strftime(out_fmt), encoding='ascii')
+        data_group['timestamps'][time_idx,:,0] = start_bytes
+        end_bytes = bytes(end_dt.strftime(out_fmt), encoding='ascii')
+        data_group['timestamps'][time_idx,:,1] = end_bytes
+        soc_bytes = bytes("soc{:03d}".format(time_idx), encoding='ascii')
+        data_group['timestep_names'][time_idx] = soc_bytes
         # Import actual datasets
         data_group['intensities'][time_idx] = src_file['/exchange/data']
         data_group['flat_fields'][time_idx] = src_file['/exchange/data_white']
         data_group['dark_fields'][time_idx] = src_file['/exchange/data_dark']
-        data_group['energies'][time_idx] = src_file['/exchange/energy']
+        energies = 1000 * src_file['/exchange/energy'].value
+        data_group['energies'][time_idx] = energies
         data_group['filenames'][time_idx,:] = filename.encode('ascii')
         # Convert the intensity data to optical depth
-        Is, ff, df = [data_group[key][time_idx] for key in ('intensities', 'flat_fields', 'dark_fields')]
-        dark = np.mean(data_group['dark_fields'][time_idx], axis=0)
-        ODs = -np.log((ff - dark) / (Is - dark))
+        keys_ = ('intensities', 'flat_fields', 'dark_fields')
+        Is, flat, dark = [data_group[key][time_idx] for key in keys_]
+        dark = np.median(dark, axis=0)
+        ODs = -np.log((Is-dark) / (flat-dark))
         data_group['optical_depths'][time_idx] = ODs
 
 

@@ -82,37 +82,40 @@ class APS32IDCImportTest(TestCase):
             self.assertEqual(parent_group.attrs['technique'], 'Full-field TXM')
             self.assertEqual(parent_group.attrs['xanespy_version'], CURRENT_VERSION)
             self.assertEqual(parent_group.attrs['beamline'], "APS 32-ID-C")
-            self.assertEqual(parent_group.attrs['original_directory'], os.path.dirname(self.src_data))
+            self.assertEqual(parent_group.attrs['original_directory'],
+                             os.path.dirname(self.src_data))
+            self.assertEqual(parent_group.attrs['latest_data_name'], 'imported')
             # Check h5 data structure
             keys = list(data_group.keys())
             self.assertIn('intensities', keys)
             self.assertTrue(np.any(data_group['intensities']))
             self.assertEqual(data_group['intensities'].shape, (1, 3, 512, 612))
+            self.assertEqual(data_group['intensities'].attrs['context'], 'frameset')
             self.assertIn('flat_fields', keys)
             self.assertTrue(np.any(data_group['flat_fields']))
+            self.assertEqual(data_group['flat_fields'].attrs['context'], 'frameset')
             self.assertIn('dark_fields', keys)
             self.assertEqual(data_group['dark_fields'].shape, (1, 2, 512, 612))
             self.assertTrue(np.any(data_group['dark_fields']))
+            self.assertEqual(data_group['dark_fields'].attrs['context'], 'frameset')
             self.assertIn('optical_depths', keys)
             self.assertTrue(np.any(data_group['optical_depths']))
+            self.assertEqual(data_group['optical_depths'].attrs['context'], 'frameset')
             self.assertEqual(data_group['pixel_sizes'].attrs['unit'], 'µm')
             self.assertEqual(data_group['pixel_sizes'].shape, (1, 3))
             self.assertTrue(np.any(data_group['pixel_sizes'].value > 0))
             self.assertEqual(data_group['energies'].shape, (1, 3))
-            expected_Es = np.array([[8.34, 8.35, 8.36]])
-            np.testing.assert_array_almost_equal(data_group['energies'].value, expected_Es, decimal=3)
+            expected_Es = np.array([[8340, 8350, 8360]])
+            np.testing.assert_array_almost_equal(data_group['energies'].value,
+                                                 expected_Es, decimal=3)
             self.assertIn('timestamps', keys)
             expected_timestamp = np.empty(shape=(1, 3, 2), dtype="S32")
-            # expected_timestamp = np.array([
-            #     [[b'2016-10-07 18:24:42', b'2016-10-07 '],
-            #      [b'2016-10-07 18:24:42', b'2016-10-07 22:51:25']],
-            #     [[b'2016-10-07 18:24:42', b'2016-10-07 03:19:58'],
-            #      [b'2016-10-07 18:24:42', b'2016-10-07 04:21:56']],
-            # ], dtype="S32")
             expected_timestamp[...,0] = b'2016-10-07 18:24:42'
             expected_timestamp[...,1] = b'2016-10-07 18:37:42'
             np.testing.assert_equal(data_group['timestamps'].value,
                                     expected_timestamp)
+            self.assertIn('timestep_names', keys)
+            self.assertEqual(data_group['timestep_names'][0], bytes("soc000", 'ascii'))
             self.assertIn('filenames', keys)
             self.assertEqual(data_group['filenames'].shape, (1, 3))
             self.assertEqual(data_group['filenames'][0, 0], self.src_data.encode('ascii'))
