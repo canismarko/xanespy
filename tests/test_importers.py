@@ -40,8 +40,9 @@ from xanespy.importers import (magnification_correction,
                                decode_aps_params, decode_ssrl_params,
                                import_ssrl_xanes_dir, CURRENT_VERSION,
                                import_nanosurveyor_frameset,
-                               import_aps_8BM_xanes_dir,
-                               import_aps_8BM_xanes_file,
+                               import_aps4idc_sxstm_files,
+                               import_aps8bm_xanes_dir,
+                               import_aps8bm_xanes_file,
                                import_aps32idc_xanes_files,
                                import_aps32idc_xanes_file,
                                read_metadata)
@@ -359,7 +360,7 @@ class APS8BMFileImportTest(TestCase):
             os.remove(self.hdf)
     
     def test_imported_hdf(self):
-        import_aps_8BM_xanes_file(self.txrm_file,
+        import_aps8bm_xanes_file(self.txrm_file,
                                   ref_filename=self.txrm_ref, hdf_filename=self.hdf,
                                   quiet=True)
         # Check that the file was created
@@ -414,7 +415,7 @@ class APS8BMDirImportTest(TestCase):
         try:
             with self.assertRaisesRegex(exceptions.DataNotFoundError,
                                         '/temp-empty-dir'):
-                import_aps_8BM_xanes_dir(EMPTY_DIR,
+                import_aps8bm_xanes_dir(EMPTY_DIR,
                                          hdf_filename="test-file.hdf",
                                          quiet=True)
         finally:
@@ -424,22 +425,22 @@ class APS8BMDirImportTest(TestCase):
             os.rmdir(EMPTY_DIR)
     
     def test_imported_references(self):
-        import_aps_8BM_xanes_dir(APS_DIR, hdf_filename=self.hdf, quiet=True)
+        import_aps8bm_xanes_dir(APS_DIR, hdf_filename=self.hdf, quiet=True)
         with h5py.File(self.hdf, mode='r') as f:
             self.assertIn('references', f['fov03/imported'].keys())
     
     def test_groupname_kwarg(self):
         """The groupname keyword argument needs some special attention."""
         with self.assertRaisesRegex(exceptions.CreateGroupError, 'Invalid groupname'):
-            import_aps_8BM_xanes_dir(APS_DIR, hdf_filename=self.hdf,
+            import_aps8bm_xanes_dir(APS_DIR, hdf_filename=self.hdf,
                                      quiet=True, groupname="Wawa")
         # Now does it work with the {} inserted
-        import_aps_8BM_xanes_dir(APS_DIR, hdf_filename=self.hdf,
+        import_aps8bm_xanes_dir(APS_DIR, hdf_filename=self.hdf,
                                  quiet=True, groupname="Wawa{}")
         
     
     def test_imported_hdf(self):
-        import_aps_8BM_xanes_dir(APS_DIR, hdf_filename=self.hdf, quiet=True)
+        import_aps8bm_xanes_dir(APS_DIR, hdf_filename=self.hdf, quiet=True)
         # Check that the file was created
         self.assertTrue(os.path.exists(self.hdf))
         with h5py.File(self.hdf, mode='r') as f:
@@ -629,7 +630,7 @@ class SSRLImportTest(TestCase):
         self.assertEqual(len(result), 1)
 
 
-class SxstmTestCase(unittest.TestCase):
+class SxstmFileTestCase(unittest.TestCase):
     """Tests for soft x-ray tunneling microscope data from APS 4-ID-C."""
     def test_header(self):
         filename = os.path.join(SXSTM_DIR, 'XGSS_UIC_JC_475v_60c_001_001_001.3ds')
@@ -639,3 +640,84 @@ class SxstmTestCase(unittest.TestCase):
         data = sxstm_data.dataframe()
         sxstm_data.close()
 
+
+class SxstmImportTestCase(unittest.TestCase):
+    """Tests for importing a set of X-ray tunneleing microscopy data from
+    APS 4-ID-C. 
+    
+    """
+    hdf_filename = os.path.join(SXSTM_DIR, 'sxstm_imported.h5')
+    parent_groupname = 'sxstm-test-data'    
+    def tearDown(self):
+        if os.path.exists(self.hdf_filename):
+            os.remove(self.hdf_filename)
+    
+    def test_hdf_file(self):
+        with warnings.catch_warnings():
+            warnings.filterwarnings('ignore',
+                                    message='X and Y pixel sizes')
+            import_aps4idc_sxstm_files(filenames='sxstm-data-4idc',
+                                       hdf_filename=self.hdf_filename,
+                                       hdf_groupname=self.parent_groupname,
+                                       shape=(2, 2),
+                                       energies=[8324., 8354.])
+        # Check that the file exists with the data group
+        self.assertTrue(os.path.exists(self.hdf_filename))
+        with h5py.File(self.hdf_filename, mode='r') as f:
+            # Check that the group structure is correct
+            self.assertIn(self.parent_groupname, list(f.keys()))
+            parent = f[self.parent_groupname]
+            self.assertIn('imported', list(parent.keys()),
+                          "Importer didn't create '/%s/imported'" % self.parent_groupname)
+            # Check metadata about beamline
+            self.assertEqual(parent.attrs['technique'],
+                             'Synchrotron X-ray Scanning Tunneling Microscopy')
+            self.assertEqual(parent.attrs['xanespy_version'], CURRENT_VERSION)
+            self.assertEqual(parent.attrs['beamline'], "APS 4-ID-C")
+            self.assertEqual(parent.attrs['latest_data_name'], 'imported')
+            full_path = os.path.abspath(SXSTM_DIR)
+            self.assertEqual(parent.attrs['original_directory'], full_path)
+            # Check that the datasets are created
+            group = parent['imported']
+            keys = list(group.keys())
+            columns = ['bias_calc', 'current', 'LIA_tip_ch1',
+                       'LIA_tip_ch2', 'LIA_sample', 'LIA_shielding',
+                       'LIA_topo', 'shielding', 'flux', 'bias',
+                       'height']
+            for col in columns:
+                self.assertIn(col, list(group.keys()),
+                              "Importer didn't create '/%s/imported/%s'"
+                              "" % (self.parent_groupname, col))
+                self.assertEqual(group[col].attrs['context'], 'frameset')
+                self.assertEqual(group[col].dtype, 'float32')
+                self.assertEqual(group[col].shape, (1, 2, 2, 2))
+                self.assertTrue(np.any(group[col]))
+            self.assertEqual(group['pixel_sizes'].attrs['unit'], 'µm')
+            self.assertEqual(group['pixel_sizes'].attrs['context'], 'metadata')
+            isEqual = np.array_equal(group['energies'].value,
+                                     np.array([[8324., 8354.]]))
+            self.assertTrue(isEqual, msg=group['energies'].value)
+            self.assertEqual(group['energies'].attrs['context'], 'metadata')
+            self.assertIn('filenames', keys)
+            self.assertEqual(group['filenames'].attrs['context'], 'metadata')
+            self.assertIn('timestep_names', keys)
+            self.assertEqual(group['timestep_names'].attrs['context'], 'metadata')
+            self.assertEqual(group['timestep_names'][0], b"ex-situ")
+            # self.assertIn('timestamps', keys)
+            # self.assertEqual(group['timestamps'].attrs['context'], 'metadata')
+            # self.assertIn('original_positions', keys)
+            # self.assertEqual(group['original_positions'].attrs['context'], 'metadata')
+            # self.assertIn('relative_positions', keys)
+            # self.assertEqual(group['relative_positions'].attrs['context'], 'metadata')
+
+    def test_file_list(self):
+        """See if a file list can be passed instead of a directory name."""
+        filelist = [os.path.join(SXSTM_DIR, f) for f in os.listdir(SXSTM_DIR)]
+        with warnings.catch_warnings():
+            warnings.filterwarnings('ignore',
+                                    message='X and Y pixel sizes')
+            import_aps4idc_sxstm_files(filenames=filelist,
+                                       hdf_filename=self.hdf_filename,
+                                       hdf_groupname=self.parent_groupname,
+                                       shape=(2, 2),
+                                       energies=[8324., 8354.])

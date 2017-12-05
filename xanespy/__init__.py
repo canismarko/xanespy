@@ -36,8 +36,9 @@ from beamlines import (sector8_xanes_script, ZoneplatePoint,
                        Zoneplate, Detector, DetectorPoint)
 from importers import (import_frameset,
                        import_ssrl_xanes_dir,
-                       import_aps_8BM_xanes_dir,
-                       import_aps_8BM_xanes_file,
+                       import_aps4idc_sxstm_files,
+                       import_aps8bm_xanes_dir,
+                       import_aps8bm_xanes_file,
                        import_nanosurveyor_frameset,
                        import_stxm_frameset)
 from xanes_frameset import XanesFrameset

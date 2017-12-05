@@ -66,7 +66,9 @@ class XanesFrameset():
     
     """
     active_group = ''
+    parent_name = None
     cmap = 'plasma'
+    edge = None
     _data_name = None
     # Places to store staged image transformations
     _transformations = None
@@ -88,7 +90,13 @@ class XanesFrameset():
         """
         self.hdf_filename = filename
         self.edge = edge
-        self.parent_name = groupname
+        # Validate the parent dataname
+        store = TXMStore(hdf_filename=self.hdf_filename,
+                         parent_name=groupname,
+                         data_name='',
+                         mode='r')
+        with store:
+            self.parent_name = store.validate_parent_group(groupname)
     
     def __repr__(self):
         s = "<{cls}: '{name}'>"
@@ -1134,11 +1142,13 @@ class XanesFrameset():
         """Generate a set of maps based on pixel-wise Xanes spectra: whiteline
         position, particle labels.
         
-        Arguments
-        ---------
-        -fit_spectra : If truthy, the whiteline will be found by
-         fitting curves, instead of the default of taking the direct
-         maximum. This is likely to be very slow.
+        Parameters
+        ----------
+        fit_spectra : bool, optional
+          If truthy, the whiteline will be found by fitting curves,
+          instead of the default of taking the direct maximum. This is
+          likely to be very slow.
+        
         """
         self.calculate_whitelines()
         self.calculate_mean_frames()
@@ -1361,8 +1371,9 @@ class XanesFrameset():
         """
         with self.store() as store:
             map_data = store.get_dataset(representation)
-            # Validate map data
-            is_map_data = getattr(map_data, 'attrs', {}).get('context', None) == 'map'
+            # Validate map data if it's an actual HDF file
+            is_map_data = (not hasattr(map_data, 'attrs') or
+                           map_data.attrs.get('context') == 'map')
             if not is_map_data:
                 # Not actually a map, so return none
                 map_data = None
@@ -1471,7 +1482,7 @@ class XanesFrameset():
         
         """
         with self.store() as store:
-            imshape = self.frame_shape()
+            imshape = self.frame_shape(representation)
             # Filter to only the requested frame
             pixel_size = store.pixel_sizes[idx]
             # Take the median across all pixel sizes (except the xy dim)

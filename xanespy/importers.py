@@ -34,6 +34,7 @@ from scipy.ndimage.filters import median_filter
 import pytz
 
 from xradia import XRMFile, TXRMFile
+from sxstm import SxstmDataFile
 from utilities import prog
 import exceptions
 from xanes_math import transform_images, apply_references, transformation_matrices
@@ -44,14 +45,147 @@ format_classes = {
 }
 
 
-CURRENT_VERSION = "0.3" # Let's file loaders deal with changes to storage
+CURRENT_VERSION = "0.3" # Lets file loaders deal with changes to storage
 
 log = logging.getLogger(__name__)
 
 
+def import_aps4idc_sxstm_files(filenames, hdf_filename, hdf_groupname, shape, energies):
+    """Import scanning X-ray tunneling microscopy absorbance frames.
+    
+    These frames are STM images from APS 4-ID-C with incident X-rays
+    at increasing energies, providing pixel-resolved spectral data. If
+    the files are all in one directory with no other data, then the
+    ``filenames`` argument can be the directory name, otherwise it
+    should be a list of the filenames to import. It is assumed that
+    the fast axis is energy, then the two spatial axes.
+    
+    Parameters
+    ----------
+    filenames : list, str
+      List of filenames to import relative to working
+      directory. Alternately, it can be a string with a directory path
+      and all files will be imported.
+    hdf_filename : str
+      Path to a filename to use for saving imported data. If it
+      doesn't exist, it will be created.
+    hdf_groupname : str
+      HDF groupname to use for saving data. If it exists, it will be
+      overwritten.
+    shape : 2-tuple
+      Shape for the resulting maps.
+    energies : iterable
+      Incident beam energies for each frame, in electron-volts.
+    """
+    # Convert to a list of filenames if it's a directory
+    try:
+        is_directory = os.path.isdir(filenames)
+    except TypeError:
+        is_directory = False
+    if is_directory:
+        directory = filenames
+        filenames = os.listdir(filenames)
+    else:
+        directory = os.getcwd()
+    # Process the metadata from filenames
+    metadata = []
+    file_re = re.compile('([a-zA-Z0-9_]+)_(\d+)_(\d+).3ds')
+    for f in filenames:
+        scan_name, pos_idx, E_idx = file_re.match(os.path.basename(f)).groups()
+        E_idx = int(E_idx) - 1 # Convert from 1-index to 0-index
+        pos_idx = int(pos_idx) - 1
+        # Convert to actual 2D indices
+        pos_idx = np.unravel_index(int(pos_idx), shape)
+        # Add to the dataframe
+        metadata.append([os.path.join(directory, f), scan_name, pos_idx, E_idx])
+    metadata = pd.DataFrame(data=metadata,
+                            columns=['filename', 'scan_name', 'pos_idx', 'E_idx'])
+    # Create a new HDF file
+    with h5py.File(hdf_filename, mode='a') as f:
+        # Create the new parent HDF group (delete if it exists)
+        if hdf_groupname in f.keys():
+            del f[hdf_groupname]
+            log.warn('Overwriting existing group "%s."' % hdf_groupname)
+        parent_group = f.create_group(hdf_groupname)
+        data_group = parent_group.create_group('imported')
+        parent_group.attrs['latest_data_name'] = 'imported'
+        # Set some metadata for the experiment
+        new_attrs = {
+            'technique': 'Synchrotron X-ray Scanning Tunneling Microscopy',
+            'xanespy_version': CURRENT_VERSION,
+            'beamline': 'APS 4-ID-C',
+            'original_directory': os.path.abspath(directory),
+        }
+        parent_group.attrs.update(new_attrs)
+        # Calculate the desired shape
+        num_Es = len(metadata.E_idx.unique())
+        full_shape = (1, num_Es, *shape)
+        # Create empty datasets to hold the data
+        ds_names = {
+            'Bias calc (V)': 'bias_calc',
+            'Current (A)': 'current',
+            'LIA Tip Ch1 (V)': 'LIA_tip_ch1',
+            'LIA Tip Ch2 (V)': 'LIA_tip_ch2',
+            'LIA Sample Ch1 (V)': 'LIA_sample',
+            'LIA Gold Shielding Ch1 (V)': 'LIA_shielding',
+            'LIA topo Ch1 (V)': 'LIA_topo',
+            'Gold Shielding (V)': 'shielding',
+            'Flux (V)': 'flux',
+            'Bias (V)': 'bias',
+            'Z (m)': 'height',
+        }
+        for ds_name in ds_names.values():
+            ds = data_group.create_dataset(ds_name, shape=full_shape,
+                                           dtype='float32', compression='gzip')
+            ds.attrs['context'] = 'frameset'
+        # Load each source file one at a time
+        Xs, Ys = [], []
+        for row in prog(metadata.itertuples(), desc='Importing', total=len(filenames)):
+            with SxstmDataFile(row.filename) as sxstm_file:
+                df = sxstm_file.dataframe()
+            medians = df.median()
+            Xs.append(medians['X (m)'] / 1e-6)
+            Ys.append(medians['Y (m)'] / 1e-6)
+            full_idx = (0,row.E_idx,*row.pos_idx)
+            # Import each data column to the HDF5 file
+            for old_name, new_name in ds_names.items():
+                if new_name == 'height':
+                    data = medians[old_name] / 1e-9
+                else:
+                    data = medians[old_name]
+                data_group[new_name][full_idx] = data
+        # Determine the pixel sizes
+        px_size_X = (np.max(Xs) - np.min(Xs)) / (shape[1] - 1)
+        px_size_Y = (np.max(Ys) - np.min(Ys)) / (shape[0] - 1)
+        if px_size_X != px_size_Y:
+            warnings.warn("X and Y pixel sizes do not match (%f vs %f). "
+                          "X axis values will be unreliable."
+                          "" % (px_size_X, px_size_Y))
+        px_ds = data_group.create_dataset('pixel_sizes', shape=(1, num_Es),
+                                       dtype='float32')
+        px_ds[:,:] = px_size_Y
+        px_ds.attrs['unit'] = 'µm'
+        px_ds.attrs['context'] = 'metadata'
+        # Save the beam energy list
+        Es = np.reshape(energies, (1, len(energies)))
+        E_ds = data_group.create_dataset('energies', data=Es)
+        E_ds.attrs['context'] = 'metadata'
+        # Save an array for filenames
+        filenames = np.array(filenames, dtype="S100")
+        filenames = np.reshape(filenames, (*shape, num_Es))
+        filenames = np.moveaxis(filenames, -1, 0)
+        filename_ds = data_group.create_dataset('filenames', data=filenames)
+        filename_ds.attrs['context'] = 'metadata'
+        # Save a time step name
+        ts_names = np.array(['ex-situ'], dtype="S30")
+        ts_names = data_group.create_dataset('timestep_names', data=ts_names)
+        ts_names.attrs['context'] = 'metadata'
+
 def _average_frames(*frames):
-    """Accept several frames and return the first frame with new image
-    data. Assumes metadata from first frame in list."""
+    """Accept several Xradia frames and return the first frame with new
+    image data. Assumes metadata from first frame in list.
+    
+    """
     raise UserWarning("Just use numpy.mean instead.")
     new_image = np.zeros_like(frames[0].image_data(), dtype=np.float)
     # Sum all images
@@ -192,7 +326,12 @@ def import_aps32idc_xanes_file(filename, hdf_filename, hdf_groupname,
         keys_ = ('intensities', 'flat_fields', 'dark_fields')
         Is, flat, dark = [data_group[key][time_idx] for key in keys_]
         dark = np.median(dark, axis=0)
-        ODs = -np.log((Is-dark) / (flat-dark))
+        Is = (Is) / (flat)
+        Is[Is<=0] = 1e-6
+        ODs = -np.log(Is)
+        # Check for nan values
+        if np.any(np.isnan(ODs)):
+            log.warn('nan values found after OD conversion')
         data_group['optical_depths'][time_idx] = ODs
 
 
@@ -815,7 +954,7 @@ def decode_aps_params(filename):
     return result
 
 
-def import_aps_8BM_xanes_file(filename, ref_filename, hdf_filename,
+def import_aps8bm_xanes_file(filename, ref_filename, hdf_filename,
                               groupname=None, quiet=False):
     """Extract an entire xanes framestack from one xradia file.
     
@@ -901,7 +1040,7 @@ def import_aps_8BM_xanes_file(filename, ref_filename, hdf_filename,
     h5file.close()
 
 
-def import_aps_8BM_xanes_dir(directory, hdf_filename, groupname=None,
+def import_aps8bm_xanes_dir(directory, hdf_filename, groupname=None,
                              *args, **kwargs):
     imp_group = import_frameset(directory=directory, flavor="aps",
                                 hdf_filename=hdf_filename, return_val="group",

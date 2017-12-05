@@ -102,8 +102,6 @@ class QtFrameView(QtCore.QObject):  # pragma: no cover
     # draw_frames = QtCore.pyqtSignal(
     #     object, np.ndarray, object, 'QString', tuple,
     #     arguments=('frames', 'energies', 'norm', 'cmap', 'extent'))
-    draw_histogram = QtCore.pyqtSignal(object, object, 'QString',
-                                       arguments=('data', 'norm', 'cmap'))
     
     def setup(self):
         # Load the Qt Designer .ui file
@@ -122,7 +120,6 @@ class QtFrameView(QtCore.QObject):  # pragma: no cover
         self.create_canvas()
         # Create animations from the collected artists
         self.source = FrameChangeSource(view=self)
-        self.draw_histogram.connect(self._draw_histogram)
     
     def create_status_bar(self):
         self.status_layout = QtWidgets.QVboxLayout()
@@ -188,6 +185,8 @@ class QtFrameView(QtCore.QObject):  # pragma: no cover
     
     def connect_presenter(self, presenter):
         presenter.frame_data_changed.connect(self._animate_frames)
+        presenter.frame_data_changed.connect(self.draw_histogram)
+        presenter.mean_spectrum_changed.connect(self.draw_spectrum)
     
     def connect_signals(self, presenter):
         # Connect internal signals and slots
@@ -330,18 +329,18 @@ class QtFrameView(QtCore.QObject):  # pragma: no cover
         # User feedback and logging
         log.debug("Artist creation took %d sec", time() - start)
     
-    def draw_spectrum(self, spectrum, energies, norm, cmap, edge_range=None):
+    def draw_spectrum(self, spectrum, fitted_spectrum, norm, cmap, edge_range=None):
         self.spectrum_ax.clear()
-        plots.plot_xanes_spectrum(spectrum=spectrum,
-                                  energies=energies,
+        plots.plot_xanes_spectrum(spectrum=spectrum.values,
+                                  energies=spectrum.index,
                                   norm=norm,
                                   cmap=cmap,
                                   color="y",
                                   ax=self.spectrum_ax)
         # Now plot a zoomed in version on the edge itself
         self.edge_ax.clear()
-        plots.plot_xanes_spectrum(spectrum=spectrum,
-                                  energies=energies,
+        plots.plot_xanes_spectrum(spectrum=spectrum.values,
+                                  energies=spectrum.index,
                                   norm=norm,
                                   cmap=cmap,
                                   color="y",
@@ -349,7 +348,8 @@ class QtFrameView(QtCore.QObject):  # pragma: no cover
         if edge_range is not None:
             self.edge_ax.set_xlim(*edge_range)
     
-    def _draw_histogram(self, data, norm, cmap):
+    def draw_histogram(self, data, energies, norm, cmap):
+        log.debug("Plotting frame histogram")
         # Update the histogram
         self.hist_ax.clear()
         plots.plot_txm_histogram(data=data, ax=self.hist_ax,
@@ -358,6 +358,7 @@ class QtFrameView(QtCore.QObject):  # pragma: no cover
         # Update the colorbar
         mappable = cm.ScalarMappable(norm=norm, cmap=cmap)
         self.cbar.on_mappable_changed(mappable)
+        self.cbar.set_ticks(np.linspace(norm.vmin, norm.vmax, num=5))
     
     def show(self):
         self.window.show()

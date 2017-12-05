@@ -212,8 +212,27 @@ class TXMStore():
     @latest_data_name.setter
     def latest_data_name(self, val):
         self.parent_group().attrs['latest_data_name'] = val
+
+    def validate_parent_group(self, name):
+        """Retrieve the real parent group name for a possible parent_group.
+        
+        If ``name`` is None and only one group exists in the file,
+        then that group name will be returned. If ``name`` is in the
+        file, then ``name`` will be returned. If ``name`` is not in
+        the file, a GroupKeyError will be raised.
+        """
+        if name is None and len(self._file.keys()) == 1:
+            new_name = list(self._file.keys())[0]
+        elif name not in self._file.keys():
+            raise GroupKeyError("Cannot load parent group '{group}'. "
+                                "Valid choices are {choices}."
+                                "".format(group=name, choices=list(self._file.keys())))
+        else:
+            new_name = name
+        return new_name
     
     def parent_group(self):
+
         """Retrieve the top-level HDF5 group object for this file and
         groupname."""
         try:

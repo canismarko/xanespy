@@ -39,7 +39,7 @@ import matplotlib.pyplot as plt
 from tqdm import tqdm
 
 from utilities import prog, foreach, get_component
-import exceptions
+from exceptions import XanesMathError
 
 
 log = logging.getLogger(__name__)
@@ -378,7 +378,7 @@ def k_edge_mask(frames: np.ndarray, energies: np.ndarray, edge,
     ej = k_edge_jump(frames=frames, energies=energies, edge=edge)
     stdev = np.std(frames, axis=tuple(range(0, len(frames.shape)-2)))
     edge_ratio = ej / stdev
-    # Thresholding  to separate background from foreground
+    # Thresholding to separate background from foreground
     img_bottom = edge_ratio.min()
     threshold = filters.threshold_otsu(edge_ratio)
     threshold = img_bottom + sensitivity * (threshold - img_bottom)
@@ -404,13 +404,14 @@ def k_edge_jump(frames: np.ndarray, energies: np.ndarray, edge):
     pre_edge_mask = np.logical_and(np.greater_equal(energies, pre_edge[0]),
                                    np.less_equal(energies, pre_edge[1]))
     if not np.any(pre_edge_mask):
-        msg = "Could not find pre-edge {} in {}".format(pre_edge, energies)
-        raise exceptions.XanesMathError(msg)
+        raise XanesMathError("Could not find pre-edge "
+                             "{} in {}".format(pre_edge, energies))
     post_edge_mask = np.logical_and(np.greater_equal(energies, post_edge[0]),
                                     np.less_equal(energies, post_edge[1]))
     if not np.any(post_edge_mask):
-        msg = "Could not find post-edge {} in {}".format(post_edge, energies)
-        raise exceptions.XanesMathError(msg)
+        raise XanesMathError("Could not find post-edge "
+                             "{} in {}".format(post_edge, energies))
+        
     # Compare the post-edges and pre-edges
     mean_pre = np.mean(frames[pre_edge_mask, ...], axis=0)
     mean_post = np.mean(frames[post_edge_mask, ...], axis=0)
@@ -890,17 +891,17 @@ def register_correlations(frames, reference, upsample_factor=10,
       Description for putting in the progress bar.
     quiet : bool, optional
       Whether to suppress the progress bar, etc.
-
+    
     Returns
     -------
     translations : np.ndarray
       Array with same dimensions as 0-th axis of `frames` containing
       (x, y) translations for each frame.
-
+    
     """
     t_shape = (*frames.shape[:-2], 2)
     translations = np.empty(shape=t_shape, dtype=np.float)
-
+    
     def get_translation(idx):
         frm = frames[idx]
         results = feature.register_translation(reference,

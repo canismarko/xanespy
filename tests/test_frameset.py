@@ -256,7 +256,7 @@ class XanesFramesetTest(TestCase):
         if edge is None:
             edge = edges.k_edges['Ni_NCA']
         # Create new frameset object
-        fs = XanesFrameset(filename="", edge=edge)
+        fs = XanesFrameset(filename="txmstore-test.h5", edge=edge)
         # Mock out the `store` retrieval so we can control it
         if store is None:
             store = MockStore()
@@ -294,6 +294,7 @@ class XanesFramesetTest(TestCase):
         # Prepare stubbed data
         store = MockStore()
         od_data = np.random.rand(1, 6, 16, 16)
+        store.get_frames = mock.MagicMock(return_value=od_data)
         store.get_dataset = mock.MagicMock(return_value=od_data)
         Es = [np.linspace(840, 862, num=6)]
         store.energies = Es
@@ -312,7 +313,8 @@ class XanesFramesetTest(TestCase):
             context='frameset', attrs={'parameter_names': expected_names}
         )
         store.replace_dataset.assert_any_call(
-            'linear_combination_residuals', residuals, context='map')
+            'linear_combination_residuals', residuals, context='map',
+            attrs={'frame_source': 'optical_depths'})
         # store.replace_dataset.assert_any_call(
         #     'linear_combination_sources', [spectrum.values], context='metadata')
         # np.testing.assert_equal(store.linear_combination_sources, np.array([spectrum]))
@@ -338,7 +340,8 @@ class XanesFramesetTest(TestCase):
         store.replace_dataset.assert_any_call(
             'fit_parameters', params, context='frameset',
             attrs={'parameter_names': str(('slope', 'intercept'))})
-        store.replace_dataset.assert_any_call('fit_residuals', residuals, context='map')
+        store.replace_dataset.assert_any_call('fit_residuals', residuals, context='map',
+                                              attrs={'frame_source': 'optical_depths'})
     
     def test_particle_series(self):
         store = MockStore()
@@ -396,7 +399,7 @@ class XanesFramesetTest(TestCase):
         spectrum = np.sin((energies-8300)*4*np.pi/100)
         frames = np.broadcast_to(spectrum, (10, 128, 128, 51))
         frames = np.swapaxes(frames, 3, 1)
-        store.get_dataset = mock.Mock(return_value=frames)
+        store.get_frames = mock.Mock(return_value=frames)
         fs = self.create_frameset(store=store)
         # Check that the return value is correct
         result = fs.spectrum()
@@ -527,11 +530,11 @@ class XanesFramesetTest(TestCase):
         # Make mocked data
         store = MockStore
         data = self.dummy_frame_data()
-        store.get_dataset.return_value = data
+        store.get_frames.return_value = data
         fs = self.create_frameset(store=store)
         # Check that the method returns the right data
         result = fs.frames(timeidx=3, representation='marbles')
-        store.get_dataset.assert_called_once_with(name='marbles')
+        store.get_frames.assert_called_once_with(name='marbles')
         np.testing.assert_equal(result, data[3])
     
     def test_energies(self):
@@ -615,7 +618,7 @@ class XanesFramesetTest(TestCase):
         self.assertEqual(fs.data_name, 'new_group')
     
     def test_repr(self):
-        fs = XanesFrameset(filename=None, edge=edges.k_edges['Ni_NCA'],
+        fs = XanesFrameset(filename="txmstore-test.h5", edge=edges.k_edges['Ni_NCA'],
                            groupname="ssrl-test-data")
         expected = "<XanesFrameset: 'ssrl-test-data'>"
         self.assertEqual(fs.__repr__(), expected)
