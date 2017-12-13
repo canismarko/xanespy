@@ -696,7 +696,7 @@ class XanesFrameset():
             mean = np.mean(Is, axis=0)
         return mean
     
-    def frame_shape(self, representation="intensities"):
+    def frame_shape(self, representation="optical_depths"):
         """Return the shape of the individual energy frames."""
         with self.store() as store:
             imshape = store.get_dataset(representation).shape[-2:]
@@ -1471,7 +1471,7 @@ class XanesFrameset():
         
         """
         with self.store() as store:
-            imshape = self.frame_shape()
+            imshape = self.frame_shape(representation)
             # Filter to only the requested frame
             pixel_size = store.pixel_sizes[idx]
             # Take the median across all pixel sizes (except the xy dim)
@@ -1521,8 +1521,7 @@ class XanesFrameset():
         """Prepare data and plot a map of whiteline positions.
         
         Parameters
-        ==========
-        
+        ----------
         median_size : int
           Kernel size for the median rank filter.
         

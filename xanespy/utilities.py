@@ -243,7 +243,7 @@ def prog(iterable=None, leave=None, dynamic_ncols=True, *args, **kwargs):
     elif is_kernel():
         # Use the IPython widgets version of tqdm
         leave = True if leave is None else leave
-        prog_iter = tqdm_notebook(iterable, leave=leave,
+        prog_iter = tqdm(iterable, leave=leave,
                                   dynamic_ncols=dynamic_ncols, *args,
                                   **kwargs)
     else:
