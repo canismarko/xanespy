@@ -41,9 +41,8 @@ else:
     from xanespy.qt_frameset_presenter import QtFramesetPresenter
     from xanespy.qt_frame_view import FrameChangeSource, QtFrameView
 
-from xanespy import XanesFrameset
+from xanespy import XanesFrameset, k_edges, exceptions
 from xanespy.utilities import xycoord, Extent, shape, Pixel
-from xanespy import exceptions
 
 pp = pprint.PrettyPrinter(indent=2)
 
@@ -51,7 +50,28 @@ if HAS_PYQT:
     # Define mocked views for the various Qt UI windows
     MockFrameView = mock.MagicMock(spec_set=QtFrameView)
     MockMapView = mock.MagicMock(spec_set=QtMapView)
-    MockFrameset = mock.MagicMock(spec_set=XanesFrameset)
+
+def dummy_frame_data(shape=(10, 128, 128)):
+    """Create some dummy data with a given shape. It's pretty much just an
+    arange with reshaping."""
+    length = np.prod(shape)
+    data = np.arange(length)
+    data = np.reshape(data, shape)
+    return data
+
+def MockFrameset(*args, **kwargs):
+    Es = np.linspace(8250, 8650, num=10)
+    data = dummy_frame_data((10, 128, 128))
+    spectrum = pd.Series(np.mean(data, axis=(1, 2)), Es)
+    fs_attrs = {
+        'map_data.return_value': kwargs.pop('map_data.return_value', data[0]),
+        'frames.return_value': kwargs.pop('frames.return_value', data),
+        'energies.return_value': kwargs.pop('energies.return_value', Es),
+        'spectrum.return_value': kwargs.pop('spectrum.return_value', spectrum),
+        'extent.return_value': kwargs.pop('extent.return_value', Extent(0, 1, 0, 1)),
+    }
+    return mock.MagicMock(*args, spec_set=XanesFrameset, **fs_attrs, **kwargs)
+
 
 class QtTestCase(unittest.TestCase):
 
@@ -62,7 +82,7 @@ class QtTestCase(unittest.TestCase):
             frameset = MockFrameset()
             # Create some dummy data to be returned by the frameset
             frameset.num_energies = 20
-            frame_data = self.dummy_frame_data()
+            frame_data = dummy_frame_data()
             frameset.frames = mock.Mock(return_value=frame_data)
             map_data = self.dummy_map_data()
             frameset.map_data = mock.Mock(return_value=map_data)
@@ -77,14 +97,6 @@ class QtTestCase(unittest.TestCase):
         # Mock create_app method so it can run headless (eg travis-ci.org)
         p.create_app = mock.MagicMock(name="create_app")
         return p
-
-    def dummy_frame_data(self, shape=(10, 128, 128)):
-        """Create some dummy data with a given shape. It's pretty much just an
-        arange with reshaping."""
-        length = np.prod(shape)
-        data = np.arange(length)
-        data = np.reshape(data, shape)
-        return data
 
     def dummy_map_data(self, shape=(128, 128)):
         """Create some dummy data with a given shape. It's pretty much just an
@@ -197,7 +209,7 @@ class MapViewTestCase(QtTestCase):
         view.set_cmap_list(['a', 'b'])
         view.ui.cmbCmap.clear.assert_called_with()
         view.ui.cmbCmap.addItems.assert_called_with(['a', 'b'])
-
+    
     def test_map_limits(self):
         view = QtMapView()
         view.ui = mock.Mock()
@@ -253,7 +265,7 @@ class PresenterTestCase(QtTestCase):
         presenter.set_map_cursor(1, 3)
         self.assertEqual(len(spy), 1)
         self.assertEqual(spy[0], [None, None, None])
-
+    
     def test_spectrum_fit(self):
         presenter = self.create_presenter()
         spy = QtTest.QSignalSpy(presenter.map_spectrum_changed)
@@ -314,11 +326,12 @@ class PresenterTestCase(QtTestCase):
 
         """
         # Prepare a dummy frameset to test the data
+        
         fs = MockFrameset()
         map_data = np.linspace(11, 111)
         fs.map_data = mock.Mock(return_value=map_data)
         fs.frames = mock.Mock(
-            return_value=self.dummy_frame_data((10, 128, 128)))
+            return_value=dummy_frame_data((10, 128, 128)))
         fs.spectrum = mock.Mock(return_value=pd.Series())
         fs.extent = mock.Mock(return_value=(0, 1, 2, 4))
         presenter = self.create_presenter(frameset=fs)
@@ -343,6 +356,29 @@ class PresenterTestCase(QtTestCase):
         self.assertEqual(new_norm.vmax, 110)
         self.assertEqual(show_spy[0][2], 'plasma')
     
+    def test_refresh_frames(self):
+        """Check that asking for the frames to be reshed emits the right signals.
+        """
+        # Prepare mock data for the presenter to interact with
+        Es = np.linspace(8250, 8650, num=10)
+        data = dummy_frame_data((10, 128, 128))
+        fs_attrs = {
+            'frames.return_value': data,
+            'energies.return_value': Es,
+            'spectrum.return_value': pd.Series(np.mean(data, axis=(1, 2)), Es),
+        }
+        fs = MockFrameset(**fs_attrs)
+        # Create the presenter object and cache some fake map data
+        presenter = self.create_presenter(frameset=fs)
+        presenter.active_representation = 'optical_depths'
+        # Prepare spies to monitor the signal events
+        changed_spy = QtTest.QSignalSpy(presenter.frame_data_changed)
+        spectrum_spy = QtTest.QSignalSpy(presenter.mean_spectrum_changed)
+        # Run the code under test
+        presenter.refresh_frames()
+        self.assertEqual(len(changed_spy), 1, '``frame_data_changed`` not emitted')
+        self.assertEqual(len(spectrum_spy), 1, '``mean_spectrum_changed`` not emitted')
+    
     def test_map_data_cleared(self):
         """Check that changing the hdf group to a non-`map` representation
         hides the map view window.
@@ -353,7 +389,7 @@ class PresenterTestCase(QtTestCase):
         def no_data(*args, **kwargs):
             raise exceptions.GroupKeyError()
         fs.map_data = mock.Mock(side_effect=no_data)
-        fs.frames = mock.Mock(return_value=self.dummy_frame_data((10, 128, 128)))
+        fs.frames = mock.Mock(return_value=dummy_frame_data((10, 128, 128)))
         # Create the presenter object and cache some fake map data
         presenter = self.create_presenter(frameset=fs)
         # Prepare spies to monitor the signal events
@@ -365,7 +401,6 @@ class PresenterTestCase(QtTestCase):
         self.assertEqual(len(changed_spy), 0)
         self.assertEqual(len(cleared_spy), 1)
     
-    @unittest.expectedFailure
     def test_update_spectra(self):
         """Look for new spectra and send them out the appropriate signals."""
         presenter = self.create_presenter()
@@ -412,7 +447,16 @@ class PresenterTestCase(QtTestCase):
     def test_map_data_caching(self):
         """If the same data is retrieved in successive calls, no plotting
         should take place."""
-        presenter = self.create_presenter()
+        Es = np.linspace(8250, 8650, num=10)
+        data = dummy_frame_data((10, 128, 128))
+        fs_attrs = {
+            'map_data.return_value': data[0],
+            'frames.return_value': data,
+            'energies.return_value': Es,
+            'spectrum.return_value': pd.Series(np.mean(data, axis=(1, 2)), Es),
+        }
+        fs = MockFrameset(**fs_attrs)
+        presenter = self.create_presenter(frameset=fs)
         new_item = mock.MagicMock(QtWidgets.QTreeWidgetItem)()
         new_item.text = mock.Mock(return_value='map')
         # new_item.text.side_effect = item_text
@@ -496,13 +540,16 @@ class OldFrameViewerTestcase(QtTestCase):
     def test_set_timestep(self):
         # Set up some fake data
         frameset = MockFrameset()
-        frames = self.dummy_frame_data()
+        frames = dummy_frame_data()
         frameset.frames = mock.Mock(return_value=frames)
         maps = self.dummy_map_data()
         frameset.map_data = mock.Mock(return_value=maps)
         presenter = self.create_presenter(frameset=frameset)
         presenter.active_representation = "optical_depths"
         map_spy = QtTest.QSignalSpy(presenter.map_data_changed)
+        frames_spy = QtTest.QSignalSpy(presenter.frame_data_changed)
+        spectrum_spy = QtTest.QSignalSpy(presenter.mean_spectrum_changed)
+        map_spectrum_spy = QtTest.QSignalSpy(presenter.map_spectrum_changed)
         # Now invoke to function to be tested
         presenter.set_timestep(5)
         # Check that all the view elements are updated
@@ -511,11 +558,13 @@ class OldFrameViewerTestcase(QtTestCase):
                                            representation='optical_depths')
         frameset.map_data.assert_called_with(timeidx=5,
                                            representation='optical_depths')
-        self.assertTrue(presenter.frame_view.draw_frames.emit.called)
-        self.assertTrue(presenter.frame_view.draw_spectrum.called)
-        self.assertTrue(presenter.frame_view.draw_histogram.emit.called)
-        # Check that map data are updated
+        # self.assertTrue(presenter.frame_view.draw_spectrum.called)
+        # self.assertTrue(presenter.frame_view.draw_histogram.emit.called)
+        # Check that map and frame data are updated
+        self.assertEqual(len(frames_spy), 1)
         self.assertEqual(len(map_spy), 1)
+        self.assertEqual(len(spectrum_spy), 1)
+        self.assertEqual(len(map_spectrum_spy), 1)
     
     def test_change_vmin_vmax(self):
         presenter = self.create_presenter()
@@ -529,33 +578,7 @@ class OldFrameViewerTestcase(QtTestCase):
         norm = presenter.frame_norm()
         self.assertEqual(norm.vmin, 2)
         self.assertEqual(norm.vmax, 5)
-    
-    def test_draw_frame_histogram(self):
-        presenter = self.create_presenter()
-        presenter.draw_frame_histogram()
-        self.assertTrue(presenter.frame_view.draw_histogram.emit.called)
-    
-    def test_draw_frame_spectra(self):
-        # Set some expected values on a frameset
-        frameset = MockFrameset()
-        spectrum = pd.Series()
-        frameset.spectrum = mock.Mock(return_value=spectrum)
-        frameset.edge.edge_range = (8353, 8359)
-        # Create the presenter and change the frame range
-        presenter = self.create_presenter(frameset=frameset)
-        presenter.set_frame_vmax(5.7)
-        presenter.set_frame_vmin(1.5)
-        # Check that the spectrum was drawn
-        presenter.draw_frame_spectra()
-        self.assertTrue(frameset.spectrum.called)
-        # Check that the normalizer was correct
-        called_norm = presenter.frame_view.draw_spectrum.call_args[1]['norm']
-        self.assertEqual(called_norm.vmin, 1.5)
-        self.assertEqual(called_norm.vmax, 5.7)
-        # Check that the edge range is provided
-        called_edge = presenter.frame_view.draw_spectrum.call_args[1]['edge_range']
-        self.assertEqual(called_edge, (8353, 8359))
-    
+   
     def test_move_slider(self):
         presenter = self.create_presenter()
         presenter.move_slider(5)
@@ -598,17 +621,6 @@ class OldFrameViewerTestcase(QtTestCase):
         presenter.frame_view.set_vmax_step.assert_called_with(10**-2)
         presenter.frame_view.set_vmin_maximum.assert_called_with(1.5)
         presenter.frame_view.set_vmax_minimum.assert_called_with(1)
-    
-    def test_refresh_frames(self):
-        presenter = self.create_presenter()
-        presenter.refresh_frames()
-        self.assertTrue(presenter.frame_view.draw_frames.emit.called)
-        self.assertTrue(presenter.frame_view.draw_histogram.emit.called)
-        self.assertTrue(presenter.frame_view.draw_spectrum.called)
-        # Should just clear the axes if there's no data
-        presenter.frame_representation = None
-        presenter.refresh_frames()
-        self.assertTrue(presenter.frame_view.clear_axes.called)
     
     def test_change_cmap(self):
         presenter = self.create_presenter()
@@ -705,7 +717,7 @@ class OldFrameViewerTestcase(QtTestCase):
     def test_change_hdf_group(self):
         # Create a mocked frameset object to test the presenter
         frameset = MockFrameset()
-        data = self.dummy_frame_data((10, 128, 128))
+        data = dummy_frame_data((10, 128, 128))
         frameset.frames = mock.Mock(return_value=data)
         frameset.pixel_unit = mock.Mock(return_value='um')
         # Create the presenter object
@@ -817,7 +829,7 @@ class OldFrameViewerTestcase(QtTestCase):
     def test_hover_frame_pixel(self):
         # Set some dummy data on the frameset
         frameset = MockFrameset()
-        data = self.dummy_frame_data((10, 1024, 1024))
+        data = dummy_frame_data((10, 1024, 1024))
         frameset.frames = mock.MagicMock(return_value=data)
         frameset.frame_shape = mock.MagicMock(return_value=(1024, 1024))
         # Set a fake extent on the frameset

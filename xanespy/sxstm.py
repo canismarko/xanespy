@@ -92,7 +92,7 @@ class SxstmDataFile():
         self.file.close(*args, **kwargs)
     
     def __enter__(self):
-        pass
+        return self
     
     def __exit__(self, *args, **kwargs):
         self.close()

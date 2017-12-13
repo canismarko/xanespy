@@ -253,8 +253,6 @@ class QtFramesetPresenter(QtCore.QObject):
     
     def set_timestep(self, new_timestep):
         self.active_timestep = new_timestep
-        self.draw_frame_histogram()
-        self.draw_frame_spectra()
         self.refresh_frames()
         self.update_maps()
     
@@ -441,25 +439,6 @@ class QtFramesetPresenter(QtCore.QObject):
         norm = Normalize(vmin=self._map_vmin, vmax=self._map_vmax, clip=True)
         return norm
     
-    def draw_frame_spectra(self):
-        frame_spectrum = self.frameset.spectrum(
-            edge_jump_filter=False,
-            representation=self.active_representation,
-            index=self.active_timestep)
-        energies = frame_spectrum.index
-        ODs = get_component(frame_spectrum, self.active_frame_component)
-        edge_range = getattr(self.frameset.edge, 'edge_range', None)
-        self.frame_view.draw_spectrum(ODs, energies=energies,
-                                      cmap=self.frame_cmap,
-                                      norm=self.frame_norm(),
-                                      edge_range=edge_range)
-    
-    def draw_frame_histogram(self):
-        frames = self.active_frames()
-        self.frame_view.draw_histogram.emit(frames,
-                                            self.frame_norm(),
-                                            self.frame_cmap)
-    
     def change_frame_component(self, new_comp):
         if not self.active_frame_component == new_comp:
             log.debug("Changing frame component from %s to %s", self.active_frame_component, new_comp)
@@ -532,9 +511,16 @@ class QtFramesetPresenter(QtCore.QObject):
     def refresh_frames(self):
         if self.active_representation is not None:
             # A valid set of frames is available, so plot them
-            self.draw_frame_histogram()
-            self.draw_frame_spectra()
-            self.animate_frames()
+            self.update_spectra()
+            frames = self.active_frames()
+            extent = self.frameset.extent(self.active_representation)
+            energies = self.frameset.energies(timeidx=self.active_timestep)
+            log.debug("Changing frames from presenter")
+            self.frame_data_changed.emit(frames,
+                                         energies,
+                                         self.frame_norm(),
+                                         self.frame_cmap, extent)
+            
         else:
             # Invalid frame data, so just clear the axes
             self.frame_view.clear_axes()
@@ -568,16 +554,6 @@ class QtFramesetPresenter(QtCore.QObject):
                 mask = self.frameset.edge_mask()
                 map_data = np.ma.array(map_data, mask=mask)
         return map_data
-    
-    def animate_frames(self):
-        frames = self.active_frames()
-        extent = self.frameset.extent(self.active_representation)
-        energies = self.frameset.energies(timeidx=self.active_timestep)
-        log.debug("Animating frames from presenter")
-        self.frame_data_changed.emit(frames,
-                                     energies,
-                                     self.frame_norm(),
-                                     self.frame_cmap, extent)
     
     def hover_frame_pixel(self, xy):
         # Validate that the pixel's on the graph, and has data
@@ -745,7 +721,6 @@ class QtFramesetPresenter(QtCore.QObject):
                 pixel=self._map_pixel,
                 edge_jump_filter=self.use_edge_mask,
                 representation=self.active_representation)
-            log.debug("the map spectrum:", map_spectrum)
         except exceptions.GroupKeyError:
             pass
         else:
@@ -755,17 +730,17 @@ class QtFramesetPresenter(QtCore.QObject):
             map_spectrum = pd.Series(map_spectrum, index=energies)
             # Get the fitted spectrum if available
             if self.show_spectrum_fit:
-                fit = self.frameset.fitted_spectrum(
-                    pixel=self._map_pixel, index=self.active_timestep)
+                log.warning('Plotting of spectrum fits not implemented.')
+                fit = True
             else:
                 fit = None
-            # self.mean_spectrum_changed.emit(mean_spectrum,
-            #                                 fit,
-            #                                 self.map_norm(),
-            #                                 self.map_cmap,
-            #                                 self.frameset.edge.edge_range)
+            self.mean_spectrum_changed.emit(mean_spectrum,
+                                            fit,
+                                            self.map_norm(),
+                                            self.map_cmap,
+                                            getattr(self.frameset.edge, 'edge_range'))
             edge_range = getattr(self.frameset.edge, 'edge_range', None)
-            log.debug("Emitting map spectrum:", map_spectrum)
+            log.debug("Emitting map spectrum")
             self.map_spectrum_changed.emit(map_spectrum,
                                            fit,
                                            self.map_norm(),

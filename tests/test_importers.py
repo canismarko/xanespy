@@ -40,8 +40,9 @@ from xanespy.importers import (magnification_correction,
                                decode_aps_params, decode_ssrl_params,
                                import_ssrl_xanes_dir, CURRENT_VERSION,
                                import_nanosurveyor_frameset,
-                               import_aps_8BM_xanes_dir,
-                               import_aps_8BM_xanes_file,
+                               import_aps4idc_sxstm_files,
+                               import_aps8bm_xanes_dir,
+                               import_aps8bm_xanes_file,
                                import_aps32idc_xanes_files,
                                import_aps32idc_xanes_file,
                                read_metadata)
@@ -82,37 +83,40 @@ class APS32IDCImportTest(TestCase):
             self.assertEqual(parent_group.attrs['technique'], 'Full-field TXM')
             self.assertEqual(parent_group.attrs['xanespy_version'], CURRENT_VERSION)
             self.assertEqual(parent_group.attrs['beamline'], "APS 32-ID-C")
-            self.assertEqual(parent_group.attrs['original_directory'], os.path.dirname(self.src_data))
+            self.assertEqual(parent_group.attrs['original_directory'],
+                             os.path.dirname(self.src_data))
+            self.assertEqual(parent_group.attrs['latest_data_name'], 'imported')
             # Check h5 data structure
             keys = list(data_group.keys())
             self.assertIn('intensities', keys)
             self.assertTrue(np.any(data_group['intensities']))
             self.assertEqual(data_group['intensities'].shape, (1, 3, 512, 612))
+            self.assertEqual(data_group['intensities'].attrs['context'], 'frameset')
             self.assertIn('flat_fields', keys)
             self.assertTrue(np.any(data_group['flat_fields']))
+            self.assertEqual(data_group['flat_fields'].attrs['context'], 'frameset')
             self.assertIn('dark_fields', keys)
             self.assertEqual(data_group['dark_fields'].shape, (1, 2, 512, 612))
             self.assertTrue(np.any(data_group['dark_fields']))
+            self.assertEqual(data_group['dark_fields'].attrs['context'], 'frameset')
             self.assertIn('optical_depths', keys)
             self.assertTrue(np.any(data_group['optical_depths']))
+            self.assertEqual(data_group['optical_depths'].attrs['context'], 'frameset')
             self.assertEqual(data_group['pixel_sizes'].attrs['unit'], 'µm')
             self.assertEqual(data_group['pixel_sizes'].shape, (1, 3))
             self.assertTrue(np.any(data_group['pixel_sizes'].value > 0))
             self.assertEqual(data_group['energies'].shape, (1, 3))
-            expected_Es = np.array([[8.34, 8.35, 8.36]])
-            np.testing.assert_array_almost_equal(data_group['energies'].value, expected_Es, decimal=3)
+            expected_Es = np.array([[8340, 8350, 8360]])
+            np.testing.assert_array_almost_equal(data_group['energies'].value,
+                                                 expected_Es, decimal=3)
             self.assertIn('timestamps', keys)
             expected_timestamp = np.empty(shape=(1, 3, 2), dtype="S32")
-            # expected_timestamp = np.array([
-            #     [[b'2016-10-07 18:24:42', b'2016-10-07 '],
-            #      [b'2016-10-07 18:24:42', b'2016-10-07 22:51:25']],
-            #     [[b'2016-10-07 18:24:42', b'2016-10-07 03:19:58'],
-            #      [b'2016-10-07 18:24:42', b'2016-10-07 04:21:56']],
-            # ], dtype="S32")
             expected_timestamp[...,0] = b'2016-10-07 18:24:42'
             expected_timestamp[...,1] = b'2016-10-07 18:37:42'
             np.testing.assert_equal(data_group['timestamps'].value,
                                     expected_timestamp)
+            self.assertIn('timestep_names', keys)
+            self.assertEqual(data_group['timestep_names'][0], bytes("soc000", 'ascii'))
             self.assertIn('filenames', keys)
             self.assertEqual(data_group['filenames'].shape, (1, 3))
             self.assertEqual(data_group['filenames'][0, 0], self.src_data.encode('ascii'))
@@ -356,7 +360,7 @@ class APS8BMFileImportTest(TestCase):
             os.remove(self.hdf)
     
     def test_imported_hdf(self):
-        import_aps_8BM_xanes_file(self.txrm_file,
+        import_aps8bm_xanes_file(self.txrm_file,
                                   ref_filename=self.txrm_ref, hdf_filename=self.hdf,
                                   quiet=True)
         # Check that the file was created
@@ -411,7 +415,7 @@ class APS8BMDirImportTest(TestCase):
         try:
             with self.assertRaisesRegex(exceptions.DataNotFoundError,
                                         '/temp-empty-dir'):
-                import_aps_8BM_xanes_dir(EMPTY_DIR,
+                import_aps8bm_xanes_dir(EMPTY_DIR,
                                          hdf_filename="test-file.hdf",
                                          quiet=True)
         finally:
@@ -421,22 +425,22 @@ class APS8BMDirImportTest(TestCase):
             os.rmdir(EMPTY_DIR)
     
     def test_imported_references(self):
-        import_aps_8BM_xanes_dir(APS_DIR, hdf_filename=self.hdf, quiet=True)
+        import_aps8bm_xanes_dir(APS_DIR, hdf_filename=self.hdf, quiet=True)
         with h5py.File(self.hdf, mode='r') as f:
             self.assertIn('references', f['fov03/imported'].keys())
     
     def test_groupname_kwarg(self):
         """The groupname keyword argument needs some special attention."""
         with self.assertRaisesRegex(exceptions.CreateGroupError, 'Invalid groupname'):
-            import_aps_8BM_xanes_dir(APS_DIR, hdf_filename=self.hdf,
+            import_aps8bm_xanes_dir(APS_DIR, hdf_filename=self.hdf,
                                      quiet=True, groupname="Wawa")
         # Now does it work with the {} inserted
-        import_aps_8BM_xanes_dir(APS_DIR, hdf_filename=self.hdf,
+        import_aps8bm_xanes_dir(APS_DIR, hdf_filename=self.hdf,
                                  quiet=True, groupname="Wawa{}")
         
     
     def test_imported_hdf(self):
-        import_aps_8BM_xanes_dir(APS_DIR, hdf_filename=self.hdf, quiet=True)
+        import_aps8bm_xanes_dir(APS_DIR, hdf_filename=self.hdf, quiet=True)
         # Check that the file was created
         self.assertTrue(os.path.exists(self.hdf))
         with h5py.File(self.hdf, mode='r') as f:
@@ -626,7 +630,7 @@ class SSRLImportTest(TestCase):
         self.assertEqual(len(result), 1)
 
 
-class SxstmTestCase(unittest.TestCase):
+class SxstmFileTestCase(unittest.TestCase):
     """Tests for soft x-ray tunneling microscope data from APS 4-ID-C."""
     def test_header(self):
         filename = os.path.join(SXSTM_DIR, 'XGSS_UIC_JC_475v_60c_001_001_001.3ds')
@@ -636,3 +640,84 @@ class SxstmTestCase(unittest.TestCase):
         data = sxstm_data.dataframe()
         sxstm_data.close()
 
+
+class SxstmImportTestCase(unittest.TestCase):
+    """Tests for importing a set of X-ray tunneleing microscopy data from
+    APS 4-ID-C. 
+    
+    """
+    hdf_filename = os.path.join(SXSTM_DIR, 'sxstm_imported.h5')
+    parent_groupname = 'sxstm-test-data'    
+    def tearDown(self):
+        if os.path.exists(self.hdf_filename):
+            os.remove(self.hdf_filename)
+    
+    def test_hdf_file(self):
+        with warnings.catch_warnings():
+            warnings.filterwarnings('ignore',
+                                    message='X and Y pixel sizes')
+            import_aps4idc_sxstm_files(filenames='sxstm-data-4idc',
+                                       hdf_filename=self.hdf_filename,
+                                       hdf_groupname=self.parent_groupname,
+                                       shape=(2, 2),
+                                       energies=[8324., 8354.])
+        # Check that the file exists with the data group
+        self.assertTrue(os.path.exists(self.hdf_filename))
+        with h5py.File(self.hdf_filename, mode='r') as f:
+            # Check that the group structure is correct
+            self.assertIn(self.parent_groupname, list(f.keys()))
+            parent = f[self.parent_groupname]
+            self.assertIn('imported', list(parent.keys()),
+                          "Importer didn't create '/%s/imported'" % self.parent_groupname)
+            # Check metadata about beamline
+            self.assertEqual(parent.attrs['technique'],
+                             'Synchrotron X-ray Scanning Tunneling Microscopy')
+            self.assertEqual(parent.attrs['xanespy_version'], CURRENT_VERSION)
+            self.assertEqual(parent.attrs['beamline'], "APS 4-ID-C")
+            self.assertEqual(parent.attrs['latest_data_name'], 'imported')
+            full_path = os.path.abspath(SXSTM_DIR)
+            self.assertEqual(parent.attrs['original_directory'], full_path)
+            # Check that the datasets are created
+            group = parent['imported']
+            keys = list(group.keys())
+            columns = ['bias_calc', 'current', 'LIA_tip_ch1',
+                       'LIA_tip_ch2', 'LIA_sample', 'LIA_shielding',
+                       'LIA_topo', 'shielding', 'flux', 'bias',
+                       'height']
+            for col in columns:
+                self.assertIn(col, list(group.keys()),
+                              "Importer didn't create '/%s/imported/%s'"
+                              "" % (self.parent_groupname, col))
+                self.assertEqual(group[col].attrs['context'], 'frameset')
+                self.assertEqual(group[col].dtype, 'float32')
+                self.assertEqual(group[col].shape, (1, 2, 2, 2))
+                self.assertTrue(np.any(group[col]))
+            self.assertEqual(group['pixel_sizes'].attrs['unit'], 'µm')
+            self.assertEqual(group['pixel_sizes'].attrs['context'], 'metadata')
+            isEqual = np.array_equal(group['energies'].value,
+                                     np.array([[8324., 8354.]]))
+            self.assertTrue(isEqual, msg=group['energies'].value)
+            self.assertEqual(group['energies'].attrs['context'], 'metadata')
+            self.assertIn('filenames', keys)
+            self.assertEqual(group['filenames'].attrs['context'], 'metadata')
+            self.assertIn('timestep_names', keys)
+            self.assertEqual(group['timestep_names'].attrs['context'], 'metadata')
+            self.assertEqual(group['timestep_names'][0], b"ex-situ")
+            # self.assertIn('timestamps', keys)
+            # self.assertEqual(group['timestamps'].attrs['context'], 'metadata')
+            # self.assertIn('original_positions', keys)
+            # self.assertEqual(group['original_positions'].attrs['context'], 'metadata')
+            # self.assertIn('relative_positions', keys)
+            # self.assertEqual(group['relative_positions'].attrs['context'], 'metadata')
+
+    def test_file_list(self):
+        """See if a file list can be passed instead of a directory name."""
+        filelist = [os.path.join(SXSTM_DIR, f) for f in os.listdir(SXSTM_DIR)]
+        with warnings.catch_warnings():
+            warnings.filterwarnings('ignore',
+                                    message='X and Y pixel sizes')
+            import_aps4idc_sxstm_files(filenames=filelist,
+                                       hdf_filename=self.hdf_filename,
+                                       hdf_groupname=self.parent_groupname,
+                                       shape=(2, 2),
+                                       energies=[8324., 8354.])

@@ -23,7 +23,7 @@ import h5py
 import numpy as np
 import logging
 
-import exceptions
+from exceptions import (GroupKeyError, CreateGroupError, FrameSourceError,)
 
 import xanes_math as xm
 
@@ -148,7 +148,7 @@ class TXMStore():
     def data_name(self, val):
         if val not in self.parent_group().keys():
             msg = "Group {} does not exists. Run TXMStore.fork_data_group('{}') first"
-            raise exceptions.CreateGroupError(msg.format(val, val))
+            raise CreateGroupError(msg.format(val, val))
         self._data_name = val
     
     def data_tree(self):
@@ -192,7 +192,7 @@ class TXMStore():
         if dest == self.data_name:
             log.critical('Refusing to fork group "%s" to itself', dest)
             msg = 'Refusing to fork myself to myself ({})'.format(dest)
-            raise exceptions.CreateGroupError(msg)
+            raise CreateGroupError(msg)
         log.info('Forking data group "%s" to "%s"', src, dest)
         # Delete the old group and overwrite it
         parent = self.parent_group()
@@ -212,8 +212,27 @@ class TXMStore():
     @latest_data_name.setter
     def latest_data_name(self, val):
         self.parent_group().attrs['latest_data_name'] = val
+
+    def validate_parent_group(self, name):
+        """Retrieve the real parent group name for a possible parent_group.
+        
+        If ``name`` is None and only one group exists in the file,
+        then that group name will be returned. If ``name`` is in the
+        file, then ``name`` will be returned. If ``name`` is not in
+        the file, a GroupKeyError will be raised.
+        """
+        if name is None and len(self._file.keys()) == 1:
+            new_name = list(self._file.keys())[0]
+        elif name not in self._file.keys():
+            raise GroupKeyError("Cannot load parent group '{group}'. "
+                                "Valid choices are {choices}."
+                                "".format(group=name, choices=list(self._file.keys())))
+        else:
+            new_name = name
+        return new_name
     
     def parent_group(self):
+
         """Retrieve the top-level HDF5 group object for this file and
         groupname."""
         try:
@@ -223,7 +242,7 @@ class TXMStore():
             msg = 'Cannot load parent group "{group}". Valid choices are {choices}'
             choices = list(self._file.keys())
             msg = msg.format(group=self.parent_name, choices=choices)
-            raise exceptions.GroupKeyError(msg) from None
+            raise GroupKeyError(msg) from None
         return group
     
     def data_group(self):
@@ -286,11 +305,11 @@ class TXMStore():
         if name is None:
             msg = "dataset `None` not found in file '{}'"
             msg = msg.format(self.hdf_filename)
-            raise exceptions.GroupKeyError(msg)
+            raise GroupKeyError(msg)
         elif name not in self.data_group().keys():
             msg = "dataset '{}' not found in group '{}' file '{}'"
             msg = msg.format(name, self.data_group().name, self.hdf_filename)
-            raise exceptions.GroupKeyError(msg)
+            raise GroupKeyError(msg)
         else:
             data = self.data_group()[name]
         return data
@@ -332,7 +351,7 @@ class TXMStore():
                 dataset = self.get_dataset(dataset.attrs['frame_source'])
             except KeyError:
                 source_desc = dataset.attrs.get('frame_source', 'None')
-                raise exceptions.FrameSourceError(
+                raise FrameSourceError(
                     "Invalid frame source {} specified for group {}"
                     "".format(source_desc, self.data_name))
         return dataset

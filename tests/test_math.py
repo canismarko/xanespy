@@ -259,10 +259,10 @@ class XanesMathTest(unittest.TestCase):
         # Do the guessing
         result = guess_kedge(spectrum=As, energies=Es, edge=edge)
         # Check resultant guessed parameters
-        self.assertAlmostEqual(result.scale, 0.214, places=2)
+        self.assertAlmostEqual(result.scale, 0.244, places=2)
         self.assertAlmostEqual(result.voffset, 0.45, places=2)
         self.assertEqual(result.E0, edge.E_0)
-        self.assertAlmostEqual(result.ga, 0.9, places=2)
+        self.assertAlmostEqual(result.ga, 0.75, places=2)
         self.assertAlmostEqual(result.gb, 17, places=1)
         self.assertAlmostEqual(result.bg_slope, 0, places=5)
     
@@ -349,10 +349,12 @@ class XanesMathTest(unittest.TestCase):
         with self.assertRaises(ValueError):
             ej = k_edge_jump(frames[0:-1], energies=self.K_Es, edge=self.KEdge())
         # Check that it fails with no post-edge energies
+        bad_edge = self.KEdge()
+        bad_edge.post_edge = (np.max(self.K_Es) + 1, np.max(self.K_Es) + 10)
         with self.assertRaisesRegex(exceptions.XanesMathError, "post-edge"):
             ej = k_edge_jump(frames[..., 0:20],
                              energies=self.K_Es[..., 0:20],
-                             edge=self.KEdge())
+                             edge=bad_edge)
     
     def test_k_edge_mask(self):
         """Check that the edge jump filter can be successfully turned into a
