@@ -522,7 +522,9 @@ def plot_txm_histogram(data, ax=None, norm=None, bins=None,
     # Draw a colorbar along the bottom axes
     if add_cbar:
         cbar = draw_histogram_colorbar(ax=ax, cmap=cmap, norm=norm)
-    return ax
+    else:
+        cbar = None
+    return (ax, cbar)
 
 
 def plot_txm_intermediates(images):  # pragma: no cover

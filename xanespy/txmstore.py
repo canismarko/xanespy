@@ -351,9 +351,11 @@ class TXMStore():
                 dataset = self.get_dataset(dataset.attrs['frame_source'])
             except KeyError:
                 source_desc = dataset.attrs.get('frame_source', 'None')
-                raise FrameSourceError(
+                # raise FrameSourceError(
+                log.warning(
                     "Invalid frame source {} specified for group {}"
                     "".format(source_desc, self.data_name))
+                dataset = self.get_dataset('optical_depths')
         return dataset
     
     @property
