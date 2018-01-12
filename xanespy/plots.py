@@ -32,18 +32,17 @@ def latexify():
     format."""
     # Set default LaTeX PGF style
     pgf_with_latex = {                      # setup matplotlib to use latex for output# {{{
-        "pgf.texsystem": "lualatex",        # change this if using xetex or lautex
-        "text.usetex": True,                # use LaTeX to write all text
-        "font.family": "serif",
+        "pgf.texsystem": "xelatex",        # change this if using xetex or lautex
+        # "font.family": "serif",
         "font.serif": [],                   # blank entries should cause plots 
         "font.sans-serif": [],              # to inherit fonts from the document
         "font.monospace": [],
         "pgf.preamble": [
             # r"\usepackage[utf8x]{inputenc}",    # use utf8 fonts 
-            # r"\usepackage[T1]{fontenc}",        # plots will be generatde
+            # r"\usepackage[T1]{fontenc}",        # plots will be generated
             r"\usepackage[detect-all,locale=DE,per-mode=reciprocal]{siunitx}",
             r"\usepackage{mhchem}",
-        ]                                   # using this preamble
+        ]
     }
     rcParams.update(pgf_with_latex)
     # Default to tight bounding box
