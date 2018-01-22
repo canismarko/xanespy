@@ -133,7 +133,25 @@ class TXMStore():
     
     def __exit__(self, type, value, traceback):
         self.close()
-
+    
+    def frameset_names(self):
+        """Returns a list of all the valid map representations."""
+        names = []
+        for key in self.data_group().keys():
+            # Check if it's a "map" or not
+            if self.data_group()[key].attrs['context'] == 'frameset':
+                names.append(key)
+        return names        
+    
+    def map_names(self):
+        """Returns a list of all the valid map representations."""
+        names = []
+        for key in self.data_group().keys():
+            # Check if it's a "map" or not
+            if self.data_group()[key].attrs['context'] == 'map':
+                names.append(key)
+        return names
+    
     def open_file(self, filename, mode):
         return h5py.File(filename, mode=mode)
     

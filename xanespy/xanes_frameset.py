@@ -44,6 +44,7 @@ import numpy as np
 from scipy.ndimage import median_filter
 from skimage import morphology, filters, transform,  measure
 from sklearn import linear_model, cluster
+import jinja2 as j2
 
 from utilities import (prog, xycoord, Pixel, Extent, pixel_to_xy,
                        get_component, broadcast_reverse, xy_to_pixel)
@@ -125,6 +126,123 @@ class XanesFrameset():
                 group = store.get_dataset(representation=representation)
             path = group.name
         return path
+    
+    def plot_beamer_maps(self, basename, map_names=None, time_idxs=None, groupby='map_name'):
+        """Export maps to pgf and prepare a jinja context.
+        
+        This method is similar to ``maps_to_beamer`` except that it
+        doesn't actually create the .tex file. This can be useful if
+        you desire more control over the beamer layout.
+        
+        Parameters
+        ----------
+        basename : str
+          The base name to be used for generating the ``.pgf`` files.
+        map_names : list, optional
+          Representations to use for plotting maps. If omitted,
+          anything resembling a map will be used.
+        time_idxs : list, optional
+          Indices of timesteps to use for plotting maps. If omittedd,
+          all timesteps will be used.
+        groupby : str, optional
+          Determines which dimension changes quickly. Options are
+          "map_name" and "timestep".
+        
+        Returns
+        -------
+        context : dict
+          Context dictionary appropriate for passing into the jinja2
+          template engine.
+        
+        """
+        if time_idxs is None:
+            time_idxs = range(self.num_timesteps)
+        with self.store() as store:
+            map_names = store.map_names()
+        # Decide what order to run through the combinations in
+        if groupby == 'timestep':
+            combos = [[(ts, name) for name in map_names] for ts in time_idxs]
+        elif groupby == 'map_name':
+            combos = [[(ts, name) for ts in time_idxs] for name in map_names]
+        else:
+            raise ValueError("Cannot group by '{}'. Must be either "
+                             "'map_name' or 'timestep'")
+        # Restructure the combinations so they're ordered by frame
+        N = 6 # Plots per beamer frame
+        combos = [[c[i*N:i*N+N] for i in range(int(len(c) / N)+1)] for c in combos]
+        combos = [c for cx in combos for c in cx]
+        print(combos)
+        # Iterate through each combination and plot it
+        frames = []
+        pgfbase = "{base}_{map_name}_ts{ts}.pgf"
+        for combo in combos:
+            frame = dict(plots=[])
+            for ts, map_name in combo:
+                fig = plt.figure(figsize=(1.4, 1.4))
+                ax = plt.gca()
+                self.plot_map(map_name=map_name, timeidx=ts, ax=ax)
+                ax.set_title(map_name)
+                pgfname = pgfbase.format(base=basename, map_name=map_name, ts=ts)
+                ax.figure.savefig(pgfname)
+                frame['plots'].append(pgfname)
+            # Save metadata
+            if groupby == 'map_name':
+                frame['title'] = map_name
+            else:
+                frame['title'] = "Time-step {}".format(ts)
+            frames.append(frame)
+        # Prepare the context for returning
+        context = {
+            'frames': frames
+        }
+        return context
+    
+    def export_beamer_file(self, fname, map_names=None, time_idxs=None, groupby='map_name'):
+        """Plot maps and create a beamer file.
+        
+        The resulting beamer file won't be compilable by itself, but
+        should be included in a beamer slide-deck with the
+        ``\\input{}`` directive. The pgf package must be included with
+        ``\\usepackage{pgf}`` in the preamble.
+        
+        Parameters
+        ----------
+        fname : str
+          Filename of the beamer output. Will be overwritten if it
+          exists. Pgf figures will use this as a prefix.
+        map_names : list, optional
+          Representations to use for plotting maps. If omitted,
+          anything resembling a map will be used.
+        time_idx : list, optional
+          Indices of timesteps to use for plotting maps. If omittedd,
+          all timesteps will be used.
+        groupby : str, optional
+          Determines which dimension changes quickly. Options are
+          "map_name" and "timestep".
+        
+        """
+        basename = fname[:-4]
+        env = j2.Environment(
+            loader=j2.PackageLoader('xanespy', 'templates'),
+            block_start_string = '\BLOCK{',
+	    block_end_string = '}',
+	    variable_start_string = '\VAR{',
+	    variable_end_string = '}',
+	    comment_start_string = '\#{',
+	    comment_end_string = '}',
+	    line_statement_prefix = '%%',
+	    line_comment_prefix = '%#',
+            trim_blocks=True,
+            autoescape=False,
+        )
+        template = env.get_template('beamer_maps.tex')
+        context = self.plot_beamer_maps(basename=basename,
+                                        map_names=map_names,
+                                        time_idxs=time_idxs,
+                                        groupby=groupby)
+        tex = template.render(**context)
+        with open(fname, mode='w') as f:
+            f.write(tex)
     
     def has_representation(self, representation):
         with self.store() as store:
@@ -869,7 +987,7 @@ class XanesFrameset():
         
         edge_jump_filter - If truthy, will only include those values
           that show a strong absorbtion jump across this edge.
-
+        
         *args, **kwargs :
           Passed to plotting functions.
         """
@@ -888,10 +1006,10 @@ class XanesFrameset():
             # Adjust the limits of the spectrum to be between 0 and 1
             normalized = edge.normalize(spectrum.values, spectrum.index)
             spectrum = pd.Series(normalized, index=spectrum.index)
-        scatter = plots.plot_xanes_spectrum(spectrum=spectrum,
-                                            ax=ax,
+        scatter = plots.plot_xanes_spectrum(spectrum=spectrum, ax=ax,
                                             energies=spectrum.index,
-                                            norm=Normalize(*self.edge.map_range), *args, **kwargs)
+                                            norm=Normalize(*self.edge.map_range),
+                                            *args, **kwargs)
         # if pixel is not None:
         #     # xy = pixel_to_xy(pixel, extent=self.extent(), shape=self.map_shape())
         #     # title = 'XANES Spectrum at ({x}, {y}) = {val}'
@@ -1161,13 +1279,19 @@ class XanesFrameset():
         # Calculate the mean and median maps
         with self.store(mode="r+") as store:
             energy_axis = -3
-            mean = np.mean(store.optical_depths, axis=energy_axis)
-            store.optical_depth_mean = mean
-            store.optical_depth_mean.attrs['frame_source'] = 'optical_depths'
-            # Intensities
-            mean = np.mean(store.intensities, axis=energy_axis)
-            store.intensity_mean = mean
-            store.intensity_mean.attrs['frame_source'] = 'intensities'
+            for fs_name in store.frameset_names():
+                mean = np.mean(store.get_frames(fs_name), axis=energy_axis)
+                mean_name = fs_name + '_mean'
+                log.info('Creating new map %s', mean_name)
+                store.replace_dataset(mean_name, data=mean, context='map')
+                store.get_dataset(mean_name).attrs['frame_source'] = fs_name
+            # mean = np.mean(store.optical_depths, axis=energy_axis)
+            # store.optical_depth_mean = mean
+            # store.optical_depth_mean.attrs['frame_source'] = 'optical_depths'
+            # # Intensities
+            # mean = np.mean(store.intensities, axis=energy_axis)
+            # store.intensity_mean = mean
+            # store.intensity_mean.attrs['frame_source'] = 'intensities'
     
     def plot_signals(self, cmap="viridis"):
         """Plot the signals from the previously extracted data. Requires that
@@ -1324,7 +1448,7 @@ class XanesFrameset():
             store.signal_method = method_names[method]
             store.signal_weights = weight_frames
             store.signals.attrs['frame_source'] = frame_source
-
+        
         # ## Construct a composite RGB signal map
         # Calculate a mean frame to normalize the weights
         mean = np.imag(self.mean_frame())
@@ -1445,22 +1569,10 @@ class XanesFrameset():
                 # Save the resultant data to disk
                 store.optical_depths[timestep] = store.optical_depths[timestep] - bg
     
-    def extent_array(self, representation='intensities'):
-        raise NotImplementedError()
-        #     # Include all frames
-        #     imshape = np.array(frames.shape)[-2:]  # ((rows, cols))
-        #     pixel_size = store.pixel_sizes.value
-        #     center = store.relative_positions.value
-        # left = (center[:, -1] - width) / 2
-        # right = (center[:, -1] + width) / 2
-        # bottom = (center[:, -2] - height) / 2
-        # top = (center[:, -2] + height) / 2
-        # ret = np.array((left, right, bottom, top)).T
-    
     @functools.lru_cache(maxsize=64)
     def extent(self, representation='intensities', idx=...):
         """Determine physical dimensions for axes values.
-    
+        
         If an index is given, it will first be applied to the frames
         array. For any remaining dimensions besides the last two, the
         median will be taken. For an array of extents for each frame,
@@ -1544,8 +1656,9 @@ class XanesFrameset():
             # vmax = self.edge.map_range[1] if vmax is None else vmax
             # norm = Normalize(vmin=vmin, vmax=vmax)
             # Do the actual plotting
-            data = store.get_dataset(name=map_name)[timeidx]
-            data = get_component(data, component)
+            ds = store.get_dataset(name=map_name)
+            frame_source = ds.attrs['frame_source']
+            data = get_component(ds[timeidx], component)
             if median_size > 0:
                 data = median_filter(data, median_size)
             # Get default value ranges
@@ -1553,12 +1666,14 @@ class XanesFrameset():
             vmax = np.max(data) if vmax is None else vmax
             norm = Normalize(vmin=vmin, vmax=vmax)
             # Plot the data
-            plots.plot_txm_map(data=data,
-                               ax=ax,
-                               norm=norm,
-                               edge=self.edge,
-                               extent=self.extent(representation='optical_depths'),
-                               *args, **kwargs)
+            artist = plots.plot_txm_map(
+                data=data,
+                ax=ax,
+                norm=norm,
+                edge=self.edge,
+                extent=self.extent(representation=frame_source),
+                *args, **kwargs)
+            return artist
     
     def plot_map_pixel_spectra(self, pixels, map_ax=None,
                                spectra_ax=None,
@@ -1674,9 +1789,10 @@ class XanesFrameset():
             store.optical_depths = ODs
 
 
-
 # class PtychoFrameset(XanesFrameset):
-#     """A set of images ("frames") at different energies moving across an
+#
+
+        """A set of images ("frames") at different energies moving across an
 #     absorption edge. The individual frames should be generated by
 #     ptychographic reconstruction of scanning transmission X-ray
 #     microscopy (STXM) to produce an array complex intensity

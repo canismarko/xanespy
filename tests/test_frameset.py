@@ -20,6 +20,7 @@
 
 # flake8: noqa
 
+import glob
 import datetime as dt
 import unittest
 from unittest import TestCase, mock
@@ -90,10 +91,6 @@ class TXMStoreTest(XanespyTestCase):
             os.remove(self.hdfname)
         src_hdfname = os.path.join(TEST_DIR, 'txmstore-test.h5')
         shutil.copy2(src_hdfname, self.hdfname)
-        # # Prepare an HDF5 file that these tests can use.
-        # with warnings.catch_warnings() as w:
-        #     warnings.simplefilter('ignore', RuntimeWarning, 103)
-        #     import_ssrl_xanes_dir(SSRL_DIR, hdf_filename=self.hdfname)
     
     def tearDown(self):
         # Delete temporary HDF5 files
@@ -122,6 +119,21 @@ class TXMStoreTest(XanespyTestCase):
         with self.assertRaises(exceptions.GroupKeyError):
             store.get_dataset(None)
         # Check that `get_frames()` returns the frames associated with a map
+    
+    def test_map_names(self):
+        # Prepare the store with at least 1 map
+        store = self.store(mode='r+')
+        store.data_group()['intensities'].attrs['context'] = 'map'
+        # Make sure the map name contains only the one map
+        map_names = store.map_names()
+        self.assertEqual(map_names, ['intensities'])
+    
+    def test_frameset_names(self):
+        # Prepare the store with at least 1 map
+        store = self.store(mode='r+')
+        # Make sure the map name contains only the one map
+        map_names = store.frameset_names()
+        self.assertEqual(map_names, ['intensities', 'optical_depths', 'references'])
     
     def test_data_group(self):
         store = self.store()
@@ -244,6 +256,19 @@ class XanesFramesetTest(TestCase):
     from multiple frames to make sense.
     
     """
+    beamer_basename = os.path.join(TEST_DIR, 'beamer_output_test')
+    
+    def tearDown(self):
+        # Remove temporary beamer output file
+        beamer_fname = self.beamer_basename + '.tex'
+        if os.path.exists(beamer_fname):
+            os.remove(beamer_fname)
+        # Remove temporary pgffile output
+        pgffiles = glob.glob('%s*.pgf' % self.beamer_basename)
+        [os.remove(f) for f in pgffiles]
+        pngfiles = glob.glob('%s*.png' % self.beamer_basename)
+        [os.remove(f) for f in pngfiles]
+    
     def dummy_frame_data(self, shape=(5, 5, 128, 128)):
         """Create some dummy data with a given shape. It's pretty much just an
         arange with reshaping."""
@@ -289,6 +314,36 @@ class XanesFramesetTest(TestCase):
     #     fs.fit_spectra(edge_mask=False)
     #     # No results are specified, but at least the function was
     #     # called.
+    
+    def test_plot_beamer_maps(self):
+        store = MockStore()
+        store.optical_depths = np.random.rand(8, 3, 16, 16)
+        store.get_dataset = mock.MagicMock(return_value=np.random.rand(8, 16, 16))
+        store.pixel_sizes = np.ones((8, 3, 2))
+        map_names = ['map1', 'map2']
+        store.map_names = mock.MagicMock(return_value=map_names)
+        fs = self.create_frameset(store=store)
+        context = fs.plot_beamer_maps(basename=self.beamer_basename)
+        # Check that the PGF files were created
+        pgffiles = glob.glob('%s*.pgf' % self.beamer_basename)
+        self.assertEqual(len(pgffiles), 16)
+        # Check that the context was returned properly
+        self.assertIsInstance(context, dict)
+        self.assertIn('frames', context.keys())
+        self.assertEqual(context['frames'][0]['title'], 'map1')
+        self.assertEqual(len(context['frames'][0]['plots']), 6)
+        # Check that using a bad groupby argument throws exception
+        with self.assertRaises(ValueError):
+            context = fs.plot_beamer_maps(basename=self.beamer_basename,
+                                          groupby='gibberish')
+   
+    def test_export_beamer(self):
+        fs = self.create_frameset()
+        beamer_fname = self.beamer_basename + '.tex'
+        # Check that the file was created
+        self.assertFalse(os.path.exists(beamer_fname))
+        fs.export_beamer_file(fname=beamer_fname)
+        self.assertTrue(os.path.exists(beamer_fname))
     
     def test_lc_fitting(self):
         # Prepare stubbed data

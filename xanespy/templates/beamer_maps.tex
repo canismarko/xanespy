@@ -1,0 +1,19 @@
+%# Auto-generated beamer frames from xanespy
+
+\BLOCK{ for frame in frames }
+\begin{frame}{ \VAR{frame.title} }
+  \begin{columns}
+    \BLOCK{for plot in frame.plots[0:3]}
+    \column{0.33\textwidth}
+    \input{\VAR{plot}}
+    \BLOCK{endfor}
+  \end{columns}
+  \begin{columns}
+    \BLOCK{for plot in frame.plots[3:6]}
+    \column{0.33\textwidth}
+    \input{\VAR{plot}}
+    \BLOCK{endfor}
+  \end{columns}
+\end{frame}
+\BLOCK{ endfor }
+
