@@ -37,7 +37,7 @@ from xradia import XRMFile, TXRMFile
 from sxstm import SxstmDataFile
 from utilities import prog
 import exceptions
-from xanes_math import transform_images, apply_references, transformation_matrices
+from xanes_math import transform_images, apply_references, transformation_matrices, downsample_array
 
 
 format_classes = {
@@ -50,7 +50,7 @@ CURRENT_VERSION = "0.3" # Lets file loaders deal with changes to storage
 log = logging.getLogger(__name__)
 
 
-def import_aps4idc_sxstm_files(filenames, hdf_filename, hdf_groupname, shape, energies):
+def import_aps4idc_sxstm_files(filenames, hdf_filename, hdf_groupname, shape, energies, flux_correction=True):
     """Import scanning X-ray tunneling microscopy absorbance frames.
     
     These frames are STM images from APS 4-ID-C with incident X-rays
@@ -76,6 +76,10 @@ def import_aps4idc_sxstm_files(filenames, hdf_filename, hdf_groupname, shape, en
       Shape for the resulting maps.
     energies : iterable
       Incident beam energies for each frame, in electron-volts.
+    flux_correction : bool, optional
+      If true, certain channels will be corrected to account for
+      changing beam flux.
+    
     """
     # Convert to a list of filenames if it's a directory
     try:
@@ -180,6 +184,16 @@ def import_aps4idc_sxstm_files(filenames, hdf_filename, hdf_groupname, shape, en
         ts_names = np.array(['ex-situ'], dtype="S30")
         ts_names = data_group.create_dataset('timestep_names', data=ts_names)
         ts_names.attrs['context'] = 'metadata'
+        # Correct some channels for flux changes
+        if flux_correction:
+            print("Fixing flux")
+            flux = data_group['flux'].value
+            curr = data_group['current'].value
+            fix_flux = lambda ds: ds.write_direct(ds.value / flux)
+            fix_flux(data_group['LIA_topo'])
+            fix_flux(data_group['LIA_tip_ch1'])
+            fix_flux(data_group['LIA_tip_ch2'])
+            fix_flux(data_group['LIA_sample'])
 
 def _average_frames(*frames):
     """Accept several Xradia frames and return the first frame with new
@@ -199,7 +213,7 @@ def _average_frames(*frames):
     return new_frame
 
 
-def import_aps32idc_xanes_files(filenames, hdf_filename, hdf_groupname):
+def import_aps32idc_xanes_files(filenames, hdf_filename, hdf_groupname, *args, **kwargs):
     """Import XANES data from a HDF5 file produced at APS beamline 32-ID-C.
     
     This is used for importing a full operando experiment at once.
@@ -214,18 +228,21 @@ def import_aps32idc_xanes_files(filenames, hdf_filename, hdf_groupname):
     hdf_groupname : str, optional
       A description of the dataset that will be used to form the HDF
       data group.
+    *args, **kwargs
+      Passed to ``import_aps32idc_xanes_file``
     
     """
     append = False
     for idx, filename in enumerate(filenames):
         import_aps32idc_xanes_file(filename, hdf_filename, hdf_groupname,
                                    timestep=idx, total_timesteps=len(filenames),
-                                   append=append)
+                                   append=append, *args, **kwargs)
         append = True
 
 
 def import_aps32idc_xanes_file(filename, hdf_filename, hdf_groupname,
-                               timestep=0, total_timesteps=1, append=False):
+                               timestep=0, total_timesteps=1,
+                               append=False, downsample=0, square=True, exclude=[]):
     """Import XANES data from a HDF5 file produced at APS beamline 32-ID-C.
     
     This is used for importing a single XANES dataset.
@@ -248,6 +265,16 @@ def import_aps32idc_xanes_file(filename, hdf_filename, hdf_groupname,
     append : bool, optional
       If true, existing datasets will be saved and only the timestep
       will be overwritten.
+    downsample : int, optional
+      Improves signal-to-noise at the expense of spatial
+      resolution. Applied to intensities, flat-field, etc before
+      converting to optical_depth.
+    square : bool, optional
+      If true (default), the edges will be cut to make a square
+      array. Eg (2048, 2448) becomes (2048, 2048).
+    exclude : iterable, optional
+      Indices of frames to exclude from importing if, for example, the
+      frame contains artifacts or is otherwise problematic.
     
     """
     # Open the source HDF file
@@ -276,24 +303,36 @@ def import_aps32idc_xanes_file(filename, hdf_filename, hdf_groupname,
             # Prepare an HDF5 sub-group for this dataset
             data_group = parent_group.create_group('imported')
             parent_group.attrs['latest_data_name'] = 'imported'
-        src_data = src_file['/exchange/data']
-        src_flat = src_file['/exchange/data_white']
-        src_dark = src_file['/exchange/data_dark']
+        # Check if there's any value to exclude
+        frm_idx = [i for i in range(src_file['/exchange/data'].shape[0]) if i not in exclude]
+        kw = dict(factor=downsample, axis=(1, 2))
+        src_data = downsample_array(src_file['/exchange/data'][frm_idx], **kw)
+        src_flat = downsample_array(src_file['/exchange/data_white'][frm_idx], **kw)
+        src_dark = downsample_array(src_file['/exchange/data_dark'], **kw)
+        # Cut off extra edges if requested
+        if square:
+            im_shape = src_data.shape[1:]
+            delta = int(min(im_shape) / 2)
+            slices = tuple(slice(int(s/2-delta), int(s/2+delta)) for s in im_shape)
+            slices = (slice(None),) + slices
+            src_data = src_data[slices]
+            src_flat = src_flat[slices]
+            src_dark = src_dark[slices]
         shape = (total_timesteps, *src_data.shape)
         time_idx = timestep
         data_group.require_dataset('intensities', shape=shape, dtype=src_data.dtype)
         data_group['intensities'].attrs['context'] = 'frameset'
-        data_group.require_dataset('optical_depths', shape=shape, dtype='float32')
-        data_group['optical_depths'].attrs['context'] = 'frameset'
         data_group.require_dataset('flat_fields', shape=shape, dtype=src_flat.dtype)
         data_group['flat_fields'].attrs['context'] = 'frameset'
         dark_shape = (total_timesteps, *src_dark.shape)
         data_group.require_dataset('dark_fields', shape=dark_shape, dtype=src_dark.dtype)
         data_group['dark_fields'].attrs['context'] = 'frameset'
+        data_group.require_dataset('optical_depths', shape=shape, dtype='float32')
+        data_group['optical_depths'].attrs['context'] = 'frameset'
         # Create datasets for metadata
         pixels_shape = (total_timesteps, src_data.shape[0])
         data_group.require_dataset('pixel_sizes', shape=pixels_shape, dtype='float32')
-        data_group['pixel_sizes'][time_idx] = 1
+        data_group['pixel_sizes'][time_idx] = 0.02999 * (2**downsample)
         data_group['pixel_sizes'].attrs['unit'] = 'µm'
         data_group.require_dataset('energies', shape=shape[0:2], dtype='float32')
         timestamp_shape = (*shape[0:2], 2)
@@ -316,22 +355,23 @@ def import_aps32idc_xanes_file(filename, hdf_filename, hdf_groupname,
         soc_bytes = bytes("soc{:03d}".format(time_idx), encoding='ascii')
         data_group['timestep_names'][time_idx] = soc_bytes
         # Import actual datasets
-        data_group['intensities'][time_idx] = src_file['/exchange/data']
-        data_group['flat_fields'][time_idx] = src_file['/exchange/data_white']
-        data_group['dark_fields'][time_idx] = src_file['/exchange/data_dark']
-        energies = 1000 * src_file['/exchange/energy'].value
+        data_group['intensities'][time_idx] = src_data
+        data_group['flat_fields'][time_idx] = src_flat
+        data_group['dark_fields'][time_idx] = src_dark
+        energies = 1000 * src_file['/exchange/energy'][frm_idx]
         data_group['energies'][time_idx] = energies
         data_group['filenames'][time_idx,:] = filename.encode('ascii')
         # Convert the intensity data to optical depth
         keys_ = ('intensities', 'flat_fields', 'dark_fields')
-        Is, flat, dark = [data_group[key][time_idx] for key in keys_]
-        dark = np.median(dark, axis=0)
-        Is = (Is) / (flat)
+        # Is, flat, dark = [data_group[key][time_idx] for key in keys_]
+        dark = np.median(src_dark, axis=0)
+        Is = (src_data) / (src_flat)
         Is[Is<=0] = 1e-6
         ODs = -np.log(Is)
         # Check for nan values
         if np.any(np.isnan(ODs)):
             log.warn('nan values found after OD conversion')
+        # Save optical depth data to disk
         data_group['optical_depths'][time_idx] = ODs
 
 

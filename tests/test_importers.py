@@ -72,7 +72,9 @@ class APS32IDCImportTest(TestCase):
     
     def test_imported_hdf(self):
         # Run the import function
-        import_aps32idc_xanes_file(self.src_data, hdf_filename=self.hdf, hdf_groupname='experiment1')
+        import_aps32idc_xanes_file(self.src_data,
+                                   hdf_filename=self.hdf, hdf_groupname='experiment1',
+                                   downsample=1)
         # Check that the file was created
         self.assertTrue(os.path.exists(self.hdf))
         with h5py.File(self.hdf, mode='r') as f:
@@ -90,21 +92,23 @@ class APS32IDCImportTest(TestCase):
             keys = list(data_group.keys())
             self.assertIn('intensities', keys)
             self.assertTrue(np.any(data_group['intensities']))
-            self.assertEqual(data_group['intensities'].shape, (1, 3, 512, 612))
+            self.assertEqual(data_group['intensities'].shape, (1, 3, 256, 256))
             self.assertEqual(data_group['intensities'].attrs['context'], 'frameset')
             self.assertIn('flat_fields', keys)
             self.assertTrue(np.any(data_group['flat_fields']))
             self.assertEqual(data_group['flat_fields'].attrs['context'], 'frameset')
             self.assertIn('dark_fields', keys)
-            self.assertEqual(data_group['dark_fields'].shape, (1, 2, 512, 612))
+            self.assertEqual(data_group['dark_fields'].shape, (1, 2, 256, 256))
             self.assertTrue(np.any(data_group['dark_fields']))
             self.assertEqual(data_group['dark_fields'].attrs['context'], 'frameset')
             self.assertIn('optical_depths', keys)
+            self.assertEqual(data_group['optical_depths'].shape, (1, 3, 256, 256))
             self.assertTrue(np.any(data_group['optical_depths']))
             self.assertEqual(data_group['optical_depths'].attrs['context'], 'frameset')
             self.assertEqual(data_group['pixel_sizes'].attrs['unit'], 'µm')
             self.assertEqual(data_group['pixel_sizes'].shape, (1, 3))
-            self.assertTrue(np.any(data_group['pixel_sizes'].value > 0))
+            # Original pixel size is 29.99nm but we have downsampling factor 1
+            self.assertTrue(np.all(data_group['pixel_sizes'].value == 0.02999 * 2))
             self.assertEqual(data_group['energies'].shape, (1, 3))
             expected_Es = np.array([[8340, 8350, 8360]])
             np.testing.assert_array_almost_equal(data_group['energies'].value,
@@ -122,9 +126,23 @@ class APS32IDCImportTest(TestCase):
             self.assertEqual(data_group['filenames'][0, 0], self.src_data.encode('ascii'))
             # self.assertIn('original_positions', keys)
     
+    def test_exclude_frames(self):
+        # Run the import function
+        import_aps32idc_xanes_file(self.src_data,
+                                   hdf_filename=self.hdf, hdf_groupname='experiment1',
+                                   downsample=1, exclude=(1,))
+        # Check that the file was created
+        self.assertTrue(os.path.exists(self.hdf))
+        with h5py.File(self.hdf, mode='r') as f:
+            self.assertNotIn('experiment2', list(f.keys()))
+            parent_group = f['experiment1']
+            data_group = f['experiment1/imported']
+            self.assertEqual(data_group['intensities'].shape, (1, 2, 256, 256))
+    
     def test_import_multiple_hdfs(self):
         import_aps32idc_xanes_files([self.src_data, self.src_data],
-                                    hdf_filename=self.hdf, hdf_groupname='experiment1')
+                                    hdf_filename=self.hdf, hdf_groupname='experiment1',
+                                    square=False)
         with h5py.File(self.hdf, mode='r') as f:
             g = f['/experiment1/imported']
             self.assertEqual(g['intensities'].shape, (2, 3, 512, 612))
@@ -137,10 +155,10 @@ class APS32IDCImportTest(TestCase):
         # Run the import function
         import_aps32idc_xanes_file(self.src_data,
                                    hdf_filename=self.hdf, hdf_groupname='experiment1',
-                                   total_timesteps=2)
+                                   total_timesteps=2, square=False)
         import_aps32idc_xanes_file(self.src_data,
                                    hdf_filename=self.hdf, hdf_groupname='experiment1',
-                                   total_timesteps=2, timestep=1, append=True)
+                                   total_timesteps=2, timestep=1, append=True, square=False)
         with h5py.File(self.hdf, mode='r') as f:
             g = f['/experiment1/imported']
             self.assertEqual(g['intensities'].shape, (2, 3, 512, 612))

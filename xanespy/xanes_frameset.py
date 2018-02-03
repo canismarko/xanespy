@@ -127,12 +127,82 @@ class XanesFrameset():
             path = group.name
         return path
     
-    def plot_beamer_maps(self, basename, map_names=None, time_idxs=None, groupby='map_name'):
+    def plot_beamer_spectra(self, basename, frameset_names=None, time_idxs=None, groupby='dataset'):
+        """Export spectra to pgf and prepare a jinja context.
+        
+        This method is similar to ``export_beamer_file`` except that
+        it doesn't actually create the .tex file. This can be useful
+        if you desire more control over the beamer layout.
+        
+        Parameters
+        ----------
+        basename : str
+          The base name to be used for generating the ``.pgf`` files.
+        frameset_names : list, optional
+          Representations to use for plotting maps. If omitted,
+          anything resembling a map will be used.
+        time_idxs : list, optional
+          Indices of timesteps to use for plotting maps. If omittedd,
+          all timesteps will be used.
+        groupby : str, optional
+          Determines which dimension changes quickly. Options are
+          "dataset" and "timestep".
+        
+        Returns
+        -------
+        context : dict
+          Context dictionary appropriate for passing into the jinja2
+          template engine.
+        
+        """
+        if time_idxs is None:
+            time_idxs = range(self.num_timesteps)
+        with self.store() as store:
+            fs_names = store.frameset_names()
+        # Decide what order to run through the combinations in
+        if groupby == 'timestep':
+            combos = [[(ts, name) for name in fs_names] for ts in time_idxs]
+        elif groupby == 'dataset':
+            combos = [[(ts, name) for ts in time_idxs] for name in fs_names]
+        else:
+            raise ValueError("Cannot group by '{}'. Must be either "
+                             "'dataset' or 'timestep'".format(groupby))
+        # Restructure the combinations so they're ordered by frame
+        N = 6 # Plots per beamer frame
+        combos = [[c[i*N:i*N+N] for i in range(int(len(c) / N)+1)] for c in combos]
+        combos = [c for cx in combos for c in cx]
+        # Iterate through each combination and plot it
+        frames = []
+        pgfbase = "{base}_{fs_name}_spectrum{ts}.pgf"
+        for combo in combos:
+            frame = dict(plots=[])
+            for ts, fs_name in combo:
+                fig = plt.figure(figsize=(1.3, 1))
+                fig.patch.set_alpha(0)
+                ax = plt.gca()
+                self.plot_spectrum(representation=fs_name, timeidx=ts, ax=ax, markersize=1)
+                ax.set_title(fs_name)
+                pgfname = pgfbase.format(base=basename, fs_name=fs_name, ts=ts)
+                ax.figure.savefig(pgfname)
+                frame['plots'].append(pgfname)
+            # Save metadata
+            if groupby == 'dataset':
+                frame['title'] = "{} - {}".format(self.parent_name, fs_name).replace('_', ' ')
+            else:
+                frame['title'] = "{} - Time-step {}".format(self.parent_name, ts).replace('_', ' ')
+            frames.append(frame)
+        # Prepare the context for returning
+        context = {
+            'frames': frames
+        }
+        return context
+    
+    def plot_beamer_maps(self, basename, map_names=None, time_idxs=None, groupby='dataset'):
         """Export maps to pgf and prepare a jinja context.
         
-        This method is similar to ``maps_to_beamer`` except that it
-        doesn't actually create the .tex file. This can be useful if
-        you desire more control over the beamer layout.
+        This method is similar to ``export_beamer_file`` except that
+        it doesn't actually create the .tex file. This can be useful
+        if you desire more control over the beamer layout.
         
         Parameters
         ----------
@@ -146,7 +216,7 @@ class XanesFrameset():
           all timesteps will be used.
         groupby : str, optional
           Determines which dimension changes quickly. Options are
-          "map_name" and "timestep".
+          "dataset" and "timestep".
         
         Returns
         -------
@@ -162,23 +232,23 @@ class XanesFrameset():
         # Decide what order to run through the combinations in
         if groupby == 'timestep':
             combos = [[(ts, name) for name in map_names] for ts in time_idxs]
-        elif groupby == 'map_name':
+        elif groupby == 'dataset':
             combos = [[(ts, name) for ts in time_idxs] for name in map_names]
         else:
             raise ValueError("Cannot group by '{}'. Must be either "
-                             "'map_name' or 'timestep'")
+                             "'dataset' or 'timestep'".format(groupby))
         # Restructure the combinations so they're ordered by frame
         N = 6 # Plots per beamer frame
         combos = [[c[i*N:i*N+N] for i in range(int(len(c) / N)+1)] for c in combos]
         combos = [c for cx in combos for c in cx]
-        print(combos)
         # Iterate through each combination and plot it
         frames = []
         pgfbase = "{base}_{map_name}_ts{ts}.pgf"
         for combo in combos:
             frame = dict(plots=[])
             for ts, map_name in combo:
-                fig = plt.figure(figsize=(1.4, 1.4))
+                fig = plt.figure(figsize=(1.3, 1))
+                fig.patch.set_alpha(0)
                 ax = plt.gca()
                 self.plot_map(map_name=map_name, timeidx=ts, ax=ax)
                 ax.set_title(map_name)
@@ -186,10 +256,10 @@ class XanesFrameset():
                 ax.figure.savefig(pgfname)
                 frame['plots'].append(pgfname)
             # Save metadata
-            if groupby == 'map_name':
-                frame['title'] = map_name
+            if groupby == 'dataset':
+                frame['title'] = "{} - {}".format(self.parent_name, map_name).replace('_', ' ')
             else:
-                frame['title'] = "Time-step {}".format(ts)
+                frame['title'] = "{} - Time-step {}".format(self.parent_name, ts).replace('_', ' ')
             frames.append(frame)
         # Prepare the context for returning
         context = {
@@ -197,7 +267,7 @@ class XanesFrameset():
         }
         return context
     
-    def export_beamer_file(self, fname, map_names=None, time_idxs=None, groupby='map_name'):
+    def export_beamer_file(self, basename, map_names=None, frameset_names=None, time_idxs=None, groupby='dataset'):
         """Plot maps and create a beamer file.
         
         The resulting beamer file won't be compilable by itself, but
@@ -213,15 +283,28 @@ class XanesFrameset():
         map_names : list, optional
           Representations to use for plotting maps. If omitted,
           anything resembling a map will be used.
+        frameset_names : list, optional
+          Representations to use for plotting spectra. If omitted,
+          anything resembling a frameset will be used.
         time_idx : list, optional
           Indices of timesteps to use for plotting maps. If omittedd,
           all timesteps will be used.
-        groupby : str, optional
+        dataset : str, optional
           Determines which dimension changes quickly. Options are
-          "map_name" and "timestep".
+          "dataset" and "timestep".
         
         """
-        basename = fname[:-4]
+        # Plot maps/spectra and prepare contexts for each
+        context = {}
+        map_context = self.plot_beamer_maps(basename=basename,
+                                           map_names=map_names,
+                                           time_idxs=time_idxs,
+                                           groupby=groupby)
+        spec_context = self.plot_beamer_spectra(basename=basename,
+                                                frameset_names=frameset_names,
+                                                time_idxs=time_idxs,
+                                                groupby=groupby)
+        # Prepare the Jinja2 templates
         env = j2.Environment(
             loader=j2.PackageLoader('xanespy', 'templates'),
             block_start_string = '\BLOCK{',
@@ -235,14 +318,15 @@ class XanesFrameset():
             trim_blocks=True,
             autoescape=False,
         )
-        template = env.get_template('beamer_maps.tex')
-        context = self.plot_beamer_maps(basename=basename,
-                                        map_names=map_names,
-                                        time_idxs=time_idxs,
-                                        groupby=groupby)
-        tex = template.render(**context)
-        with open(fname, mode='w') as f:
-            f.write(tex)
+        map_template = env.get_template('beamer_maps.tex')
+        spec_template = env.get_template('beamer_spectra.tex')
+        # Render and write the templates
+        map_tex = map_template.render(**map_context)
+        spec_tex = spec_template.render(**spec_context)
+        with open(basename+'_maps.tex', mode='w') as f:
+            f.write(map_tex)
+        with open(basename+'_spectra.tex', mode='w') as f:
+            f.write(spec_tex)
     
     def has_representation(self, representation):
         with self.store() as store:
@@ -965,31 +1049,32 @@ class XanesFrameset():
                 series = pd.Series(spectrum)
         return series
     
-    def plot_xanes_spectrum(self, ax=None, pixel=None,
-                            norm_range=None, normalize=False,
-                            representation="optical_depths",
-                            show_fit=False, edge_jump_filter=False,
-                            linestyle=":",
-                            *args, **kwargs):
+    def plot_spectrum(self, ax=None, pixel=None,
+                      norm_range=None, normalize=False,
+                      representation="optical_depths",
+                      show_fit=False, edge_jump_filter=False,
+                      linestyle=":", timeidx=0,
+                      *args, **kwargs):
         """Calculate and plot the xanes spectrum for this field-of-view.
         
         Arguments
         ---------
-        ax - matplotlib axes object on which to draw
-        
-        pixel - Coordinates of a specific pixel on the image to plot.
-        
-        normalize - If truthy, will set the pre-edge at zero and the
-          post-edge at 1.
-        
-        show_fit - If truthy, will use the edge object to fit the data
-          and plot the resulting fit line.
-        
-        edge_jump_filter - If truthy, will only include those values
-          that show a strong absorbtion jump across this edge.
-        
-        *args, **kwargs :
+        ax : optional
+          matplotlib axes object on which to draw
+        pixel : 2-tuple, optional
+          Coordinates of a specific pixel on the image to plot.
+        normalize : bool, optional
+          If truthy, will set the pre-edge at zero and the post-edge
+          at 1.
+        show_fit : bool, optional
+          If truthy, will use the edge object to fit the data and plot
+          the resulting fit line.
+        edge_jump_filter : bool, optional
+          If truthy, will only include those values that show a strong
+          absorbtion jump across this edge.
+        *args, **kwargs : optional
           Passed to plotting functions.
+        
         """
         if show_fit:
             raise NotImplementedError("`show_fit` parameter coming soon")
@@ -998,7 +1083,8 @@ class XanesFrameset():
         norm = Normalize(*norm_range)
         spectrum = self.spectrum(pixel=pixel,
                                  edge_jump_filter=edge_jump_filter,
-                                 representation=representation)
+                                 representation=representation,
+                                 index=timeidx)
         edge = self.edge
         if ax is None:
             ax = plots.new_axes()
@@ -1006,10 +1092,10 @@ class XanesFrameset():
             # Adjust the limits of the spectrum to be between 0 and 1
             normalized = edge.normalize(spectrum.values, spectrum.index)
             spectrum = pd.Series(normalized, index=spectrum.index)
-        scatter = plots.plot_xanes_spectrum(spectrum=spectrum, ax=ax,
-                                            energies=spectrum.index,
-                                            norm=Normalize(*self.edge.map_range),
-                                            *args, **kwargs)
+        scatter = plots.plot_spectrum(spectrum=spectrum, ax=ax,
+                                      energies=spectrum.index,
+                                      norm=Normalize(*self.edge.map_range),
+                                      *args, **kwargs)
         # if pixel is not None:
         #     # xy = pixel_to_xy(pixel, extent=self.extent(), shape=self.map_shape())
         #     # title = 'XANES Spectrum at ({x}, {y}) = {val}'

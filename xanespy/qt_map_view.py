@@ -206,7 +206,7 @@ class QtMapView(QtCore.QObject):
         self.spectrum_ax.clear()
         self.edge_ax.clear()
         # Plot the new spectra
-        plots.plot_xanes_spectrum(
+        plots.plot_spectrum(
             spectrum=spectrum.values,
             energies=spectrum.index,
             norm=norm,
@@ -214,7 +214,7 @@ class QtMapView(QtCore.QObject):
             cmap=cmap,
             ax=self.spectrum_ax,
         )
-        plots.plot_xanes_spectrum(
+        plots.plot_spectrum(
             spectrum=spectrum.values,
             energies=spectrum.index,
             norm=norm,

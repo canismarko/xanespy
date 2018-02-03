@@ -331,15 +331,15 @@ class QtFrameView(QtCore.QObject):  # pragma: no cover
     
     def draw_spectrum(self, spectrum, fitted_spectrum, norm, cmap, edge_range=None):
         self.spectrum_ax.clear()
-        plots.plot_xanes_spectrum(spectrum=spectrum.values,
-                                  energies=spectrum.index,
-                                  norm=norm,
-                                  cmap=cmap,
-                                  color="y",
-                                  ax=self.spectrum_ax)
+        plots.plot_spectrum(spectrum=spectrum.values,
+                            energies=spectrum.index,
+                            norm=norm,
+                            cmap=cmap,
+                            color="y",
+                            ax=self.spectrum_ax)
         # Now plot a zoomed in version on the edge itself
         self.edge_ax.clear()
-        plots.plot_xanes_spectrum(spectrum=spectrum.values,
+        plots.plot_spectrum(spectrum=spectrum.values,
                                   energies=spectrum.index,
                                   norm=norm,
                                   cmap=cmap,

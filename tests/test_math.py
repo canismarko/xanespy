@@ -44,7 +44,8 @@ from xanespy.xanes_math import (transform_images, direct_whitelines,
                                 guess_kedge, transformation_matrices,
                                 apply_internal_reference,
                                 apply_mosaic_reference,
-                                register_template, _fit_spectrum)
+                                register_template, _fit_spectrum,
+                                downsample_array)
 
 TEST_DIR = os.path.dirname(__file__)
 SSRL_DIR = os.path.join(TEST_DIR, 'txm-data-ssrl')
@@ -90,6 +91,30 @@ class XanesMathTest(unittest.TestCase):
         # Predict the expected result for arctan function
         expected = np.arctan(x-8353) / np.pi + 1/2
         np.testing.assert_equal(result, expected)
+    
+    def test_downsample_array(self):
+        """Check that image downsampling works as expected."""
+        coins = data.coins()
+        # Test for exception on negative factors
+        with self.assertRaises(ValueError):
+            downsample_array(coins, factor=-1)
+        # Test for exception on invalid method
+        with self.assertRaises(ValueError):
+            downsample_array(coins, factor=1, method='ritual sacrifice')
+        # Test simple downsampling
+        output = downsample_array(coins, factor=1)
+        self.assertEqual(output.shape, (151, 192))
+        # Test no downsampling (factor=0) returns original array
+        output = downsample_array(coins, factor=0)
+        self.assertIs(output, coins)
+        # Test a 3D array
+        coins3d = np.broadcast_to(coins, (5, *coins.shape))
+        output = downsample_array(coins3d, factor=1)
+        self.assertEqual(output.shape, (2, 151, 192))
+        # Test a 3D array with only certain axes
+        coins3d = np.broadcast_to(coins, (5, *coins.shape))
+        output = downsample_array(coins3d, factor=1, axis=(1, 2))
+        self.assertEqual(output.shape, (5, 151, 192))
     
     def test_mosiac_reference(self):
         """Check that a repeated mosaic of images is converted to optical

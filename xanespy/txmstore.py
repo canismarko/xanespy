@@ -139,8 +139,10 @@ class TXMStore():
         names = []
         for key in self.data_group().keys():
             # Check if it's a "map" or not
-            if self.data_group()[key].attrs['context'] == 'frameset':
-                names.append(key)
+            grp = self.data_group()
+            if 'context' in grp.attrs.keys():
+                if grp[key].attrs['context'] == 'frameset':
+                    names.append(key)
         return names        
     
     def map_names(self):

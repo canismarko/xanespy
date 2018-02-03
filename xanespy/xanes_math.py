@@ -75,6 +75,101 @@ def iter_indices(data, leftover_dims=1, desc=None, quiet=False):
     return indices
 
 
+def downsample_array(arr, factor, method='mean', axis=None):
+    """Reduced the shape of an image in powers of 2.
+    
+    Increases in the signal-to-noise can be achieved by sacrificing
+    spatial resolution: a (1024, 1024) image can be converted to (512,
+    512) by taking the mean of each (2, 2) block. The ``factor``
+    parameter controls how agressive this conversion is. Extra pixels
+    get dropped: eg (1025, 1024) -> (512, 512).
+    
+    ===           ======  =====   ===
+    arr           factor  block   out
+    ===           ======  =====   ===
+    (1024, 1024)  0       N/A     (1024, 1024)
+    (1024, 1024)  1       (2, 2)  (512, 512)
+    (1024, 1024)  2       (4, 4)  (256, 256)
+    (1024, 1024)  3       (8, 8)  (128, 128)
+    
+    Parameters
+    ----------
+    arr : np.ndarray
+      Input array to be downsampled.
+    factor : int
+      Downsampling factor. A value of 0 returns the original array.
+    method : str, optional
+      How to convert a (eg 2x2) block to a single value. Valid choices
+      are 'mean' (default), 'median', 'sum'.
+    axis : tuple, optional
+      Which axes to use for reduction. If omitted, all axes will be
+      used.
+    
+    Raises
+    ------
+    ValueError
+      Negative downsampling factors.
+    ValueError
+      ``method`` parameter is not one of the valid options.
+    
+    Returns
+    -------
+    out : np.ndarray
+      The downsample array.
+
+    """
+    # Check that the method parameter is valid
+    methods = {
+        'mean': np.mean,
+        'sum': np.sum,
+        'median': np.median,
+    }
+    if method not in methods.keys():
+        raise ValueError("Invalid method '{}'. Choices are {}"
+                         "".format(method, list(methods.keys())))
+    # Prepare a list of axes to operate on if not given
+    if axis is None:
+        axis = tuple(range(arr.ndim))
+    # Check that the downsampling factor is sane.
+    if factor < 0:
+        raise ValueError("Downsampling factor must be non-negative: {}"
+                         "".format(factor))
+    elif factor == 0:
+        # No resampling necessary
+        out = arr
+    else:
+        # Calculate new shapes and block sizes
+        blocksize = 2**factor
+        def subshape(arr, bs, axis):
+            for idx in range(arr.ndim):
+                if idx in axis:
+                    yield int(arr.shape[idx] / bs) * bs
+                else:
+                    yield arr.shape[idx]
+        # subshape = tuple(int(s / blocksize) * blocksize for s in arr.shape)
+        subshape = tuple(subshape(arr, blocksize, axis))
+        # Remove any extra pixels that don't fit into a block
+        slices = tuple(slice(0, s, 1) for s in subshape)
+        arr = arr[slices]
+        # Create extra axes for reducing
+        def tmpshape(arr, bs, axis):
+            for idx in range(arr.ndim):
+                if idx in axis:
+                    # Yes downsample
+                    yield int(arr.shape[idx] / bs)
+                    yield bs
+                else:
+                    # No downsample
+                    yield arr.shape[idx]
+                    yield 1
+        tmpshape = tuple(tmpshape(arr, blocksize, axis))
+        arr = arr.reshape(tmpshape)
+        # Reduce the extra (odd) axes to produce a downsampled image
+        axis = tuple(range(1, arr.ndim, 2))
+        out = methods[method](arr, axis=axis)
+    return out
+
+
 def apply_mosaic_reference(intensity, reference):
     """Use a single reference frame to calculate the reference for a
     mosaic of intensity frames.

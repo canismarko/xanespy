@@ -278,8 +278,8 @@ def plot_pixel_spectra(pixels, extent, spectra, energies, map_ax,
         spectrum = (spectrum - min_) / (max_ - min_)
         # Plot the spectrum on the spectrum axes
         spectrum += step_size * idx
-        plot_xanes_spectrum(spectrum, energies,
-                            ax=spectra_ax, ax2=spectra_ax2)
+        plot_spectrum(spectrum, energies, ax=spectra_ax,
+                      ax2=spectra_ax2)
         # Put labels on the axes to indicate which specturm is which
         spectra_ax.text(
             x=np.max(energies) + 2,
@@ -304,13 +304,15 @@ def plot_pixel_spectra(pixels, extent, spectra, energies, map_ax,
     spectra_ax.set_xlim(right=np.max(energies)+4)
 
 
-def plot_xanes_spectrum(spectrum, energies, norm=Normalize(),
-                        show_fit=False, ax=None, ax2=None,
-                        linestyle=':', color="blue", cmap="plasma",
-                        polar_coords=False,
-                        *args, **kwargs):  # pragma: no cover
-    """Plot a XANES spectrum on an axes. Applies some color formatting if
-    `edge` is a valid XANES Edge object.
+def plot_spectrum(spectrum, energies, norm=Normalize(),
+                  show_fit=False, ax=None, ax2=None,
+                  linestyle=':', color="blue", cmap="plasma",
+                  polar_coords=False,
+                  *args, **kwargs):  # pragma: no cover
+    """Plot an energy spectrum on an axes.
+    
+    Applies some color formatting if `edge` is a valid XANES Edge
+    object.
     
     Arguments
     ---------
@@ -384,25 +386,26 @@ def plot_xanes_spectrum(spectrum, energies, norm=Normalize(),
     xlim = ax.get_xlim()
     ylim = ax.get_ylim()
     # Draw scatter plot of data points
+    markersize = kwargs.get('markersize', rcParams['lines.markersize'])
     if is_complex:
         ax.scatter(energies, comp0(ys), c="C0", s=25, alpha=0.5)
         ax.set_ylabel(label0, color="C0")
         for t1 in ax.get_yticklabels():
             t1.set_color("C0")
-        ax2.scatter(energies, comp1(ys), c="C1", s=25, alpha=0.5)
+        ax2.scatter(energies, comp1(ys), c="C1", s=markersize ** 2, alpha=0.5)
         ax2.set_ylabel(label1, color="C1")
         for t1 in ax2.get_yticklabels():
             t1.set_color("C1")
     else:
-        ax.scatter(energies, ys, c=colors, s=25)
+        ax.scatter(energies, ys, c=colors, s=markersize ** 2)
         ax.set_ylabel('Optical Depth')
     ax.set_xlim(*xlim)
     ax.set_ylim(*ylim)
     ax.set_xlabel('Energy /eV')
     # Plot the edges of the map range
     if norm is not None:
-        vlineargs = {'linestyle': '--', 'alpha': 0.7,
-                     'color': "lightgrey", 'zorder': 0}
+        vlineargs = dict(linestyle='--', alpha=0.7,
+                         color="lightgrey", zorder=0,)
         ax.axvline(norm.vmin, **vlineargs)
         ax.axvline(norm.vmax, **vlineargs)
     return artist
