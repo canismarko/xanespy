@@ -127,7 +127,8 @@ class XanesFrameset():
             path = group.name
         return path
     
-    def plot_beamer_spectra(self, basename, frameset_names=None, time_idxs=None, groupby='dataset'):
+    def plot_beamer_spectra(self, basename, frameset_names=None,
+                            time_idxs=None, groupby='dataset'):
         """Export spectra to pgf and prepare a jinja context.
         
         This method is similar to ``export_beamer_file`` except that
@@ -189,7 +190,8 @@ class XanesFrameset():
             if groupby == 'dataset':
                 frame['title'] = "{} - {}".format(self.parent_name, fs_name).replace('_', ' ')
             else:
-                frame['title'] = "{} - Time-step {}".format(self.parent_name, ts).replace('_', ' ')
+                frame['title'] = ("{} - Time-step {}"
+                                  "".format(self.parent_name, ts).replace('_', ' '))
             frames.append(frame)
         # Prepare the context for returning
         context = {
@@ -247,12 +249,17 @@ class XanesFrameset():
         for combo in combos:
             frame = dict(plots=[])
             for ts, map_name in combo:
-                fig = plt.figure(figsize=(1.3, 1))
+                fig = plt.figure(figsize=(1.65, 1.5))
                 fig.patch.set_alpha(0)
                 ax = plt.gca()
-                self.plot_map(map_name=map_name, timeidx=ts, ax=ax)
+                artist = self.plot_map(map_name=map_name, timeidx=ts, ax=ax)
+                plt.colorbar(artist, ax=ax)
                 ax.set_title(map_name)
                 pgfname = pgfbase.format(base=basename, map_name=map_name, ts=ts)
+                ax.set_ylabel("")
+                ax.yaxis.set_ticks([])
+                ax.set_xlabel(self.pixel_unit())
+                ax.figure.tight_layout()
                 ax.figure.savefig(pgfname)
                 frame['plots'].append(pgfname)
             # Save metadata
@@ -267,7 +274,8 @@ class XanesFrameset():
         }
         return context
     
-    def export_beamer_file(self, basename, map_names=None, frameset_names=None, time_idxs=None, groupby='dataset'):
+    def export_beamer_file(self, basename, map_names=None,
+                           frameset_names=None, time_idxs=None, groupby='dataset'):
         """Plot maps and create a beamer file.
         
         The resulting beamer file won't be compilable by itself, but
@@ -750,7 +758,6 @@ class XanesFrameset():
             Is = store.get_dataset(representation)
             Is = np.mean(Is, axis=1)
         Is = get_component(Is, component)
-        print(Is)
         out = np.empty_like(Is, dtype='uint16')
         # Segment values below the first treshold
         out[Is<thresholds[0]] = 0
@@ -761,8 +768,6 @@ class XanesFrameset():
             out[is_th] = idx + 1
         # Segment values above the last threshold
         out[Is > thresholds[-1]] = len(thresholds)
-        print(thresholds[-1], len(thresholds))
-        print(np.count_nonzero(out))
         # Save data to data store
         with self.store(mode='r+') as store:
             store.segments = out
@@ -1280,9 +1285,7 @@ class XanesFrameset():
             results = leastsq(func=errfun, x0=guess, args=(spectrum,), full_output=True)
             x, cov_x, infodict, mesg, status = results
             # Status 4 is often a sign of mismatched datatypes.
-            if status not in [1, 2, 3, 4]:
-                print(status)
-            elif status == 4:
+            if status == 4:
                 msg = "Precision errors encountered during fitting. Check dtypes."
                 warnings.warn(msg, RuntimeWarning)
             params[idx] = x
@@ -1371,13 +1374,77 @@ class XanesFrameset():
                 log.info('Creating new map %s', mean_name)
                 store.replace_dataset(mean_name, data=mean, context='map')
                 store.get_dataset(mean_name).attrs['frame_source'] = fs_name
-            # mean = np.mean(store.optical_depths, axis=energy_axis)
-            # store.optical_depth_mean = mean
-            # store.optical_depth_mean.attrs['frame_source'] = 'optical_depths'
-            # # Intensities
-            # mean = np.mean(store.intensities, axis=energy_axis)
-            # store.intensity_mean = mean
-            # store.intensity_mean.attrs['frame_source'] = 'intensities'
+    
+    def plot_line_scans(self, representation="optical_depths",
+                        direction="horizontal", idx=None, ax=None,
+                        form="lines",
+                        time_idx=0):
+        """Plot spectrum for each point on a line.
+        
+        The ``direction`` and ``idx`` parameters control which lines
+        are scanned. Eg. ``direction="vertical"`` and ``idx=3`` will plot
+        a spectrum for each position in the 4th column.
+        
+        Parameters
+        ----------
+        representation : str, optional
+          Which frameset to use for plotting.
+        direction : str, optional
+          Whether to do lines scans in "horizontal" (default) or
+          "vertical" orientation.
+        idx : int, optional
+          Which row or column to use for line scans. If omitted,
+          frames will be averaged across the unchanging dimension.
+        ax : mpl.Axes, optional
+          Matplotlib axes to use for plotting. If omitted, a new Axes
+          will be created.
+        form : str, optional
+          How to plot the data: 'lines' or 'map'.
+        timeidx : int, optional
+          Which time step to use for plotting line scans.
+        
+        Returns
+        -------
+        artists
+          List of line of image artists return from plotting command
+        
+        """
+        # Get the data from disk
+        with self.store(mode='r') as store:
+            frames = store.get_frames(representation)[time_idx]
+        energies=self.energies()
+        # Process the direction parameter to determine reshaping
+        if direction == "vertical":
+            mean_axis = 2
+        elif direction == "horizontal":
+            mean_axis = 1
+        else:
+            raise ValueError('Invalid ``direction`` argument "{}". '
+                             'Valid options are "horizontal" or "vertical"'
+                             ''.format(direction))
+        # Convert the data from frames into line spectra
+        spectra = np.mean(frames, axis=mean_axis)
+        spectra = np.moveaxis(spectra, 1, 0)
+        # Plot the spectra either as lines or as a map
+        if ax is None:
+            ax = plots.new_axes()
+        if form == 'lines':
+            artists = plots.plot_spectra(spectra, energies=energies, ax=ax)
+            ax.set_xlabel('Energy /eV')
+        elif form == 'map':
+            extent = self.extent(representation)[slice(0, 2)]
+            extent = (*extent, 0, len(energies))
+            artists = plots.plot_spectra_as_map(spectra,
+                                                energies=energies, ax=ax, extent=extent)
+            ax.set_xlabel('Energy /eV')
+            ax.xaxis.set_ticks([])
+            ax.set_xlabel('Energy /eV')
+            ax.set_ylabel("Position /{}".format(self.pixel_unit()))
+        else:
+            raise ValueError('Invalid value for ``form``: {}. '
+                             'Valid values are "lines" or "map".'
+                             ''.format(repr(form)))
+        return artists
     
     def plot_signals(self, cmap="viridis"):
         """Plot the signals from the previously extracted data. Requires that

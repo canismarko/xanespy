@@ -50,7 +50,8 @@ CURRENT_VERSION = "0.3" # Lets file loaders deal with changes to storage
 log = logging.getLogger(__name__)
 
 
-def import_aps4idc_sxstm_files(filenames, hdf_filename, hdf_groupname, shape, energies, flux_correction=True):
+def import_aps4idc_sxstm_files(filenames, hdf_filename, hdf_groupname,
+                               shape, energies, flux_correction=True):
     """Import scanning X-ray tunneling microscopy absorbance frames.
     
     These frames are STM images from APS 4-ID-C with incident X-rays
@@ -161,10 +162,16 @@ def import_aps4idc_sxstm_files(filenames, hdf_filename, hdf_groupname, shape, en
         # Determine the pixel sizes
         px_size_X = (np.max(Xs) - np.min(Xs)) / (shape[1] - 1)
         px_size_Y = (np.max(Ys) - np.min(Ys)) / (shape[0] - 1)
-        if px_size_X != px_size_Y:
+        # 1D line-scans produce NaN values
+        if np.isnan(px_size_X) or np.isinf(px_size_X):
+            px_size_X = px_size_Y
+        elif np.isnan(px_size_Y) or np.isinf(px_size_Y):
+            px_size_Y = px_size_X
+        elif px_size_X != px_size_Y:
             warnings.warn("X and Y pixel sizes do not match (%f vs %f). "
                           "X axis values will be unreliable."
                           "" % (px_size_X, px_size_Y))
+        print(px_size_X, px_size_Y)
         px_ds = data_group.create_dataset('pixel_sizes', shape=(1, num_Es),
                                        dtype='float32')
         px_ds[:,:] = px_size_Y
@@ -186,10 +193,10 @@ def import_aps4idc_sxstm_files(filenames, hdf_filename, hdf_groupname, shape, en
         ts_names.attrs['context'] = 'metadata'
         # Correct some channels for flux changes
         if flux_correction:
-            print("Fixing flux")
+            log.debug("Fixing flux")
             flux = data_group['flux'].value
-            curr = data_group['current'].value
-            fix_flux = lambda ds: ds.write_direct(ds.value / flux)
+            def fix_flux(ds):
+                ds.write_direct(ds.value / flux)
             fix_flux(data_group['LIA_topo'])
             fix_flux(data_group['LIA_tip_ch1'])
             fix_flux(data_group['LIA_tip_ch2'])
@@ -739,7 +746,6 @@ def import_stxm_frameset(directory: str, quiet=False,
         # Get rid of extra tabs and newlines
         lines = f.readlines()
         lines = [l.replace('\t', '').replace('\n', '') for l in lines]
-        # [print(i, ": ", l) for i, l in enumerate(lines)]
         # Extract energies
         energy_re = "Points = \(\d+, ([0-9., ]+)\);"
         e_string = re.search(energy_re, lines[14]).groups()[0]
@@ -1184,10 +1190,6 @@ def import_frameset(directory, flavor, hdf_filename, groupname=None, return_val=
         Is = []
         for E_idx, (E_name, E_df) in enumerate(ts_df.groupby('energy')):
             Importer = format_classes[os.path.splitext(E_df.index[0])[-1]]
-            # E_files = [Importer(f, flavor=flavor) for f in E_df.index]
-            # images = np.array([f.image_data() for f in E_files])
-            # kernel = np.array([[0, 1, 0], [1, 1, 1], [0, 1, 0]])
-            # image = median_filter(np.mean(images, axis=0), footprint=kernel)
             images = []
             for f in E_df.index:
                 with Importer(f, flavor=flavor) as E_file:

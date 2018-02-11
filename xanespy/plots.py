@@ -529,12 +529,78 @@ def plot_txm_histogram(data, ax=None, norm=None, bins=None,
     return (ax, cbar)
 
 
+def plot_spectra(spectra, energies, ax=None):
+    """Take an iterable of spectra and plot them one above the next.
+    
+    Parameters
+    ----------
+    spectra : iterable
+      Each entry is an array with intensity values.
+    energies : np.ndarray
+      Energy values for the points in each entry of ``spectra``.
+    ax : matplotlib.Axes, optional
+      The Axes object to receive the plots. If omitted, a new Axes
+      will be created.
+    
+    Returns
+    -------
+    artists : list
+      A list of the matplotlib artists used to draw the spectra.
+    
+    """
+    artists = []
+    # Get a default axes if one was not provided
+    if ax is None:
+        ax = new_axes()
+    # Do the plotting for each spectrum
+    yoffset = 0
+    for spectrum in spectra:
+        artist = ax.plot(energies, spectrum + yoffset, marker='o', linestyle=':')
+        artists.append(artist)
+        # Calculate the appropriate step for the next round
+        yoffset += np.median(spectrum) - 0.25 * (np.max(spectrum) - np.min(spectrum))
+    return artists
+
+
+def plot_spectra_as_map(spectra, energies, ax=None, extent=None, **kwargs):
+    """Take an iterable of spectra and plot them as a heat map.
+    
+    This function takes energies so it can put ticks on the x-axis,
+    however if they are not equally spaced, their distance on the map
+    will not properly capture they're distance numerically.
+    
+    Parameters
+    ----------
+    spectra : iterable
+      Each entry is an array with intensity values.
+    energies : np.ndarray
+      Energy values for the points in each entry of ``spectra``.
+    ax : matplotlib.Axes, optional
+      The Axes object to receive the plots. If omitted, a new Axes
+      will be created.
+    extent : Matplotlib extent.
+    **kwargs : Get passed on to matplotlib imshow().
+    
+    Returns
+    -------
+    artists : list
+      A list of the matplotlib artists used to draw the spectra.
+    
+    """
+    # Get a default axes if one was not provided
+    if ax is None:
+        ax = new_axes()
+    # Do the plotting for each spectrum
+    artist = ax.imshow(spectra, origin='lower', extent=extent, aspect="auto", **kwargs)
+    return [artist]
+
+
 def plot_txm_intermediates(images):  # pragma: no cover
     """Accept a dictionary of images and plots them each on its own axes
     using matplotlib's `imshow`. This is a complement to routines that
     operate on a microscopy frame and optionally return all the
     intermediate calculated frames.
-
+    
     """
     for key in images.keys():
         ax1, ax2 = dual_axes()
