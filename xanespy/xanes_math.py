@@ -381,7 +381,7 @@ def l_edge_mask(frames: np.ndarray, energies: np.ndarray, edge,
     mask : np.ndarray
       A boolean mask with the same shape as the last two dimensions of
       `frames` where True pixels are likely to be background material.
-    
+
     """
     # Take the mean over all timesteps
     ODs = frames
@@ -426,7 +426,7 @@ def l_edge_mask(frames: np.ndarray, energies: np.ndarray, edge,
     # Compute the overlap between the global and pixel spectra
     overlap = np.dot(spectrum, pixels)
     # Threshold the pixel overlap to find foreground vs background
-    threshold = filters.threshold_otsu(overlap)
+    threshold = filters.threshold_otsu(overlap) * sensitivity
     mask = overlap > threshold
     # Recreate the original image shape as a boolean array
     mask = np.reshape(mask, frame_shape)
