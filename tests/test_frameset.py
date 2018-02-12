@@ -37,9 +37,7 @@ import h5py
 import numpy as np
 import pandas as pd
 import matplotlib
-with warnings.catch_warnings():
-    warnings.simplefilter('ignore', UserWarning, 1405)
-    matplotlib.use("Agg")
+
 from matplotlib.colors import Normalize
 import pytz
 from skimage import data, transform
@@ -326,7 +324,10 @@ class XanesFramesetTest(TestCase):
         fs_names = ['fs1', 'fs2']
         store.frameset_names = mock.MagicMock(return_value=fs_names)
         fs = self.create_frameset(store=store)
-        context = fs.plot_beamer_spectra(basename=self.beamer_basename)
+        with warnings.catch_warnings() as w:
+            warnings.filterwarnings('ignore', message=".*Is LaTeX installed.*",
+                                    category=RuntimeWarning)
+            context = fs.plot_beamer_spectra(basename=self.beamer_basename)
         # Check that the PGF files were created
         pgffiles = glob.glob('%s*.pgf' % self.beamer_basename)
         self.assertEqual(len(pgffiles), 16)
@@ -348,7 +349,9 @@ class XanesFramesetTest(TestCase):
         map_names = ['map1', 'map2']
         store.map_names = mock.MagicMock(return_value=map_names)
         fs = self.create_frameset(store=store)
-        with matplotlib.rc_context(rc={'axes.titlesize': 5}):
+        with warnings.catch_warnings() as w:
+            warnings.filterwarnings('ignore', message=".*Is LaTeX installed.*",
+                                    category=RuntimeWarning)
             context = fs.plot_beamer_maps(basename=self.beamer_basename, tight_layout=False)
         # Check that the PGF files were created
         pgffiles = glob.glob('%s*.pgf' % self.beamer_basename)

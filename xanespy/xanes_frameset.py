@@ -184,7 +184,10 @@ class XanesFrameset():
                 self.plot_spectrum(representation=fs_name, timeidx=ts, ax=ax, markersize=1)
                 ax.set_title(fs_name)
                 pgfname = pgfbase.format(base=basename, fs_name=fs_name, ts=ts)
-                ax.figure.savefig(pgfname)
+                try:
+                    ax.figure.savefig(pgfname)
+                except (RuntimeError, FileNotFoundError):
+                    warnings.warn("Could not save figure. Is LaTeX installed?", RuntimeWarning)
                 frame['plots'].append(pgfname)
             # Save metadata
             if groupby == 'dataset':
@@ -265,7 +268,10 @@ class XanesFrameset():
                 ax.set_xlabel(self.pixel_unit())
                 if tight_layout:
                     ax.figure.tight_layout()
-                ax.figure.savefig(pgfname)
+                try:
+                    ax.figure.savefig(pgfname)
+                except (RuntimeError, FileNotFoundError):
+                    warnings.warn("Could not save figure. Is LaTeX installed?", RuntimeWarning)
                 frame['plots'].append(pgfname)
             # Save metadata
             if groupby == 'dataset':

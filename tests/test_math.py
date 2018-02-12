@@ -25,9 +25,6 @@ import os
 import warnings
 
 import matplotlib
-with warnings.catch_warnings():
-    warnings.simplefilter('ignore', UserWarning, 1405)
-    matplotlib.use('Agg')
 import unittest
 import numpy as np
 from skimage import data

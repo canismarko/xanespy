@@ -28,6 +28,10 @@ import os
 import sys
 import warnings
 
+# Import matplotlib here to set the backend
+import matplotlib as mpl
+mpl.use('Agg')
+
 
 if __name__ == '__main__':
     start_dir = os.path.dirname(__file__)
