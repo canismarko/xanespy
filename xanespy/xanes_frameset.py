@@ -199,7 +199,8 @@ class XanesFrameset():
         }
         return context
     
-    def plot_beamer_maps(self, basename, map_names=None, time_idxs=None, groupby='dataset'):
+    def plot_beamer_maps(self, basename, map_names=None,
+                         time_idxs=None, groupby='dataset', tight_layout=True):
         """Export maps to pgf and prepare a jinja context.
         
         This method is similar to ``export_beamer_file`` except that
@@ -219,6 +220,9 @@ class XanesFrameset():
         groupby : str, optional
           Determines which dimension changes quickly. Options are
           "dataset" and "timestep".
+        tight_layout : bool, optional
+          Whether to call the matplotlib.tight_layout() function,
+          useful for things with colorbars, etc.
         
         Returns
         -------
@@ -259,7 +263,8 @@ class XanesFrameset():
                 ax.set_ylabel("")
                 ax.yaxis.set_ticks([])
                 ax.set_xlabel(self.pixel_unit())
-                ax.figure.tight_layout()
+                if tight_layout:
+                    ax.figure.tight_layout()
                 ax.figure.savefig(pgfname)
                 frame['plots'].append(pgfname)
             # Save metadata
@@ -285,7 +290,7 @@ class XanesFrameset():
         
         Parameters
         ----------
-        fname : str
+        basename : str
           Filename of the beamer output. Will be overwritten if it
           exists. Pgf figures will use this as a prefix.
         map_names : list, optional
@@ -1047,11 +1052,7 @@ class XanesFrameset():
                 flat = (*frames.shape[:frames.ndim-2], -1) # Collapse image dimension
                 spectrum = np.mean(np.reshape(frames, flat), axis=-1)
             # Combine into a series
-            if len(spectrum) == len(energies):
-                # If the spectrum is actually an energy spectrum
-                series = pd.Series(spectrum, index=energies)
-            else:
-                series = pd.Series(spectrum)
+            series = pd.Series(spectrum, index=energies)
         return series
     
     def plot_spectrum(self, ax=None, pixel=None,
@@ -1802,31 +1803,30 @@ class XanesFrameset():
           Kernel size for the median rank filter.
         
         """
-        # Do the plotting
         with self.store() as store:
             # Add bounds for the colormap if given
             # vmin = self.edge.map_range[0] if vmin is None else vmin
             # vmax = self.edge.map_range[1] if vmax is None else vmax
             # norm = Normalize(vmin=vmin, vmax=vmax)
-            # Do the actual plotting
+            # Get the data from disk
             ds = store.get_dataset(name=map_name)
-            frame_source = ds.attrs['frame_source']
             data = get_component(ds[timeidx], component)
             if median_size > 0:
                 data = median_filter(data, median_size)
-            # Get default value ranges
-            vmin = np.min(data) if vmin is None else vmin
-            vmax = np.max(data) if vmax is None else vmax
-            norm = Normalize(vmin=vmin, vmax=vmax)
-            # Plot the data
-            artist = plots.plot_txm_map(
-                data=data,
-                ax=ax,
-                norm=norm,
-                edge=self.edge,
-                extent=self.extent(representation=frame_source),
-                *args, **kwargs)
-            return artist
+            frame_source = store.frame_source(map_name)
+        # Get default value ranges
+        vmin = np.min(data) if vmin is None else vmin
+        vmax = np.max(data) if vmax is None else vmax
+        norm = Normalize(vmin=vmin, vmax=vmax)
+        # Plot the data
+        artist = plots.plot_txm_map(
+            data=data,
+            ax=ax,
+            norm=norm,
+            edge=self.edge,
+            extent=self.extent(representation=frame_source),
+            *args, **kwargs)
+        return artist
     
     def plot_map_pixel_spectra(self, pixels, map_ax=None,
                                spectra_ax=None,

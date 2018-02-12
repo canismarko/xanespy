@@ -171,7 +171,6 @@ def import_aps4idc_sxstm_files(filenames, hdf_filename, hdf_groupname,
             warnings.warn("X and Y pixel sizes do not match (%f vs %f). "
                           "X axis values will be unreliable."
                           "" % (px_size_X, px_size_Y))
-        print(px_size_X, px_size_Y)
         px_ds = data_group.create_dataset('pixel_sizes', shape=(1, num_Es),
                                        dtype='float32')
         px_ds[:,:] = px_size_Y
@@ -201,6 +200,7 @@ def import_aps4idc_sxstm_files(filenames, hdf_filename, hdf_groupname,
             fix_flux(data_group['LIA_tip_ch1'])
             fix_flux(data_group['LIA_tip_ch2'])
             fix_flux(data_group['LIA_sample'])
+
 
 def _average_frames(*frames):
     """Accept several Xradia frames and return the first frame with new

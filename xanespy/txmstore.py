@@ -138,8 +138,10 @@ class TXMStore():
         """Returns a list of all the valid map representations."""
         names = []
         for key in self.data_group().keys():
-            # Check if it's a "frameset" or not
-            if self.data_group()[key].attrs.get('context') == 'frameset':
+            # Check if it's a "map" or not
+            grp = self.data_group()
+            context = grp[key].attrs.get('context', '')
+            if context == 'frameset':
                 names.append(key)
         return names        
     
@@ -230,7 +232,7 @@ class TXMStore():
     @latest_data_name.setter
     def latest_data_name(self, val):
         self.parent_group().attrs['latest_data_name'] = val
-
+    
     def validate_parent_group(self, name):
         """Retrieve the real parent group name for a possible parent_group.
         
@@ -250,7 +252,7 @@ class TXMStore():
         return new_name
     
     def parent_group(self):
-
+    
         """Retrieve the top-level HDF5 group object for this file and
         groupname."""
         try:
@@ -342,7 +344,13 @@ class TXMStore():
         except TypeError:
             result = False
         return result
-
+    
+    def frame_source(self, name):
+        """Get the name of the frames that went into creating a map."""
+        attrs = getattr(self.get_dataset(name), 'attrs', {})
+        source = attrs.get('frame_source', name)
+        return source
+    
     def get_frames(self, name):
         """Return the source frame data for the given data name.
         
@@ -378,7 +386,7 @@ class TXMStore():
     
     @property
     def relative_positions(self):
-
+    
         """(x, y, z) position values for each frame."""
         return self.data_group()['relative_positions']
     
