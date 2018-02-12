@@ -257,6 +257,7 @@ class XanesFramesetTest(TestCase):
     
     """
     beamer_basename = os.path.join(TEST_DIR, 'beamer_output_test')
+    hdf_filename = os.path.join(TEST_DIR, 'txmstore-test.h5')
     
     def tearDown(self):
         # Remove temporary beamer output file
@@ -281,7 +282,7 @@ class XanesFramesetTest(TestCase):
         if edge is None:
             edge = edges.k_edges['Ni_NCA']
         # Create new frameset object
-        fs = XanesFrameset(filename="txmstore-test.h5", edge=edge)
+        fs = XanesFrameset(filename=self.hdf_filename, edge=edge)
         # Mock out the `store` retrieval so we can control it
         if store is None:
             store = MockStore()
@@ -698,7 +699,7 @@ class XanesFramesetTest(TestCase):
         self.assertEqual(fs.data_name, 'new_group')
     
     def test_repr(self):
-        fs = XanesFrameset(filename="txmstore-test.h5", edge=edges.k_edges['Ni_NCA'],
+        fs = XanesFrameset(filename=self.hdf_filename, edge=edges.k_edges['Ni_NCA'],
                            groupname="ssrl-test-data")
         expected = "<XanesFrameset: 'ssrl-test-data'>"
         self.assertEqual(fs.__repr__(), expected)
@@ -710,11 +711,11 @@ class OldXanesFramesetTest(XanespyTestCase):
     directly with imported HDF files. The newer tests above mock out
     the TXMStore class so we can properly isolate the XanesFrameset
     functionality.
-
+    
     """
     originhdf = os.path.join(SSRL_DIR, 'txmstore-test.h5')
     temphdf = os.path.join(SSRL_DIR, 'txmstore-test-tmp.h5')
-
+    
     @classmethod
     def setUpClass(cls):
         # Prepare an HDF5 file that these tests can use.
@@ -724,7 +725,7 @@ class OldXanesFramesetTest(XanespyTestCase):
             warnings.filterwarnings('ignore', message="Ignoring invalid file .*",
                                     category=RuntimeWarning)
             import_ssrl_xanes_dir(SSRL_DIR, hdf_filename=cls.originhdf, quiet=True)
-
+    
     def setUp(self):
         # Copy the HDF5 file so we can safely make changes
         shutil.copy(self.originhdf, self.temphdf)
@@ -817,7 +818,7 @@ class OldXanesFramesetTest(XanespyTestCase):
         with self.frameset.store() as store:
             new_shape = store.optical_depths.shape
         self.assertEqual(new_shape, (1, 2, 1023, 1023))
-
+    
     def test_calculate_clusters(self):
         """Check the the data are separated into signals and discretized by
         k-means clustering."""

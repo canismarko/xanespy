@@ -96,7 +96,13 @@ def import_aps4idc_sxstm_files(filenames, hdf_filename, hdf_groupname,
     metadata = []
     file_re = re.compile('([a-zA-Z0-9_]+)_(\d+)_(\d+).3ds')
     for f in filenames:
-        scan_name, pos_idx, E_idx = file_re.match(os.path.basename(f)).groups()
+        # Extract metadata from filenames
+        file_match = file_re.match(os.path.basename(f))
+        if file_match is None:
+            warnings.warn('Cannot process filename {}.'.format(os.path.basename(f)))
+            continue
+        # Filename matches so continue the importing
+        scan_name, pos_idx, E_idx = file_match.groups()
         E_idx = int(E_idx) - 1 # Convert from 1-index to 0-index
         pos_idx = int(pos_idx) - 1
         # Convert to actual 2D indices
@@ -689,7 +695,7 @@ def import_stxm_frameset(directory: str, quiet=False,
     append : bool, optional
       If True, any existing dataset will be added to, rather
       than replaced (default False)
-
+    
     """
     # Prepare logging info
     logstart = time()

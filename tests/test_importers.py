@@ -674,7 +674,7 @@ class SxstmImportTestCase(unittest.TestCase):
         with warnings.catch_warnings():
             warnings.filterwarnings('ignore',
                                     message='X and Y pixel sizes')
-            import_aps4idc_sxstm_files(filenames='sxstm-data-4idc',
+            import_aps4idc_sxstm_files(filenames=os.path.join(TEST_DIR, 'sxstm-data-4idc'),
                                        hdf_filename=self.hdf_filename,
                                        hdf_groupname=self.parent_groupname,
                                        shape=(2, 2),
