@@ -71,13 +71,13 @@ class FrameChangeSource(QtCore.QObject):
         if not self._is_running:
             log.debug("Starting FrameChangeSource in thread %d", threading.get_ident())
             # Listen to the frame adjustment signals
-            self.view.frame_changed.connect(self._on_change)
+            self.view.presenter_frame_changed.connect(self._on_change)
             self._is_running = True
     
     def stop(self):
         if self._is_running:
             log.debug("Stopping FrameChangeSource in thread %d", threading.get_ident())
-            self.view.frame_changed.disconnect(self._on_change)
+            self.view.presenter_frame_changed.disconnect(self._on_change)
             self._is_running = False
     
     def _on_change(self, new_idx):
@@ -98,7 +98,9 @@ class QtFrameView(QtCore.QObject):  # pragma: no cover
     # Signals
     file_opened = QtCore.pyqtSignal('QString', arguments=('filename',))
     expand_hdf_tree = QtCore.pyqtSignal()
-    frame_changed = QtCore.pyqtSignal(int)
+    # frame_change_requested = QtCore.pyqtSignal(int)
+    frame_slider_moved = QtCore.pyqtSignal(int)
+    presenter_frame_changed = QtCore.pyqtSignal(int)
     # draw_frames = QtCore.pyqtSignal(
     #     object, np.ndarray, object, 'QString', tuple,
     #     arguments=('frames', 'energies', 'norm', 'cmap', 'extent'))
@@ -120,6 +122,8 @@ class QtFrameView(QtCore.QObject):  # pragma: no cover
         self.create_canvas()
         # Create animations from the collected artists
         self.source = FrameChangeSource(view=self)
+        # Connect UI signals to view signals
+        self.ui.sldFrameSlider.valueChanged.connect(self.frame_slider_moved)
     
     def create_status_bar(self):
         self.status_layout = QtWidgets.QVboxLayout()
@@ -187,6 +191,8 @@ class QtFrameView(QtCore.QObject):  # pragma: no cover
         presenter.frame_data_changed.connect(self._animate_frames)
         presenter.frame_data_changed.connect(self.draw_histogram)
         presenter.mean_spectrum_changed.connect(self.draw_spectrum)
+        presenter.active_frame_changed.connect(self.presenter_frame_changed.emit)
+        presenter.active_frame_changed.connect(self.move_slider)
     
     def connect_signals(self, presenter):
         # Connect internal signals and slots
@@ -199,7 +205,7 @@ class QtFrameView(QtCore.QObject):  # pragma: no cover
         self.ui.cmbTimestep.currentIndexChanged.connect(presenter.set_timestep)
         self.ui.cmbCmap.currentTextChanged.connect(presenter.change_cmap)
         self.ui.cmbComponent.currentTextChanged.connect(presenter.change_frame_component)
-        self.ui.sldFrameSlider.valueChanged.connect(presenter.move_slider)
+        # self.ui.sldFrameSlider.valueChanged.connect(presenter.move_slider)
         self.ui.btnRefresh.clicked.connect(presenter.refresh_frames)
         self.ui.hdfTree.currentItemChanged.connect(presenter.change_hdf_group)
         # Use the media control stype buttons to change presenter frames
@@ -209,9 +215,6 @@ class QtFrameView(QtCore.QObject):  # pragma: no cover
         self.ui.btnFirst.clicked.connect(presenter.first_frame)
         self.ui.btnLast.clicked.connect(presenter.last_frame)
         self.ui.sldPlaySpeed.valueChanged.connect(presenter.set_play_speed)
-        # Update the UI from the presenter
-        self.frame_changed.connect(self.ui.sldFrameSlider.setValue)
-        self.file_opened.connect(presenter.change_hdf_file)
         # Opening a new HDF file
         self.ui.actionOpen.triggered.connect(self.open_hdf_file)
         # Connect a handler for when the user hovers over the frame
@@ -250,29 +253,32 @@ class QtFrameView(QtCore.QObject):  # pragma: no cover
                    self.ui.spnVMin, self.ui.spnVMax,
                    self.ui.btnApplyLimits, self.ui.btnResetLimits]
         return widgets
-
+    
+    def move_slider(self, val):
+        self.ui.sldFrameSlider.setValue(val)
+    
     def disable_frame_controls(self, status):
         log.debug("Disabling frame controls: %s", status)
         for ctrl in self.frame_controls:
             ctrl.setDisabled(status)
-
+    
     def disable_plotting_controls(self, status):
         log.debug("Disabling plotting: %s", status)
         for ctrl in self.plotting_controls:
             ctrl.setDisabled(status)
-
+    
     def use_busy_cursor(self, status):
         if status:
             self.window.setCursor(QtCore.Qt.WaitCursor)
         else:
             self.window.unsetCursor()
-
+    
     def set_drawing_status(self, status):
         if status:
             self.ui.statusbar.showMessage("Drawing...")
         else:
             self.ui.statusbar.clearMessage()
-
+    
     def set_ui_enabled(self, enable=True):
         """
         Turn on (default) or off the main interactive elements in the
@@ -293,7 +299,7 @@ class QtFrameView(QtCore.QObject):  # pragma: no cover
         self.ui.spnVMax.setEnabled(enable)
         self.ui.btnApplyLimits.setEnabled(enable)
         self.ui.btnResetLimits.setEnabled(enable)
-        
+    
     def _animate_frames(self, frames, energies, norm, cmap, extent):
         # Disconnect the old animation first
         if self._frame_animation:
@@ -387,66 +393,66 @@ class QtFrameView(QtCore.QObject):  # pragma: no cover
     
     def set_vmin_step(self, val):
         self.ui.spnVMin.setSingleStep(val)
-
+    
     def set_vmax_step(self, val):
         self.ui.spnVMax.setSingleStep(val)
-
+    
     def set_vmin_maximum(self, val):
         self.ui.spnVMin.setMaximum(val)
-
+    
     def set_vmax_minimum(self, val):
         self.ui.spnVMax.setMinimum(val)
-
+    
     def set_cmap_list(self, cmap_list):
         self.ui.cmbCmap.clear()
         self.ui.cmbCmap.addItems(cmap_list)
-
+    
     def set_cmap(self, cmap):
         self.ui.cmbCmap.setCurrentText(cmap)
-
+    
     def set_component_list(self, component_list):
         self.ui.cmbComponent.clear()
         self.ui.cmbComponent.addItems(component_list)
-
+    
     def set_component(self, comp):
         self.ui.cmbComponent.setCurrentText(comp)
-
+    
     def add_hdf_tree_item(self, item):
         self.ui.hdfTree.addTopLevelItem(item)
-
+    
     def select_active_hdf_item(self, item):
         self.ui.hdfTree.setCurrentItem(item)
-
+    
     def set_timestep_list(self, timestep_list):
         self.ui.cmbTimestep.clear()
         self.ui.cmbTimestep.addItems(timestep_list)
-
+    
     def set_timestep(self, idx):
         self.ui.cmbTimestep.setCurrentIndex(idx)
-
+    
     def show_status_message(self, message):
         self.ui.statusbar.showMessage(message)
-
+    
     def set_status_shape(self, msg):
         self.ui.lblShape.setText(msg)
-
+    
     def set_status_index(self, msg):
         self.ui.lblIndex.setText(msg)
-
+    
     def set_status_energy(self, msg):
         self.ui.lblEnergy.setText(msg)
-
+    
     def set_status_cursor(self, msg):
         self.ui.lblCursor.setText(msg)
-
+    
     def set_status_unit(self, msg):
         self.ui.lblUnit.setText(msg)
-
+    
     def set_status_pixel(self, msg):
         self.ui.lblPixel.setText(msg)
-
+    
     def set_status_value(self, msg):
         self.ui.lblValue.setText(msg)
-
+    
     def set_window_title(self, title):
         self.window.setWindowTitle(title)

@@ -227,7 +227,73 @@ class MapViewTestCase(QtTestCase):
 
 @skipUnless(HAS_PYQT, "PyQt5 required")
 class PresenterTestCase(QtTestCase):
-
+    def test_change_active_frame(self):
+        presenter = self.create_presenter()
+        presenter.num_frames = 20
+        spy = QtTest.QSignalSpy(presenter.active_frame_changed)
+        presenter.change_active_frame(1)
+        # was the new frame set?
+        self.assertEqual(presenter.active_frame, 1)
+        # Was the signal emitted for changing the frame
+        self.assertEqual(len(spy), 1)
+    
+    def test_next_frame(self):
+        presenter = self.create_presenter()
+        presenter.num_frames = 20
+        spy = QtTest.QSignalSpy(presenter.active_frame_changed)
+        self.assertEqual(presenter.active_frame, 0)
+        # Move to next frame
+        presenter.next_frame()
+        self.assertEqual(presenter.active_frame, 1)
+        self.assertEqual(len(spy), 1)
+        self.assertEqual(spy[0][0], 1)
+        # presenter.active_frame_changed.emit.assert_called_with(1)
+        # Move to next frame by wrapping around
+        presenter.active_frame = 19
+        presenter.next_frame()
+        self.assertEqual(presenter.active_frame, 0)
+        self.assertEqual(len(spy), 2)
+        self.assertEqual(spy[1][0], 0)
+    
+    def test_previous_frame(self):
+        presenter = self.create_presenter()
+        presenter.num_frames = 20
+        presenter.active_frame = 2
+        spy = QtTest.QSignalSpy(presenter.active_frame_changed)
+        self.assertEqual(presenter.active_frame, 2)
+        # Move to next frame
+        presenter.previous_frame()
+        self.assertEqual(presenter.active_frame, 1)
+        self.assertEqual(len(spy), 1)
+        self.assertEqual(spy[0][0], 1)
+        # presenter.active_frame_changed.emit.assert_called_with(1)
+        # Move to next frame by wrapping around
+        presenter.active_frame = 0
+        presenter.previous_frame()
+        self.assertEqual(presenter.active_frame, 19)
+        self.assertEqual(len(spy), 2)
+        self.assertEqual(spy[1][0], 19)
+    
+    def test_first_frame(self):
+        presenter = self.create_presenter()
+        presenter.num_frames = 20
+        presenter.active_frame = 10
+        spy = QtTest.QSignalSpy(presenter.active_frame_changed)
+        presenter.first_frame()
+        self.assertEqual(presenter.active_frame, 0)
+        self.assertEqual(len(spy), 1)
+        self.assertEqual(spy[0][0], 0)
+    
+    def test_last_frame(self):
+        presenter = self.create_presenter()
+        presenter.num_frames = 20
+        presenter.active_frame = 10
+        spy = QtTest.QSignalSpy(presenter.active_frame_changed)
+        presenter.last_frame()
+        self.assertEqual(presenter.active_frame, 19)
+        self.assertEqual(len(spy), 1)
+        self.assertEqual(spy[0][0], 19)
+    
     def test_active_map(self):
         presenter = self.create_presenter()
         fs = presenter.frameset
@@ -443,7 +509,7 @@ class PresenterTestCase(QtTestCase):
         self.assertEqual(vmin, 3)
         self.assertEqual(step, 0.1)
         self.assertEqual(decimals, 2)
-
+    
     def test_map_data_caching(self):
         """If the same data is retrieved in successive calls, no plotting
         should take place."""
@@ -472,7 +538,7 @@ class PresenterTestCase(QtTestCase):
         presenter.change_hdf_group(new_item, old_item=None)
         self.assertEqual(len(changed_spy), 0)
         self.assertEqual(len(cleared_spy), 0)
-
+    
     def test_change_map_cmap(self):
         # Prepare presenter and spies
         presenter = self.create_presenter()
@@ -632,48 +698,6 @@ class OldFrameViewerTestcase(QtTestCase):
         presenter.change_cmap('rainbow')
         self.assertEqual(presenter.frame_cmap, 'rainbow')
         presenter.frame_view.animate_frames.assert_not_called()
-    
-    def test_next_frame(self):
-        presenter = self.create_presenter()
-        presenter.num_frames = 20
-        self.assertEqual(presenter.active_frame, 0)
-        # Move to next frame
-        presenter.next_frame()
-        self.assertEqual(presenter.active_frame, 1)
-        presenter.frame_view.frame_changed.emit.assert_called_with(1)
-        # Move to next frame by wrapping around
-        presenter.active_frame = 19
-        presenter.next_frame()
-        self.assertEqual(presenter.active_frame, 0)
-        presenter.frame_view.frame_changed.emit.assert_called_with(0)
-    
-    def test_previous_frame(self):
-        presenter = self.create_presenter()
-        presenter.num_frames = 20
-        self.assertEqual(presenter.active_frame, 0)
-        # Move to previous frame (with wrapping)
-        presenter.previous_frame()
-        self.assertEqual(presenter.active_frame, 19)
-        presenter.frame_view.frame_changed.emit.assert_called_with(19)
-        # Move to next frame by wrapping around
-        presenter.previous_frame()
-        self.assertEqual(presenter.active_frame, 18)
-        presenter.frame_view.frame_changed.emit.assert_called_with(18)
-    
-    def test_first_frame(self):
-        presenter = self.create_presenter()
-        presenter.active_frame = 10
-        presenter.first_frame()
-        self.assertEqual(presenter.active_frame, 0)
-        presenter.frame_view.frame_changed.emit.assert_called_with(0)
-    
-    def test_last_frame(self):
-        presenter = self.create_presenter()
-        presenter.active_frame = 10
-        presenter.num_frames = 20
-        presenter.last_frame()
-        self.assertEqual(presenter.active_frame, 19)
-        presenter.frame_view.frame_changed.emit.assert_called_with(19)
     
     def test_build_hdf_tree(self):
         dummy_tree = [

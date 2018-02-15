@@ -102,6 +102,7 @@ class QtFramesetPresenter(QtCore.QObject):
     frame_data_changed = QtCore.pyqtSignal(
         object, np.ndarray, object, 'QString', tuple,
         arguments=('frames', 'energies', 'norm', 'cmap', 'extent'))
+    active_frame_changed = QtCore.pyqtSignal(int)
     
     def __init__(self, frameset, frame_view, *args, **kwargs):
         self.frameset = frameset
@@ -215,8 +216,9 @@ class QtFramesetPresenter(QtCore.QObject):
         self.frame_view.set_timestep(self.active_timestep)
         # Connect response signals for the widgets in the frameview
         self.frame_view.connect_signals(presenter=self)
-        self.frame_view.frame_changed.connect(self.update_status_frame)
-        self.frame_view.frame_changed.connect(self.update_status_value)
+        # self.frame_view.frame_change_requested.connect(self.update_status_frame)
+        # self.frame_view.frame_change_requested.connect(self.update_status_value)
+        self.frame_view.frame_slider_moved.connect(self.change_active_frame)
         # Prepare data for the HDF tree view
         self.build_hdf_tree(expand_tree=expand_tree)
         # Create a timer for playing through all the frames
@@ -439,6 +441,10 @@ class QtFramesetPresenter(QtCore.QObject):
         norm = Normalize(vmin=self._map_vmin, vmax=self._map_vmax, clip=True)
         return norm
     
+    def change_active_frame(self, new_idx):
+        self.active_frame = (new_idx % self.num_frames)
+        self.active_frame_changed.emit(self.active_frame)
+    
     def change_frame_component(self, new_comp):
         if not self.active_frame_component == new_comp:
             log.debug("Changing frame component from %s to %s", self.active_frame_component, new_comp)
@@ -612,20 +618,16 @@ class QtFramesetPresenter(QtCore.QObject):
         self.play_timer.setInterval(new_interval)
             
     def next_frame(self):
-        self.active_frame = (self.active_frame + 1) % self.num_frames
-        self.frame_view.frame_changed.emit(self.active_frame)
+        self.change_active_frame(self.active_frame + 1)
     
     def previous_frame(self):
-        self.active_frame = (self.active_frame - 1) % self.num_frames
-        self.frame_view.frame_changed.emit(self.active_frame)
+        self.change_active_frame(self.active_frame - 1)
     
     def first_frame(self):
-        self.active_frame = 0
-        self.frame_view.frame_changed.emit(self.active_frame)
+        self.change_active_frame(0)
     
     def last_frame(self):
-        self.active_frame = max(0, self.num_frames - 1)
-        self.frame_view.frame_changed.emit(self.active_frame)
+        self.change_active_frame(-1)
     
     def update_status_shape(self):
         try:
