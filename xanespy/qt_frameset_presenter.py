@@ -103,6 +103,9 @@ class QtFramesetPresenter(QtCore.QObject):
         object, np.ndarray, object, 'QString', tuple,
         arguments=('frames', 'energies', 'norm', 'cmap', 'extent'))
     active_frame_changed = QtCore.pyqtSignal(int)
+    frame_vrange_changed = QtCore.pyqtSignal(
+        float, float, float, int,
+        arguments=('vmin', 'vmax', 'step', 'decimals'))
     
     def __init__(self, frameset, frame_view, *args, **kwargs):
         self.frameset = frameset
@@ -141,7 +144,11 @@ class QtFramesetPresenter(QtCore.QObject):
         else:
             log.warning("Frame view not threaded")
         # Connect to the view's signals
-        pass
+        view.frame_slider_moved.connect(self.change_active_frame)
+        view.new_vrange_requested.connect(self.set_frame_vrange)
+        view.new_vrange_requested.connect(self.refresh_frames)
+        view.reset_vrange_requested.connect(self.reset_frame_range)
+        view.reset_vrange_requested.connect(self.refresh_frames)
     
     def add_map_view(self, view, threaded=True):
         """Attach a view to this presenter.
@@ -218,7 +225,6 @@ class QtFramesetPresenter(QtCore.QObject):
         self.frame_view.connect_signals(presenter=self)
         # self.frame_view.frame_change_requested.connect(self.update_status_frame)
         # self.frame_view.frame_change_requested.connect(self.update_status_value)
-        self.frame_view.frame_slider_moved.connect(self.change_active_frame)
         # Prepare data for the HDF tree view
         self.build_hdf_tree(expand_tree=expand_tree)
         # Create a timer for playing through all the frames
@@ -264,34 +270,34 @@ class QtFramesetPresenter(QtCore.QObject):
             self.active_frame = new_frame
             self.frame_view.frame_changed.emit(self.active_frame)
     
-    def update_frame_range_limits(self):
-        """Check that the (min, max, step) of the frame spinboxes are
-        reasonable. This should be called when the spinbox values change."""
-        # Round the step to the nearest multiple of ten
+    # def update_frame_range_limits(self):
+    #     """Check that the (min, max, step) of the frame spinboxes are
+    #     reasonable. This should be called when the spinbox values change."""
+    #     # Round the step to the nearest multiple of ten
+    #     decimals = - math.floor(math.log10(self._frame_vmax - self._frame_vmin) - 1)
+    #     self.frame_view.set_vmin_decimals(decimals)
+    #     self.frame_view.set_vmax_decimals(decimals)
+    #     step = 1 / 10**decimals
+    #     self.frame_view.set_vmin_step(step)
+    #     self.frame_view.set_vmax_step(step)
+    #     # Now set new limits on the view's vmin and vmax
+    #     self.frame_view.set_vmin_maximum(self._frame_vmax)
+    #     self.frame_view.set_vmax_minimum(self._frame_vmin)
+    
+    def set_frame_vrange(self, vmin, vmax):
+        if vmin < vmax:
+            log.debug("Setting frame vrange to (%f, %f)" % (vmin, vmax))
+            self._frame_vmin = vmin
+            self._frame_vmax = vmax
+        else:
+            log.info("Invalid frame range {}".format((vmin, vmax)))
+        # Calculate new step and decimal values
         decimals = - math.floor(math.log10(self._frame_vmax - self._frame_vmin) - 1)
-        self.frame_view.set_vmin_decimals(decimals)
-        self.frame_view.set_vmax_decimals(decimals)
         step = 1 / 10**decimals
-        self.frame_view.set_vmin_step(step)
-        self.frame_view.set_vmax_step(step)
-        # Now set new limits on the view's vmin and vmax
-        self.frame_view.set_vmin_maximum(self._frame_vmax)
-        self.frame_view.set_vmax_minimum(self._frame_vmin)
+        # Emit all the new values
+        self.frame_vrange_changed.emit(self._frame_vmin,
+                                       self._frame_vmax, step, decimals)
     
-    def set_frame_vmin(self, new_value):
-        log.debug("Changing frame vmin to %f", new_value)
-        # assert new_value <= self._frame_vmax, "Vmin must be less than Vmax"
-        self._frame_vmin = new_value
-        # self.update_frame_range_limits()
-        self.frame_view.set_vmin(self._frame_vmin)
-    
-    def set_frame_vmax(self, new_value):
-        log.debug("Changing frame vmax to %f", new_value)
-        # assert new_value >= self._frame_vmin, "Vmax must be greater than Vmin"
-        self._frame_vmax = new_value
-        # self.update_frame_range_limits()
-        self.frame_view.set_vmax(self._frame_vmax)
-
     def set_map_vmin(self, new_value):
         if self._map_vmin != new_value:
             log.debug("Changing map vmin to %f", new_value)
@@ -340,8 +346,7 @@ class QtFramesetPresenter(QtCore.QObject):
             # Update the view with the new values
             self._frame_vmin = p_lower
             self._frame_vmax = p_upper
-            self.set_frame_vmin(p_lower)
-            self.set_frame_vmax(p_upper)
+            self.set_frame_vrange(p_lower, p_upper)
     
     def reset_map_range(self):
         """Reset the map plotting vmin and vmax based on the currently
@@ -526,7 +531,7 @@ class QtFramesetPresenter(QtCore.QObject):
                                          energies,
                                          self.frame_norm(),
                                          self.frame_cmap, extent)
-            
+            self.change_active_frame(0)
         else:
             # Invalid frame data, so just clear the axes
             self.frame_view.clear_axes()

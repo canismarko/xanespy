@@ -94,6 +94,7 @@ class QtTestCase(unittest.TestCase):
             map_view = MockMapView()
         p = QtFramesetPresenter(frameset=frameset,
                                 frame_view=frame_view)
+        p.num_frames = 20
         # Mock create_app method so it can run headless (eg travis-ci.org)
         p.create_app = mock.MagicMock(name="create_app")
         return p
@@ -227,6 +228,61 @@ class MapViewTestCase(QtTestCase):
 
 @skipUnless(HAS_PYQT, "PyQt5 required")
 class PresenterTestCase(QtTestCase):
+
+    def test_set_frame_range(self):
+        # Prepare test scaffolding
+        presenter = self.create_presenter()
+        spy = QtTest.QSignalSpy(presenter.frame_vrange_changed)
+        # Execute code under test
+        presenter.set_frame_vrange(1.3, 2.7)
+        # Check that the right values were saved
+        self.assertEqual(presenter._frame_vmin, 1.3)
+        self.assertEqual(presenter._frame_vmax, 2.7)
+        # Check that the correct signal was emitted
+        self.assertEqual(len(spy), 1)
+        # Check that absurd values don't get set
+        presenter.set_frame_vrange(1, 1)
+        self.assertEqual(presenter._frame_vmin, 1.3)
+        self.assertEqual(presenter._frame_vmax, 2.7)
+        
+    #     def test_reset_limits(self):
+    #     frameset = MockFrameset()
+        
+    #     def frames(*args, **kwargs):
+    #         if kwargs.get('representation', '') is None:
+    #             raise exceptions.GroupKeyError()
+    #         else:
+    #             return np.linspace(1.5, 5)
+        
+    #     frameset.frames.side_effect = frames
+    #     presenter = self.create_presenter(frameset=frameset)
+    #     presenter.active_representation = "optical_depths"
+    #     presenter.reset_frame_range()
+    #     P_lower = np.percentile(frameset.frames(), 1)
+    #     P_upper = np.percentile(frameset.frames(), 99)
+    #     self.assertEqual(presenter._frame_vmin, P_lower)
+    #     self.assertEqual(presenter._frame_vmax, P_upper)
+    #     presenter.frame_view.set_vmin.assert_called_with(P_lower)
+    #     presenter.frame_view.set_vmax.assert_called_with(P_upper)
+    #     # Check what happens in the representation is invalid
+    #     presenter.frame_view.set_vmin.reset_mock()
+    #     presenter.active_representation = None
+    #     presenter.reset_frame_range()
+    #     presenter.frame_view.set_vmin.assert_not_called()
+    
+    # def test_update_frame_range_limits(self):
+    #     presenter = self.create_presenter()
+    #     presenter.set_frame_vmin(1)
+    #     presenter.set_frame_vmax(1.5)
+    #     presenter.update_frame_range_limits()
+    #     # Check that the right things were updated on the view
+    #     presenter.frame_view.set_vmin_decimals.assert_called_with(2)
+    #     presenter.frame_view.set_vmax_decimals.assert_called_with(2)
+    #     presenter.frame_view.set_vmin_step.assert_called_with(10**-2)
+    #     presenter.frame_view.set_vmax_step.assert_called_with(10**-2)
+    #     presenter.frame_view.set_vmin_maximum.assert_called_with(1.5)
+    #     presenter.frame_view.set_vmax_minimum.assert_called_with(1)
+    
     def test_change_active_frame(self):
         presenter = self.create_presenter()
         presenter.num_frames = 20
@@ -389,7 +445,7 @@ class PresenterTestCase(QtTestCase):
     def test_map_data_changed(self):
         """Check that changing the hdf group to a `map` representation
         launches the map view window.
-
+        
         """
         # Prepare a dummy frameset to test the data
         
@@ -437,6 +493,7 @@ class PresenterTestCase(QtTestCase):
         # Create the presenter object and cache some fake map data
         presenter = self.create_presenter(frameset=fs)
         presenter.active_representation = 'optical_depths'
+        presenter.num_frames = 2
         # Prepare spies to monitor the signal events
         changed_spy = QtTest.QSignalSpy(presenter.frame_data_changed)
         spectrum_spy = QtTest.QSignalSpy(presenter.mean_spectrum_changed)
@@ -632,61 +689,10 @@ class OldFrameViewerTestcase(QtTestCase):
         self.assertEqual(len(spectrum_spy), 1)
         self.assertEqual(len(map_spectrum_spy), 1)
     
-    def test_change_vmin_vmax(self):
-        presenter = self.create_presenter()
-        # Check the vmax
-        presenter.set_frame_vmax(5.0)
-        self.assertEqual(presenter._frame_vmax, 5.0)
-        # Check the vmin
-        presenter.set_frame_vmin(2)
-        self.assertEqual(presenter._frame_vmin, 2)
-        # Check normalizer
-        norm = presenter.frame_norm()
-        self.assertEqual(norm.vmin, 2)
-        self.assertEqual(norm.vmax, 5)
-   
     def test_move_slider(self):
         presenter = self.create_presenter()
         presenter.move_slider(5)
         self.assertEqual(presenter.active_frame, 5)
-    
-    def test_reset_limits(self):
-        frameset = MockFrameset()
-        
-        def frames(*args, **kwargs):
-            if kwargs.get('representation', '') is None:
-                raise exceptions.GroupKeyError()
-            else:
-                return np.linspace(1.5, 5)
-        
-        frameset.frames.side_effect = frames
-        presenter = self.create_presenter(frameset=frameset)
-        presenter.active_representation = "optical_depths"
-        presenter.reset_frame_range()
-        P_lower = np.percentile(frameset.frames(), 1)
-        P_upper = np.percentile(frameset.frames(), 99)
-        self.assertEqual(presenter._frame_vmin, P_lower)
-        self.assertEqual(presenter._frame_vmax, P_upper)
-        presenter.frame_view.set_vmin.assert_called_with(P_lower)
-        presenter.frame_view.set_vmax.assert_called_with(P_upper)
-        # Check what happens in the representation is invalid
-        presenter.frame_view.set_vmin.reset_mock()
-        presenter.active_representation = None
-        presenter.reset_frame_range()
-        presenter.frame_view.set_vmin.assert_not_called()
-    
-    def test_update_frame_range_limits(self):
-        presenter = self.create_presenter()
-        presenter.set_frame_vmin(1)
-        presenter.set_frame_vmax(1.5)
-        presenter.update_frame_range_limits()
-        # Check that the right things were updated on the view
-        presenter.frame_view.set_vmin_decimals.assert_called_with(2)
-        presenter.frame_view.set_vmax_decimals.assert_called_with(2)
-        presenter.frame_view.set_vmin_step.assert_called_with(10**-2)
-        presenter.frame_view.set_vmax_step.assert_called_with(10**-2)
-        presenter.frame_view.set_vmin_maximum.assert_called_with(1.5)
-        presenter.frame_view.set_vmax_minimum.assert_called_with(1)
     
     def test_change_cmap(self):
         presenter = self.create_presenter()
@@ -926,11 +932,11 @@ class FrameSourceTestCase(unittest.TestCase):
         # Check that signals get connected
         source.start()
         self.assertTrue(source._is_running)
-        view.frame_changed.connect.assert_called_with(source._on_change)
-        # Check that signals get disconnected
+        view.presenter_frame_changed.connect.assert_called_with(source._on_change)
+        # Check That Signals Get Disconnected
         source.stop()
         self.assertFalse(source._is_running)
-        view.frame_changed.disconnect.assert_called_with(source._on_change)
+        view.presenter_frame_changed.disconnect.assert_called_with(source._on_change)
 
 
 # Launch the tests if this is run as a script

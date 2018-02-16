@@ -98,12 +98,10 @@ class QtFrameView(QtCore.QObject):  # pragma: no cover
     # Signals
     file_opened = QtCore.pyqtSignal('QString', arguments=('filename',))
     expand_hdf_tree = QtCore.pyqtSignal()
-    # frame_change_requested = QtCore.pyqtSignal(int)
     frame_slider_moved = QtCore.pyqtSignal(int)
     presenter_frame_changed = QtCore.pyqtSignal(int)
-    # draw_frames = QtCore.pyqtSignal(
-    #     object, np.ndarray, object, 'QString', tuple,
-    #     arguments=('frames', 'energies', 'norm', 'cmap', 'extent'))
+    new_vrange_requested = QtCore.pyqtSignal(float, float)
+    reset_vrange_requested = QtCore.pyqtSignal()
     
     def setup(self):
         # Load the Qt Designer .ui file
@@ -124,6 +122,13 @@ class QtFrameView(QtCore.QObject):  # pragma: no cover
         self.source = FrameChangeSource(view=self)
         # Connect UI signals to view signals
         self.ui.sldFrameSlider.valueChanged.connect(self.frame_slider_moved)
+        self.ui.btnApplyLimits.clicked.connect(self.request_new_vrange)
+        self.ui.btnResetLimits.clicked.connect(self.reset_vrange_requested)
+    
+    def request_new_vrange(self, bool):
+        vmin = self.ui.spnVMin.value()
+        vmax = self.ui.spnVMax.value()
+        self.new_vrange_requested.emit(vmin, vmax)
     
     def create_status_bar(self):
         self.status_layout = QtWidgets.QVboxLayout()
@@ -193,15 +198,12 @@ class QtFrameView(QtCore.QObject):  # pragma: no cover
         presenter.mean_spectrum_changed.connect(self.draw_spectrum)
         presenter.active_frame_changed.connect(self.presenter_frame_changed.emit)
         presenter.active_frame_changed.connect(self.move_slider)
+        presenter.frame_vrange_changed.connect(self.change_vrange)
     
     def connect_signals(self, presenter):
         # Connect internal signals and slots
         self.expand_hdf_tree.connect(self.ui.hdfTree.expandAll)
-        # Inform the presenter of updates to the UI
-        self.ui.spnVMin.valueChanged.connect(presenter.set_frame_vmin)
-        self.ui.spnVMax.valueChanged.connect(presenter.set_frame_vmax)
-        self.ui.btnResetLimits.clicked.connect(presenter.reset_frame_range)
-        self.ui.btnApplyLimits.clicked.connect(presenter.refresh_frames)
+        # # Inform the presenter of updates to the UI
         self.ui.cmbTimestep.currentIndexChanged.connect(presenter.set_timestep)
         self.ui.cmbCmap.currentTextChanged.connect(presenter.change_cmap)
         self.ui.cmbComponent.currentTextChanged.connect(presenter.change_frame_component)
@@ -225,7 +227,6 @@ class QtFrameView(QtCore.QObject):  # pragma: no cover
                 xy = None
             presenter.hover_frame_pixel(xy)
         self.fig.canvas.mpl_connect('motion_notify_event', hover_frame)
-        
     
     def open_hdf_file(self):
         # Ask the user for an HDF file to open
@@ -244,7 +245,7 @@ class QtFrameView(QtCore.QObject):  # pragma: no cover
                    self.ui.btnRefresh, self.ui.btnForward, self.ui.btnLast,
                    self.ui.sldPlaySpeed, self.ui.sldFrameSlider]
         return widgets
-
+    
     @property
     def plotting_controls(self):
         """Gives a list of all the UI elements that are associated with
@@ -378,30 +379,44 @@ class QtFrameView(QtCore.QObject):  # pragma: no cover
     
     def set_slider_max(self, val):
         self.ui.sldFrameSlider.setRange(0, val)
+
+    def change_vrange(self, vmin, vmax, step, decimals):
+        """Change the range of frame map colors.
+        
+        Does not affect the rendered frames."""
+        self.ui.spnVMin.setValue(vmin)
+        self.ui.spnVMax.setValue(vmax)
+        self.ui.spnVMin.setSingleStep(step)
+        self.ui.spnVMax.setSingleStep(step)
+        self.ui.spnVMin.setDecimals(decimals)
+        self.ui.spnVMax.setDecimals(decimals)
+        # Set the min and max of the spin boxes so they don't cross
+        self.ui.spnVMin.setMaximum(vmax - step)
+        self.ui.spnVMax.setMinimum(vmin + step)
     
-    def set_vmin(self, val):
-        self.ui.spnVMin.setValue(val)
+    # def set_vmin(self, val):
+    #     self.ui.spnVMin.setValue(val)
     
-    def set_vmax(self, val):
-        self.ui.spnVMax.setValue(val)
+    # def set_vmax(self, val):
+    #     self.ui.spnVMax.setValue(val)
     
-    def set_vmin_decimals(self, val):
-        self.ui.spnVMin.setDecimals(val)
+    # def set_vmin_decimals(self, val):
+    #     self.ui.spnVMin.setDecimals(val)
     
-    def set_vmax_decimals(self, val):
-        self.ui.spnVMax.setDecimals(val)
+    # def set_vmax_decimals(self, val):
+    #     self.ui.spnVMax.setDecimals(val)
     
-    def set_vmin_step(self, val):
-        self.ui.spnVMin.setSingleStep(val)
+    # def set_vmin_step(self, val):
+    #     self.ui.spnVMin.setSingleStep(val)
     
-    def set_vmax_step(self, val):
-        self.ui.spnVMax.setSingleStep(val)
+    # def set_vmax_step(self, val):
+    #     self.ui.spnVMax.setSingleStep(val)
     
-    def set_vmin_maximum(self, val):
-        self.ui.spnVMin.setMaximum(val)
+    # def set_vmin_maximum(self, val):
+    #     self.ui.spnVMin.setMaximum(val)
     
-    def set_vmax_minimum(self, val):
-        self.ui.spnVMax.setMinimum(val)
+    # def set_vmax_minimum(self, val):
+    #     self.ui.spnVMax.setMinimum(val)
     
     def set_cmap_list(self, cmap_list):
         self.ui.cmbCmap.clear()
