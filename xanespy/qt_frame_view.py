@@ -105,6 +105,12 @@ class QtFrameView(QtCore.QObject):  # pragma: no cover
     new_timestep_requested = QtCore.pyqtSignal(int)
     new_cmap_requested = QtCore.pyqtSignal(str)
     new_component_requested = QtCore.pyqtSignal(str)
+    play_button_clicked = QtCore.pyqtSignal(bool)
+    forward_button_clicked = QtCore.pyqtSignal()
+    back_button_clicked = QtCore.pyqtSignal()
+    first_button_clicked = QtCore.pyqtSignal()
+    last_button_clicked = QtCore.pyqtSignal()
+    play_speed_requested = QtCore.pyqtSignal(int)
     
     def setup(self):
         # Load the Qt Designer .ui file
@@ -130,6 +136,12 @@ class QtFrameView(QtCore.QObject):  # pragma: no cover
         self.ui.cmbTimestep.currentIndexChanged.connect(self.new_timestep_requested)
         self.ui.cmbCmap.currentTextChanged.connect(self.new_cmap_requested)
         self.ui.cmbComponent.currentTextChanged.connect(self.new_component_requested)
+        self.ui.btnPlay.toggled.connect(self.play_button_clicked)
+        self.ui.btnForward.clicked.connect(self.forward_button_clicked)
+        self.ui.btnBack.clicked.connect(self.back_button_clicked)
+        self.ui.btnFirst.clicked.connect(self.first_button_clicked)
+        self.ui.btnLast.clicked.connect(self.last_button_clicked)
+        self.ui.sldPlaySpeed.valueChanged.connect(self.play_speed_requested)
     
     def request_new_vrange(self, bool):
         vmin = self.ui.spnVMin.value()
@@ -205,6 +217,7 @@ class QtFrameView(QtCore.QObject):  # pragma: no cover
         presenter.active_frame_changed.connect(self.presenter_frame_changed.emit)
         presenter.active_frame_changed.connect(self.move_slider)
         presenter.frame_vrange_changed.connect(self.change_vrange)
+        presenter.active_energy_changed.connect(self.set_status_energy)
     
     def connect_signals(self, presenter):
         # Connect internal signals and slots
@@ -213,12 +226,12 @@ class QtFrameView(QtCore.QObject):  # pragma: no cover
         self.ui.btnRefresh.clicked.connect(presenter.refresh_frames)
         self.ui.hdfTree.currentItemChanged.connect(presenter.change_hdf_group)
         # Use the media control stype buttons to change presenter frames
-        self.ui.btnPlay.toggled.connect(presenter.play_frames)
-        self.ui.btnForward.clicked.connect(presenter.next_frame)
-        self.ui.btnBack.clicked.connect(presenter.previous_frame)
-        self.ui.btnFirst.clicked.connect(presenter.first_frame)
-        self.ui.btnLast.clicked.connect(presenter.last_frame)
-        self.ui.sldPlaySpeed.valueChanged.connect(presenter.set_play_speed)
+        # self.ui.btnPlay.toggled.connect(presenter.play_frames)
+        # self.ui.btnForward.clicked.connect(presenter.next_frame)
+        # self.ui.btnBack.clicked.connect(presenter.previous_frame)
+        # self.ui.btnFirst.clicked.connect(presenter.first_frame)
+        # self.ui.btnLast.clicked.connect(presenter.last_frame)
+        # self.ui.sldPlaySpeed.valueChanged.connect(presenter.set_play_speed)
         # Opening a new HDF file
         self.ui.actionOpen.triggered.connect(self.open_hdf_file)
         # Connect a handler for when the user hovers over the frame
@@ -429,9 +442,6 @@ class QtFrameView(QtCore.QObject):  # pragma: no cover
         self.ui.cmbComponent.clear()
         self.ui.cmbComponent.addItems(component_list)
     
-    def set_component(self, comp):
-        self.ui.cmbComponent.setCurrentText(comp)
-    
     def add_hdf_tree_item(self, item):
         self.ui.hdfTree.addTopLevelItem(item)
     
@@ -453,9 +463,10 @@ class QtFrameView(QtCore.QObject):  # pragma: no cover
     
     def set_status_index(self, msg):
         self.ui.lblIndex.setText(msg)
-    
-    def set_status_energy(self, msg):
-        self.ui.lblEnergy.setText(msg)
+
+    def set_status_energy(self, energy):
+        s = "{:.2f} eV".format(energy)
+        self.ui.lblEnergy.setText(s)
     
     def set_status_cursor(self, msg):
         self.ui.lblCursor.setText(msg)

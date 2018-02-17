@@ -103,6 +103,7 @@ class QtFramesetPresenter(QtCore.QObject):
         object, np.ndarray, object, 'QString', tuple,
         arguments=('frames', 'energies', 'norm', 'cmap', 'extent'))
     active_frame_changed = QtCore.pyqtSignal(int)
+    active_energy_changed = QtCore.pyqtSignal(float)
     frame_vrange_changed = QtCore.pyqtSignal(
         float, float, float, int,
         arguments=('vmin', 'vmax', 'step', 'decimals'))
@@ -152,6 +153,12 @@ class QtFramesetPresenter(QtCore.QObject):
         view.new_cmap_requested.connect(self.change_frame_cmap)
         view.new_component_requested.connect(self.change_frame_component)
         view.new_timestep_requested.connect(self.set_timestep)
+        view.play_button_clicked.connect(self.play_frames)
+        view.forward_button_clicked.connect(self.next_frame)
+        view.back_button_clicked.connect(self.previous_frame)
+        view.first_button_clicked.connect(self.first_frame)
+        view.last_button_clicked.connect(self.last_frame)
+        view.play_speed_requested.connect(self.set_play_speed)
     
     def add_map_view(self, view, threaded=True):
         """Attach a view to this presenter.
@@ -450,6 +457,8 @@ class QtFramesetPresenter(QtCore.QObject):
     def change_active_frame(self, new_idx):
         self.active_frame = (new_idx % self.num_frames)
         self.active_frame_changed.emit(self.active_frame)
+        energy = self.frameset.energies(self.active_timestep)[self.active_frame]
+        self.active_energy_changed.emit(energy)
     
     def change_frame_component(self, new_comp):
         if not self.active_frame_component == new_comp:
@@ -651,13 +660,14 @@ class QtFramesetPresenter(QtCore.QObject):
         s = "({}):".format(unit)
         self.frame_view.set_status_unit(s)
     
-    def update_status_frame(self, new_frame):
-        """Create a string (and send it to the UI) that indicates the energy
-        of the requested frame."""
-        self.frame_view.set_status_index(str(new_frame))
-        energy = self.frameset.energies(self.active_timestep)[new_frame]
-        s = "{:.2f} eV".format(energy)
-        self.frame_view.set_status_energy(s)
+    # def update_status_frame(self, new_frame):
+    #     """Create a string (and send it to the UI) that indicates the energy
+    #     of the requested frame."""
+    #     self.frame_view.set_status_index(str(new_frame))
+    #     energy = self.frameset.energies(self.active_timestep)[new_frame]
+    #     s = "{:.2f} eV".format(energy)
+    #     print(s)
+    #     self.frame_view.set_status_energy(s)
     
     def change_hdf_file(self, filename):
         print("Opening filename %s" % filename)
