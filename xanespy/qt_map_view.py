@@ -166,12 +166,13 @@ class QtMapView(QtCore.QObject):
             yartist = self.map_ax.axhline(xy.y, linestyle="--", color=color, linewidth=1)
             self.crosshairs = [xartist, yartist]
         
-        
     def show(self):  # pragma: no cover
         self.window.show()
     
     def hide(self):  # pragma: no cover
-        self.window.hide()
+        if hasattr(self.window, 'hide'):
+            self.window.hide()
+            
     
     def redraw_canvas(self):  # pragma: no cover
         self.fig.canvas.draw()

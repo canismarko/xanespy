@@ -74,7 +74,6 @@ def MockFrameset(*args, **kwargs):
 
 
 class QtTestCase(unittest.TestCase):
-
     def create_presenter(self, frame_view=None, frameset=None, map_view=None):
         if frame_view is None:
             frame_view = MockFrameView()
@@ -98,7 +97,7 @@ class QtTestCase(unittest.TestCase):
         # Mock create_app method so it can run headless (eg travis-ci.org)
         p.create_app = mock.MagicMock(name="create_app")
         return p
-
+    
     def dummy_map_data(self, shape=(128, 128)):
         """Create some dummy data with a given shape. It's pretty much just an
         arange with reshaping."""
@@ -109,7 +108,6 @@ class QtTestCase(unittest.TestCase):
 
 @skipUnless(HAS_PYQT, "PyQt5 required")
 class MapViewTestCase(QtTestCase):
-
     def test_keyboard_nav(self):
         view = QtMapView()
         event = mock.Mock()
@@ -228,7 +226,44 @@ class MapViewTestCase(QtTestCase):
 
 @skipUnless(HAS_PYQT, "PyQt5 required")
 class PresenterTestCase(QtTestCase):
-
+    def test_change_cmap(self):
+        presenter = self.create_presenter()
+        presenter.frame_cmap = "viridis"
+        # Check that it doesn't replot the frames if cmap stays the same
+        presenter.change_frame_cmap('viridis')
+        presenter.frame_view.animate_frames.assert_not_called()
+        # now actually change the color map
+        presenter.change_frame_cmap('rainbow')
+        self.assertEqual(presenter.frame_cmap, 'rainbow')
+        presenter.frame_view.animate_frames.assert_not_called()
+    
+    def test_set_timestep(self):
+        # Set up some fake data
+        frameset = MockFrameset()
+        frames = dummy_frame_data()
+        frameset.frames = mock.Mock(return_value=frames)
+        maps = self.dummy_map_data()
+        frameset.map_data = mock.Mock(return_value=maps)
+        presenter = self.create_presenter(frameset=frameset)
+        presenter.active_representation = "optical_depths"
+        map_spy = QtTest.QSignalSpy(presenter.map_data_changed)
+        frames_spy = QtTest.QSignalSpy(presenter.frame_data_changed)
+        spectrum_spy = QtTest.QSignalSpy(presenter.mean_spectrum_changed)
+        map_spectrum_spy = QtTest.QSignalSpy(presenter.map_spectrum_changed)
+        # Now invoke to function to be tested
+        presenter.set_timestep(5)
+        # Check that all the view elements are updated
+        self.assertEqual(presenter.active_timestep, 5)
+        frameset.frames.assert_called_with(timeidx=5,
+                                           representation='optical_depths')
+        frameset.map_data.assert_called_with(timeidx=5,
+                                           representation='optical_depths')
+        # Check that map and frame data are updated
+        self.assertEqual(len(frames_spy), 1)
+        self.assertEqual(len(map_spy), 1)
+        self.assertEqual(len(spectrum_spy), 1)
+        self.assertEqual(len(map_spectrum_spy), 1)
+    
     def test_set_frame_range(self):
         # Prepare test scaffolding
         presenter = self.create_presenter()
@@ -363,7 +398,7 @@ class PresenterTestCase(QtTestCase):
         map_ = presenter.active_map()
         np.testing.assert_equal(map_, masked_map)
         np.testing.assert_equal(map_.mask, mask)
-
+    
     def test_hover_map_pixel(self):
         presenter = self.create_presenter()
         spy = QtTest.QSignalSpy(presenter.map_cursor_changed)
@@ -427,7 +462,7 @@ class PresenterTestCase(QtTestCase):
         presenter.set_map_cursor(None, None)
         self.assertEqual(len(spy), 1)
         self.assertEqual(spy[0], [None, None, None])
-
+    
     def test_move_map_pixel(self):
         presenter = self.create_presenter()
         spy = QtTest.QSignalSpy(presenter.map_pixel_changed)
@@ -441,7 +476,7 @@ class PresenterTestCase(QtTestCase):
         presenter.move_map_pixel(1, -3)
         self.assertEqual(presenter._map_pixel, (6, 2))
         self.assertEqual(len(spy), 1)
-
+    
     def test_map_data_changed(self):
         """Check that changing the hdf group to a `map` representation
         launches the map view window.
@@ -660,50 +695,10 @@ class OldFrameViewerTestcase(QtTestCase):
         self.assertTrue(presenter.frame_view.set_timestep_list.called)
         presenter.frame_view.set_timestep.assert_called_with(0)
     
-    def test_set_timestep(self):
-        # Set up some fake data
-        frameset = MockFrameset()
-        frames = dummy_frame_data()
-        frameset.frames = mock.Mock(return_value=frames)
-        maps = self.dummy_map_data()
-        frameset.map_data = mock.Mock(return_value=maps)
-        presenter = self.create_presenter(frameset=frameset)
-        presenter.active_representation = "optical_depths"
-        map_spy = QtTest.QSignalSpy(presenter.map_data_changed)
-        frames_spy = QtTest.QSignalSpy(presenter.frame_data_changed)
-        spectrum_spy = QtTest.QSignalSpy(presenter.mean_spectrum_changed)
-        map_spectrum_spy = QtTest.QSignalSpy(presenter.map_spectrum_changed)
-        # Now invoke to function to be tested
-        presenter.set_timestep(5)
-        # Check that all the view elements are updated
-        self.assertEqual(presenter.active_timestep, 5)
-        frameset.frames.assert_called_with(timeidx=5,
-                                           representation='optical_depths')
-        frameset.map_data.assert_called_with(timeidx=5,
-                                           representation='optical_depths')
-        # self.assertTrue(presenter.frame_view.draw_spectrum.called)
-        # self.assertTrue(presenter.frame_view.draw_histogram.emit.called)
-        # Check that map and frame data are updated
-        self.assertEqual(len(frames_spy), 1)
-        self.assertEqual(len(map_spy), 1)
-        self.assertEqual(len(spectrum_spy), 1)
-        self.assertEqual(len(map_spectrum_spy), 1)
-    
     def test_move_slider(self):
         presenter = self.create_presenter()
         presenter.move_slider(5)
         self.assertEqual(presenter.active_frame, 5)
-    
-    def test_change_cmap(self):
-        presenter = self.create_presenter()
-        presenter.frame_cmap = "viridis"
-        # Check that it doesn't replot the frames if cmap stays the same
-        presenter.change_cmap('viridis')
-        presenter.frame_view.animate_frames.assert_not_called()
-        # now actually change the color map
-        presenter.change_cmap('rainbow')
-        self.assertEqual(presenter.frame_cmap, 'rainbow')
-        presenter.frame_view.animate_frames.assert_not_called()
     
     def test_build_hdf_tree(self):
         dummy_tree = [

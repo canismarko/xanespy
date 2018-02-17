@@ -55,12 +55,12 @@ class QtFramesetPresenter(QtCore.QObject):
     map_data_cleared : pyqtSignal
       Emitted when no map data is available and plots can be cleared.
     """
-    frame_cmap = "copper"
     _frame_vmin = 0
     _frame_vmax = 1
     _map_vmin = 0
     _map_vmax = 1
     map_cmap = "plasma"
+    frame_cmap = ""
     active_frame = 0
     active_timestep = 0
     active_representation = None
@@ -149,6 +149,9 @@ class QtFramesetPresenter(QtCore.QObject):
         view.new_vrange_requested.connect(self.refresh_frames)
         view.reset_vrange_requested.connect(self.reset_frame_range)
         view.reset_vrange_requested.connect(self.refresh_frames)
+        view.new_cmap_requested.connect(self.change_frame_cmap)
+        view.new_component_requested.connect(self.change_frame_component)
+        view.new_timestep_requested.connect(self.set_timestep)
     
     def add_map_view(self, view, threaded=True):
         """Attach a view to this presenter.
@@ -212,9 +215,7 @@ class QtFramesetPresenter(QtCore.QObject):
         # Set the colormap lists with valid colormaps
         cmap_list = sorted(list(plt.cm.datad.keys()))
         self.frame_view.set_cmap_list(CMAPS)
-        self.frame_view.set_cmap(self.frame_cmap)
         self.frame_view.set_component_list(COMPS)
-        self.frame_view.set_component(self.active_frame_component)
         # Set the list of possible timesteps
         with self.frameset.store() as store:
             tslist = ["{} - {}".format(idx, ts)
@@ -465,7 +466,7 @@ class QtFramesetPresenter(QtCore.QObject):
             self.update_maps()
             self.update_spectra()
     
-    def change_cmap(self, new_cmap):
+    def change_frame_cmap(self, new_cmap):
         if not self.frame_cmap == new_cmap:
             log.debug("Changing cmap from %s to %s", self.frame_cmap, new_cmap)
             self.frame_cmap = new_cmap
@@ -711,7 +712,7 @@ class QtFramesetPresenter(QtCore.QObject):
             self.update_spectra()
         # Make the UI usable again
         self.busy_status_changed.emit(False)
-
+    
     def update_spectra(self):
         """Get the most recent data for mean and single-pixel spectra and send
         them out to the signals `mean_spectrum_changed` and

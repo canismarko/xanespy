@@ -102,6 +102,9 @@ class QtFrameView(QtCore.QObject):  # pragma: no cover
     presenter_frame_changed = QtCore.pyqtSignal(int)
     new_vrange_requested = QtCore.pyqtSignal(float, float)
     reset_vrange_requested = QtCore.pyqtSignal()
+    new_timestep_requested = QtCore.pyqtSignal(int)
+    new_cmap_requested = QtCore.pyqtSignal(str)
+    new_component_requested = QtCore.pyqtSignal(str)
     
     def setup(self):
         # Load the Qt Designer .ui file
@@ -124,6 +127,9 @@ class QtFrameView(QtCore.QObject):  # pragma: no cover
         self.ui.sldFrameSlider.valueChanged.connect(self.frame_slider_moved)
         self.ui.btnApplyLimits.clicked.connect(self.request_new_vrange)
         self.ui.btnResetLimits.clicked.connect(self.reset_vrange_requested)
+        self.ui.cmbTimestep.currentIndexChanged.connect(self.new_timestep_requested)
+        self.ui.cmbCmap.currentTextChanged.connect(self.new_cmap_requested)
+        self.ui.cmbComponent.currentTextChanged.connect(self.new_component_requested)
     
     def request_new_vrange(self, bool):
         vmin = self.ui.spnVMin.value()
@@ -203,10 +209,6 @@ class QtFrameView(QtCore.QObject):  # pragma: no cover
     def connect_signals(self, presenter):
         # Connect internal signals and slots
         self.expand_hdf_tree.connect(self.ui.hdfTree.expandAll)
-        # # Inform the presenter of updates to the UI
-        self.ui.cmbTimestep.currentIndexChanged.connect(presenter.set_timestep)
-        self.ui.cmbCmap.currentTextChanged.connect(presenter.change_cmap)
-        self.ui.cmbComponent.currentTextChanged.connect(presenter.change_frame_component)
         # self.ui.sldFrameSlider.valueChanged.connect(presenter.move_slider)
         self.ui.btnRefresh.clicked.connect(presenter.refresh_frames)
         self.ui.hdfTree.currentItemChanged.connect(presenter.change_hdf_group)
@@ -421,9 +423,7 @@ class QtFrameView(QtCore.QObject):  # pragma: no cover
     def set_cmap_list(self, cmap_list):
         self.ui.cmbCmap.clear()
         self.ui.cmbCmap.addItems(cmap_list)
-    
-    def set_cmap(self, cmap):
-        self.ui.cmbCmap.setCurrentText(cmap)
+        self.ui.cmbCmap.setCurrentText('copper')
     
     def set_component_list(self, component_list):
         self.ui.cmbComponent.clear()
