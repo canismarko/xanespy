@@ -716,18 +716,8 @@ class OldXanesFramesetTest(XanespyTestCase):
     functionality.
     
     """
-    originhdf = os.path.join(SSRL_DIR, 'txmstore-test.h5')
-    temphdf = os.path.join(SSRL_DIR, 'txmstore-test-tmp.h5')
-    
-    @classmethod
-    def setUpClass(cls):
-        # Prepare an HDF5 file that these tests can use.
-        if os.path.exists(cls.originhdf):
-            os.remove(cls.originhdf)
-        with warnings.catch_warnings() as w:
-            warnings.filterwarnings('ignore', message="Ignoring invalid file .*",
-                                    category=RuntimeWarning)
-            import_ssrl_xanes_dir(SSRL_DIR, hdf_filename=cls.originhdf, quiet=True)
+    originhdf = os.path.join(TEST_DIR, 'txmstore-test.h5')
+    temphdf = os.path.join(TEST_DIR, 'txmstore-test-tmp.h5')
     
     def setUp(self):
         # Copy the HDF5 file so we can safely make changes
@@ -739,12 +729,6 @@ class OldXanesFramesetTest(XanespyTestCase):
     def tearDown(self):
         if os.path.exists(self.temphdf):
             os.remove(self.temphdf)
-    
-    @classmethod
-    def tearDownClass(cls):
-        # Delete temporary HDF5 files
-        if os.path.exists(cls.originhdf):
-            os.remove(cls.originhdf)
     
     def test_align_frames(self):
         # Perform an excessive translation to ensure data are correctable

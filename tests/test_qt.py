@@ -348,7 +348,7 @@ class PresenterTestCase(QtTestCase):
     
     def test_previous_frame(self):
         presenter = self.create_presenter()
-        presenter.num_frames = 20
+        presenter.num_frames = 10
         presenter.active_frame = 2
         spy = QtTest.QSignalSpy(presenter.active_frame_changed)
         self.assertEqual(presenter.active_frame, 2)
@@ -361,9 +361,9 @@ class PresenterTestCase(QtTestCase):
         # Move to next frame by wrapping around
         presenter.active_frame = 0
         presenter.previous_frame()
-        self.assertEqual(presenter.active_frame, 19)
+        self.assertEqual(presenter.active_frame, 9)
         self.assertEqual(len(spy), 2)
-        self.assertEqual(spy[1][0], 19)
+        self.assertEqual(spy[1][0], 9)
     
     def test_first_frame(self):
         presenter = self.create_presenter()
@@ -377,13 +377,13 @@ class PresenterTestCase(QtTestCase):
     
     def test_last_frame(self):
         presenter = self.create_presenter()
-        presenter.num_frames = 20
-        presenter.active_frame = 10
+        presenter.num_frames = 10
+        presenter.active_frame = 5
         spy = QtTest.QSignalSpy(presenter.active_frame_changed)
         presenter.last_frame()
-        self.assertEqual(presenter.active_frame, 19)
+        self.assertEqual(presenter.active_frame, 9)
         self.assertEqual(len(spy), 1)
-        self.assertEqual(spy[0][0], 19)
+        self.assertEqual(spy[0][0], 9)
     
     def test_active_map(self):
         presenter = self.create_presenter()
@@ -803,20 +803,6 @@ class OldFrameViewerTestcase(QtTestCase):
         presenter.update_status_shape()
         presenter.frame_view.set_status_shape.assert_called_with(
             '---')
-    
-    def test_update_status_frame(self):
-        # Prepare a dummy frameset
-        frameset = MockFrameset()
-        data = np.linspace(8250, 8640, 10)
-        frameset.energies = mock.Mock(return_value=data)
-        # Call the update status shape method
-        presenter = self.create_presenter(frameset=frameset)
-        presenter.update_status_frame(1)
-        # Check that the right things were called
-        presenter.frame_view.set_status_energy.assert_called_with(
-            '8293.33 eV')
-        presenter.frame_view.set_status_index.assert_called_with(
-            '1')
     
     def test_clear_hdf_group(self):
         """What happens when the user picks an HDF group that can't be
