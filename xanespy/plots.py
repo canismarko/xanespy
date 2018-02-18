@@ -25,6 +25,7 @@ from matplotlib.colors import Normalize
 from matplotlib.ticker import ScalarFormatter
 
 from utilities import pixel_to_xy, Extent, Pixel
+from xanes_math import KEdgeParams, kedge_params, predict_edge
 
 
 def latexify():
@@ -303,6 +304,26 @@ def plot_pixel_spectra(pixels, extent, spectra, energies, map_ax,
         spectra_ax2.set_ylim(bottom=np.imag(min_val), top=np.imag(max_val))
     spectra_ax.set_xlim(right=np.max(energies)+4)
 
+def plot_kedge_fit(energies, params):
+    """Plot the fit based on the given k-edge params. The params will be
+    given to ``xanespy.xanes_math.KEdgeParams`` for conversion.
+
+    energies : np.ndarray
+      A 1D array with the x values to plot.
+
+    params : array-like
+      Fitted K-edge parameters.
+    """
+    p = KEdgeParams(*params)
+    # Plot the sigmoid by making everything else zero
+    sig_p = dict(zip(kedge_params, p))
+    sig_p['ga'] = 0
+    sig_p = KEdgeParams(**sig_p)
+    sig = predict_edge(energies, *sig_p)
+    pyplot.plot(energies, sig, linestyle=":")
+    # Plot the whole predicted line
+    fit = predict_edge(energies, *p)
+    pyplot.plot(energies, fit, linestyle=":")
 
 def plot_spectrum(spectrum, energies, norm=Normalize(),
                   show_fit=False, ax=None, ax2=None,

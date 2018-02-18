@@ -624,7 +624,7 @@ def guess_kedge(spectrum, energies, edge):
     # Estimate the whiteline Gaussian parameters
     ga = 5 * (np.max(spectrum) - scale - voffset)
     gb = energies[np.argmax(spectrum)] - E0
-    gc = 4  # Arbitrary choice, should improve this in the future
+    gc = 2  # Arbitrary choice, should improve this in the future
     # Construct the parameters tuple
     params = KEdgeParams(scale=scale, voffset=voffset, E0=E0,
                          sigw=0.5, bg_slope=0,
@@ -640,6 +640,10 @@ class _fit_spectrum():
         # Fit the k edge for this spectrum
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
+            bounds = [(-np.inf, np.inf), (-np.inf, np.inf), (-np.inf, np.inf),
+                      (-np.inf, np.inf), (-np.inf, 0),
+                      (0, np.inf), (0, 50), (-np.inf, np.inf)]
+            bounds = list(zip(*bounds))
             try:
                 popt, pcov = curve_fit(f=predict_edge, xdata=Es,
                                        ydata=Is, p0=self.p0)
@@ -650,7 +654,7 @@ class _fit_spectrum():
         return popt
 
 
-def fit_kedge(spectra, energies, p0):
+def fit_kedge(spectra, energies, p0, progbar=True):
     """Use least squares to fit a set of curves to the data. Currently
     this is a line for the baseline optical_depth decreasing at higher
     energies, plus a sigmoid for the edge and a gaussian for the
@@ -672,6 +676,11 @@ def fit_kedge(spectra, energies, p0):
     p0 : tuple
       A tuple with the initial guess. The correct order is described
       by kedge_params.
+    out : np.array, optional
+      Numpy array to hold the results. If omitted, a new array will be
+      created.
+    progbar : bool, optional
+      If True, an ipywidgets progress bar will be shown.
     
     """
     assert energies.shape == spectra.shape
@@ -679,7 +688,7 @@ def fit_kedge(spectra, energies, p0):
     result_shape = (*spectra.shape[:-1], len(kedge_params))
     # Start threaded processing
     spectra_iter = list(zip(spectra, energies))
-    if spectra.shape[0] > 1:
+    if spectra.shape[0] > 1 and progbar:
         spectra_iter = prog(spectra_iter,
                             desc="Fitting spectra")
     f = _fit_spectrum(p0=p0)
@@ -791,14 +800,14 @@ def direct_whitelines(spectra, energies, edge, quiet=False):
 
 def transform_images(data, transformations, out=None, mode='median', quiet=False):
     """Takes image data and applies the given translation matrices.
-
+    
     It is assumed that the first dimension of `data` is the same as
     the length of `transformations`. The transformation matrices can
     be generated from translation, rotation and scale parameters via
     the :py:meth:`xanespy.xanes_math.transformation_matrics`
     function. Data will be written to `out` if given, otherwise
     returned as a new array.
-
+    
     Arguments
     ---------
     data : np.ndarray
@@ -885,7 +894,8 @@ def transform_images(data, transformations, out=None, mode='median', quiet=False
     return out
 
 
-def transformation_matrices(translations=None, rotations=None, scales=None, center=(0, 0)):
+def transformation_matrices(translations=None, rotations=None,
+                            scales=None, center=(0, 0)):
     """Takes array of operations and calculates (3, 3) transformation
     matrices.
     
