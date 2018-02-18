@@ -1792,6 +1792,12 @@ class XanesFrameset():
         with self.store() as store:
             val = store.optical_depths.shape[0]
         return val
+
+    @property
+    def timestep_names(self):
+        with self.store() as store:
+            val = store.timestep_names.value
+        return val
     
     @property
     def num_energies(self):

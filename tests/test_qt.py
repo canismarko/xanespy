@@ -30,9 +30,10 @@ import pprint
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir)))
 
 import numpy as np
+import matplotlib.pyplot as plt
 import pandas as pd
 try:
-    from PyQt5 import QtWidgets, QtTest
+    from PyQt5 import QtWidgets, QtTest, QtCore
 except ImportError:
     HAS_PYQT = False
 else:
@@ -81,6 +82,7 @@ class QtTestCase(unittest.TestCase):
             frameset = MockFrameset()
             # Create some dummy data to be returned by the frameset
             frameset.num_energies = 20
+            frameset.data_tree = mock.MagicMock(return_value=[])
             frame_data = dummy_frame_data()
             frameset.frames = mock.Mock(return_value=frame_data)
             map_data = self.dummy_map_data()
@@ -91,8 +93,7 @@ class QtTestCase(unittest.TestCase):
             frameset.frame_shape = mock.Mock(return_value=(128, 128))
         if map_view is None:
             map_view = MockMapView()
-        p = QtFramesetPresenter(frameset=frameset,
-                                frame_view=frame_view)
+        p = QtFramesetPresenter(frameset=frameset)
         p.num_frames = 20
         # Mock create_app method so it can run headless (eg travis-ci.org)
         p.create_app = mock.MagicMock(name="create_app")
@@ -105,6 +106,68 @@ class QtTestCase(unittest.TestCase):
         data = np.arange(length)
         data = np.reshape(data, shape)
         return data
+
+@skipUnless(HAS_PYQT, "PyQt5 required")
+class FrameViewTestCase(QtTestCase):
+    def test_update_figure_pixel(self):
+        view = QtFrameView()
+        view.ui = mock.MagicMock()
+        xy = xycoord(1, 1)
+        px = Pixel(64, 64)
+        view.update_figure_pixel(xy, 'um', px, 2.554)
+        # Check that the ui was updated
+        view.ui.lblCursor.setText.assert_called_with("(1.000, 1.000) um")
+        view.ui.lblPixel.setText.assert_called_with("[64, 64]")
+        view.ui.lblValue.setText.assert_called_with("2.554")
+        # Do it again but with a point off the figure
+        view.update_figure_pixel(None, 'um', None, None)
+        # Check that the ui was updated
+        view.ui.lblCursor.setText.assert_called_with("(---, ---) um")
+        view.ui.lblPixel.setText.assert_called_with("[--, --]")
+        view.ui.lblValue.setText.assert_called_with("---")
+    
+    def test_status_metadata(self):
+        view = QtFrameView()
+        view.ui = mock.MagicMock()
+        frames = np.random.rand(10, 64, 64)
+        energies = np.linspace(8531, 8542, num=10)
+        norm = plt.Normalize(0, 1)
+        view.set_status_metadata(frames, energies,
+                                 norm=norm, cmap='plasma',
+                                 extent=(0, 1, 0, 1))
+        # Verify the results
+        view.ui.lblShape.setText.assert_called_with("(10, 64, 64)")
+        view.ui.lblDtype.setText.assert_called_with(str(frames.dtype))
+    
+    def test_busy_mode(self):
+        view = QtFrameView()
+        view.ui = mock.MagicMock()
+        view.window = mock.MagicMock()
+        view.set_busy_mode(True)
+        # Check that the frame controls were disabled
+        view.ui.btnFirst.setDisabled.assert_called_with(True)
+        view.ui.btnLast.setDisabled.assert_called_with(True)
+        view.ui.btnForward.setDisabled.assert_called_with(True)
+        view.ui.btnBack.setDisabled.assert_called_with(True)
+        view.ui.btnPlay.setDisabled.assert_called_with(True)
+        view.ui.sldPlaySpeed.setDisabled.assert_called_with(True)
+        view.ui.sldFrameSlider.setDisabled.assert_called_with(True)
+        # Check that the plotting controls were disabled
+        view.ui.cmbTimestep.setDisabled.assert_called_with(True)
+        view.ui.cmbComponent.setDisabled.assert_called_with(True)
+        view.ui.cmbCmap.setDisabled.assert_called_with(True)
+        view.ui.spnVMin.setDisabled.assert_called_with(True)
+        view.ui.spnVMax.setDisabled.assert_called_with(True)
+        view.ui.btnApplyLimits.setDisabled.assert_called_with(True)
+        view.ui.btnResetLimits.setDisabled.assert_called_with(True)
+        # Check that the busy cursor is used
+        view.window.setCursor.assert_called_with(QtCore.Qt.WaitCursor)
+        # Check that the status message is displayed
+        view.ui.statusbar.showMessage.assert_called_once_with('Drawing...')
+        # Check that the busy status is cleared if ending busy mode
+        view.set_busy_mode(False)
+        view.window.unsetCursor.assert_called_with()
+        view.ui.statusbar.clearMessage.assert_called_once_with()
 
 @skipUnless(HAS_PYQT, "PyQt5 required")
 class MapViewTestCase(QtTestCase):
@@ -226,16 +289,168 @@ class MapViewTestCase(QtTestCase):
 
 @skipUnless(HAS_PYQT, "PyQt5 required")
 class PresenterTestCase(QtTestCase):
+    def test_hover_frame_pixel(self):
+        # Set some dummy data on the frameset
+        frameset = MockFrameset()
+        data = dummy_frame_data((10, 1024, 1024))
+        frameset.frames = mock.MagicMock(return_value=data)
+        frameset.frame_shape = mock.MagicMock(return_value=(1024, 1024))
+        frameset.pixel_unit = mock.Mock(return_value='um')
+        # Set a fake extent on the frameset
+        extent = Extent(-10, 10, -10, 10)
+        frameset.extent = mock.MagicMock(return_value=extent)
+        # Get the presenter value and see how it responds to hover
+        presenter = self.create_presenter(frameset=frameset)
+        presenter.active_frame = 2  # To avoid confusion with active_timestep
+        pixel_spy = QtTest.QSignalSpy(presenter.frame_hover_changed)
+        presenter.hover_frame_pixel(xy=xycoord(3, 7))
+        self.assertEqual(len(pixel_spy), 1)
+        self.assertEqual(pixel_spy[0], [(3, 7), 'um', (154, 666), 2255514])
+        self.assertEqual(presenter.frame_pixel, (154, 666))
+        # Now what happens when we leave the canvas
+        presenter.hover_frame_pixel(xy=None)
+        self.assertEqual(len(pixel_spy), 2)
+        self.assertEqual(pixel_spy[1], [None, 'um', None, None])
+        self.assertEqual(presenter.frame_pixel, None)
+    
+    def test_change_hdf_group(self):
+        # Create a mocked frameset object to test the presenter
+        frameset = MockFrameset()
+        data = dummy_frame_data((10, 128, 128))
+        frameset.frames = mock.Mock(return_value=data)
+        frameset.data_tree = mock.MagicMock(return_value=[])
+        frameset.pixel_unit = mock.Mock(return_value='um')
+        # Create the presenter object
+        presenter = self.create_presenter(frameset=frameset)
+        presenter.prepare_ui()
+        # Make a mock tree item
+        new_item = mock.MagicMock(QtWidgets.QTreeWidgetItem)()
+        
+        def item_text(pos):
+            if pos == 0:
+                return 'new_groupname'
+            elif pos == 1:
+                return 'frameset'
+            elif pos == 2:
+                return '/test-sample/aligned/new_groupname'
+        
+        new_item.text.side_effect = item_text
+        # Call the actual method to change the active tree item
+        title_spy = QtTest.QSignalSpy(presenter.hdf_path_changed)
+        frame_spy = QtTest.QSignalSpy(presenter.frame_data_changed)
+        presenter.change_hdf_group(new_item, old_item=None)
+        # Check that the new representation is set and used
+        self.assertEqual(presenter.active_representation, 'new_groupname')
+        frameset.frames.assert_called_with(timeidx=0, representation='new_groupname')
+        self.assertEqual(len(frame_spy), 1)
+        # Check that the data_name is set correctly
+        self.assertEqual(frameset.data_name, 'aligned')
+        # Check that the window titles were updated
+        self.assertEqual(len(title_spy), 1)
+    
+    def test_clear_hdf_group(self):
+        """What happens when the user picks an HDF group that can't be
+        displayed?"""
+        frameset = MockFrameset()
+        presenter = self.create_presenter(frameset=frameset)
+        new_item = mock.MagicMock(QtWidgets.QTreeWidgetItem)()
+        
+        def item_text(pos):
+            if pos == 0:
+                return 'aligned'
+            elif pos == 1:
+                return ''
+            elif pos == 2:
+                return '/test-sample/aligned'
+        
+        new_item.text.side_effect = item_text
+        def no_frames(*args, **kwargs):
+            raise exceptions.GroupKeyError()
+        frameset.frames = mock.Mock(side_effect=no_frames)
+        spy = QtTest.QSignalSpy(presenter.frame_data_cleared)
+        presenter.change_hdf_group(new_item, old_item=None)
+        self.assertEqual(len(spy), 1)
+    
+    def test_play_frames(self):
+        presenter = self.create_presenter()
+        presenter.prepare_ui()
+        # Now start playing the frames
+        presenter.play_timer = mock.MagicMock()
+        presenter.play_frames(True)
+        presenter.play_timer.start.assert_called_with()
+        presenter.play_timer.stop.assert_not_called()
+        presenter.play_frames(False)
+        presenter.play_timer.stop.assert_called_with()
+    
+    def test_build_hdf_tree(self):
+        dummy_tree = [
+            {'ndim': 0,
+             'context': None,
+             'level': 0,
+             'name': "active_parent",
+             'path': "/test-dir",
+             'children': [
+                 {'ndim': 2,
+                  'context': 'frameset',
+                  'level': 1,
+                  'name': "Child",
+                  'path': "/test-dir/test-dataset",
+                  'children': [],
+                 }
+             ]},
+            {'ndim': 0,
+             'context': None,
+             'level': 0,
+             'name': "different_parent",
+             'path': "/test-dir",
+             'children': [],
+            }
+        ]
+        frameset = MockFrameset()
+        frameset.parent_name = "active_parent"
+        frameset.data_tree = mock.Mock(return_value=dummy_tree)
+        active_path = "/test-dir/test-dataset"
+        frameset.hdf_path = mock.Mock(return_value=active_path)
+        presenter = self.create_presenter(frameset=frameset)
+        tree_spy = QtTest.QSignalSpy(presenter.hdf_tree_changed)
+        presenter.build_hdf_tree(expand_tree=False)
+        # Check that the frame view was updated with the new items
+        self.assertEqual(len(tree_spy), 1)
+        # Check that the tree items given are correct
+        # item1 = presenter.frame_view.add_hdf_tree_item.call_args_list[0][0][0]
+        # item2 = presenter.frame_view.add_hdf_tree_item.call_args_list[1][0][0]
+        # self.assertFalse(item1.isDisabled())
+        # self.assertFalse(item2.isDisabled())
+    
+    def test_prepare_ui(self):
+        # Prepare a frameset object to test the presenter
+        frameset = MockFrameset()
+        data = np.random.rand(10, 128, 128)
+        frameset.frames = mock.Mock(return_value=data)
+        frameset.num_energies = 20
+        frameset.data_tree = mock.MagicMock(return_value=[])
+        frameset.timestep_names = ['timestep 1', 'timestep 2']
+        # Create the presenter
+        presenter = self.create_presenter(frameset=frameset)
+        # Create spies to monitor the presenters signals
+        cmap_list_spy = QtTest.QSignalSpy(presenter.cmap_list_changed)
+        comp_list_spy = QtTest.QSignalSpy(presenter.component_list_changed)
+        ts_list_spy = QtTest.QSignalSpy(presenter.timestep_list_changed)
+        # Run the actual code
+        presenter.prepare_ui()
+        # Check that the right stuff was emitted
+        self.assertEqual(len(cmap_list_spy), 1)
+        self.assertEqual(len(comp_list_spy), 1)
+        self.assertEqual(len(ts_list_spy), 1)
+        
     def test_change_cmap(self):
         presenter = self.create_presenter()
         presenter.frame_cmap = "viridis"
         # Check that it doesn't replot the frames if cmap stays the same
         presenter.change_frame_cmap('viridis')
-        presenter.frame_view.animate_frames.assert_not_called()
         # now actually change the color map
         presenter.change_frame_cmap('rainbow')
         self.assertEqual(presenter.frame_cmap, 'rainbow')
-        presenter.frame_view.animate_frames.assert_not_called()
     
     def test_set_timestep(self):
         # Set up some fake data
@@ -280,44 +495,6 @@ class PresenterTestCase(QtTestCase):
         self.assertEqual(presenter._frame_vmin, 1.3)
         self.assertEqual(presenter._frame_vmax, 2.7)
         
-    #     def test_reset_limits(self):
-    #     frameset = MockFrameset()
-        
-    #     def frames(*args, **kwargs):
-    #         if kwargs.get('representation', '') is None:
-    #             raise exceptions.GroupKeyError()
-    #         else:
-    #             return np.linspace(1.5, 5)
-        
-    #     frameset.frames.side_effect = frames
-    #     presenter = self.create_presenter(frameset=frameset)
-    #     presenter.active_representation = "optical_depths"
-    #     presenter.reset_frame_range()
-    #     P_lower = np.percentile(frameset.frames(), 1)
-    #     P_upper = np.percentile(frameset.frames(), 99)
-    #     self.assertEqual(presenter._frame_vmin, P_lower)
-    #     self.assertEqual(presenter._frame_vmax, P_upper)
-    #     presenter.frame_view.set_vmin.assert_called_with(P_lower)
-    #     presenter.frame_view.set_vmax.assert_called_with(P_upper)
-    #     # Check what happens in the representation is invalid
-    #     presenter.frame_view.set_vmin.reset_mock()
-    #     presenter.active_representation = None
-    #     presenter.reset_frame_range()
-    #     presenter.frame_view.set_vmin.assert_not_called()
-    
-    # def test_update_frame_range_limits(self):
-    #     presenter = self.create_presenter()
-    #     presenter.set_frame_vmin(1)
-    #     presenter.set_frame_vmax(1.5)
-    #     presenter.update_frame_range_limits()
-    #     # Check that the right things were updated on the view
-    #     presenter.frame_view.set_vmin_decimals.assert_called_with(2)
-    #     presenter.frame_view.set_vmax_decimals.assert_called_with(2)
-    #     presenter.frame_view.set_vmin_step.assert_called_with(10**-2)
-    #     presenter.frame_view.set_vmax_step.assert_called_with(10**-2)
-    #     presenter.frame_view.set_vmin_maximum.assert_called_with(1.5)
-    #     presenter.frame_view.set_vmax_minimum.assert_called_with(1)
-    
     def test_change_active_frame(self):
         presenter = self.create_presenter()
         presenter.num_frames = 20
@@ -643,7 +820,6 @@ class PresenterTestCase(QtTestCase):
         presenter.change_map_cmap("copper")
         self.assertEqual(len(spy), 1)
         self.assertEqual(spy[0][2], 'copper')
-        
     
     def test_reset_map_range(self):
         fs = MockFrameset()
@@ -670,201 +846,6 @@ class PresenterTestCase(QtTestCase):
         self.assertEqual(presenter._map_vmin, 10)
         self.assertEqual(presenter._map_vmax, 108)
 
-@skipUnless(HAS_PYQT, "PyQt5 required")
-class OldFrameViewerTestcase(QtTestCase):
-    
-    def test_init(self):
-        """Check that certain values are set properly during __init__."""
-        # Switch to "optical_depths" representation if possible
-        frameset = MockFrameset()
-        frameset.has_representation.return_value = True
-        presenter = self.create_presenter(frameset=frameset)
-        self.assertEqual(presenter.active_representation, None)
-    
-    def test_prepare_ui(self):
-        # Prepare a frameset object to test the presenter
-        frameset = MockFrameset()
-        data = np.random.rand(10, 128, 128)
-        frameset.frames = mock.Mock(return_value=data)
-        frameset.num_energies = 20
-        # Create the presenter
-        presenter = self.create_presenter(frameset=frameset)
-        # Run the actual code
-        presenter.prepare_ui()
-        self.assertTrue(presenter.frame_view.set_cmap_list.called)
-        self.assertTrue(presenter.frame_view.set_timestep_list.called)
-        presenter.frame_view.set_timestep.assert_called_with(0)
-    
-    def test_move_slider(self):
-        presenter = self.create_presenter()
-        presenter.move_slider(5)
-        self.assertEqual(presenter.active_frame, 5)
-    
-    def test_build_hdf_tree(self):
-        dummy_tree = [
-            {'ndim': 0,
-             'context': None,
-             'level': 0,
-             'name': "active_parent",
-             'path': "/test-dir",
-             'children': [
-                 {'ndim': 2,
-                  'context': 'frameset',
-                  'level': 1,
-                  'name': "Child",
-                  'path': "/test-dir/test-dataset",
-                  'children': [],
-                 }
-             ]},
-            {'ndim': 0,
-             'context': None,
-             'level': 0,
-             'name': "different_parent",
-             'path': "/test-dir",
-             'children': [],
-            }
-        ]
-        frameset = MockFrameset()
-        frameset.parent_name = "active_parent"
-        frameset.data_tree = mock.Mock(return_value=dummy_tree)
-        active_path = "/test-dir/test-dataset"
-        frameset.hdf_path = mock.Mock(return_value=active_path)
-        presenter = self.create_presenter(frameset=frameset)
-        presenter.build_hdf_tree(expand_tree=False)
-        # Check that the frame view was updated with the new items
-        self.assertTrue(presenter.frame_view.add_hdf_tree_item.called)
-        # Check that the tree items given are correct
-        item1 = presenter.frame_view.add_hdf_tree_item.call_args_list[0][0][0]
-        item2 = presenter.frame_view.add_hdf_tree_item.call_args_list[1][0][0]
-        self.assertFalse(item1.isDisabled())
-        self.assertFalse(item2.isDisabled())
-    
-    def test_change_hdf_group(self):
-        # Create a mocked frameset object to test the presenter
-        frameset = MockFrameset()
-        data = dummy_frame_data((10, 128, 128))
-        frameset.frames = mock.Mock(return_value=data)
-        frameset.pixel_unit = mock.Mock(return_value='um')
-        # Create the presenter object
-        presenter = self.create_presenter(frameset=frameset)
-        presenter.prepare_ui()
-        # Make a mock tree item
-        new_item = mock.MagicMock(QtWidgets.QTreeWidgetItem)()
-        
-        def item_text(pos):
-            if pos == 0:
-                return 'new_groupname'
-            elif pos == 1:
-                return 'frameset'
-            elif pos == 2:
-                return '/test-sample/aligned/new_groupname'
-    
-        new_item.text.side_effect = item_text
-        # Call the actual method to change the active tree item
-        presenter.change_hdf_group(new_item, old_item=None)
-        # Check that the new representation is set and used
-        self.assertEqual(presenter.active_representation, 'new_groupname')
-        frameset.frames.assert_called_with(timeidx=0, representation='new_groupname')
-        # Check that the data_name is set correctly
-        self.assertEqual(frameset.data_name, 'aligned')
-        # Check that the statusbar text is updated
-        presenter.frame_view.set_status_shape.assert_called_with(
-            '(10, 128, 128)')
-        presenter.frame_view.set_status_unit.assert_called_with(
-            '(um):')
-        # Check that the window titles were updated
-        presenter.frame_view.set_window_title.assert_called_with(
-            'Xanespy Frameset (/test-sample/aligned/new_groupname)'
-        )
-        # Check that relevant UI elements were updated
-        presenter.frame_view.set_slider_max.assert_called_with(9)
-        # Check that UI was disabled then re-enabled
-        calls = [mock.call(True), mock.call(False)]
-        presenter.frame_view.disable_plotting_controls.assert_has_calls(calls)
-        presenter.frame_view.disable_frame_controls.assert_has_calls(calls)
-        presenter.frame_view.set_drawing_status.assert_has_calls(calls)
-    
-    def test_update_status_shape(self):
-        # Prepare a dummy frameset
-        frameset = MockFrameset()
-        data = np.random.rand(10, 128, 128)
-        frameset.frames = mock.Mock(return_value=data)
-        # Call the update status shape method
-        presenter = self.create_presenter(frameset=frameset)
-        presenter.update_status_shape()
-        # Assert that the right frame_view calls were made
-        presenter.frame_view.set_status_shape.assert_called_with(
-            '(10, 128, 128)')
-        # Now make it invalid frame data
-        presenter.frame_representation = None
-        def side_effect(*args, **kwargs):
-            raise exceptions.GroupKeyError()
-        frameset.frames = mock.Mock(side_effect=side_effect)
-        presenter.update_status_shape()
-        presenter.frame_view.set_status_shape.assert_called_with(
-            '---')
-    
-    def test_clear_hdf_group(self):
-        """What happens when the user picks an HDF group that can't be
-        displayed?"""
-        frameset = MockFrameset()
-        presenter = self.create_presenter(frameset=frameset)
-        new_item = mock.MagicMock(QtWidgets.QTreeWidgetItem)()
-        
-        def item_text(pos):
-            if pos == 0:
-                return 'aligned'
-            elif pos == 1:
-                return ''
-            elif pos == 2:
-                return '/test-sample/aligned'
-        
-        new_item.text.side_effect = item_text
-        def no_frames(*args, **kwargs):
-            raise exceptions.GroupKeyError()
-        frameset.frames = mock.Mock(side_effect=no_frames)
-        presenter.change_hdf_group(new_item, old_item=None)
-        presenter.frame_view.clear_axes.assert_called_with()
-    
-    def test_play_frames(self):
-        presenter = self.create_presenter()
-        presenter.prepare_ui()
-        # Now start playing the frames
-        presenter.play_timer = mock.MagicMock()
-        presenter.play_frames(True)
-        presenter.play_timer.start.assert_called_with()
-        presenter.play_timer.stop.assert_not_called()
-        presenter.play_frames(False)
-        presenter.play_timer.stop.assert_called_with()
-    
-    def test_hover_frame_pixel(self):
-        # Set some dummy data on the frameset
-        frameset = MockFrameset()
-        data = dummy_frame_data((10, 1024, 1024))
-        frameset.frames = mock.MagicMock(return_value=data)
-        frameset.frame_shape = mock.MagicMock(return_value=(1024, 1024))
-        # Set a fake extent on the frameset
-        extent = Extent(-10, 10, -10, 10)
-        frameset.extent = mock.MagicMock(return_value=extent)
-        # Get the presenter value and see how it responds to hover
-        presenter = self.create_presenter(frameset=frameset)
-        presenter.active_frame = 2  # To avoid confusion with active_timestep
-        presenter.hover_frame_pixel(xy=xycoord(3, 7))
-        presenter.frame_view.set_status_cursor.assert_called_with(
-            "(3.00, 7.00)")
-        presenter.frame_view.set_status_pixel.assert_called_with(
-            "[154, 666]")
-        self.assertEqual(presenter.frame_pixel, (154, 666))
-        presenter.frame_view.set_status_value.assert_called_with(
-            str(data[2][154, 666]))
-        # Now what happens when we leave the canvas
-        presenter.hover_frame_pixel(xy=None)
-        presenter.frame_view.set_status_cursor.assert_called_with(
-            "")
-        presenter.frame_view.set_status_pixel.assert_called_with(
-            "")
-        presenter.frame_view.set_status_value.assert_called_with(
-            "")
 
 @skipUnless(HAS_PYQT, "PyQt5 required")
 class FrameSourceTestCase(unittest.TestCase):

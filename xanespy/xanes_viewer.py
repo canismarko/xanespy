@@ -64,14 +64,14 @@ def main():
                        groupname=groupname)
     # Lauch the Qt viewer
     is_threaded = not args.debug
-    presenter = QtFramesetPresenter(frameset=fs,
-                                    frame_view=QtFrameView())
+    presenter = QtFramesetPresenter(frameset=fs)
     presenter.add_map_view(QtMapView(), threaded=is_threaded)
     # This is a temporary workaround until frame_view signals are fixed
-    presenter.add_frame_view(presenter.frame_view, threaded=is_threaded)
+    presenter.add_frame_view(QtFrameView(), threaded=is_threaded)
     expand_tree = args.groupname is not None
     presenter.prepare_ui(expand_tree=expand_tree)
     ret = presenter.launch()
+    return ret
 
 
 if __name__ == "__main__":

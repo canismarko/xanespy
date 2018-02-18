@@ -84,6 +84,11 @@ class QtFramesetPresenter(QtCore.QObject):
     process_events = QtCore.pyqtSignal()
     cmap_list_changed = QtCore.pyqtSignal(list)
     component_list_changed = QtCore.pyqtSignal(list)
+    timestep_list_changed = QtCore.pyqtSignal(list)
+    frame_hover_changed = QtCore.pyqtSignal(object, 'QString', object, object,
+                                            arguments=('xy', 'xy_unit', 'px', 'val'))
+    hdf_tree_changed = QtCore.pyqtSignal(list)
+    hdf_path_changed = QtCore.pyqtSignal('QString')
     mean_spectrum_changed = QtCore.pyqtSignal(
         pd.Series, object, object, 'QString', object,
         arguments=['spectrum', 'fitted_spectrum', 'norm', 'cmap', 'edge_range'])
@@ -102,22 +107,21 @@ class QtFramesetPresenter(QtCore.QObject):
     frame_data_changed = QtCore.pyqtSignal(
         object, np.ndarray, object, 'QString', tuple,
         arguments=('frames', 'energies', 'norm', 'cmap', 'extent'))
+    frame_data_cleared = QtCore.pyqtSignal()
     active_frame_changed = QtCore.pyqtSignal(int)
     active_energy_changed = QtCore.pyqtSignal(float)
     frame_vrange_changed = QtCore.pyqtSignal(
         float, float, float, int,
         arguments=('vmin', 'vmax', 'step', 'decimals'))
     
-    def __init__(self, frameset, frame_view, *args, **kwargs):
+    def __init__(self, frameset, *args, **kwargs):
         self.frameset = frameset
-        self.frame_view = frame_view
         # Set the list of views to be empty to start
         self.map_views = []
         self.map_threads = []
         self.frame_views = []
         self.frame_threads = []
         super().__init__(*args, **kwargs)
-        self.connect_signals()
     
     def add_frame_view(self, view, threaded=True):
         """Attach a view to this presenter.
@@ -159,6 +163,8 @@ class QtFramesetPresenter(QtCore.QObject):
         view.first_button_clicked.connect(self.first_frame)
         view.last_button_clicked.connect(self.last_frame)
         view.play_speed_requested.connect(self.set_play_speed)
+        view.new_hdf_group_requested.connect(self.change_hdf_group)
+        view.figure_hovered.connect(self.hover_frame_pixel)
     
     def add_map_view(self, view, threaded=True):
         """Attach a view to this presenter.
@@ -212,44 +218,22 @@ class QtFramesetPresenter(QtCore.QObject):
             self.update_maps()
             self.update_spectra()
     
-    def connect_signals(self):
-        pass
-    
     def prepare_ui(self, expand_tree=True):
         self.create_app()
-        # Get the frame_view prepared and running
-        self.frame_view.setup()
-        # Set the colormap lists with valid colormaps
-        cmap_list = sorted(list(plt.cm.datad.keys()))
-        self.frame_view.set_cmap_list(CMAPS)
-        self.frame_view.set_component_list(COMPS)
-        # Set the list of possible timesteps
-        with self.frameset.store() as store:
-            tslist = ["{} - {}".format(idx, ts)
-                      for idx, ts in enumerate(store.timestep_names)]
-        self.frame_view.set_timestep_list(tslist)
-        self.frame_view.set_timestep(self.active_timestep)
-        # Connect response signals for the widgets in the frameview
-        self.frame_view.connect_signals(presenter=self)
-        # self.frame_view.frame_change_requested.connect(self.update_status_frame)
-        # self.frame_view.frame_change_requested.connect(self.update_status_value)
-        # Prepare data for the HDF tree view
-        self.build_hdf_tree(expand_tree=expand_tree)
         # Create a timer for playing through all the frames
         self.play_timer = QtCore.QTimer()
         self.play_timer.timeout.connect(self.next_frame)
         self.set_play_speed(15)
-        # Connect a signal for exiting
-        # self.frame_view.ui.actionExit.triggered.connect(self.app.quit)
-        # Connect signals for notifying the user of long operations
-        self.busy_status_changed.connect(self.frame_view.disable_frame_controls)
-        self.busy_status_changed.connect(self.frame_view.disable_plotting_controls)
-        self.busy_status_changed.connect(self.frame_view.use_busy_cursor)
-        self.busy_status_changed.connect(self.frame_view.set_drawing_status)
         # We're done creating the app, so let the views create their UI's
         self.app_ready.emit()
         self.cmap_list_changed.emit(CMAPS)
         self.component_list_changed.emit(COMPS)
+        # Set the list of possible timesteps
+        tslist = ["{} - {}".format(idx, ts)
+                  for idx, ts in enumerate(self.frameset.timestep_names)]
+        self.timestep_list_changed.emit(tslist)
+        # Prepare data for the HDF tree view
+        self.build_hdf_tree(expand_tree=expand_tree)
     
     def create_app(self):  # pragma: no cover
         log.debug("Creating QApplication")
@@ -260,8 +244,7 @@ class QtFramesetPresenter(QtCore.QObject):
     
     def launch(self):  # pragma: no cover
         # Show the graphs and launch to event loop
-        self.frame_view.show()
-        ret = self.app.exec_()
+        ret = self.app.exec()
         # Quit threads after execution
         [thread.quit() for thread in self.map_threads]
         [thread.quit() for thread in self.frame_threads]
@@ -272,11 +255,11 @@ class QtFramesetPresenter(QtCore.QObject):
         self.refresh_frames()
         self.update_maps()
     
-    def move_slider(self, new_value):
-        new_frame = new_value
-        if not self.active_frame == new_frame:
-            self.active_frame = new_frame
-            self.frame_view.frame_changed.emit(self.active_frame)
+    # def move_slider(self, new_value):
+    #     new_frame = new_value
+    #     if not self.active_frame == new_frame:
+    #         self.active_frame = new_frame
+    #         self.frame_view.frame_changed.emit(self.active_frame)
     
     # def update_frame_range_limits(self):
     #     """Check that the (min, max, step) of the frame spinboxes are
@@ -493,41 +476,7 @@ class QtFramesetPresenter(QtCore.QObject):
         the structure of the frameset's HDF file.
         
         """
-        icons = {
-            'metadata': QtGui.QIcon.fromTheme('x-office-spreadsheet'),
-            'frameset': QtGui.QIcon.fromTheme('emblem-photos'),
-            'map': QtGui.QIcon.fromTheme('image-x-generic'),
-        }
-        active_path = self.frameset.hdf_path(self.active_representation)
-        self._active_tree_item = None
-        
-        # Recursive helper function for building the tree
-        def tree_item(data, parent=None):
-            item = QtWidgets.QTreeWidgetItem()
-            item.setText(0, data['name'])
-            item.setText(2, data['path'])
-            if data['context'] is not None:
-                item.setText(1, data['context'])
-                item.setIcon(1, icons[data['context']])
-            # Now recursively add children
-            for child in data['children']:
-                new_item = tree_item(child)
-                child_item = tree_item(child)
-                ret = item.addChild(child_item)
-            return item
-        
-        # Start building the tree
-        for child in self.frameset.data_tree():
-            # Recursively create the tree item and its children
-            new_root_item = tree_item(child)
-            # Now add the new root to the tree
-            self.frame_view.add_hdf_tree_item(new_root_item)
-            # Flag for expanding the active tree auotmatically
-            child_name = child['path'].split('/')[1]
-            _expand =  expand_tree and (child_name == self.frameset.parent_name)
-            if _expand:
-                new_root_item.treeWidget().expandItem(new_root_item)
-        # Expand the full tree to make it easier for the user to browse
+        self.hdf_tree_changed.emit(self.frameset.data_tree())
     
     def refresh_frames(self):
         if self.active_representation is not None:
@@ -544,10 +493,7 @@ class QtFramesetPresenter(QtCore.QObject):
             self.change_active_frame(0)
         else:
             # Invalid frame data, so just clear the axes
-            self.frame_view.clear_axes()
-        # Update the status bar with new frame data
-        self.update_status_shape()
-        self.update_status_unit()
+            self.frame_data_cleared.emit()
     
     def active_frames(self):
         frames = self.frameset.frames(timeidx=self.active_timestep,
@@ -592,25 +538,28 @@ class QtFramesetPresenter(QtCore.QObject):
             pixel_s = "[{row}, {col}]".format(row=pixel.vertical,
                                               col=pixel.horizontal)
             self.frame_pixel = pixel
+            # Get the frame's value
+            value = self.active_frames()[self.active_frame][pixel]
         else:
             # Modify the UI to clear the cursor data
             cursor_s = ""
             pixel_s = ""
+            value = None
+            pixel = None
             self.frame_pixel = None
         # Now update the UI
-        self.frame_view.set_status_pixel(pixel_s)
-        self.frame_view.set_status_cursor(cursor_s)
-        self.update_status_value()
+        unit = self.frameset.pixel_unit()
+        self.frame_hover_changed.emit(xy, unit, pixel, value)
     
-    def update_status_value(self):
-        px = self.frame_pixel
-        try:
-            assert px is not None
-            # Get the value of this pixel from the frame data
-            value_s = str(self.active_frames()[self.active_frame][px])
-        except (IndexError, AssertionError):
-            value_s = ""
-        self.frame_view.set_status_value(value_s)
+    # def update_status_value(self):
+    #     px = self.frame_pixel
+    #     try:
+    #         assert px is not None
+    #         # Get the value of this pixel from the frame data
+    #         value_s = str(self.active_frames()[self.active_frame][px])
+    #     except (IndexError, AssertionError):
+    #         value_s = ""
+    #     self.frame_view.set_status_value(value_s)
     
     def play_frames(self, start):
         if start:
@@ -644,30 +593,21 @@ class QtFramesetPresenter(QtCore.QObject):
     def last_frame(self):
         self.change_active_frame(-1)
     
-    def update_status_shape(self):
-        try:
-            shape = self.active_frames().shape
-        except exceptions.GroupKeyError:
-            # No valid frames so show a placeholder
-            s = "---"
-        else:
-            s = "{}".format(shape)
-        # Set the UI's text
-        self.frame_view.set_status_shape(s)
+    # def update_status_shape(self):
+    #     try:
+    #         shape = self.active_frames().shape
+    #     except exceptions.GroupKeyError:
+    #         # No valid frames so show a placeholder
+    #         s = "---"
+    #     else:
+    #         s = "{}".format(shape)
+    #     # Set the UI's text
+    #     self.frame_view.set_status_shape(s)
     
-    def update_status_unit(self):
-        unit = self.frameset.pixel_unit()
-        s = "({}):".format(unit)
-        self.frame_view.set_status_unit(s)
-    
-    # def update_status_frame(self, new_frame):
-    #     """Create a string (and send it to the UI) that indicates the energy
-    #     of the requested frame."""
-    #     self.frame_view.set_status_index(str(new_frame))
-    #     energy = self.frameset.energies(self.active_timestep)[new_frame]
-    #     s = "{:.2f} eV".format(energy)
-    #     print(s)
-    #     self.frame_view.set_status_energy(s)
+    # def update_status_unit(self):
+    #     unit = self.frameset.pixel_unit()
+    #     s = "({}):".format(unit)
+    #     self.frame_view.set_status_unit(s)
     
     def change_hdf_file(self, filename):
         print("Opening filename %s" % filename)
@@ -703,15 +643,7 @@ class QtFramesetPresenter(QtCore.QObject):
         self.reset_map_range()
         self.refresh_frames()
         # Update the window title with the new path
-        title = "Xanespy Frameset ({})".format(path)
-        self.frame_view.set_window_title(title)
-        # Update some UI elements with new data
-        try:
-            num_energies = self.active_frames().shape[0]
-        except exceptions.GroupKeyError:
-            pass
-        else:
-            self.frame_view.set_slider_max(num_energies - 1)
+        self.hdf_path_changed.emit(path)
         # Get new map data
         map_data = self.active_map()
         # Inform the UI of the new map data if necessary and cache it

@@ -329,26 +329,6 @@
            </widget>
           </item>
           <item>
-           <widget class="QPushButton" name="btnRefresh">
-            <property name="toolTip">
-             <string>Force a refresh of the frame data based on current setting.</string>
-            </property>
-            <property name="text">
-             <string>Refresh</string>
-            </property>
-            <property name="icon">
-             <iconset theme="view-refresh">
-              <normaloff>.</normaloff>.</iconset>
-            </property>
-            <property name="checkable">
-             <bool>false</bool>
-            </property>
-            <property name="flat">
-             <bool>false</bool>
-            </property>
-           </widget>
-          </item>
-          <item>
            <widget class="QPushButton" name="btnForward">
             <property name="toolTip">
              <string>Go to the next frame in the set.</string>
@@ -454,6 +434,27 @@
               <height>0</height>
              </size>
             </property>
+            <property name="orientation">
+             <enum>Qt::Vertical</enum>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QLabel" name="label">
+            <property name="text">
+             <string>Dtype:</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QLabel" name="lblDtype">
+            <property name="text">
+             <string>float32</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="Line" name="line_7">
             <property name="orientation">
              <enum>Qt::Vertical</enum>
             </property>
