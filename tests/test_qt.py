@@ -109,6 +109,14 @@ class QtTestCase(unittest.TestCase):
 
 @skipUnless(HAS_PYQT, "PyQt5 required")
 class FrameViewTestCase(QtTestCase):
+    def test_move_slier(self):
+        view = QtFrameView()
+        view.ui = mock.MagicMock()
+        view.move_slider(5)
+        # Check that the UI was updated
+        view.ui.sldFrameSlider.setValue.assert_called_once_with(5)
+        view.ui.lblIndex.setText.assert_called_once_with("5")
+        
     def test_update_figure_pixel(self):
         view = QtFrameView()
         view.ui = mock.MagicMock()
@@ -416,11 +424,6 @@ class PresenterTestCase(QtTestCase):
         presenter.build_hdf_tree(expand_tree=False)
         # Check that the frame view was updated with the new items
         self.assertEqual(len(tree_spy), 1)
-        # Check that the tree items given are correct
-        # item1 = presenter.frame_view.add_hdf_tree_item.call_args_list[0][0][0]
-        # item2 = presenter.frame_view.add_hdf_tree_item.call_args_list[1][0][0]
-        # self.assertFalse(item1.isDisabled())
-        # self.assertFalse(item2.isDisabled())
     
     def test_prepare_ui(self):
         # Prepare a frameset object to test the presenter
@@ -849,7 +852,6 @@ class PresenterTestCase(QtTestCase):
 
 @skipUnless(HAS_PYQT, "PyQt5 required")
 class FrameSourceTestCase(unittest.TestCase):
-    
     def test_add_callback(self):
         view = MockFrameView()
         source = FrameChangeSource(view=view)

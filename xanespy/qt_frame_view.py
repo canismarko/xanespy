@@ -315,6 +315,7 @@ class QtFrameView(QtCore.QObject):  # pragma: no cover
     
     def move_slider(self, val):
         self.ui.sldFrameSlider.setValue(val)
+        self.ui.lblIndex.setText(str(val))
     
     def set_busy_mode(self, status):
         """Either enable or disable the busy mode.
@@ -480,27 +481,15 @@ class QtFrameView(QtCore.QObject):  # pragma: no cover
         # Set the slider maximum
         self.ui.sldFrameSlider.setMaximum(frames.shape[0]-1)
     
-    # def set_status_shape(self, msg):
-    #     self.ui.lblShape.setText(msg)
-    
     def set_status_index(self, msg):
         self.ui.lblIndex.setText(msg)
-
+    
     def set_status_energy(self, energy):
         s = "{:.2f} eV".format(energy)
         self.ui.lblEnergy.setText(s)
     
     def set_status_unit(self, msg):
         self.ui.lblUnit.setText(msg)
-    
-    # def set_status_cursor(self, msg):
-    #     self.ui.lblCursor.setText(msg)
-    
-    # def set_status_pixel(self, msg):
-    #     self.ui.lblPixel.setText(msg)
-    
-    # def set_status_value(self, msg):
-    #     self.ui.lblValue.setText(msg)
     
     def set_window_title(self, hdf_path):
         title = "Xanespy Frameset ({})".format(hdf_path)

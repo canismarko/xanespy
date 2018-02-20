@@ -927,6 +927,15 @@ class XanesFrameset():
         with self.store() as store:
             imshape = store.get_dataset(representation).shape[-2:]
         return imshape
+
+    def pixel_size(self, representation='optical_depths', timestep=0):
+        """Return the size of the pixel (with units set by ``pixel_unit``)."""
+        with self.store() as store:
+            # Filter to only the requested frame
+            pixel_size = store.pixel_sizes[timestep]
+            # Take the median across all pixel sizes (except the xy dim)
+            pixel_size = np.median(pixel_size)
+        return pixel_size
     
     def pixel_unit(self):
         """Return the unit of measure for the size of a pixel."""
@@ -1753,12 +1762,8 @@ class XanesFrameset():
           ``utilities.Extent``
         
         """
-        with self.store() as store:
-            imshape = self.frame_shape(representation)
-            # Filter to only the requested frame
-            pixel_size = store.pixel_sizes[idx]
-            # Take the median across all pixel sizes (except the xy dim)
-            pixel_size = np.median(pixel_size)
+        pixel_size = self.pixel_size(representation=representation, timestep=idx)
+        imshape = self.frame_shape(representation)
         height = imshape[0] * pixel_size
         width = imshape[1] * pixel_size
         # Calculate boundaries from image shapes

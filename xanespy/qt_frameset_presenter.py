@@ -136,7 +136,6 @@ class QtFramesetPresenter(QtCore.QObject):
           signals get connected
         
         """
-        log.warning("add_frame_view is not yet complete")
         self.frame_views.append(view)
         # Let the view connect to this presenters signals
         view.connect_presenter(presenter=self)
