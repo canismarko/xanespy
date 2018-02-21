@@ -46,7 +46,7 @@ log = logging.getLogger(__name__)
 
 
 # Helpers for parallelizable code
-def iter_indices(data, leftover_dims=1, desc=None, quiet=False):
+def iter_indices(data, leftover_dims=1, desc=None, quiet=False, ):
     """Accept an array of frames, indices, etc. and generate slices for
     each frame.
     
@@ -508,8 +508,8 @@ def k_edge_jump(frames: np.ndarray, energies: np.ndarray, edge):
                              "{} in {}".format(post_edge, energies))
         
     # Compare the post-edges and pre-edges
-    mean_pre = np.mean(frames[pre_edge_mask, ...], axis=0)
-    mean_post = np.mean(frames[post_edge_mask, ...], axis=0)
+    mean_pre = np.mean(frames[pre_edge_mask], axis=0)
+    mean_post = np.mean(frames[post_edge_mask], axis=0)
     ej = mean_post - mean_pre
     return ej
 
@@ -545,214 +545,10 @@ def particle_labels(frames: np.ndarray, energies: np.ndarray, edge,
     return labels
 
 
-kedge_params = (
-    'scale', 'voffset', 'E0',  # Global parameters
-    'sigw',  # Sharpness of the edge sigmoid
-    'bg_slope', # Linear reduction in background optical_depth
-    'ga', 'gb', 'gc',  # Gaussian height, center and width
-)
-KEdgeParams = namedtuple('KEdgeParams', kedge_params)
-
-
-def predict_edge(energies, *params):
-    """Defines the curve function that gets fit to the data for an
-    optical_depth K-edge.
-    
-    The predicted curve is a combination of a straight line (for
-    background), an arctan function (for the edge), and a gaussian
-    peak (for the whiteline).
-    
-    Arguments
-    ---------
-    energies : np.ndarray
-      Array with energy values to be predicted.
-    *params : tuple(int)
-      The curve parameters that should be used for the
-      prediction. Their order is described by kedge_params variable.
-    
-    Returns
-    -------
-    curve : np.ndarray
-      The predicted optical_depth values based on the input
-      parameters. Shape will match `energies`.
-    
-    """
-    # Named tuple to help keep track of parameters
-    Params = namedtuple('Params', kedge_params)
-    p = Params(*params)
-    x = energies
-    # Adjust the x's to be relative to E_0
-    x = x - p.E0
-    # Sigmoid
-    sig = np.arctan(x*p.sigw) / np.pi + 1/2
-    # Gaussian
-    gaus = p.ga*np.exp(-(x-p.gb)**2/2/p.gc**2)
-    # Background
-    bg = x * p.bg_slope
-    curve = sig + gaus + bg
-    curve = p.scale * curve + p.voffset
-    return curve
-
-
-def guess_kedge(spectrum, energies, edge):
-    """Guess initial starting parameters for a k-edge curve. This will
-    give a rough estimate, appropriate for giving to the fit_kedge
-    function as the starting parameters, p0.
-
-    Arguments
-    ---------
-
-    - spectrum : An array containing optical_depth data that represents a
-      K-edge spectrum. Only 1-dimensional data are currently accepted.
-
-    - energies : An array containing X-ray energies corresponding to
-      the points in `spectrum`. Must have the same shape as `spectrum`.
-
-    - edge : An X-ray Edge object, will be used for estimating the
-      actual edge energy itself.
-
-    Returns: A named tuple with the estimated parameters (see
-      .KEdgeParams for definition)
-
-    """
-    assert spectrum.shape == energies.shape
-    # Guess the overall scale and offset parameters
-    scale = k_edge_jump(frames=spectrum, energies=energies, edge=edge)
-    voffset = np.min(spectrum)
-    # Estimate the edge position
-    E0 = edge.E_0
-    # Estimate the whiteline Gaussian parameters
-    ga = 5 * (np.max(spectrum) - scale - voffset)
-    gb = energies[np.argmax(spectrum)] - E0
-    gc = 2  # Arbitrary choice, should improve this in the future
-    # Construct the parameters tuple
-    params = KEdgeParams(scale=scale, voffset=voffset, E0=E0,
-                         sigw=0.5, bg_slope=0,
-                         ga=ga, gb=gb, gc=gc)
-    return params
-
-
-class _fit_spectrum():
-    def __init__(self, p0):
-        self.p0 = p0
-
-    def __call__(self, Is, Es):
-        # Fit the k edge for this spectrum
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore")
-            bounds = [(-np.inf, np.inf), (-np.inf, np.inf), (-np.inf, np.inf),
-                      (-np.inf, np.inf), (-np.inf, 0),
-                      (0, np.inf), (0, 50), (-np.inf, np.inf)]
-            bounds = list(zip(*bounds))
-            try:
-                popt, pcov = curve_fit(f=predict_edge, xdata=Es,
-                                       ydata=Is, p0=self.p0)
-            except RuntimeError:
-                # Failed fitting, so set everything to not-a-number
-                popt = np.empty((len(self.p0),))
-                popt[:] = np.nan
-        return popt
-
-
-def fit_kedge(spectra, energies, p0, progbar=True):
-    """Use least squares to fit a set of curves to the data. Currently
-    this is a line for the baseline optical_depth decreasing at higher
-    energies, plus a sigmoid for the edge and a gaussian for the
-    whiteline.
-    
-    Returns an array with a similar shape to spectra but the last axis
-    is replaced with fitting parameters, describe by the named tupled
-    `KParams` defined in this module.
-    
-    Arguments
-    ---------
-    spectra : numpy.array
-      An array containing optical_depth data. Assumes that the
-      index is energy. This can be a multi-dimensional array, which
-      allows calculation of image frames, etc. The last axis should be
-      X-ray energy.
-    energies : numpy.array
-      Array of X-ray energies. Must have same shape as `spectra`.
-    p0 : tuple
-      A tuple with the initial guess. The correct order is described
-      by kedge_params.
-    out : np.array, optional
-      Numpy array to hold the results. If omitted, a new array will be
-      created.
-    progbar : bool, optional
-      If True, an ipywidgets progress bar will be shown.
-    
-    """
-    assert energies.shape == spectra.shape
-    # Empty array to hold the results
-    result_shape = (*spectra.shape[:-1], len(kedge_params))
-    # Start threaded processing
-    spectra_iter = list(zip(spectra, energies))
-    if spectra.shape[0] > 1 and progbar:
-        spectra_iter = prog(spectra_iter,
-                            desc="Fitting spectra")
-    f = _fit_spectrum(p0=p0)
-    with mp.Pool() as pool:
-        chunksize = 223  # Prime number just for kicks
-        result = pool.starmap(f, spectra_iter, chunksize=chunksize)
-        # result.wait()
-        pool.close()
-        pool.join()
-        result = np.array(result).reshape(result_shape)
-    # foreach(fit_spectrum, spectrum_iters, threads=1)
-    return result
-
-def fit_kedge_mpi(spectra, energies, p0):
-    """Use least squares to fit a set of curves to the data. Very similar
-    to ``fit_k_edge()`` except using message passing interface (MPI) for
-    parallel processing.
-
-    Returns an array with a similar shape to spectra but the last axis
-    is replaced with fitting parameters, described by the named tupled
-    ``KParams`` defined in this module.
-
-    Parameters
-    ==========
-    spectra : np.ndarray
-      An array containing optical_depth data. Assumes that the index is
-      energy. This can be a multi-dimensional array, which allows
-      calculation of image frames, etc. The last axis should be X-ray
-      energy.
-    energies : np.ndarray
-      Array of X-ray energies. Must have same shape as `spectra`.
-    p0 : tuple
-      A tuple with the initial guess. The correct order is described
-      by kedge_params.
-    out : np.ndarray
-      To hold the results. If omitted, a new array will be created.
-
-    """
-    assert energies.shape == spectra.shape
-    
-    # Empty array to hold the results
-    # result_shape = (*spectra.shape[:-1], len(kedge_params))
-    # # Start threaded processing
-    # spectra_iter = list(zip(spectra, energies))
-    # if spectra.shape[0] > 1:
-    #     spectra_iter = prog(spectra_iter,
-    #                         desc="Fitting spectra")
-    # f = _fit_spectrum(p0=p0)
-    # with mp.Pool() as pool:
-    #     chunksize = 223  # Prime number just for kicks
-    #     result = pool.starmap(f, spectra_iter, chunksize=chunksize)
-    #     # result.wait()
-    #     pool.close()
-    #     pool.join()
-    #     result = np.array(result).reshape(result_shape)
-    # # foreach(fit_spectrum, spectrum_iters, threads=1)
-    # return result
-
-
-
 def direct_whitelines(spectra, energies, edge, quiet=False):
     """Takes an array of X-ray optical_depth spectra and calculates the
     positions of maximum intensities over the near-edge region.
-
+    
     Arguments
     ---------
     spectra : np.array

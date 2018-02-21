@@ -211,16 +211,16 @@ def is_kernel():
     return getattr(get_ipython(), 'kernel', None) is not None
 
 
-def prog(iterable=None, leave=None, dynamic_ncols=True, *args, **kwargs):
+def prog(iterable=None, leave=None, dynamic_ncols=True, smoothing=0.01, *args, **kwargs):
     """A progress bar for displaying how many iterations have been
     completed.
-
+    
     This is mostly just a wrapper around the tqdm library. args and
     kwargs are passed directly to either tqdm.tqdm or
     tqdm.tqdm_notebook. This function also takes into account the
     value of ``USE_PROG`` defined in this module. If tqdm is no
     installed, then calls to prog will just return the iterable again.
-
+    
     Parameters
     ----------
     iterable
@@ -244,12 +244,12 @@ def prog(iterable=None, leave=None, dynamic_ncols=True, *args, **kwargs):
         # Use the IPython widgets version of tqdm
         leave = True if leave is None else leave
         prog_iter = tqdm(iterable, leave=leave,
-                                  dynamic_ncols=dynamic_ncols, *args,
-                                  **kwargs)
+                         dynamic_ncols=dynamic_ncols,
+                         smoothing=smoothing, *args, **kwargs)
     else:
         # Use the text-version of tqdm
         leave = False if leave is None else leave
         prog_iter = tqdm(iterable, leave=leave,
-                         dynamic_ncols=dynamic_ncols, *args,
-                         **kwargs)
+                         dynamic_ncols=dynamic_ncols,
+                         smoothing=smoothing, *args, **kwargs)
     return prog_iter

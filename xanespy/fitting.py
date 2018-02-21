@@ -25,6 +25,8 @@ from collections import namedtuple
 
 import numpy as np
 
+from xanes_math import k_edge_jump
+
 
 def prepare_p0(p0, frame_shape, num_timesteps=1):
     """Create an initial parameter guess for fitting.
@@ -149,3 +151,72 @@ class L3Curve():
         # Add global y-offset parameter
         pnames.append('offset')
         return tuple(pnames)
+
+
+class KCurve():
+    param_names = (
+        'scale', 'voffset', 'E0',  # Global parameters
+        'sigw',  # Sharpness of the edge sigmoid
+        'bg_slope', # Linear reduction in background optical_depth
+        'ga', 'gb', 'gc',  # Gaussian height, center and width
+    )
+    
+    def __init__(self, energies):
+        self.energies = energies
+    
+    def guess_params(self, intensities, edge):
+        """Guess initial starting parameters for a k-edge curve. This will
+        give a rough estimate, appropriate for giving to the fit_kedge
+        function as the starting parameters, p0.
+        
+        Arguments
+        ---------
+        intensities : np.ndarray
+          An array containing optical_depth data that represents a
+          K-edge spectrum. Only 1-dimensional data are currently
+          accepted.
+        edge : xanespy.edges.KEdge
+          An X-ray Edge object, will be used for estimating the actual
+          edge energy itself.
+        
+        Returns
+        -------
+        p0 : tuple
+          A named tuple with the estimated parameters (see KEdgeParams
+          for definition)
+        
+        """
+        Is = intensities
+        assert Is.shape == self.energies.shape
+        # Guess the overall scale and offset parameters
+        scale = k_edge_jump(frames=Is, energies=self.energies, edge=edge)
+        voffset = np.min(Is)
+        # Estimate the edge position
+        E0 = edge.E_0
+        # Estimate the whiteline Gaussian parameters
+        ga = 5 * (np.max(Is) - scale - voffset)
+        gb = self.energies[np.argmax(Is)] - E0
+        gc = 2  # Arbitrary choice, should improve this in the future
+        # Construct the parameters tuple
+        KParams = namedtuple('KParams', self.param_names)
+        p0 = KParams(scale=scale, voffset=voffset, E0=E0,
+                             sigw=0.5, bg_slope=0,
+                             ga=ga, gb=gb, gc=gc)
+        return p0
+    
+    def __call__(self, *params):
+        # Named tuple to help keep track of parameters
+        Params = namedtuple('Params', self.param_names)
+        p = Params(*params)
+        x = self.energies
+        # Adjust the x's to be relative to E_0
+        x = x - p.E0
+        # Sigmoid
+        sig = np.arctan(x*p.sigw) / np.pi + 1/2
+        # Gaussian
+        gaus = p.ga*np.exp(-(x-p.gb)**2/2/p.gc**2)
+        # Background
+        bg = x * p.bg_slope
+        curve = sig + gaus + bg
+        curve = p.scale * curve + p.voffset
+        return curve

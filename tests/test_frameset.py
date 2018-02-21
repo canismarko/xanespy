@@ -52,11 +52,10 @@ from xanespy.xanes_math import (transform_images, direct_whitelines,
                                 particle_labels, k_edge_jump,
                                 k_edge_mask, l_edge_mask,
                                 apply_references, iter_indices,
-                                predict_edge, fit_kedge, kedge_params,
-                                KEdgeParams, extract_signals_nmf,
-                                guess_kedge, transformation_matrices,
+                                extract_signals_nmf,
+                                transformation_matrices,
                                 apply_internal_reference,
-                                register_template, _fit_spectrum)
+                                register_template)
 # from xanespy.edges import KEdge, k_edges, l_edges
 from xanespy.importers import (import_ssrl_xanes_dir,
                                import_nanosurveyor_frameset,
@@ -385,7 +384,7 @@ class XanesFramesetTest(TestCase):
         fs = self.create_frameset(store=store)
         spectrum = fs.spectrum()
         # DO the actual fitting
-        weights, residuals = fs.fit_linear_combinations(sources=[spectrum], quiet=True)
+        weights, residuals = fs.fit_linear_combinations(sources=[spectrum], quiet=True, edge_filter=False)
         self.assertEqual(weights.shape, (1, 2, 16, 16))
         self.assertEqual(residuals.shape, (1, 16, 16))
         # Check that the data were saved
@@ -414,7 +413,7 @@ class XanesFramesetTest(TestCase):
         line = lambda a, b: a * x + b
         line.dtype = np.float32
         params, residuals = fs.fit_spectra(line, p0=np.zeros((1, 2, 16, 16)),
-                                           nonnegative=True,
+                                           nonnegative=True, edge_filter=False,
                                            pnames=('slope', 'intercept'), quiet=True)
         self.assertFalse(np.any(params<0))
         self.assertEqual(residuals.dtype, Es.dtype)

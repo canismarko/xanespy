@@ -56,7 +56,7 @@ def dummy_frame_data(shape=(10, 128, 128)):
     """Create some dummy data with a given shape. It's pretty much just an
     arange with reshaping."""
     length = np.prod(shape)
-    data = np.arange(length)
+    data = np.arange(length, dtype='float32')
     data = np.reshape(data, shape)
     return data
 
@@ -325,6 +325,7 @@ class PresenterTestCase(QtTestCase):
         # Create a mocked frameset object to test the presenter
         frameset = MockFrameset()
         data = dummy_frame_data((10, 128, 128))
+        data[5, 64, 64] = np.nan
         frameset.frames = mock.Mock(return_value=data)
         frameset.data_tree = mock.MagicMock(return_value=[])
         frameset.pixel_unit = mock.Mock(return_value='um')

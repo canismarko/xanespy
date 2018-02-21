@@ -22,10 +22,18 @@
 
 import unittest
 from unittest import TestCase, mock
+from collections import namedtuple
+import os
 
 import numpy as np
+import pandas as pd
 
-from xanespy.fitting import LinearCombination, L3Curve, prepare_p0
+from xanespy.fitting import LinearCombination, KCurve, L3Curve, prepare_p0
+from xanespy import edges
+
+
+TEST_DIR = os.path.dirname(__file__)
+SSRL_DIR = os.path.join(TEST_DIR, 'txm-data-ssrl')
 
 
 class FittingTestCase(TestCase):
@@ -55,6 +63,48 @@ class FittingTestCase(TestCase):
         params = (1, 860, 0.1, 0, 862.5, 1, -2)
         out = l3(*params)
         self.assertEqual(np.argmax(out), 20)
+    
+    def test_K_curve(self):
+        # Prepare input data
+        Es = np.linspace(8250, 8650, num=100)
+        k_curve = KCurve(energies=Es)
+        # Confirm correct number of parameter names
+        names = ('scale', 'voffset', 'E0',  # Global parameters
+                 'sigw',  # Sharpness of the edge sigmoid
+                 'bg_slope', # Linear reduction in background optical_depth
+                 'ga', 'gb', 'gc',  # Gaussian height, center and width
+        )
+        self.assertEqual(k_curve.param_names, names)
+        # Check a predicted curve
+        KParams = namedtuple('KParams', k_curve.param_names)
+        params = KParams(scale=1, voffset=1, E0=8353,
+                         sigw=0.5, bg_slope=-0.001,
+                         ga=0.5, gb=3, gc=5)
+        out = k_curve(*params)
+        # Check some properties of the predicted curve determined manually
+        self.assertEqual(np.argmax(out), 27)
+        self.assertAlmostEqual(np.min(out), 1.050, places=3)
+        self.assertAlmostEqual(np.max(out), 2.306, places=3)
+    
+    def test_guess_kedge_params(self):
+        """Given an arbitrary K-edge spectrum, can we guess reasonable
+        starting parameters for fitting?"""
+        # Load spectrum
+        spectrum = pd.read_csv(os.path.join(SSRL_DIR, 'NCA_xanes.csv'),
+                               index_col=0, sep=' ', names=['Absorbance'])
+        edge = edges.NCANickelKEdge()
+        Es = np.array(spectrum.index)
+        ODs = np.array(spectrum.values)[:,0]
+        # Do the guessing
+        kcurve = KCurve(Es)
+        result = kcurve.guess_params(ODs, edge=edge)
+        # Check resultant guessed parameters
+        self.assertAlmostEqual(result.scale, 0.244, places=2)
+        self.assertAlmostEqual(result.voffset, 0.45, places=2)
+        self.assertEqual(result.E0, edge.E_0)
+        self.assertAlmostEqual(result.ga, 0.75, places=2)
+        self.assertAlmostEqual(result.gb, 17, places=1)
+        self.assertAlmostEqual(result.bg_slope, 0, places=5)
     
     def test_prepare_p0(self):
         # Run the function with known inputs

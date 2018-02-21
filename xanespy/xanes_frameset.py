@@ -1155,7 +1155,7 @@ class XanesFrameset():
                 # if np.iscomplexobj(ODs):
                 #     ODs = np.(ODs)
                 mask = self.edge.mask(frames=ODs,
-                                      energies=store.energies.value,
+                                      energies=store.energies,
                                       sensitivity=sensitivity,
                                       min_size=min_size)
         return mask
@@ -1207,8 +1207,10 @@ class XanesFrameset():
                                   context='metadata')
         return results
     
-    def fit_spectra(self, func, p0, pnames=None, name=None, nonnegative=True, component='real',
-                    representation='optical_depths', dtype=None, quiet=False):
+    def fit_spectra(self, func, p0, pnames=None, name=None,
+                    edge_filter=True, nonnegative=False,
+                    component='real', representation='optical_depths',
+                    dtype=None, quiet=False):
         """Fit a given function to the spectra at each pixel.
         
         The fit parameters will be saved in the HDF dataset
@@ -1227,19 +1229,21 @@ class XanesFrameset():
           frameset. Example, fitting 3 sources (plus offset) for a (1,
           40, 256, 256) 40-energy frameset requires p0 to be (1, 4,
           256, 256).
+        pnames : str, optional
+          An object with __str__ that will be saved as metadata giving
+          the parameters' names.
         name : str, optional
           What to call this fit in the HDF5 file. Use this to allow
           subsequent fits against the same dataset to be saved. If
           ``None``, we will attempt look for ``func.name``, then
           lastly we'll use "fit".
+        edge_filter : bool, optional
+          If true, only compute pixels that pass an edge filter.
         nonnegative : bool, optional
           If true (default), negative parameters will be avoided. This
           can also be a tuple to allow for fine-grained control. Eg:
           (True, False) will only punish negative values in the first
           of the two parameters.
-        pnames : str, optional
-          An object with __str__ that will be saved as metadata giving
-          the parameters' names.
         component : str, optional
           What to use for complex-valued functions.
         representation : str, optional
@@ -1262,6 +1266,8 @@ class XanesFrameset():
         # Get data
         with self.store() as store:
             frames = get_component(store.get_dataset(representation), component)
+        if edge_filter:
+            frames[...,self.edge_mask()] = np.nan
         # Get the default curve name if necessary
         if name is None:
             name = getattr(func, 'name', 'fit')
@@ -1297,6 +1303,12 @@ class XanesFrameset():
                                   leftover_dims=1, quiet=quiet)
         def fit_sources(idx):
             spectrum = spectra[idx]
+            # Don't bother fitting if there's NaN values
+            if np.any(np.isnan(spectrum)):
+                params[idx] = np.nan
+                residuals[idx] = np.nan
+                return
+            # Valid data, so fit the spectrum
             guess = tuple(p0[idx])
             results = leastsq(func=errfun, x0=guess, args=(spectrum,), full_output=True)
             x, cov_x, infodict, mesg, status = results
@@ -1361,16 +1373,13 @@ class XanesFrameset():
             store.whiteline_max = whitelines
             store.whiteline_max.attrs['frame_source'] = 'optical_depths'
     
-    def calculate_maps(self, fit_spectra=False):
+    def calculate_maps(self):
         """Generate a set of maps based on pixel-wise Xanes spectra: whiteline
         position, particle labels.
         
-        Parameters
-        ----------
-        fit_spectra : bool, optional
-          If truthy, the whiteline will be found by fitting curves,
-          instead of the default of taking the direct maximum. This is
-          likely to be very slow.
+        This method does not do any advanced analysis, so something
+        like ``~xanespy.xanes_frameset.XanesFrameset.fit_spectra`` may
+        be necessary.
         
         """
         self.calculate_whitelines()

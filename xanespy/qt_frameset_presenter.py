@@ -331,8 +331,8 @@ class QtFramesetPresenter(QtCore.QObject):
             pass
         else:
             # Calculate the relevant perctile intervals
-            p_lower = np.percentile(data, 1)
-            p_upper = np.percentile(data, 99)
+            p_lower = np.nanpercentile(data, 1)
+            p_upper = np.nanpercentile(data, 99)
             # Update the view with the new values
             self._frame_vmin = p_lower
             self._frame_vmax = p_upper

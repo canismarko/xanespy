@@ -36,13 +36,11 @@ from xanespy.xanes_math import (transform_images, direct_whitelines,
                                 particle_labels, k_edge_jump,
                                 k_edge_mask, l_edge_mask,
                                 apply_references, iter_indices,
-                                predict_edge, fit_kedge, kedge_params,
-                                KEdgeParams, extract_signals_nmf,
-                                guess_kedge, transformation_matrices,
+                                extract_signals_nmf,
+                                transformation_matrices,
                                 apply_internal_reference,
                                 apply_mosaic_reference,
-                                register_template, _fit_spectrum,
-                                downsample_array)
+                                register_template, downsample_array)
 
 TEST_DIR = os.path.dirname(__file__)
 SSRL_DIR = os.path.join(TEST_DIR, 'txm-data-ssrl')
@@ -75,19 +73,6 @@ class XanesMathTest(unittest.TestCase):
         coins = coins * (0.975 + np.random.rand(*coins.shape)/20)
         coins = coins.astype(np.int32)
         return coins
-    
-    def test_predict_edge(self):
-        params = KEdgeParams(
-            scale=1, voffset=0, E0=8353,
-            sigw=1,
-            bg_slope=0,
-            ga=0, gb=1, gc=1,
-        )
-        x = np.linspace(8330, 8440)
-        result = predict_edge(x, *params)
-        # Predict the expected result for arctan function
-        expected = np.arctan(x-8353) / np.pi + 1/2
-        np.testing.assert_equal(result, expected)
     
     def test_downsample_array(self):
         """Check that image downsampling works as expected."""
@@ -156,31 +141,6 @@ class XanesMathTest(unittest.TestCase):
         # Compare results
         expected = np.array([[0, 0], [1, 1]])
         np.testing.assert_equal(results, expected)
-    
-    def test_fit_spectrum(self):
-        params = KEdgeParams(
-            scale=1, voffset=0, E0=8353,
-            sigw=1,
-            bg_slope=0,
-            ga=0, gb=1, gc=1,
-        )
-        Es = np.linspace(8250, 8640)
-        predicted = predict_edge(Es, *params)
-        # Fit against the initial parameters and check that it returns
-        # the same params
-        func = _fit_spectrum(params)
-        result = func(predicted, Es)
-        np.testing.assert_equal(result, params)
-        # Test ridiculously bad fits return `nan`
-        params = KEdgeParams(
-            scale=0, voffset=0, E0=0,
-            sigw=1,
-            bg_slope=0,
-            ga=0, gb=1, gc=1,
-        )
-        func = _fit_spectrum(params)
-        result = func(predicted, Es)
-        np.testing.assert_equal(result, [np.nan] * 8)
     
     def test_apply_internal_reference(self):
         # With real data
@@ -269,25 +229,6 @@ class XanesMathTest(unittest.TestCase):
         indices = iter_indices(indata, leftover_dims=2, quiet=True)
         self.assertEqual(len(list(indices)), 3*13)
     
-    def test_guess_kedge_params(self):
-        """Given an arbitrary K-edge spectrum, can we guess reasonable
-        starting parameters for fitting?"""
-        # Load spectrum
-        spectrum = pd.read_csv(os.path.join(SSRL_DIR, 'NCA_xanes.csv'),
-                               index_col=0, sep=' ', names=['Absorbance'])
-        Es = np.array(spectrum.index)
-        As = np.array(spectrum.values)[:,0]
-        edge = edges.NCANickelKEdge()
-        # Do the guessing
-        result = guess_kedge(spectrum=As, energies=Es, edge=edge)
-        # Check resultant guessed parameters
-        self.assertAlmostEqual(result.scale, 0.244, places=2)
-        self.assertAlmostEqual(result.voffset, 0.45, places=2)
-        self.assertEqual(result.E0, edge.E_0)
-        self.assertAlmostEqual(result.ga, 0.75, places=2)
-        self.assertAlmostEqual(result.gb, 17, places=1)
-        self.assertAlmostEqual(result.bg_slope, 0, places=5)
-    
     def test_apply_references(self):
         # Create some fake frames. Reshaping is to mimic multi-dim dataset
         Is, refs = self.coins()[:2], self.coins()[2:4]
@@ -319,33 +260,6 @@ class XanesMathTest(unittest.TestCase):
                                     energies=np.array([spectrum.index]),
                                     edge=edges.k_edges['Ni_NCA'], quiet=True)
         self.assertEqual(results, [8350.])
-    
-    def test_fit_kedge(self):
-        prog.quiet = True
-        # Load some test data
-        spectrum = pd.read_csv(os.path.join(SSRL_DIR, 'NCA_xanes.csv'),
-                               index_col=0, sep=' ', names=['Absorbance'])
-        Is = np.array([spectrum.Absorbance.values])
-        Es = np.array([spectrum.index])
-        # Give an intial guess
-        guess = KEdgeParams(1/5, 0, 8333, # Scale, v_offset, E_0
-                            1, # Sigmoid sharpness
-                            0, # Slope
-                            1, 17, 4) # Gaussian height, center and width
-        out = fit_kedge(Is, energies=Es, p0=guess)
-        self.assertEqual(out.shape, (1, len(kedge_params)))
-        out_params = KEdgeParams(*out[0])
-        # Uncomment these plotting commands to check the fit if the test fails
-        # guess0 = guess_kedge(spectrum=Is[0], energies=Es[0],
-        #                      edge=edges.k_edges['Ni_NCA'])
-        # print(guess0)
-        # import matplotlib.pyplot as plt
-        # plt.figure()
-        # plt.plot(Es, Is, marker="+")
-        # new_Es = np.linspace(8250, 8640, num=200)
-        # plt.plot(new_Es, predict_edge(new_Es, *out_params), marker="+", linestyle="-")
-        # plt.show()
-        self.assertAlmostEqual(out_params.E0 + out_params.gb, 8350.50, places=2)
     
     def test_particle_labels(self):
         """Check image segmentation on a set of frames. These tests just check

@@ -25,7 +25,6 @@ from matplotlib.colors import Normalize
 from matplotlib.ticker import ScalarFormatter
 
 from utilities import pixel_to_xy, Extent, Pixel
-from xanes_math import KEdgeParams, kedge_params, predict_edge
 
 
 def latexify():
