@@ -139,7 +139,6 @@ class Curve():
 
 
 class LinearCombination(Curve):
-
     """Combines other curves into one callable.
     
     The constructor accepts the keyword argument ``sources``, which

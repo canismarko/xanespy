@@ -6,53 +6,72 @@ data into a common format**. These importer functions are written as
 needed: if your preferred beamline is not here, `submit an issue`_.
 
 
-APS Beamline 8-BM-B - Energy Stack (TXRM)
------------------------------------------
+APS Beamline 32-ID-C
+--------------------
 
-.. note:: Currently this function can only import one XANES
-   stack. Time-resolved measurement is not implemented. If you would
-   find this feature valuable, please `submit an issue`_.
-
-The Xradia microscope can save an entire stack in one ``.txrm``
-file. This file can be imported using the
-:py:func:`~xanespy.importers.import_aps_8BM_xanes_file` function. The
-list of energies is automatically extracted from the file. The
-reference frames will then reside in a different ``.txrm`` file.
-
-Example usage:
+The ``energy_scan`` script at 32-ID-C saves source data as an HDF
+file. Xanespy preserves the original ("source") file and saves
+imported and processed data in a second ("desination") HDF file to be
+used in later analysis. The source file can be easily imported:
 
 .. code:: python
 
-    import xanespy as xp
-    
-    xp.import_aps_8BM_xanes_file('exp1-sample-stack.txrm',
-                                 ref_filename='exp1-reference_stack.txrm',
-  			         hdf_filename='txm-data.h5',
-       			         groupname='experiment1')
-			       
+   import_aps32idc_xanes_file(filename='source_xanes_example_scan_001.h5',
+                              hdf_filename='xanespy_destination.h5',
+			      hdf_groupname'example_scan_001',
+                              downsample=1, square=True)
 
-APS Beamline 8-BM-B - Directory of XRM Files
---------------------------------------------
+The camera at the beamline captures micrographs of 2048x2448. In most
+cases this is over-kill since the focusing power of the 60 nm
+zone-plate is not strong enough to take advantage of this. The extra
+pixel density can be converted into an improved contrast-to-noise
+ratio by the **``downsample``** parameter. This parameter controls how
+many pixels (to a power of two) are combined. In the previous example,
+``downsample=1`` combines to :math:`2^1 = 2\times2` blocks and results
+in a (1024, 1224) image. ``downsample=2`` combines :math:`2^2 =
+4\times4` blocks to produce a (512, 612) image.
 
-In-house XANES scan scripts often save a directory full of ``.xrm``
-files with the metadata coding in the filenames. From the Xradia TXM
-at sector 8-BM-B, this XANES scan script can be generated with
-:py:func:`~xanespy.beamlines.sector8_xanes_script`, and the results
-can then be imported with
-:py:func:`~xanespy.importers.import_aps_8BM_xanes_dir`. The list of
-energies is automatically extracted from the filenames. The reference
-frames will also be identified in the directory.
+There are sometimes corner artifacts in the camera, independent of
+sample position: this can cause poor alignment of the imported
+data. An easy solution is to import the data with
+``square=True``. This will crop the imported images to be square,
+discarding the corner artifacts.
 
-Example usage:
+**Operando experiments** generate one HDF file per energy scan. Using
+ the above approach would continually overwrite the imported data,
+ leaving only the last scan in the import data store. To overcome
+ this, the ``timestep`` and ``total_timesteps`` parameters should be
+ used, or the related ``import_aps32idc_xanes_files`` function.
+
+Option 1: Loop through the files explicitly:
 
 .. code:: python
 
-    import xanespy as xp
+   # Populate a list of filenames, eg. with listdir() from the os module
+   filenames = []
+   # Loop through the files an import then one at a time
+   for idx, fname in enumerate(filenames):
+       import_aps_32idc_xanes_file(fname, hdf_filename='my_XANES_data.h5',
+	                           hdf_groupname='operando_001',
+				   timestep=idx, total_timesteps=len(filenames))
 
-    # First a script should be created with sector_8_xanes_script()
-    # Once the script is done, import the data with this function
-    xp.import_aps_8BM_xanes_dir("opearando_exp1/",
-                                hdf_filename="operando_experiments.h5")
+Option 2: Convenice function.
+
+.. code::
+
+   # Populate a list of filenames, eg. with listdir() from the os module
+   filenames = []
+   # The function basically does what is shown in option 1
+   import_aps_32idc_xanes_files(filenames, hdf_filename='my_XANES_data.h5',
+                                hdf_groupname='operando_002')
+
+Any additional parameters given to the convenience function
+:py:func:`~xanespy.importers.import_aps32idc_xanes_files` will be
+passed directly to the inner
+:py:func:`~xanespy.importers.import_aps32idc_xanes_file` function. If
+using option 1, it is important that parameters controlling the data
+shape are consistent across calls: ``total_timesteps``, ``append``,
+``downsample``, ``square`` and ``exclude``.
 
 
 SSRL Beamline 6-2c - Directory of XRM Files
@@ -83,7 +102,7 @@ Ptychography from 5.3.2.1 (ALS)
 
 The output of the nanosurveyor reconstruction algorithm at 5.3.2.1
 saves the data in h5
-files. :py:func:`~xanespy.importers.import_nanosurveyor_frameset``
+files. :py:func:`~xanespy.importers.import_nanosurveyor_frameset`
 copies the reconstructed images and metadata from the individual files
 and combines them into a new HDF5 file for XAS analysis. The original
 CCD images are left in their original HDF5 files, so they should not
@@ -187,3 +206,60 @@ The :py:class:`~xanespy.xradia.XRMFile` and
 ``flavor`` keyword argument. This option affects several pieces of
 metadata. See the :py:class:`~xanespy.xradia.XRMFile` documentation
 for details.
+
+
+APS Beamline 8-BM-B - Energy Stack (TXRM)
+-----------------------------------------
+
+.. note:: The X-ray microscope that was temporarily at beamline 8-BM
+          has been returned to NSLS-II. These functions are retained
+          for compatibility with previously collected data.
+
+The Xradia microscope can save an entire stack in one ``.txrm``
+file. This file can be imported using the
+:py:func:`~xanespy.importers.import_aps8bm_xanes_file` function. The
+list of energies is automatically extracted from the file. The
+reference frames will then reside in a different ``.txrm`` file.
+
+Example usage:
+
+.. code:: python
+
+    import xanespy as xp
+    
+    xp.import_aps_8BM_xanes_file('exp1-sample-stack.txrm',
+                                 ref_filename='exp1-reference_stack.txrm',
+  			         hdf_filename='txm-data.h5',
+       			         groupname='experiment1')
+
+.. note:: Currently this function can only import one XANES stack;
+	  time-resolved measurement is not implemented. If you would
+	  find this feature valuable, please `submit an issue`_.
+			       
+
+APS Beamline 8-BM-B - Directory of XRM Files
+--------------------------------------------
+
+.. note:: The X-ray microscope that was temporarily at beamline 8-BM
+          has been returned to NSLS-II. These functions are retained
+          for compatibility with previously collected data.
+
+In-house XANES scan scripts often save a directory full of ``.xrm``
+files with the metadata coding in the filenames. From the Xradia TXM
+at sector 8-BM-B, this XANES scan script can be generated with
+:py:func:`~xanespy.beamlines.sector8_xanes_script`, and the results
+can then be imported with
+:py:func:`~xanespy.importers.import_aps8bm_xanes_dir`. The list of
+energies is automatically extracted from the filenames. The reference
+frames will also be identified in the directory.
+
+Example usage:
+
+.. code:: python
+
+    import xanespy as xp
+
+    # First a script should be created with sector_8_xanes_script()
+    # Once the script is done, import the data with this function
+    xp.import_aps_8BM_xanes_dir("opearando_exp1/",
+                                hdf_filename="operando_experiments.h5")

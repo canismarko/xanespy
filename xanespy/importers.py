@@ -241,7 +241,7 @@ def import_aps32idc_xanes_files(filenames, hdf_filename, hdf_groupname, *args, *
     hdf_groupname : str, optional
       A description of the dataset that will be used to form the HDF
       data group.
-    *args, **kwargs
+    args, kwargs
       Passed to ``import_aps32idc_xanes_file``
     
     """
@@ -935,7 +935,7 @@ def import_ssrl_xanes_dir(directory, hdf_filename, groupname=None, *args, **kwar
     groupname : str, optional
       HDF group name to use for saving these data. If omitted, try to
       guess from directory path.
-    *args, **kwargs
+    args, kwargs
       Arguments and keyword arguments passed on to
     ``import_frameset``.
     
