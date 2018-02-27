@@ -381,14 +381,14 @@ def l_edge_mask(frames: np.ndarray, energies: np.ndarray, edge,
     mask : np.ndarray
       A boolean mask with the same shape as the last two dimensions of
       `frames` where True pixels are likely to be background material.
-
+    
     """
     # Take the mean over all timesteps
     ODs = frames
     if frames.ndim > 3:
         E_dim = frame_dims + 1
-        ODs = np.mean(frames.reshape(-1, *frames.shape[-E_dim:]), axis=0)
-        Es = np.mean(energies.reshape(-1, frames.shape[-E_dim]), axis=0)
+        ODs = np.mean(np.reshape(frames, (-1, *frames.shape[-E_dim:])), axis=0)
+        Es = np.mean(np.reshape(energies, (-1, frames.shape[-E_dim])), axis=0)
     elif frames.ndim == 3:
         Es = energies
     # Convert optical depths into spectra -> (spectrum, energy) shape
