@@ -28,7 +28,8 @@ import os
 import numpy as np
 import pandas as pd
 
-from xanespy.fitting import LinearCombination, KCurve, L3Curve, prepare_p0
+from xanespy.fitting import (LinearCombination, KCurve, Gaussian,
+                             L3Curve, prepare_p0, fit_spectra)
 from xanespy import edges
 
 
@@ -49,6 +50,14 @@ class FittingTestCase(TestCase):
         # Test param_names property
         pnames = ('weight_0', 'weight_1', 'offset')
         self.assertEqual(lc.param_names, pnames)
+
+    def test_gaussian(self):
+        # Prepare intpu data
+        Es = np.linspace(0, 10, num=101)
+        gaussian = Gaussian(x=Es)
+        out = gaussian(1, 5.1, 0.2)
+        # Check the resulting output
+        self.assertEqual(np.argmax(out), 51)
     
     def test_L3_curve(self):
         # Prepare input data
@@ -117,3 +126,18 @@ class FittingTestCase(TestCase):
         expected[:,2,:,:] = 1
         # Check that the arrays match
         np.testing.assert_equal(out, expected)
+    
+    def test_fit_spectra(self):
+        # Define a function to fit
+        line = lambda m, b: m*x + b
+        # Prepare source data
+        x = np.linspace(0, 10, num=11)
+        real_params = np.array([(2, -3)])
+        real_data = line(*real_params[0])
+        spectra = np.array([real_data])
+        # Execute the fit
+        p0 = np.array([(1, 0)])
+        params, residuals = fit_spectra(observations=spectra,
+                                        func=line, p0=p0)
+        np.testing.assert_equal(params, real_params)
+        self.assertTrue(0 < residuals < 1e-9, residuals)

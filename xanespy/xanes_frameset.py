@@ -36,7 +36,6 @@ import subprocess
 import warnings
 
 import pandas as pd
-from scipy.optimize import leastsq
 from matplotlib import pyplot, cm, pyplot as plt
 from matplotlib.colors import Normalize
 import h5py
@@ -50,7 +49,7 @@ from utilities import (prog, xycoord, Pixel, Extent, pixel_to_xy,
                        get_component, broadcast_reverse, xy_to_pixel)
 from txmstore import TXMStore
 import plots
-from fitting import LinearCombination
+from fitting import LinearCombination, fit_spectra
 import exceptions
 import xanes_math as xm
 from edges import Edge
@@ -1275,53 +1274,19 @@ class XanesFrameset():
         spectra = np.moveaxis(frames, 1, -1)
         map_shape = spectra.shape[:-1]
         spectra = spectra.reshape((-1, spectra.shape[-1]))
-        residuals = np.zeros(shape=(spectra.shape[0],))
         p0 = np.moveaxis(p0, 1, -1)
         p0 = p0.reshape((-1, p0.shape[-1]))
-        params = np.empty_like(p0)
         # Make sure data-types match to avoid precision errors
         if dtype is None:
             dtype = getattr(func, 'dtype', None)
         if dtype is not None:
             spectra = spectra.astype(dtype)
             p0 = p0.astype(dtype)
-        # Prepare error function
-        def errfun(guess, obs):
-            if np.any(np.logical_and(guess < 0, nonnegative)):
-                # Punish negative values
-                diff = np.empty_like(obs)
-                diff[:] = 1e6
-            else:
-                # Calculate error for this guess
-                predicted = func(*guess)
-                # Compare predicted with observed values
-                diff = np.abs(obs - predicted)
-            assert not np.any(np.isnan(diff))
-            return diff
-        # Execute fitting for each spectrum
-        indices = xm.iter_indices(spectra, desc="Fitting spectra",
-                                  leftover_dims=1, quiet=quiet)
-        def fit_sources(idx):
-            spectrum = spectra[idx]
-            # Don't bother fitting if there's NaN values
-            if np.any(np.isnan(spectrum)):
-                params[idx] = np.nan
-                residuals[idx] = np.nan
-                return
-            # Valid data, so fit the spectrum
-            guess = tuple(p0[idx])
-            results = leastsq(func=errfun, x0=guess, args=(spectrum,), full_output=True)
-            x, cov_x, infodict, mesg, status = results
-            # Status 4 is often a sign of mismatched datatypes.
-            if status == 4:
-                msg = "Precision errors encountered during fitting. Check dtypes."
-                warnings.warn(msg, RuntimeWarning)
-            params[idx] = x
-            # Calculate residual errors
-            res_ = (spectrum - func(*x))
-            res_ = np.sqrt(np.mean(np.power(res_, 2)))
-            residuals[idx] = res_
-        xm.foreach(fit_sources, indices, threads=1)
+        # Perform the actual fitting
+        params, residuals = fit_spectra(observations=spectra,
+                                        func=func, p0=p0,
+                                        nonnegative=nonnegative,
+                                        quiet=quiet)
         # Reshape to have maps of LC source weight
         params = params.reshape((*map_shape, -1))
         params = np.moveaxis(params, -1, 1)

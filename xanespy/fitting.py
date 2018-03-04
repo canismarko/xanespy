@@ -22,10 +22,12 @@ against."""
 
 
 from collections import namedtuple
+import warnings
 
 import numpy as np
+from scipy.optimize import leastsq
 
-from xanes_math import k_edge_jump
+from xanes_math import k_edge_jump, iter_indices, foreach
 
 
 def prepare_p0(p0, frame_shape, num_timesteps=1):
@@ -48,7 +50,96 @@ def prepare_p0(p0, frame_shape, num_timesteps=1):
     return out
 
 
-class LinearCombination():
+def fit_spectra(observations, func, p0, nonnegative=False, quiet=False):
+    """Fit a function to a series observations.
+    
+    The shapes of ``observations`` and ``p0`` parameters must match in
+    the first dimension, and the callable ``func`` should take a
+    series of parameters (the exact number is determined by the last
+    dimension of ``p0``) and return a set of observations (the length
+    of which is determined by the last dimension of ``observations``).
+    
+    Parameters
+    ----------
+    observations : np.ndarray
+      An array of observations against which to fit the function
+      ``func``.
+    func : callable, str
+      The function that will be used for fitting. It should match
+      ``func(p0, p1, ...)`` where p0, p1, etc are the fitting
+      parameters. Some useful functions can be found in the
+      ``xanespy.fitting`` module.
+    p0 : np.ndarray
+      Initial guess for parameters, with similar dimensions to a
+      frameset. Example, fitting 3 sources (plus offset) for a (1,
+      40, 256, 256) 40-energy frameset requires p0 to be (1, 4,
+      256, 256).
+    nonnegative : bool, optional
+      If true (default), negative parameters will be avoided. This
+      can also be a tuple to allow for fine-grained control. Eg:
+      (True, False) will only punish negative values in the first
+      of the two parameters.
+    quiet : bool, optional
+      Whether to suppress the progress bar, etc.
+    
+    Returns
+    -------
+    params : numpy.ndarray
+      The fit parameters (as frames) for each source.
+    residuals : numpy.ndarray
+      Residual error after fitting, as maps.
+    
+    """
+    residuals = np.zeros(shape=(observations.shape[0],))
+    params = np.empty_like(p0)
+    # Prepare error function
+    def errfun(guess, obs):
+        if np.any(np.logical_and(guess < 0, nonnegative)):
+            # Punish negative values
+            diff = np.empty_like(obs)
+            diff[:] = 1e6
+        else:
+            # Calculate error for this guess
+            predicted = func(*guess)
+            # Compare predicted with observed values
+            diff = np.abs(obs - predicted)
+        assert not np.any(np.isnan(diff))
+        return diff
+    # Execute fitting for each spectrum
+    indices = iter_indices(observations, desc="Fitting spectra",
+                           leftover_dims=1, quiet=quiet)
+    def fit_sources(idx):
+        spectrum = observations[idx]
+        # Don't bother fitting if there's NaN values
+        if np.any(np.isnan(spectrum)):
+            params[idx] = np.nan
+            residuals[idx] = np.nan
+            return
+        # Valid data, so fit the spectrum
+        guess = tuple(p0[idx])
+        results = leastsq(func=errfun, x0=guess, args=(spectrum,), full_output=True)
+        x, cov_x, infodict, mesg, status = results
+        # Status 4 is often a sign of mismatched datatypes.
+        if status == 4:
+            msg = "Precision errors encountered during fitting. Check dtypes."
+            warnings.warn(msg, RuntimeWarning)
+        params[idx] = x
+        # Calculate residual errors
+        res_ = (spectrum - func(*x))
+        res_ = np.sqrt(np.mean(np.power(res_, 2)))
+        residuals[idx] = res_
+    foreach(fit_sources, indices, threads=1)
+    return (params, residuals)
+
+
+class Curve():
+    """Base class for a callabled Curve."""
+    name = "curve"
+    param_names = ()
+
+
+class LinearCombination(Curve):
+
     """Combines other curves into one callable.
     
     The constructor accepts the keyword argument ``sources``, which
@@ -94,7 +185,34 @@ class LinearCombination():
         return names
 
 
-class L3Curve():
+class Gaussian(Curve):
+    """A Gaussian curve.
+    
+    Mathematically:
+    
+    .. math::
+        a e^{\frac{-(x-b)**2}{2c^2)}
+    
+    Parameters
+    ----------
+    x : np.ndarray
+      Array of x-values to input into the Gaussian function.
+    
+    """
+    name = "gaussian"
+    param_names = ('height', 'center', 'width')
+    
+    def __init__(self, x):
+        self.x = x
+    
+    def __call__(self, height, center, width):
+        x = self.x
+        a, b, c = (height, center, width)
+        return a * np.exp(-(x-b)**2 / 2 / c**2)
+
+
+class L3Curve(Curve):
+
     """An L_3 absorption edge.
     
     This function is a combination of two Gaussian peaks and a step
@@ -117,19 +235,16 @@ class L3Curve():
         self.energies = energies
         self.dtype = energies.dtype
     
-    @staticmethod
-    def _gauss(x, a, b, c):
-        return a * np.exp(-(x-b)**2 / 2 / c**2)
-    
     def __call__(self, *params):
         p = self.params(*params)
         Es = self.energies
         # Add two gaussian fields
         out = np.zeros_like(Es)
+        gaussian = Gaussian(x=Es)
         for idx in range(self.num_peaks):
             i = 3*idx
             p_i = p[i:i+3]
-            out += self._gauss(Es, *p_i)
+            out += gaussian(*p_i)
         # Add arctan step function
         out += p.sig_height * (np.arctan((Es-p.sig_center)*p.sig_sigma) / np.pi + 0.5)
         # Add vertical offset
@@ -153,7 +268,7 @@ class L3Curve():
         return tuple(pnames)
 
 
-class KCurve():
+class KCurve(Curve):
     param_names = (
         'scale', 'voffset', 'E0',  # Global parameters
         'sigw',  # Sharpness of the edge sigmoid
