@@ -189,6 +189,17 @@ class NCACobaltKEdge(KEdge):
     edge_range = (7715, 7740)
 
 
+class CuKEdge(KEdge):
+    name = 'Cu'
+    E_0 = 8978.9
+    shell = "K"
+    regions = []
+    pre_edge = (8940, 8970)
+    post_edge = (9010, 9200)
+    edge_range = (8970, 9010)
+    map_range = (8970, 9010)
+
+
 class NCANickelKEdge(KEdge):
     name = "Ni_NCA"
     E_0 = 8333
@@ -245,6 +256,8 @@ k_edges = {
     'Ni_NMC': NCANickelKEdge(), # They're pretty much the same
     'Co_NCA': NCACobaltKEdge(),
     'Mn_LMO': LMOMnKEdge(),
+    'Ni': NCANickelKEdge(),
+    'Cu': CuKEdge(),
 }
 
 

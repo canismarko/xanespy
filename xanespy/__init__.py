@@ -40,7 +40,9 @@ from importers import (import_frameset,
                        import_aps8bm_xanes_dir,
                        import_aps8bm_xanes_file,
                        import_nanosurveyor_frameset,
-                       import_stxm_frameset)
+                       import_stxm_frameset,
+                       import_aps32idc_xanes_files,
+                       import_aps32idc_xanes_file)
 from xanes_frameset import XanesFrameset
 import edges
 from edges import k_edges, l_edges

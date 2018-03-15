@@ -35,7 +35,7 @@ import h5py
 # Check if the tqdm package is installed for showing progress bars
 try:
     from tqdm import tqdm, tqdm_notebook
-except (ImportError, ModuleNotFoundError):
+except (ImportError):
     HAS_TQDM = False
 else:
     HAS_TQDM = True

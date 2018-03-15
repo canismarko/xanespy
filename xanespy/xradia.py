@@ -27,7 +27,7 @@ import os
 import re
 import warnings
 
-from PIL import OleFileIO
+# from PIL import OleFileIO
 import numpy as np
 import pytz
 
