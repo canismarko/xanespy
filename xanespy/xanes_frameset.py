@@ -1145,7 +1145,9 @@ class XanesFrameset():
         
         """
         with self.store() as store:
-            if not store.has_dataset('optical_depths'):
+            if store.has_dataset('edge_mask'):
+                mask = store.edge_mask[0]
+            elif not store.has_dataset('optical_depths'):
                 # Store has no optical_depth data so just return a blank array
                 mask = np.zeros(shape=store.intensities.shape[-2:])
             else:

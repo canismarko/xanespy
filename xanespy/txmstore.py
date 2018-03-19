@@ -109,6 +109,7 @@ class TXMStore():
     optical_depth_mean = TXMDataset('optical_depth_mean', context='map')
     intensity_mean = TXMDataset('intensity_mean', context='map')
     signal_map = TXMDataset('signal_map', context='map')
+    edge_mask = TXMDataset('edge_mask', context='map')
     whiteline_max = TXMDataset('whiteline_max', context='map')
     whiteline_fit = TXMDataset('whiteline_fit', context='map')
     cluster_fit = TXMDataset('cluster_fit', context='map')
