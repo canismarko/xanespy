@@ -1066,7 +1066,11 @@ class XanesFrameset():
                 flat = (*frames.shape[:frames.ndim-2], -1) # Collapse image dimension
                 spectrum = np.mean(np.reshape(frames, flat), axis=-1)
             # Combine into a series
-            series = pd.Series(spectrum, index=energies)
+            if spectrum.shape == energies.shape:
+                index = energies
+            else:
+                index = None
+            series = pd.Series(spectrum, index=index)
         return series
     
     def plot_spectrum(self, ax=None, pixel=None,

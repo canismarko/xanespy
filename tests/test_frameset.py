@@ -489,6 +489,24 @@ class XanesFramesetTest(TestCase):
         np.testing.assert_equal(result.index, energies)
         np.testing.assert_almost_equal(result.values, spectrum)
     
+    def test_nonenergy_spectrum(self):
+        """If the frames aren't in energy order"""
+        store = MockStore()
+        # Prepare fake energy data
+        energies = np.linspace(8300, 8400, num=51)
+        store.energies = np.broadcast_to(energies, (10, 51))
+        # Prepare fake spectrum (absorbance) data
+        x_params = np.linspace(0, 2*np.pi, num=7)
+        spectrum = np.sin(x_params)
+        frames = np.broadcast_to(spectrum, (10, 128, 128, 7)) # 7, not 51
+        frames = np.swapaxes(frames, 3, 1)
+        store.get_frames = mock.Mock(return_value=frames)
+        fs = self.create_frameset(store=store)
+        # Check that the return value is correct
+        result = fs.spectrum()
+        np.testing.assert_equal(result.index, np.arange(0, 7))
+        np.testing.assert_almost_equal(result.values, spectrum)
+    
     def test_fork_group(self):
         """Tests that the XanesFrameset.fork_group properly hands off to
         TXMStore.fork_data_group.
