@@ -13,3 +13,4 @@ tqdm>=4.10.0
 ipywidgets
 # twine~=1.8
 jinja2
+imageio

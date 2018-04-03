@@ -38,10 +38,11 @@ def latexify():
         "font.sans-serif": [],              # to inherit fonts from the document
         "font.monospace": [],
         "pgf.preamble": [
-            # r"\usepackage[utf8x]{inputenc}",    # use utf8 fonts 
-            # r"\usepackage[T1]{fontenc}",        # plots will be generated
+            r"\usepackage[utf8x]{inputenc}",    # use utf8 fonts 
+            r"\usepackage[T1]{fontenc}",        # plots will be generated
+            r"\usepackage{fontspec}",
             r"\usepackage[detect-all,locale=DE,per-mode=reciprocal]{siunitx}",
-            r"\usepackage{mhchem}",
+            r"\usepackage[version=4]{mhchem}",
         ]
     }
     rcParams.update(pgf_with_latex)
