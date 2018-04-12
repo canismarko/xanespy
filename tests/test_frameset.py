@@ -488,6 +488,10 @@ class XanesFramesetTest(TestCase):
         result = fs.spectrum()
         np.testing.assert_equal(result.index, energies)
         np.testing.assert_almost_equal(result.values, spectrum)
+        # Check that the derivative is calculated correctly
+        derivative = 4*np.pi/100 * np.cos((energies-8300)*4*np.pi/100)
+        result = fs.spectrum(derivative=1)
+        np.testing.assert_almost_equal(result.values, derivative, decimal=3)
     
     def test_nonenergy_spectrum(self):
         """If the frames aren't in energy order"""

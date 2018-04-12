@@ -27,7 +27,7 @@ import os
 import re
 import warnings
 
-# from PIL import OleFileIO
+import olefile
 import numpy as np
 import pytz
 
@@ -70,7 +70,7 @@ class XRMFile():
     def __init__(self, filename, flavor: str):
         self.filename = filename
         self.flavor = flavor
-        self.ole_file = OleFileIO.OleFileIO(self.filename)
+        self.ole_file = olefile.OleFileIO(self.filename)
         # Filename parameters
         # params = self.parameters_from_filename()
         # self.sample_name = params['sample_name']

@@ -47,7 +47,7 @@ def latexify():
     }
     rcParams.update(pgf_with_latex)
     # Default to tight bounding box
-    rcParams['savefig.bbox'] = "tight"
+    # rcParams['savefig.bbox'] = "tight"
 
 
 def remove_extra_spines(ax):

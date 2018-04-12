@@ -1008,7 +1008,8 @@ class XanesFrameset():
         return names
     
     def spectrum(self, pixel=None, edge_jump_filter=False,
-                       representation="optical_depths", index=0):
+                 representation="optical_depths", index=0,
+                 derivative=0):
         """Collapse the frameset down to an energy spectrum.
         
         Any dimensions (besides the energy dimension) that remain
@@ -1040,6 +1041,9 @@ class XanesFrameset():
           Which step in the frameset to use. When used to index
           store().optical_depths, this should return a 3D array like
           (energy, rows, columns).
+        derivative : int, optional
+          Calculate a derivative of the spectrum before returning
+          it. If less than 1 (default), no derivative is calculated.
         
         """
         # Retrieve data
@@ -1070,6 +1074,10 @@ class XanesFrameset():
                 index = energies
             else:
                 index = None
+            # Calculate the derivative (gradient) if requested
+            if derivative > 0 and index is not None:
+                for i in range(derivative):
+                    spectrum = np.gradient(spectrum, np.array(index))
             series = pd.Series(spectrum, index=index)
         return series
     
