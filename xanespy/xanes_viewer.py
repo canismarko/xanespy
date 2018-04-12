@@ -22,10 +22,15 @@ def parse_args():
                         help='Path to HDF5 file with processed data.')
     parser.add_argument('-g', '--groupname', type=str,
                         help="HDF Groupname to use for frameset")
+    # Add arguments for K and L edges
+    k_edge_list = str(tuple(k_edges.keys()))
     parser.add_argument('-k', '--k-edge', type=str,
-                        help='Name of xanespy K absorption edge')
+                        help='Name of xanespy K absorption edge'
+                        ' %s' % k_edge_list)
+    l_edge_list = str(tuple(l_edges.keys()))
     parser.add_argument('-l', '--l-edge', type=str,
-                        help='Name of xanespy L absorption edge')
+                        help='Name of xanespy L absorption edge'
+                        ' %s' % l_edge_list)
     parser.add_argument('-d', '--debug', action='store_true',
                         help="Show detailed logging and disable threading.")
     args = parser.parse_args()

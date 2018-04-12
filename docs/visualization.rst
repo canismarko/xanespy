@@ -16,17 +16,21 @@ Interactive (Qt) Viewer
 -----------------------
 
 Xanespy includes a graphical user interface that allows for
-interactive visualization of X-ray frames and maps. To launch the
-viewer, prepare a ``XanesFrameset`` object and run the ``qt_viewer()``
-method::
+interactive visualization of X-ray frames and maps. The viewer is
+launched from the command line and takes the path to a processed HDF
+file as its input. For some extra functionality, you can give the name
+of a metal K- of L- edge using the ``-k`` or ``-l`` argument
+respectively. See ``xanes-viewer --help`` for a list of K and L edges
+available.
 
-    fs = XanesFrameset(...)
-    fs.qt_viewer()
+.. code:: bash
+
+   $ xanes-viewer results/beamtime-analysis.h5 -k Ni
 
 The data tree on the left of the window shows the possible datasets
 than be viewed. Choosing an entry with type "frameset" will load and
 plot the frames, spectra and histograms in the frame window. If a
-"map" entry is selected, the map window will be launchedx and the
+"map" entry is selected, the map window will be launched and the
 frames that went into making the map will be shown in the frame
 window.
 
@@ -36,14 +40,6 @@ in the GUI can be passed into the ``plot_map``, ``plot_histogram`` or
 ``plot_spectrum`` methods of the frameset object. The name of the
 entry in the data tree is given as the keyword argument
 ``representation``.
-
-.. warning:: The interactive viewer has no effect on the underlying
-             frameset or accompanying data, with one exception:
-             changing to a different top-level branch in the data tree
-             will change the ``XanesFrameset.data_name``
-             attribute. Before proceeding with analysis, either revert
-             the ``data_name`` attribute manually or create a new
-             ``XanesFrameset`` object.
 
 .. figure:: images/qt_viewer_screenshot-1.png
    :alt: Qt View screenshot 1

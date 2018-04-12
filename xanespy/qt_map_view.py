@@ -172,7 +172,6 @@ class QtMapView(QtCore.QObject):
     def hide(self):  # pragma: no cover
         if hasattr(self.window, 'hide'):
             self.window.hide()
-            
     
     def redraw_canvas(self):  # pragma: no cover
         self.fig.canvas.draw()
@@ -199,6 +198,14 @@ class QtMapView(QtCore.QObject):
                                  cmap=cmap, add_cbar=False)
         mappable = cm.ScalarMappable(norm=norm, cmap=cmap)
         self.cbar.on_mappable_changed(mappable)
+    
+    def update_spectrum_ui(self, spectrum, fitted_spectrum, norm, cmap,
+                      edge_range):  # pragma: no cover
+        # Disable the edge_mask option if no edge range
+        if edge_range is None:
+            self.ui.chkEdgeMask.setEnabled(False)
+        else:
+            self.ui.chkEdgeMask.setEnabled(True)
     
     def plot_spectrum(self, spectrum, fitted_spectrum, norm, cmap,
                       edge_range):  # pragma: no cover
@@ -245,6 +252,7 @@ class QtMapView(QtCore.QObject):
         presenter.map_data_changed.connect(self.redraw_canvas)
         presenter.map_data_cleared.connect(self.hide)
         presenter.map_spectrum_changed.connect(self.plot_spectrum)
+        presenter.map_spectrum_changed.connect(self.update_spectrum_ui)
         presenter.cmap_list_changed.connect(self.set_cmap_list)
         presenter.component_list_changed.connect(self.set_component_list)
         presenter.map_limits_changed.connect(self.set_map_limits)

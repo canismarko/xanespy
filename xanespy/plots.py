@@ -369,7 +369,8 @@ def plot_spectrum(spectrum, energies, norm=Normalize(),
     """
     if ax is None:
         ax = new_axes()
-    norm.autoscale_None(np.real(spectrum))
+    if norm is not None:
+        norm.autoscale_None(np.real(spectrum))
     # Retrieve `values` in case it's a pandas series
     spectrum = getattr(spectrum, 'values', spectrum)
     # Color code the markers by energy

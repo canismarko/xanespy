@@ -81,7 +81,7 @@ class XanesFrameset():
           Path to the HDF file that holds these data.
         edge
           An Edge object describing the meterial's X-ray energy response
-          characteristics.
+          characteristics. Can be ``None`` but not recommended.
        groupname : str, optional
           Top level HDF group corresponding to this frameset. This
           argument is only required if there is more than one top-level
@@ -89,6 +89,9 @@ class XanesFrameset():
         
         """
         self.hdf_filename = filename
+        if edge is None:
+            warnings.warn('``edge`` set to ``None``.'
+                          'Some operations will fail.')
         self.edge = edge
         # Validate the parent dataname
         store = TXMStore(hdf_filename=self.hdf_filename,
@@ -926,7 +929,7 @@ class XanesFrameset():
         with self.store() as store:
             imshape = store.get_dataset(representation).shape[-2:]
         return imshape
-
+    
     def pixel_size(self, representation='optical_depths', timestep=0):
         """Return the size of the pixel (with units set by ``pixel_unit``)."""
         with self.store() as store:
@@ -1110,9 +1113,12 @@ class XanesFrameset():
         """
         if show_fit:
             raise NotImplementedError("`show_fit` parameter coming soon")
-        if norm_range is None:
+        if norm_range is None and self.edge is not None:
             norm_range = (self.edge.map_range[0], self.edge.map_range[1])
-        norm = Normalize(*norm_range)
+        if norm_range is not None:
+            norm = Normalize(*norm_range)
+        else:
+            norm = None
         spectrum = self.spectrum(pixel=pixel,
                                  edge_jump_filter=edge_jump_filter,
                                  representation=representation,
@@ -1126,7 +1132,7 @@ class XanesFrameset():
             spectrum = pd.Series(normalized, index=spectrum.index)
         scatter = plots.plot_spectrum(spectrum=spectrum, ax=ax,
                                       energies=spectrum.index,
-                                      norm=Normalize(*self.edge.map_range),
+                                      norm=norm,
                                       *args, **kwargs)
         # if pixel is not None:
         #     # xy = pixel_to_xy(pixel, extent=self.extent(), shape=self.map_shape())
@@ -1138,7 +1144,8 @@ class XanesFrameset():
         #     #                      val=val)
         #     # ax.set_title(title)
         # Plot lines at edge of normalization range or indicate peak positions
-        edge.annotate_spectrum(ax=ax)
+        if edge is not None:
+            edge.annotate_spectrum(ax=ax)
         return scatter
     
     @functools.lru_cache()

@@ -683,12 +683,12 @@ class QtFramesetPresenter(QtCore.QObject):
                 fit = True
             else:
                 fit = None
+            edge_range = getattr(self.frameset.edge, 'edge_range', None)
             self.mean_spectrum_changed.emit(mean_spectrum,
                                             fit,
                                             self.map_norm(),
                                             self.map_cmap,
-                                            getattr(self.frameset.edge, 'edge_range'))
-            edge_range = getattr(self.frameset.edge, 'edge_range', None)
+                                            edge_range)
             log.debug("Emitting map spectrum")
             self.map_spectrum_changed.emit(map_spectrum,
                                            fit,

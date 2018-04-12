@@ -3,7 +3,7 @@
 from distutils.core import setup
 
 setup(name="xanespy",
-      version="0.1.2",
+      version="0.1.3",
       description="Tools for analyzing X-ray absorbance spectroscopy data",
       author="Mark Wolfman",
       author_email="canismarko@gmail.com",
