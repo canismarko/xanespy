@@ -9,17 +9,26 @@ the model. The core `~xanespy.xanes_frameset.XanesFrameset` class has
 methods for common fitting-related use-cases, such as using curves to
 approximate L_3 and K edges, and linear combination fitting of
 standard spectra. If the pre-rolled options are not enough, arbitary
-callables can be created and fit against the data. Regardless of the
-approach, the parameters are saved as maps in the HDF file for further
-analysis.
+callables can be created and fit against the data. The following is an
+example for fitting a single L-edge spectrum:
 
 .. code:: python
 
    Es = np.linspace(845, 865, num=1000)
+   obs = ... # Load your data
    l3 = xp.fitting.L3Curve(Es)
 
-   ODs = l3(1.1, 853, 0.6, 1, 855, 0.6, 0.15, 854, 10, 3)
-   plt.plot(Es, ODs)
+   # Create initial guess, matching ``l3.param_names``
+   p0 = (1.1, 853, 0.6, 1, 855, 0.6, 0.15, 854, 10, 3)
+
+   # Now do the fitting
+   result = xp.fitting.fit_spectra(observations=[obs], func=l3, p0=[p0])
+   params, residuals = result
+
+   # Plot the resulting fit and original data
+   predicted = l3(**params)
+   plt.plot(Es, obs)
+   plt.plot(Es, predicted, linestyle=':')
 
 .. todo:: Come up with a better illustration for fitting.
 
