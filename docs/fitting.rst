@@ -22,7 +22,7 @@ example for fitting a single L-edge spectrum:
    p0 = (1.1, 853, 0.6, 1, 855, 0.6, 0.15, 854, 10, 3)
 
    # Now do the fitting
-   result = xp.fitting.fit_spectra(observations=[obs], func=l3, p0=[p0])
+   result = xp.fitting.fit_spectra(observations=obs, func=l3, p0=p0)
    params, residuals = result
 
    # Plot the resulting fit and original data

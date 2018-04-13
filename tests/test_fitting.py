@@ -141,3 +141,8 @@ class FittingTestCase(TestCase):
                                         func=line, p0=p0)
         np.testing.assert_equal(params, real_params)
         self.assertTrue(0 < residuals < 1e-9, residuals)
+        # Check what happens in only 1-D data are used
+        params, residuals = fit_spectra(observations=real_data,
+                                        func=line, p0=(1, 0))
+        np.testing.assert_equal(params, real_params[0])
+        self.assertTrue(0 < residuals < 1e-9, residuals)

@@ -62,8 +62,8 @@ def fit_spectra(observations, func, p0, nonnegative=False, quiet=False):
     Parameters
     ----------
     observations : np.ndarray
-      An array of observations against which to fit the function
-      ``func``.
+      A 1- or 2-dimensional array of observations against which to fit
+      the function ``func``.
     func : callable, str
       The function that will be used for fitting. It should match
       ``func(p0, p1, ...)`` where p0, p1, etc are the fitting
@@ -88,9 +88,15 @@ def fit_spectra(observations, func, p0, nonnegative=False, quiet=False):
       The fit parameters (as frames) for each source.
     residuals : numpy.ndarray
       Residual error after fitting, as maps.
-    
+
     """
-    residuals = np.zeros(shape=(observations.shape[0],))
+    # Massage the datas
+    observations = np.array(observations)
+    p0 = np.array(p0)
+    if observations.ndim == 1:
+        residuals = np.zeros(shape=(1,))
+    else:
+        residuals = np.zeros(shape=(observations.shape[0],))
     params = np.empty_like(p0)
     # Prepare error function
     def errfun(guess, obs):
@@ -110,6 +116,7 @@ def fit_spectra(observations, func, p0, nonnegative=False, quiet=False):
                            leftover_dims=1, quiet=quiet)
     def fit_sources(idx):
         spectrum = observations[idx]
+        print(spectrum)
         # Don't bother fitting if there's NaN values
         if np.any(np.isnan(spectrum)):
             params[idx] = np.nan
