@@ -16,7 +16,7 @@ example for fitting a single L-edge spectrum:
 
    Es = np.linspace(845, 865, num=1000)
    obs = ... # Load your data
-   l3 = xp.fitting.L3Curve(Es)
+   l3 = xp.fitting.L3Curve(Es, num_peaks=2)
 
    # Create initial guess, matching ``l3.param_names``
    p0 = (1.1, 853, 0.6, 1, 855, 0.6, 0.15, 854, 10, 3)
@@ -26,7 +26,7 @@ example for fitting a single L-edge spectrum:
    params, residuals = result
 
    # Plot the resulting fit and original data
-   predicted = l3(**params)
+   predicted = l3(*params)
    plt.plot(Es, obs)
    plt.plot(Es, predicted, linestyle=':')
 

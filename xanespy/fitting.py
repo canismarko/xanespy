@@ -116,7 +116,6 @@ def fit_spectra(observations, func, p0, nonnegative=False, quiet=False):
                            leftover_dims=1, quiet=quiet)
     def fit_sources(idx):
         spectrum = observations[idx]
-        print(spectrum)
         # Don't bother fitting if there's NaN values
         if np.any(np.isnan(spectrum)):
             params[idx] = np.nan
