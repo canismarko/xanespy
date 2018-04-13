@@ -16,7 +16,7 @@ analysis.
 .. code:: python
 
    Es = np.linspace(845, 865, num=1000)
-   l3 = xp.fitting.L3Edge(Es)
+   l3 = xp.fitting.L3Curve(Es)
 
    ODs = l3(1.1, 853, 0.6, 1, 855, 0.6, 0.15, 854, 10, 3)
    plt.plot(Es, ODs)

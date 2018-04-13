@@ -18,12 +18,14 @@ is on X-ray microscopy frames collected at multiple energies and over
 multiple timesteps. However, a design goal is for most (if not all) of
 the calculation routines to be applicable to bulk XAS data as well.
 
+
 Motivation & Features
 ---------------------
 
 - Importing and analysis of transmission X-ray microscopy framesets
 - Analysis of X-ray spectroscopy data (K-edge XANES and L-edge)
 - Efficient analysis of large operando datasets
+
 
 Installation
 ------------
@@ -33,11 +35,6 @@ Xanespy can be installed from the **python package index (PyPI) using pip**
 .. code:: bash
 
    $ pip install xanespy
-
-or from anaconda.org using **conda**
-.. code:: bash
-
-   $ conda install -c canismarko xanespy
 
 
 Usage
@@ -68,6 +65,7 @@ HDF5 file ready for the rest of xanespy to use
     # Inspect the result with the built-in Qt5 GUI
     fs.qt_viewer()
 
+
 Beamlines
 ---------
 
@@ -82,12 +80,14 @@ issue`_.
 - 6-2c - Stanford Synchrotron Radiation Lightsource
 - 5.3.2.1 - Advanced Light Source (ptychography)
 
+
 Ptychography
 ------------
 
 Xanespy has support for ptychography data from ALS beamline
 5.3.2.1. Use ``xanespy.import_nanosurveyor_frameset`` to import the .cxi
 files and ``xanespy.PtychoFrameset`` to load the data.
+
 
 Extended X-ray Absorbance Fine Structure (EXAFS)
 ------------------------------------------------
@@ -96,6 +96,7 @@ Currently EXAFS analysis is NOT supported. While it would be nice to
 someday include this, this technique generally requires heavy user
 involvement and does not lend itself to batch processing; if you have
 expertise in automated analysis of EXAFS data, please get in touch.
+
 
 License
 -------
@@ -109,12 +110,13 @@ General Public License for more details.
 
 .. _GNU General Public License version 3: https://www.gnu.org/licenses/gpl-3.0.en.html
 
+
 Acknowledgement
 ---------------
 
 This work was supported as part of the NorthEast Center for Chemical
-Energy Storage (`NECCES`_), an Energy Frontier Research Center funded by
-the U.S. Department of Energy, Office of Science, Basic Energy
+Energy Storage (`NECCES`_), an Energy Frontier Research Center funded
+by the U.S. Department of Energy, Office of Science, Basic Energy
 Sciences under Award # DE-SC0012583.
 
 .. _NECCES: http://binghamton.edu/necces/

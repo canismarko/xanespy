@@ -1,16 +1,24 @@
 #!/usr/bin/env python
 
-from distutils.core import setup
+import os
+from setuptools import setup
+
+def read(fname):
+    return open(os.path.join(os.path.dirname(__file__), fname)).read()
 
 setup(name="xanespy",
-      version="0.1.3",
+      version=read("VERSION"),
       description="Tools for analyzing X-ray absorbance spectroscopy data",
+      long_description=read('README.rst'),
+      long_description_content_type='text/x-rst',
       author="Mark Wolfman",
       author_email="canismarko@gmail.com",
       url="https://github.com/canismarko/xanespy",
       keywords="XANES X-ray microscopy operando",
-      install_requires=['pytz>=2013b', 'h5py', 'pandas', 'olefile',
-                        'matplotlib', 'scikit-image', 'scikit-learn'],
+      install_requires=[
+          'pytz>=2013b', 'h5py', 'pandas', 'olefile', 'matplotlib', 'scikit-image',
+          'scikit-learn', 'numpy',
+      ],
       packages=['xanespy',],
       package_data={
           'xanespy': ['qt_map_window.ui', 'qt_frame_window.ui']
