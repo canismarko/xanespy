@@ -896,13 +896,16 @@ class XanesFrameset():
         regions.sort(key=lambda p: p.area, reverse=True)
         return regions
     
-    def plot_mean_image(self, ax=None, component="modulus", cmap="gray", *args, **kwargs):
+    def plot_mean_image(self, ax=None, component="modulus",
+                        representation="optical_depths",
+                        cmap="gray", *args, **kwargs):
         if ax is None:
             ax = plots.new_image_axes()
         with self.store() as store:
-            optical_depths = np.reshape(store.optical_depths,
-                                     (-1, *store.optical_depths.shape[-2:]))
-            data = np.mean(optical_depths, axis=0)
+            data = store.get_dataset(representation)
+            data = np.reshape(data,
+                              (-1, *data.shape[-2:]))
+            data = np.mean(data, axis=0)
             ax_unit = store.pixel_unit
         data = get_component(data, component)
         artist = ax.imshow(data,
@@ -1155,13 +1158,15 @@ class XanesFrameset():
         
         Parameters
         ----------
-        sensitivity : float
-          A multiplier for the otsu value to determine
-          the actual threshold.
-        min_size : int
+        sensitivity : optional
+          A multiplier for the otsu value to determine the actual
+          threshold. Higher values give better statistics, but might
+          include the active material, lower values give worse
+          statistics but are less likely to include active material.
+        min_size : optional
           Objects below this size (in pixels) will be removed. Passing
           zero (default) will result in no effect.
-        
+
         """
         with self.store() as store:
             if store.has_dataset('edge_mask'):
@@ -1711,17 +1716,26 @@ class XanesFrameset():
             energies = store.energies[timeidx]
         return energies
     
-    def subtract_surroundings(self):
+    def subtract_surroundings(self, sensitivity: float=1.):
         """Use the edge mask to separate "surroundings" from "sample", then
         subtract the average surrounding optical_depth from each
         frame. This effectively removes effects where the entire frame
         is brighter from one energy to the next.
+
+        Parameters
+        ----------
+        sensitivity : optional
+          A multiplier for the otsu value to determine the actual
+          threshold. Higher values give better statistics, but might
+          include the active material, lower values give worse
+          statistics but are less likely to include active material.
         
         """
         with self.store(mode='r+') as store:
             log.debug('Subtracting surroundings')
             # Get the mask and make it compatible with XANES shape
-            mask = np.broadcast_to(self.edge_mask(), store.optical_depths.shape[1:])
+            mask = np.broadcast_to(self.edge_mask(sensitivity=sensitivity),
+                                   store.optical_depths.shape[1:])
             # Go through each timestep one at a time (to avoid using all the memory)
             for timestep in range(store.optical_depths.shape[0]):
                 bg = store.optical_depths[timestep][mask]

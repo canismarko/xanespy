@@ -177,6 +177,20 @@ class LMOMnKEdge(KEdge):
         (6610, 6650, 10),
         (6700, 6850, 50),
     ]
+class FeKEdge(KEdge):
+    name = "Fe"
+    E_0 = 7100.0
+    shell = "K"
+    regions = [
+        (7100, 7110, 3),
+        (7110, 7117, 1),
+        (7117, 7130, 5),
+        (7130, 7200, 5),
+    ]
+    pre_edge = (7100, 7108)
+    post_edge = (7150, 7250)
+    edge_range = (7115, 7140)
+    map_range = (7100, 7200)
 
 
 class NCACobaltKEdge(KEdge):
@@ -252,6 +266,7 @@ class NMCNickelKEdge29(NCANickelKEdge):
 
 # Dictionaries make it more intuitive to access these edges by element
 k_edges = {
+    'Fe': FeKEdge(),
     'Ni_NCA': NCANickelKEdge(),
     'Ni_NMC': NCANickelKEdge(), # They're pretty much the same
     'Co_NCA': NCACobaltKEdge(),

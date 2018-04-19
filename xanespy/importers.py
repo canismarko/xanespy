@@ -255,7 +255,9 @@ def import_aps32idc_xanes_files(filenames, hdf_filename, hdf_groupname, *args, *
 
 def import_aps32idc_xanes_file(filename, hdf_filename, hdf_groupname,
                                timestep=0, total_timesteps=1,
-                               append=False, downsample=0, square=True, exclude=[]):
+                               append=False, downsample=0,
+                               square=True, exclude=[],
+                               median_filter_size=None):
     """Import XANES data from a HDF5 file produced at APS beamline 32-ID-C.
     
     This is used for importing a single XANES dataset.
@@ -288,7 +290,14 @@ def import_aps32idc_xanes_file(filename, hdf_filename, hdf_groupname,
     exclude : iterable, optional
       Indices of frames to exclude from importing if, for example, the
       frame contains artifacts or is otherwise problematic.
-    
+    median_filter_size : float or tuple
+      If not None, apply a median rank filter to each flat and data
+      frame. The value of this parameters matches the ``size``
+      parameter to :py:func:`scipy.ndimage.filters.median_filter`, for
+      example using ``(0, 3, 3)`` will filter only along the *x* and
+      *y* axes, and not the energy axis. Median filtering takes places
+      after downsampling.
+
     """
     # Open the source HDF file
     src_file = h5py.File(filename, mode='r')
@@ -374,8 +383,12 @@ def import_aps32idc_xanes_file(filename, hdf_filename, hdf_groupname,
         energies = 1000 * src_file['/exchange/energy'][frm_idx]
         data_group['energies'][time_idx] = energies
         data_group['filenames'][time_idx,:] = filename.encode('ascii')
+        # Apply median filter if requested
+        if median_filter_size is not None:
+            src_data = median_filter(src_data, size=median_filter_size)
+            src_flat = median_filter(src_flat, size=median_filter_size)
         # Convert the intensity data to optical depth
-        keys_ = ('intensities', 'flat_fields', 'dark_fields')
+        # keys_ = ('intensities', 'flat_fields', 'dark_fields')
         # Is, flat, dark = [data_group[key][time_idx] for key in keys_]
         dark = np.median(src_dark, axis=0)
         Is = (src_data) / (src_flat)
