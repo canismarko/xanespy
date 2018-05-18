@@ -151,7 +151,7 @@ class TXMStore():
         names = []
         for key in self.data_group().keys():
             # Check if it's a "map" or not
-            if self.data_group()[key].attrs['context'] == 'map':
+            if self.data_group()[key].attrs.get('context','') == 'map':
                 names.append(key)
         return names
     

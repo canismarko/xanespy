@@ -616,6 +616,7 @@ class XanesFrameset():
                      commit=True,
                      component="modulus",
                      plot_results=True,
+                     results_ax=None,
                      quiet=False):
         """Use cross correlation algorithm to line up the frames. All frames
         will have their sample position set to (0, 0) since we don't
@@ -656,6 +657,9 @@ class XanesFrameset():
           'phase', 'imag' or 'real'.
         plot_results : If truthy (default), plot the root-mean-square of the
           translation distance for each pass.
+        results_ax : optional
+          If ``plot_results`` is true, this axes will be used to
+          receive the plot.
         quiet : bool, optional
           Whether to suppress the progress bar, etc.
         
@@ -731,8 +735,9 @@ class XanesFrameset():
         pass_distances = np.array(pass_distances)
         if plot_results:
             x = range(0, passes)
-            ax = plots.new_axes()
-            # ax.plot(x, pass_distances, marker='o', linestyle=":")
+            if results_ax is None:
+                results_ax = plots.new_axes()
+            ax = results_ax
             ax.boxplot(pass_distances.swapaxes(0, 1))
             ax.set_xlabel('Pass')
             ax.set_ylabel("Distance (µm)")

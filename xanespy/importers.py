@@ -255,9 +255,9 @@ def import_aps32idc_xanes_files(filenames, hdf_filename, hdf_groupname, *args, *
 
 def import_aps32idc_xanes_file(filename, hdf_filename, hdf_groupname,
                                timestep=0, total_timesteps=1,
-                               append=False, downsample=0,
+                               append=False, downsample=1,
                                square=True, exclude=[],
-                               median_filter_size=None):
+                               median_filter_size=(1, 3, 3)):
     """Import XANES data from a HDF5 file produced at APS beamline 32-ID-C.
     
     This is used for importing a single XANES dataset.
@@ -294,16 +294,16 @@ def import_aps32idc_xanes_file(filename, hdf_filename, hdf_groupname,
       If not None, apply a median rank filter to each flat and data
       frame. The value of this parameters matches the ``size``
       parameter to :py:func:`scipy.ndimage.filters.median_filter`, for
-      example using ``(0, 3, 3)`` will filter only along the *x* and
+      example using ``(1, 3, 3)`` will filter only along the *x* and
       *y* axes, and not the energy axis. Median filtering takes places
       after downsampling.
-
+    
     """
     # Open the source HDF file
     src_file = h5py.File(filename, mode='r')
     # Prepare the destination HDF file and create datasets if needed
     log.info("Importing APS 32-ID-C file %s", filename)
-    with h5py.File(hdf_filename) as h5file:
+    with h5py.File(hdf_filename, mode='r+') as h5file:
         # Prepare an HDF5 group with metadata for this experiment
         if append:
             parent_group = h5file[hdf_groupname]
