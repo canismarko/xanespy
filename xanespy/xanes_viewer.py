@@ -48,6 +48,7 @@ def main():
     if args.debug:
         loglevel = logging.DEBUG
     else:
+        loglevel = logging.DEBUG
         loglevel = logging.WARNING
     logging.basicConfig(level=loglevel)
     # Get a default groupname if necessary
@@ -69,7 +70,9 @@ def main():
                        groupname=groupname)
     # Lauch the Qt viewer
     is_threaded = not args.debug
+    is_threaded = None
     presenter = QtFramesetPresenter(frameset=fs)
+    presenter.create_app()
     presenter.add_map_view(QtMapView(), threaded=is_threaded)
     # This is a temporary workaround until frame_view signals are fixed
     presenter.add_frame_view(QtFrameView(), threaded=is_threaded)

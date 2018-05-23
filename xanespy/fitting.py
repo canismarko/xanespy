@@ -22,12 +22,15 @@ against."""
 
 
 from collections import namedtuple
+from multiprocessing import Pool, cpu_count
 import warnings
 
 import numpy as np
 from scipy.optimize import leastsq
+import tqdm
 
 from xanes_math import k_edge_jump, iter_indices, foreach
+from utilities import prog
 
 
 def prepare_p0(p0, frame_shape, num_timesteps=1):
@@ -49,6 +52,39 @@ def prepare_p0(p0, frame_shape, num_timesteps=1):
     out = np.moveaxis(out, -1, 1)
     return out
 
+
+def error(guess, obs, func, nonnegative=False):
+    # Prepare error function
+    if np.any(np.logical_and(guess < 0, nonnegative)):
+        # Punish negative values
+        diff = np.empty_like(obs)
+        diff[:] = 1e6
+    else:
+        # Calculate error for this guess
+        predicted = func(*guess)
+        # Compare predicted with observed values
+        diff = np.abs(obs - predicted)
+    assert not np.any(np.isnan(diff))
+    return diff
+    
+def _fit_sources(inputs, func, nonnegative=False):
+    spectrum, p0 = inputs
+    # Don't bother fitting if there's NaN values
+    if np.any(np.isnan(spectrum)):
+        params[idx] = np.nan
+        residuals[idx] = np.nan
+        return
+    # Valid data, so fit the spectrum
+    results = leastsq(func=error, x0=p0, args=(spectrum, func, nonnegative), full_output=True)
+    p_fit, cov_x, infodict, mesg, status = results
+    # Status 4 is often a sign of mismatched datatypes.
+    if status == 4:
+        msg = "Precision errors encountered during fitting. Check dtypes."
+        warnings.warn(msg, RuntimeWarning)
+    # Calculate residual errors
+    res_ = (spectrum - func(*p_fit))
+    res_ = np.sqrt(np.mean(np.power(res_, 2)))
+    return (p_fit, res_)
 
 def fit_spectra(observations, func, p0, nonnegative=False, quiet=False):
     """Fit a function to a series observations.
@@ -88,53 +124,38 @@ def fit_spectra(observations, func, p0, nonnegative=False, quiet=False):
       The fit parameters (as frames) for each source.
     residuals : numpy.ndarray
       Residual error after fitting, as maps.
-
+    
     """
     # Massage the datas
     observations = np.array(observations)
-    p0 = np.array(p0)
     if observations.ndim == 1:
-        residuals = np.zeros(shape=(1,))
+        observations = observations.reshape((1, len(observations)))
+        one_dimensional = True
     else:
-        residuals = np.zeros(shape=(observations.shape[0],))
+        one_dimensional = False
+    p0 = np.array(p0)
+    if p0.ndim == 1:
+        p0_shape = (observations.shape[1], p0.shape[0])
+        p0 = np.broadcast_to(p0, p0_shape)
     params = np.empty_like(p0)
-    # Prepare error function
-    def errfun(guess, obs):
-        if np.any(np.logical_and(guess < 0, nonnegative)):
-            # Punish negative values
-            diff = np.empty_like(obs)
-            diff[:] = 1e6
-        else:
-            # Calculate error for this guess
-            predicted = func(*guess)
-            # Compare predicted with observed values
-            diff = np.abs(obs - predicted)
-        assert not np.any(np.isnan(diff))
-        return diff
     # Execute fitting for each spectrum
     indices = iter_indices(observations, desc="Fitting spectra",
                            leftover_dims=1, quiet=quiet)
-    def fit_sources(idx):
-        spectrum = observations[idx]
-        # Don't bother fitting if there's NaN values
-        if np.any(np.isnan(spectrum)):
-            params[idx] = np.nan
-            residuals[idx] = np.nan
-            return
-        # Valid data, so fit the spectrum
-        guess = tuple(p0[idx])
-        results = leastsq(func=errfun, x0=guess, args=(spectrum,), full_output=True)
-        x, cov_x, infodict, mesg, status = results
-        # Status 4 is often a sign of mismatched datatypes.
-        if status == 4:
-            msg = "Precision errors encountered during fitting. Check dtypes."
-            warnings.warn(msg, RuntimeWarning)
-        params[idx] = x
-        # Calculate residual errors
-        res_ = (spectrum - func(*x))
-        res_ = np.sqrt(np.mean(np.power(res_, 2)))
-        residuals[idx] = res_
-    foreach(fit_sources, indices, threads=1)
+    # Execute fitting (with multiprocessing)
+    payload = tqdm.tqdm(zip(observations, p0), total=len(observations),
+                        desc="Fitting spectra", unit='spctrm')
+    # payload = zip(prog(observations, desc='Fitting spectra', unit='spctr'), p0)
+    with Pool(cpu_count()) as pool:
+        import functools
+        fitter = functools.partial(_fit_sources, func=func, nonnegative=nonnegative)
+        params = pool.map(fitter, payload)
+    # Prepare the results for returning
+    params, residuals = zip(*params)
+    params = np.array(params)
+    residuals = np.array(residuals)
+    if one_dimensional:
+        params = params[0]
+        residuals = residuals[0]
     return (params, residuals)
 
 
@@ -142,6 +163,14 @@ class Curve():
     """Base class for a callabled Curve."""
     name = "curve"
     param_names = ()
+
+
+class Line(Curve):
+    def __init__(self, x):
+        self.x = x
+    
+    def __call__(self, m, b):
+        return m*self.x + b
 
 
 class LinearCombination(Curve):
@@ -274,6 +303,30 @@ class L3Curve(Curve):
 
 
 class KCurve(Curve):
+    """A K absorption edge.
+    
+    Fit Parameters
+    --------------
+    scale
+      Overall scale factor for curve
+    voffset
+      Overall vertical offset for the curve
+    E0
+      Edge position as energy of maximum in second derivative at edge
+    sigw
+      Sharpenss of the edge sigmoid
+    bg_slope
+      Linear increase/-decrease in background optical depth
+    ga
+      Height parameter for Gaussian whiteline peak
+    gb
+      Center parameter in eV (relative to E0) for Gaussian whiteline
+      peak
+    gc
+      Width parameter for Gaussian whiteline peak
+    
+    """
+    name = "K-edge-curve"
     param_names = (
         'scale', 'voffset', 'E0',  # Global parameters
         'sigw',  # Sharpness of the edge sigmoid
@@ -306,7 +359,7 @@ class KCurve(Curve):
           for definition)
         
         """
-        Is = intensities
+        Is = np.array(intensities)
         assert Is.shape == self.energies.shape
         # Guess the overall scale and offset parameters
         scale = k_edge_jump(frames=Is, energies=self.energies, edge=edge)

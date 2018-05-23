@@ -47,7 +47,6 @@ Pixel = namedtuple('Pixel', ('vertical', 'horizontal'))
 shape = namedtuple('shape', ('rows', 'columns'))
 Extent = namedtuple('extent', ('left', 'right', 'bottom', 'top'))
 
-
 CPU_COUNT = multiprocessing.cpu_count()
 
 def foreach(f, l, threads=CPU_COUNT, return_=False):

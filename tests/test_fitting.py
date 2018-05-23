@@ -29,7 +29,8 @@ import numpy as np
 import pandas as pd
 
 from xanespy.fitting import (LinearCombination, KCurve, Gaussian,
-                             L3Curve, prepare_p0, fit_spectra)
+                             L3Curve, prepare_p0, fit_spectra, Curve,
+                             Line)
 from xanespy import edges
 
 
@@ -50,7 +51,7 @@ class FittingTestCase(TestCase):
         # Test param_names property
         pnames = ('weight_0', 'weight_1', 'offset')
         self.assertEqual(lc.param_names, pnames)
-
+    
     def test_gaussian(self):
         # Prepare intpu data
         Es = np.linspace(0, 10, num=101)
@@ -104,9 +105,10 @@ class FittingTestCase(TestCase):
         edge = edges.NCANickelKEdge()
         Es = np.array(spectrum.index)
         ODs = np.array(spectrum.values)[:,0]
+        OD_df = pd.Series(ODs, index=Es)
         # Do the guessing
         kcurve = KCurve(Es)
-        result = kcurve.guess_params(ODs, edge=edge)
+        result = kcurve.guess_params(OD_df, edge=edge)
         # Check resultant guessed parameters
         self.assertAlmostEqual(result.scale, 0.244, places=2)
         self.assertAlmostEqual(result.voffset, 0.45, places=2)
@@ -129,20 +131,19 @@ class FittingTestCase(TestCase):
     
     def test_fit_spectra(self):
         # Define a function to fit
-        line = lambda m, b: m*x + b
-        # Prepare source data
         x = np.linspace(0, 10, num=11)
-        real_params = np.array([(2, -3)])
+        line = Line(x)
+        real_params = np.array([(2., -3.)])
         real_data = line(*real_params[0])
         spectra = np.array([real_data])
         # Execute the fit
         p0 = np.array([(1, 0)])
         params, residuals = fit_spectra(observations=spectra,
                                         func=line, p0=p0)
-        np.testing.assert_equal(params, real_params)
+        np.testing.assert_almost_equal(params, real_params)
         self.assertTrue(0 < residuals < 1e-9, residuals)
         # Check what happens in only 1-D data are used
         params, residuals = fit_spectra(observations=real_data,
                                         func=line, p0=(1, 0))
-        np.testing.assert_equal(params, real_params[0])
+        np.testing.assert_almost_equal(params, real_params[0])
         self.assertTrue(0 < residuals < 1e-9, residuals)

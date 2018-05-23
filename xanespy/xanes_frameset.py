@@ -49,7 +49,7 @@ from utilities import (prog, xycoord, Pixel, Extent, pixel_to_xy,
                        get_component, broadcast_reverse, xy_to_pixel)
 from txmstore import TXMStore
 import plots
-from fitting import LinearCombination, fit_spectra
+from fitting import LinearCombination, fit_spectra, prepare_p0
 import exceptions
 import xanes_math as xm
 from edges import Edge
@@ -100,6 +100,10 @@ class XanesFrameset():
                          mode='r')
         with store:
             self.parent_name = store.validate_parent_group(groupname)
+    
+    def __str__(self):
+        s = "{name}"
+        return s.format(cls=self.__class__.__name__, name=self.parent_name)
     
     def __repr__(self):
         s = "<{cls}: '{name}'>"
@@ -1301,6 +1305,9 @@ class XanesFrameset():
         # Get the default curve name if necessary
         if name is None:
             name = getattr(func, 'name', 'fit')
+        # Make sure p0 is the right shape
+        if p0.ndim < 4:
+            p0 = prepare_p0(p0, self.frame_shape(), self.num_timesteps)
         # Reshape to have energy last
         spectra = np.moveaxis(frames, 1, -1)
         map_shape = spectra.shape[:-1]
@@ -1380,8 +1387,6 @@ class XanesFrameset():
         """
         self.calculate_whitelines()
         self.calculate_mean_frames()
-        if fit_spectra:
-            self.fit_spectra()
         # Calculate particle_labels
         self.label_particles()
     
@@ -1680,6 +1685,28 @@ class XanesFrameset():
             else:
                 map_data = np.array(map_data)
         return map_data
+    
+    def timestamps(self):
+        """Retrieve an array with the timestamp for each scan.
+        
+        This will be a numpy array with the ``datetime64`` dtype. Each
+        frame has both a start and end time-stamp. Depending on the
+        beamline, the individual energy frames might have timestamps
+        based on the whole XANES scan. These timestamps are in UTC
+        since numpy's ``datetime64`` has no timezone support.
+        
+        Returns
+        -------
+        timestamps : np.ndarray
+          The timestamps for each energy frame with a shape described
+          as (num_timesteps, num_energies, 2), where the last axis is
+          for the start and end of the frame.
+        
+        """
+        with self.store() as store:
+            timestamps = store.timestamps.value
+            timestamps = timestamps.astype(np.datetime64)
+        return timestamps
     
     @functools.lru_cache(maxsize=2)
     def frames(self, representation="optical_depths", timeidx=0):

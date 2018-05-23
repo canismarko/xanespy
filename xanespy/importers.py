@@ -257,7 +257,8 @@ def import_aps32idc_xanes_file(filename, hdf_filename, hdf_groupname,
                                timestep=0, total_timesteps=1,
                                append=False, downsample=1,
                                square=True, exclude=[],
-                               median_filter_size=(1, 3, 3)):
+                               median_filter_size=(1, 3, 3),
+                               dark_idx=slice(None)):
     """Import XANES data from a HDF5 file produced at APS beamline 32-ID-C.
     
     This is used for importing a single XANES dataset.
@@ -297,13 +298,17 @@ def import_aps32idc_xanes_file(filename, hdf_filename, hdf_groupname,
       example using ``(1, 3, 3)`` will filter only along the *x* and
       *y* axes, and not the energy axis. Median filtering takes places
       after downsampling.
+    dark_idx : slice, optional
+      A slice object (or an index) for which dark-field images to
+      use. Must be the same for all timesteps in an experiment. Useful
+      if some dark field images are not usable.
     
     """
     # Open the source HDF file
     src_file = h5py.File(filename, mode='r')
     # Prepare the destination HDF file and create datasets if needed
     log.info("Importing APS 32-ID-C file %s", filename)
-    with h5py.File(hdf_filename, mode='r+') as h5file:
+    with h5py.File(hdf_filename, mode='a') as h5file:
         # Prepare an HDF5 group with metadata for this experiment
         if append:
             parent_group = h5file[hdf_groupname]
@@ -330,7 +335,7 @@ def import_aps32idc_xanes_file(filename, hdf_filename, hdf_groupname,
         kw = dict(factor=downsample, axis=(1, 2))
         src_data = downsample_array(src_file['/exchange/data'][frm_idx], **kw)
         src_flat = downsample_array(src_file['/exchange/data_white'][frm_idx], **kw)
-        src_dark = downsample_array(src_file['/exchange/data_dark'], **kw)
+        src_dark = downsample_array(src_file['/exchange/data_dark'][dark_idx], **kw)
         # Cut off extra edges if requested
         if square:
             im_shape = src_data.shape[1:]

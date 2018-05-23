@@ -218,7 +218,7 @@ class QtFramesetPresenter(QtCore.QObject):
             self.update_spectra()
     
     def prepare_ui(self, expand_tree=True):
-        self.create_app()
+        # self.create_app()
         # Create a timer for playing through all the frames
         self.play_timer = QtCore.QTimer()
         self.play_timer.timeout.connect(self.next_frame)
@@ -227,12 +227,15 @@ class QtFramesetPresenter(QtCore.QObject):
         self.app_ready.emit()
         self.cmap_list_changed.emit(CMAPS)
         self.component_list_changed.emit(COMPS)
+        self.update_timestep_list()
+        # Prepare data for the HDF tree view
+        self.build_hdf_tree(expand_tree=expand_tree)
+    
+    def update_timestep_list(self):
         # Set the list of possible timesteps
         tslist = ["{} - {}".format(idx, ts)
                   for idx, ts in enumerate(self.frameset.timestep_names)]
         self.timestep_list_changed.emit(tslist)
-        # Prepare data for the HDF tree view
-        self.build_hdf_tree(expand_tree=expand_tree)
     
     def create_app(self):  # pragma: no cover
         log.debug("Creating QApplication")
@@ -372,8 +375,8 @@ class QtFramesetPresenter(QtCore.QObject):
     
     def set_map_cursor(self, x, y):
         log.debug("New cursor xy: {}, {}".format(x, y))
-        if None in [x, y]:
-            # No pixel was hovered, so clear all the stuff
+        if None in [x, y] or self.active_map() is None:
+            # No pixel was hovered or no map, so clear all the stuff
             xy = None
             pixel = None
             value = None
@@ -437,10 +440,13 @@ class QtFramesetPresenter(QtCore.QObject):
         return norm
     
     def change_active_frame(self, new_idx):
-        self.active_frame = (new_idx % self.num_frames)
-        self.active_frame_changed.emit(self.active_frame)
-        energy = self.frameset.energies(self.active_timestep)[self.active_frame]
-        self.active_energy_changed.emit(energy)
+        valid_change = new_idx != self.active_frame
+        if valid_change:
+            log.debug("Setting index %d -> %d", self.active_frame, new_idx)
+            self.active_frame = (new_idx % self.num_frames)
+            self.active_frame_changed.emit(self.active_frame)
+            energy = self.frameset.energies(self.active_timestep)[self.active_frame]
+            self.active_energy_changed.emit(energy)
     
     def change_frame_component(self, new_comp):
         if not self.active_frame_component == new_comp:
@@ -581,15 +587,19 @@ class QtFramesetPresenter(QtCore.QObject):
         self.play_timer.setInterval(new_interval)
             
     def next_frame(self):
+        log.debug("Going to next frame")
         self.change_active_frame(self.active_frame + 1)
     
     def previous_frame(self):
+        log.debug("Going to previous frame")
         self.change_active_frame(self.active_frame - 1)
     
     def first_frame(self):
+        log.debug("Going to first frame")
         self.change_active_frame(0)
     
     def last_frame(self):
+        log.debug("Going to last frame")
         self.change_active_frame(-1)
     
     # def update_status_shape(self):
@@ -609,7 +619,7 @@ class QtFramesetPresenter(QtCore.QObject):
     #     self.frame_view.set_status_unit(s)
     
     def change_hdf_file(self, filename):
-        print("Opening filename %s" % filename)
+        raise NotImplementedError()
     
     def change_hdf_group(self, new_item, old_item):
         self.busy_status_changed.emit(True)
@@ -635,6 +645,7 @@ class QtFramesetPresenter(QtCore.QObject):
             active_representation = None
         log.debug("Changing frame representation %s -> %s",
                   self.active_representation, active_representation)
+        self.update_timestep_list()
         self.active_representation = active_representation
         self.num_frames = self.frameset.num_energies
         log.debug("New HDF data path: %s", path)

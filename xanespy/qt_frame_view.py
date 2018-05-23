@@ -314,6 +314,8 @@ class QtFrameView(QtCore.QObject):  # pragma: no cover
         return widgets
     
     def move_slider(self, val):
+        curr = self.ui.sldFrameSlider.value()
+        log.debug("Moving slider %d -> %d", curr, val)
         self.ui.sldFrameSlider.setValue(val)
         self.ui.lblIndex.setText(str(val))
     
@@ -466,6 +468,7 @@ class QtFrameView(QtCore.QObject):  # pragma: no cover
         self.ui.cmbComponent.addItems(component_list)
     
     def set_timestep_list(self, timestep_list):
+        log.debug("Setting new stimestep list: %s", str(timestep_list))
         self.ui.cmbTimestep.clear()
         self.ui.cmbTimestep.addItems(timestep_list)
     

@@ -17,7 +17,7 @@ setup(name="xanespy",
       keywords="XANES X-ray microscopy operando",
       install_requires=[
           'pytz>=2013b', 'h5py', 'pandas', 'olefile', 'matplotlib', 'scikit-image',
-          'scikit-learn', 'numpy', 'tqdm', 'jinja2',
+          'scikit-learn', 'numpy', 'tqdm', 'jinja2', 'pandas', 'scikit-image',
       ],
       packages=['xanespy',],
       package_data={

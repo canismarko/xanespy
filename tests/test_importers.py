@@ -139,10 +139,20 @@ class APS32IDCImportTest(TestCase):
             data_group = f['experiment1/imported']
             self.assertEqual(data_group['intensities'].shape, (1, 2, 256, 256))
     
+    def test_limited_dark_flat(self):
+        # Only import some of the flat and dark field images
+        import_aps32idc_xanes_file(self.src_data,
+                                   hdf_filename=self.hdf, hdf_groupname='experiment1',
+                                   downsample=0, dark_idx=slice(0, 1))
+        # Check that the right number of files were imported
+        with h5py.File(self.hdf, mode='r') as f:
+            grp = f['experiment1/imported']
+            self.assertEqual(grp['dark_fields'].shape[1], 1)
+    
     def test_import_multiple_hdfs(self):
         import_aps32idc_xanes_files([self.src_data, self.src_data],
                                     hdf_filename=self.hdf, hdf_groupname='experiment1',
-                                    square=False)
+                                    square=False, downsample=0)
         with h5py.File(self.hdf, mode='r') as f:
             g = f['/experiment1/imported']
             self.assertEqual(g['intensities'].shape, (2, 3, 512, 612))
@@ -155,10 +165,11 @@ class APS32IDCImportTest(TestCase):
         # Run the import function
         import_aps32idc_xanes_file(self.src_data,
                                    hdf_filename=self.hdf, hdf_groupname='experiment1',
-                                   total_timesteps=2, square=False)
+                                   total_timesteps=2, square=False, downsample=0)
         import_aps32idc_xanes_file(self.src_data,
                                    hdf_filename=self.hdf, hdf_groupname='experiment1',
-                                   total_timesteps=2, timestep=1, append=True, square=False)
+                                   total_timesteps=2, timestep=1, append=True, square=False,
+                                   downsample=0)
         with h5py.File(self.hdf, mode='r') as f:
             g = f['/experiment1/imported']
             self.assertEqual(g['intensities'].shape, (2, 3, 512, 612))
