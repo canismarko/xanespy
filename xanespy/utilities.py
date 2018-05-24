@@ -178,7 +178,11 @@ def get_component(data, name):
     data : 
       Input data converted to requested component.
     """
-    if np.iscomplexobj(data):
+    try:
+        is_complex = np.iscomplexobj(data)
+    except TypeError:
+        is_complex = False
+    if is_complex:
         # Sort out complex components
         if name == "modulus":
             data = np.abs(data)

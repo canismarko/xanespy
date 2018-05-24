@@ -29,6 +29,7 @@ from time import time
 import multiprocessing as mp
 from itertools import product
 from collections import namedtuple
+from functools import partial
 
 from scipy import ndimage, linalg, stats
 from scipy.optimize import curve_fit, leastsq
@@ -43,6 +44,60 @@ from exceptions import XanesMathError
 
 
 log = logging.getLogger(__name__)
+
+
+class FramesPool(mp.pool.Pool):
+    """A multiprocessing pool that iterates over frames even if there are
+    extra dimensions.
+    
+    Parameters
+    ----------
+    processes : int, optional
+      How many processes to spawn. If omitted, twice the number of
+      CPUs will be used.
+    
+    """
+
+    def map(self, func, frames, spatial_dims=2, chunksize=None, desc=None):
+        """Apply the function to each frame in ``frames`` and return the result.
+        
+        Parameters
+        ----------
+        func : callable
+          Function to be applied to each frame.
+        frames : np.ndarray
+          Array of frames to operate on. The last dimensions are
+          considered spatial dimensions.
+        spatial_dims : int, optional
+          How many of the last dimensions are spatial frame
+          dimensions, 2D, 3D, etc.
+        chunksize : int, optional
+          How many frames to process at a time.
+        desc : str, optional
+          If provided, a progress bar will be displayed.
+        
+        Returns
+        -------
+        result : np.ndarray
+          The result of all calculations. Similar in shape to
+          ``frames`` except that the spatial dimensions are replaced by
+          whatever is returned by ``func``.
+        
+        """
+        # Calculate the correct shapes to use
+        extra_dims = frames.ndim - spatial_dims
+        extra_shape = frames.shape[:extra_dims]
+        frame_shape = frames.shape[extra_dims:]
+        # Reshape frames so they're a flat array of frames
+        iter_shape = (-1, *frame_shape)
+        iterable = np.reshape(frames, iter_shape)
+        # Execute the actual mapping
+        result = super().map(func, iterable, chunksize)
+        result = np.array(result)
+        # Convert shape back to that what the frames shape implies
+        new_shape = (*extra_shape, *result.shape[1:])
+        result = np.reshape(result, new_shape)
+        return result
 
 
 # Helpers for parallelizable code
@@ -772,8 +827,19 @@ def transformation_matrices(translations=None, rotations=None,
     return new_transforms
 
 
+def _correlation_translation(frame, reference, upsample_factor, median_filter_size):
+    if median_filter_size is not None:
+        frame = ndimage.median_filter(frame, size=median_filter_size)
+    results = feature.register_translation(reference,
+                                           frame,
+                                           upsample_factor=upsample_factor)
+    shift, error, diffphase = results
+    # Convert (row, col) to (x, y)
+    return (shift[1], shift[0])
+
+
 def register_correlations(frames, reference, upsample_factor=10,
-                          desc="Registering", quiet=False):
+                          desc="Registering", median_filter_size=None):
     """Calculate the relative translation between the reference image and
     a series of frames.
     
@@ -790,9 +856,13 @@ def register_correlations(frames, reference, upsample_factor=10,
     upsample_factor : int, optional
       Factor controls subpixel registration via scikit-image.
     desc : str, optional
-      Description for putting in the progress bar.
-    quiet : bool, optional
-      Whether to suppress the progress bar, etc.
+      Description for putting in the progress bar. ``None`` will
+      suppress output.
+    median_filter_size : int, optional
+      If provided, a median filter will be applied to each
+      frame. The value of this parameter determines how large the
+      kernel is: ``3`` creates a (3, 3) kernel; ``(3, 5)`` creates
+      a (3, 5) kernel; etc.
     
     Returns
     -------
@@ -801,26 +871,33 @@ def register_correlations(frames, reference, upsample_factor=10,
       (x, y) translations for each frame.
     
     """
-    t_shape = (*frames.shape[:-2], 2)
-    translations = np.empty(shape=t_shape, dtype=np.float)
-    
-    def get_translation(idx):
-        frm = frames[idx]
-        results = feature.register_translation(reference,
-                                               frm,
-                                               upsample_factor=upsample_factor)
-        shift, error, diffphase = results
-        log.debug("Translation for frame %s = %s", str(idx), str(shift))
-        # Convert (row, col) to (x, y)
-        translations[idx] = (shift[1], shift[0])
-    indices = iter_indices(frames, desc=desc, leftover_dims=2, quiet=quiet)
-    foreach(get_translation, indices)
+    # Apply the median filter to reference (frames are done later)
+    if median_filter_size is not None:
+        reference = ndimage.median_filter(reference, size=median_filter_size)
+    # Prepare a partial with the common data
+    func = partial(_correlation_translation,
+                   reference=reference, upsample_factor=upsample_factor,
+                   median_filter_size=median_filter_size)
+    # Execute the translations with multiprocessing
+    with FramesPool() as pool:
+        translations = pool.map(func, frames, desc=desc)
     # Negative in order to properly register with transform_images method
     translations = -translations
     return translations
 
 
-def register_template(frames, reference, template, desc="Registering", quiet=False):
+def _template_translation(frame, template, ref_center, median_filter_size):
+    if median_filter_size is not None:
+        frame = ndimage.median_filter(frame, size=median_filter_size)
+    match = feature.match_template(frame, template)
+    center = np.unravel_index(np.argmax(match), match.shape)
+    shift = ref_center - np.array(center)
+    # Convert (row, col) to (x, y)
+    return (shift[1], shift[0])
+
+
+def register_template(frames, reference, template, desc="Registering",
+                      median_filter_size=None):
     """Calculate the relative translation between the reference image and
     a series of frames.
     
@@ -843,9 +920,13 @@ def register_template(frames, reference, template, desc="Registering", quiet=Fal
       A 2D array (smaller than frames and reference) that will be
       identified in each frame and used for alignment.
     desc : str, optional
-      Description for putting in the progress bar.
-    quiet : bool, optional
-      Whether to suppress the progress bar, etc.
+      Description for putting in the progress bar. ``None`` will
+      suppress output.
+    median_filter_size : int, optional
+      If provided, a median filter will be applied to each
+      frame. The value of this parameter determines how large the
+      kernel is: ``3`` creates a (3, 3) kernel; ``(3, 5)`` creates
+      a (3, 5) kernel; etc.
     
     Returns
     -------
@@ -854,21 +935,23 @@ def register_template(frames, reference, template, desc="Registering", quiet=Fal
       (x, y) translations for each frame.
     
     """
-    t_shape = (*frames.shape[:-2], 2)
-    translations = np.empty(shape=t_shape, dtype=np.float)
+    # Apply median filter to the template and reference (frames done later)
+    if median_filter_size is not None:
+        reference = ndimage.median_filter(reference, size=median_filter_size)
+        template = ndimage.median_filter(template, size=median_filter_size)
+        # This functionality doesn't always work great in unit-tests
+        warnings.warn('Median filtering with template matching'
+                      'can lead to poor registration. Use at your'
+                      'own risk.', RuntimeWarning)
     ref_match = feature.match_template(reference, template)
     ref_center = np.unravel_index(np.argmax(ref_match), ref_match.shape)
     ref_center = np.array(ref_center)
-
-    def get_translation(idx):
-        frm = frames[idx]
-        match = feature.match_template(frm, template)
-        center = np.unravel_index(np.argmax(match), match.shape)
-        shift = ref_center - np.array(center)
-        # Convert (row, col) to (x, y)
-        translations[idx] = (shift[1], shift[0])
-    indices = iter_indices(frames, desc=desc, leftover_dims=2, quiet=quiet)
-    foreach(get_translation, indices)
+    # Prepare the particle with the translation function
+    func = partial(_template_translation, template=template, ref_center=ref_center,
+                   median_filter_size=median_filter_size)
+    # Execute the registration with multiprocessing
+    with FramesPool() as pool:
+        translations = pool.map(func, frames)
     # Negative in order to properly register with transform_images method
     translations = -translations
     return translations

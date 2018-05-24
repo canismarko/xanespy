@@ -23,6 +23,8 @@
 import math
 import os
 import warnings
+import multiprocessing as mp
+from functools import partial
 
 import matplotlib
 import unittest
@@ -40,10 +42,17 @@ from xanespy.xanes_math import (transform_images, direct_whitelines,
                                 transformation_matrices,
                                 apply_internal_reference,
                                 apply_mosaic_reference,
-                                register_template, downsample_array)
+                                register_template, register_correlations,
+                                downsample_array, FramesPool)
 
 TEST_DIR = os.path.dirname(__file__)
 SSRL_DIR = os.path.join(TEST_DIR, 'txm-data-ssrl')
+
+
+# Function for testing multiprocessing
+# Must be here so it is pickle-able
+def add_one(x):
+    return x + 1
 
 
 class XanesMathTest(unittest.TestCase):
@@ -113,6 +122,34 @@ class XanesMathTest(unittest.TestCase):
         result = apply_mosaic_reference(mosaic, ref)
         np.testing.assert_almost_equal(result, expected)
     
+    def test_register_correlation(self):
+        frame0 = np.array([
+            [1, 1, 1, 0, 0],
+            [1, 3, 1, 0, 0],
+            [1, 1, 1, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+        ])
+        frame1 = np.array([
+            [0, 0, 0, 0, 0],
+            [0, 1, 1, 1, 0],
+            [0, 1, 3, 1, 0],
+            [0, 1, 1, 1, 0],
+            [0, 0, 0, 0, 0],
+        ])
+        frames = np.array([[frame0, frame1]])
+        # Do the actual registration
+        results = register_correlations(frames, reference=frame0, desc=None)
+        # Compare results
+        expected = np.array([[[0, 0], [1, 1]]])
+        np.testing.assert_equal(results, expected)
+        # Try again but with a median filter size
+        results = register_correlations(frames, reference=frame0, desc=None,
+                                        median_filter_size=3)
+        expected = np.array([[[0.0, 0.0],
+                              [1.2, 1.2]]])
+        np.testing.assert_equal(results, expected)
+    
     def test_register_template(self):
         # Prepare some sample data arrays for registration
         frame0 = np.array([
@@ -129,7 +166,7 @@ class XanesMathTest(unittest.TestCase):
             [0, 1, 1, 1, 0],
             [0, 0, 0, 0, 0],
         ])
-        frames = np.array([frame0, frame1])
+        frames = np.array([[frame0, frame1]])
         template = np.array([
             [2, 2, 2],
             [2, 6, 2],
@@ -137,10 +174,39 @@ class XanesMathTest(unittest.TestCase):
         ])
         # Do the actual registration
         results = register_template(frames, reference=frame0,
-                                    template=template, quiet=True)
+                                    desc=None, template=template)
         # Compare results
-        expected = np.array([[0, 0], [1, 1]])
+        expected = np.array([[[0, 0], [1, 1]]])
         np.testing.assert_equal(results, expected)
+        # Try again but with a median filter size
+        template = np.array([
+            [1, 1],
+            [1, 1],
+        ])
+        with warnings.catch_warnings():
+            warnings.filterwarnings('ignore', message='Median filtering')
+            results = register_template(frames, reference=frame0, desc=None,
+                                        template=template, median_filter_size=2)
+        expected = np.array([[[0.0, 0.0],
+                              [0.0, 0.0]]]) # This doesn't work great for some reason
+        np.testing.assert_equal(results, expected)
+    
+    def test_frame_pool(self):
+        # Create a (1, 2, 2, 2) array to test
+        a = np.array([[
+            [[1, 2],
+             [3, 4],
+             [5, 6]],
+            [[7, 8],
+             [9, 10],
+             [11, 12]]
+        ]])
+        # Should produce a (1, 2) array of results
+        expected = np.sum(a, axis=(2, 3))
+        with FramesPool() as pool:
+            out = pool.map(np.sum, a)
+        # Check the result
+        np.testing.assert_array_equal(out, expected)
     
     def test_apply_internal_reference(self):
         # With real data

@@ -195,6 +195,7 @@ class XanesFrameset():
                 except (RuntimeError, FileNotFoundError):
                     warnings.warn("Could not save figure. Is LaTeX installed?", RuntimeWarning)
                 frame['plots'].append(pgfname)
+                plt.close(fig)
             # Save metadata
             if groupby == 'dataset':
                 frame['title'] = "{} - {}".format(self.parent_name, fs_name).replace('_', ' ')
@@ -279,6 +280,7 @@ class XanesFrameset():
                 except (RuntimeError, FileNotFoundError):
                     warnings.warn("Could not save figure. Is LaTeX installed?", RuntimeWarning)
                 frame['plots'].append(pgfname)
+                plt.close(fig)
             # Save metadata
             if groupby == 'dataset':
                 frame['title'] = "{} - {}".format(self.parent_name, map_name).replace('_', ' ')
@@ -519,7 +521,7 @@ class XanesFrameset():
             # Nothing to apply, so no-op
             log.debug("No transformations to apply, skipping.")
             with self.store() as store:
-                out = store.get_dataset('optical_depths').value
+                out = store.get_dataset('optical_depths')[:]
         else:
             if commit:
                 names = ['intensities', 'references', 'optical_depths'] # Order matters
@@ -613,10 +615,10 @@ class XanesFrameset():
     
     def align_frames(self,
                      reference_frame="mean",
-                     blur=None,
                      method: str="cross_correlation",
                      template=None,
                      passes=1,
+                     median_filter_size=None,
                      commit=True,
                      component="modulus",
                      plot_results=True,
@@ -635,49 +637,58 @@ class XanesFrameset():
         
         Parameters
         ----------
-        reference_frame (int, str or None) : The index of the frame to
-          which all other frames should be aligned. If None, the frame
-          of highest intensity will be used. If "mean" (default) or
-          "median", the average or median of all frames will be
-          used. If "max", the frame with highest optical_depth is
-          used. This attribute has no effect if template matching is
-          used.
-        blur : A type of filter to apply to each frame of the data
-          before attempting registration. Choices are "median" or None
-        method : Which technique to use to calculate the translation
-          - "cross_correlation" (default)
-          - "template_match"
-          
+        reference_frame : 2-tuple, str, optional
+          The index of the frame to which all other frames should be
+          aligned. If None, the frame of highest intensity will be
+          used. If "mean" (default) or "median", the average or median
+          of all frames will be used. If "max", the frame with highest
+          optical_depth is used. Otherwise, a 2-tuple with (timestep,
+          energy) should be provided. This attribute has no effect if
+          template matching is used.
+        method : str, optional
+          Which technique to use to calculate the translation
+            - "cross_correlation" (default)
+            - "template_match"
           (If "template_match" is used, the `template` argument should
           also be provided.)
-        passes : How many times this alignment should be done. Default: 1.
-        template : Image data that should be matched if the
-          `template_match` method is used.
-        commit : If truthy (default), the final translation will be
-          applied to the data stored on disk by calling
+        template : np.ndarray, optional
+          Image data that should be matched if the `template_match`
+          method is used.
+        passes : int, optional
+          How many times this alignment should be done. Default: 1.
+        median_filter_size : int, optional
+          If provided, a median filter will be applied to each
+          frame. The value of this parameter determines how large the
+          kernel is: ``3`` creates a (3, 3) kernel; ``(3, 5)`` creates
+          a (3, 5) kernel; etc.
+        commit : bool, optional
+          If truthy (default), the final translation will be applied
+          to the data stored on disk by calling
           `self.apply_translations(crop=True)` after all passes have
-          finished.
-        component : What component of the data to use: 'modulus',
-          'phase', 'imag' or 'real'.
-        plot_results : If truthy (default), plot the root-mean-square of the
-          translation distance for each pass.
-        results_ax : optional
+          finished.  component : What component of the data to use:
+          'modulus', 'phase', 'imag' or 'real'.  plot_results : If
+          truthy (default), plot the root-mean-square of the
+          translation distance for each pass.  results_ax : optional
           If ``plot_results`` is true, this axes will be used to
-          receive the plot.
+          receive the plot.  quiet : bool, optional Whether to
+          suppress the progress bar, etc.
+        component : str, optional
+          For complex data, which component to use: modulus, phase,
+          real, imag.
+        plot_results : bool, optional
+          If true, a boxplot will be plot with the RMS shifts for
+          each pass.
+        results_ax : mpl.Axes, optional
+          If ``plot_results`` is true, this Axes will receive the
+          plot. If omitted, a new axes will be created.
         quiet : bool, optional
-          Whether to suppress the progress bar, etc.
+          Suppress the progress bar
         
         """
         logstart = time()
         log.info("Aligning frames with %s algorithm over %d passes",
                  method, passes)
         pass_distances = []
-        # Check for valid attributes
-        valid_filters = ["median", None]
-        if blur not in valid_filters:
-            msg = 'Invalid blur filter "{}". Choices are {}'
-            msg = msg.format(blur, valid_filters)
-            raise ValueError(msg)
         # Sanity check on `method` argument
         valid_methods = ['cross_correlation', 'template_match']
         if method not in valid_methods:
@@ -711,23 +722,23 @@ class XanesFrameset():
                                      frames.shape,
                                      len(frames.shape) - 2)
                     raise IndexError(msg)
-            # Prepare blurring if requested
-            if blur == "median":
-                ref_image = filters.median(ref_image,
-                                           morphology.disk(20))
             # Calculate translations for each frame
-            desc = "Registering pass {}".format(pass_)
+            if not quiet:
+                desc = "Registering pass {}".format(pass_)
+            else:
+                desc = None
             if method == "cross_correlation":
                 translations = xm.register_correlations(frames=frames,
                                                         reference=ref_image,
-                                                        desc=desc, quiet=quiet)
+                                                        desc=desc,
+                                                        median_filter_size=median_filter_size)
             elif method == "template_match":
                 template_ = get_component(template, component)
                 translations = xm.register_template(frames=frames,
                                                     reference=ref_image,
                                                     template=template_,
                                                     desc=desc,
-                                                    quiet=quiet)
+                                                    median_filter_size=median_filter_size)
             # Add the root-mean-square to the list of distances translated
             rms = np.sqrt((translations**2).sum(axis=-1).mean())
             log.info("RMS of translations for pass %d = %f", pass_, rms)

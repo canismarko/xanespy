@@ -23,6 +23,7 @@ steps are caputed either in an IPython notebook or conventional python
 script. These steps, together with the original data, should then be
 sufficient to reproduce the results exactly.
 
+
 Installation
 ------------
 
@@ -33,17 +34,11 @@ Xanespy can be installed from the **python package index (PyPI) using pip**
    $ pip install xanespy
 
 
-or from anaconda.org using **conda**
-
-.. code:: bash
-
-   $ conda install -c canismarko xanespy
-
-
 X-Ray Absorbance Basics
 -----------------------
 
 Coming soon...
+
 
 Example Workflow
 ----------------

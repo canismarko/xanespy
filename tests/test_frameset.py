@@ -30,6 +30,7 @@ import os
 import shutil
 import warnings
 from collections import namedtuple
+from functools import partial
 import sys
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir)))
 
@@ -247,6 +248,11 @@ class TXMDatasetTest(TestCase):
 
 
 MockStore = mock.MagicMock(TXMStore)
+# For testing things that need a pickleable function
+x = np.linspace(0, 1, num=6)
+def _line(a, b, x):
+    return a * x + b
+line = partial(_line, x=x)
 
 class XanesFramesetTest(TestCase):
     """Set of python tests that work on full framesets and require data
@@ -384,7 +390,8 @@ class XanesFramesetTest(TestCase):
         fs = self.create_frameset(store=store)
         spectrum = fs.spectrum()
         # DO the actual fitting
-        weights, residuals = fs.fit_linear_combinations(sources=[spectrum], quiet=True, edge_filter=False)
+        weights, residuals = fs.fit_linear_combinations(
+            sources=[spectrum], quiet=True, edge_filter=False)
         self.assertEqual(weights.shape, (1, 2, 16, 16))
         self.assertEqual(residuals.shape, (1, 16, 16))
         # Check that the data were saved
@@ -409,14 +416,10 @@ class XanesFramesetTest(TestCase):
         Es = np.array([np.linspace(840, 862, num=6, dtype=np.float32)])
         store.energies = Es
         fs = self.create_frameset(store=store)
-        x = np.linspace(0, 1, num=6)
-        line = lambda a, b: a * x + b
-        line.dtype = np.float32
         params, residuals = fs.fit_spectra(line, p0=np.zeros((1, 2, 16, 16)),
                                            nonnegative=True, edge_filter=False,
                                            pnames=('slope', 'intercept'), quiet=True)
         self.assertFalse(np.any(params<0))
-        self.assertEqual(residuals.dtype, Es.dtype)
         self.assertEqual(params.shape, (1, 2, 16, 16))
         self.assertEqual(residuals.shape, (1, 16, 16))
         # Check that the data were saved
@@ -524,15 +527,48 @@ class XanesFramesetTest(TestCase):
             dest='new_group', src='old_group'
         )
     
+    def test_align_frames(self):
+        # Prepare mismatched data to test
+        store = MockStore()
+        ODs = np.zeros(shape=(1, 2, 64, 64))
+        # Make two mismatched squares
+        ODs[0,0,30:34,30:34] = 1
+        ODs[0,1,32:36,32:36] = 1
+        store.optical_depths = ODs
+        store.get_dataset.return_value = ODs
+        fs = self.create_frameset(store=store)
+        # Check that reference_frame arguments of the wrong shape are rejected
+        with self.assertRaisesRegex(Exception, "does not match shape"):
+            fs.align_frames(commit=False, reference_frame=0,
+                            plot_results=False)
+        # Perform an alignment but don't commit to disk
+        fs.align_frames(commit=False, reference_frame=(0, 0),
+                        plot_results=False, quiet=True)
+        # Check that the translations weren't applied yet
+        hasnotchanged = np.all(np.equal(ODs, store.optical_depths))
+        self.assertTrue(hasnotchanged)
+        # Apply the translations
+        fs.apply_transformations(crop=True, commit=True, quiet=True)
+        # Check that the right data were written back to disk
+        self.assertEqual(store.replace_dataset.call_count, 3)
+        ds_names = tuple(c[0][0] for c in store.replace_dataset.call_args_list)
+        self.assertEqual(ds_names, ('intensities', 'references', 'optical_depths'))
+        new_ODs = store.replace_dataset.call_args[0][1]
+        new_shape = store.optical_depths.shape
+        # Test for inequality by checking shapes
+        self.assertNotEqual(ODs.shape[-2:], new_ODs.shape[-2:])
+        self.assertEqual(new_ODs.shape, (1, 2, 62, 62))
+        # Test with a median filter
+        store.replace_dataset.reset_mock()
+        fs.align_frames(commit=True, plot_results=False, quiet=True,
+                        median_filter_size=(5, 5))
+    
     def test_align_frames_invalid(self):
         """Check that the `align_frames` method throws the right exceptions on
         bad inputs.
         
         """
         fs = self.create_frameset()
-        # Bad blur value
-        with self.assertRaises(ValueError):
-            fs.align_frames(blur="bad-blur", plot_results=False)
         # Bad method
         with self.assertRaises(ValueError):
             fs.align_frames(method="bad-method", plot_results=False)
@@ -652,9 +688,6 @@ class XanesFramesetTest(TestCase):
         result = fs.energies(timeidx=3)
         np.testing.assert_equal(result, data[3])
     
-    def test_all_extents(self):
-        pass
-    
     def test_extent(self):
         # Create mock data source
         store = MockStore()
@@ -751,37 +784,6 @@ class OldXanesFramesetTest(XanespyTestCase):
         if os.path.exists(self.temphdf):
             os.remove(self.temphdf)
     
-    def test_align_frames(self):
-        # Perform an excessive translation to ensure data are correctable
-        with self.frameset.store(mode='r+') as store:
-            Ts = np.identity(3)
-            Ts = np.copy(np.broadcast_to(Ts, (*store.optical_depths.shape[0:2], 3, 3)))
-            Ts[0, 1, 0, 2] = 100
-            Ts[0, 1, 1, 2] = 100
-            transform_images(store.optical_depths,
-                             transformations=Ts,
-                             out=store.optical_depths,
-                             quiet=True)
-            old_imgs = store.optical_depths.value
-        # Check that reference_frame arguments of the wrong shape are rejected
-        with self.assertRaisesRegex(Exception, "does not match shape"):
-            self.frameset.align_frames(commit=False,
-                                       reference_frame=0, plot_results=False)
-        # Perform an alignment but don't commit to disk
-        self.frameset.align_frames(commit=False, reference_frame=(0, 0),
-                                   plot_results=False, quiet=True)
-        # Check that the translations weren't applied yet
-        with self.frameset.store() as store:
-            hasnotchanged = np.all(np.equal(old_imgs, store.optical_depths.value))
-        self.assertTrue(hasnotchanged)
-        # Apply the translations
-        self.frameset.apply_transformations(crop=True, commit=True, quiet=True)
-        with self.frameset.store() as store:
-            new_shape = store.optical_depths.shape
-        # Test for inequality by checking shapes
-        self.assertEqual(old_imgs.shape[:-2], new_shape[:-2])
-        self.assertNotEqual(old_imgs.shape[-2:], new_shape[-2:])
-   
     def test_deferred_transformations(self):
         """Test that the system properly stores data transformations for later
         processing."""

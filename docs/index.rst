@@ -9,8 +9,9 @@ Xanespy documentation
 
 Python library for analyzing **X-Ray absorbance spectroscopy** data.
 
-.. warning:: This documentation is still under development. While it is usable, the code
-	     could change at any time.
+.. warning:: This documentation and the code are under active
+	     development. We make every effort to ensure the code is
+	     usable, but make no guarantees.
 
 .. toctree::
    :maxdepth: 2
