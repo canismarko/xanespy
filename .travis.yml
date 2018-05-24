@@ -20,13 +20,10 @@ install:
   - conda info -a
 
   # Create the test environment and install the dependencies
-  - conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION pip numpy scipy nomkl
+  - conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION pip numpy>=1.14 scipy nomkl pyqt
   - source activate test-environment
-  - pip install -r requirements.txt
-  - pip uninstall numpy
+  - pip install -r requirements-travis.txt
   - pip install coveralls
-  - conda install pyqt
-  - conda install "numpy>=1.14"
 script: py.test --cov=xanespy tests/
 after_success:
   - coveralls
