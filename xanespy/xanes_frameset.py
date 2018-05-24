@@ -762,6 +762,23 @@ class XanesFrameset():
             log.info("Committing final translations to disk")
             self.apply_transformations(crop=True, commit=True)
         log.info("Aligned %d passes in %d seconds", passes, time() - logstart)
+
+    def apply_median_filter(self, size, representation='optical_depths'):
+        """Permanently apply a median filter to a frameset.
+        
+        Parameters
+        ----------
+        size : 4-tuple
+          Dimensions of the kernel to use for filtering in order of
+          (time, energy, row, col).
+        representation : str, optional
+          Which frameset representation to use for filtering.
+        
+        """
+        with self.store() as store:
+            ds = store.get_dataset(representation)
+            new_data = median_filter(ds, size=size)
+            store.replace_dataset(representation, data=new_data)
     
     def segment_materials(self, thresholds,
                           representation='optical_depths',

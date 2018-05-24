@@ -271,7 +271,7 @@ class TXMStore():
         this file and groupname. Ex. "imported" or "aligned_frames".
         """
         return self.parent_group()[self.data_name]
-    
+   
     def replace_dataset(self, name, data, context=None, attrs={},
                         compression=None, *args, **kwargs):
         """Wrapper for h5py.create_dataset that removes the existing dataset
@@ -289,15 +289,20 @@ class TXMStore():
         attrs : dict, optional
           Dictionary containing HDF5 metadata attributes to be set on
           the resulting dataset.
+        compression : str, optional
+          What type of compression to use. See HDF5 documentation for
+          options.
         *args
           Arguments to pass to h5py's ``create_dataset`` method.
         **kwargs
           Keyword arguments to pass to h5py's ``create_dataset`` method.
+        
         """
         # Remove the existing dataset if possible
         try:
+            attrs = self.data_group()[name].attrs
             del self.data_group()[name]
-        except KeyError:
+        except KeyError as e:
             pass
         # Perform the actual group creation
         ds = self.data_group().create_dataset(name=name, data=data,

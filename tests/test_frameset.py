@@ -38,6 +38,7 @@ import h5py
 import numpy as np
 import pandas as pd
 import matplotlib
+from scipy import ndimage
 
 from matplotlib.colors import Normalize
 import pytz
@@ -405,9 +406,18 @@ class XanesFramesetTest(TestCase):
         store.replace_dataset.assert_any_call(
             'linear_combination_residuals', residuals, context='map',
             attrs={'frame_source': 'optical_depths'})
-        # store.replace_dataset.assert_any_call(
-        #     'linear_combination_sources', [spectrum.values], context='metadata')
-        # np.testing.assert_equal(store.linear_combination_sources, np.array([spectrum]))
+    
+    def test_median_filter(self):
+        store = MockStore()
+        od_data = np.random.rand(1, 6, 16, 16)
+        store.get_dataset = mock.MagicMock(return_value=od_data)
+        fs = self.create_frameset(store=store)
+        store.replace_dataset.reset_mock()
+        fs.apply_median_filter(size=(1, 3, 3, 3))
+        new_data = ndimage.median_filter(od_data, size=(1, 3, 3, 3))
+        self.assertEqual(store.replace_dataset.call_count, 1)
+        saved_data = store.replace_dataset.call_args[1]['data']
+        np.testing.assert_equal(new_data, saved_data)
     
     def test_fit_spectra(self):
         store = MockStore()
