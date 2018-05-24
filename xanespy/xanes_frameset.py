@@ -624,16 +624,17 @@ class XanesFrameset():
                      plot_results=True,
                      results_ax=None,
                      quiet=False):
-        """Use cross correlation algorithm to line up the frames. All frames
-        will have their sample position set to (0, 0) since we don't
-        know which one is the real position. This operation will
-        interpolate between pixels so introduces error. If multiple
-        passes are performed, the translations are saved and combined
-        at the end so this error is only introduced once. Using the
-        `commit=False` argument allows for multiple different types of
-        registration to be performed in sequence, since uncommitted
-        translations will be applied before the next round of
-        registration.
+        """Use cross correlation algorithm to line up the frames.
+        
+        All frames will have their sample position set to (0, 0) since
+        we don't know which one is the real position. This operation
+        will interpolate between pixels so introduces error. If
+        multiple passes are performed, the translations are saved and
+        combined at the end so this error is only introduced
+        once. Using the `commit=False` argument allows for multiple
+        different types of registration to be performed in sequence,
+        since uncommitted translations will be applied before the next
+        round of registration.
         
         Parameters
         ----------
@@ -647,8 +648,10 @@ class XanesFrameset():
           template matching is used.
         method : str, optional
           Which technique to use to calculate the translation
+          
             - "cross_correlation" (default)
             - "template_match"
+          
           (If "template_match" is used, the `template` argument should
           also be provided.)
         template : np.ndarray, optional
@@ -683,7 +686,7 @@ class XanesFrameset():
           plot. If omitted, a new axes will be created.
         quiet : bool, optional
           Suppress the progress bar
-        
+
         """
         logstart = time()
         log.info("Aligning frames with %s algorithm over %d passes",

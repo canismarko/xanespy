@@ -1,8 +1,55 @@
+******************
 Analyzing the Data
-==================
+******************
+
+After importing the data, you will likely need to process and analyze
+the frame set. This is done through the
+:py:class:`xanespy.xanes_frameset.XanesFrameset` class. Most
+**processing and analysis steps are provided as methods on this
+class**, so the first step is to create a frameset object.
+
+.. code:: python
+
+    import xanespy as xp
+
+    # Use the same HDF file and groupname as when importing
+    fs = xp.XanesFrameset(filename='my_analysis.h5',
+	                  groupname='experiment1',
+                          edge=None)
+
+Defining an Absorbance Edge
+===========================
+
+Some steps in the analysis process require knowledge of the X-ray
+absorbance edge to function properly. To use these features, you'll
+need to define and absorbance edge for the element in question. You
+can also use one of the pre-defined edges, either directly or by the
+shortcuts :py:obj:`xanespy.edges.k_edges` or
+:py:obj:`xanespy.edges.l_edges`.
+
+.. code:: python
+    
+    import xanespy as xp
+    
+    # Using a pre-made edge by name
+    fs = xp.XanesFrameset(edge=xp.k_edges['Ni'], ...)
+
+    # Using a pre-made edge by reference
+    fs = xp.XanesFrameset(edge=xp.edges.NCANickelKEdge(), ...)
+
+    # Defining your own edge
+    class CuKEdge(KEdge):
+        name = 'Cu'
+        E_0 = 8978.9
+        shell = "K"
+        pre_edge = (8940, 8970)
+        post_edge = (9010, 9200)
+        edge_range = (8970, 9010)
+        map_range = (8970, 9010)
+    fs = xp.XanesFrameset(edge=CuKEdge(), ...)
 
 Forking the Data
-----------------
+================
 
 After long computations it can be helpful to create a copy of the
 dataset as a sort of checkpoint. To enable this, xanespy includes the
@@ -38,7 +85,7 @@ itself, using a datagroup that doesn't exist, etc.
 
 
 Frame Alignment
----------------
+===============
 
 In order to acquire reliable spectra, **it is important that the
 frames be aligned properly**. Thermal expansion, motor slop, sample
@@ -90,8 +137,67 @@ correlation::
   fs.align_frames(passes=5, commit=True)
 
 
+Median Filtering
+================
+
+There are three options for applying a median filter, with each one
+having a different purpose. The larger the size of the kernel given,
+the longer it will take to apply the filter.
+
+Filter When Importing
+---------------------
+
+Area detectors often have some number of **bad pixels**, either hot
+pixels or dead pixels. Applying a mild median filter during import
+time to the raw data can fix most of these problems. Some beamline
+importers apply this by default. The **3D filter** can also include
+the energy dimension, but this is not recommended since the frames
+haven't been aligned yet:
+
+.. code:: python
+
+    import xanespy as xp
+    
+    xp.import_aps32idc_file(median_filter_size=(1, 5, 5))
+    
+
+Filter When Aligning
+--------------------
+
+When aligning frames it may be helpful to apply an **aggressive median
+filter to blur each image** before registration so that noise and fine
+details have less impact. This **2D filter** is only applied to the
+images in memory, so does not apply to the final result.
+
+.. code:: python
+
+    import xanespy as xp
+
+    fs = xp.XanesFrameset(...)
+    fs.align_frames(median_filter_size=(5, 5))
+
+Filter After Aligning
+---------------------
+
+Depending on the scientific question being addressed, a **final median
+filter after aligning** maybe desireable. This **4D filter** provides
+a trade-off between temporal, spatial and energy resolutions: The
+larger the kernel along one dimension, the less resolution you'll be
+able to see but the higher the signal-to-noise in the other
+dimensions.
+
+.. code:: python
+
+	  import xanespy as xp
+
+	  fs = xp.XanesFrameset(...)
+	  fs.align_frames(...)
+	  kernel = (3, 3, 5, 5) # (time, energy, row, col)
+	  
+	  fs.median_filter(kernel)
+
 Subtracting Surroundings
-------------------------
+========================
 
 Some microscopes show differences in the absorbance of the whole
 frame, including background material. This can be removed from each
@@ -105,8 +211,29 @@ frame, giving a better spectrum::
 
    The effect of the ``subtract_surroundings()`` method.
 
+Calculating Maps
+================
+
+Several basic maps can be create with the
+:py:meth:`~xanespy.xanes_frameset.XanesFrameset.calculate_maps`
+method. These maps will be saved in the HDF5 file alongside the
+frames.
+
+.. code:: python
+
+   import matplot.pyplot as plt
+   from xanespy import xp
+   
+   fs = xp.XanesFrameset()
+   fs.calculate_maps()
+
+   # Visualize one of the newly created
+   fs.plot_map(map_name='optical_depths_mean')
+
+More fine-grained mapping is planned and will be available soon.
+
 Fitting Spectra
----------------
+===============
 
 When numerical methods are insufficient, it may be necessary to fit
 the pixel spectra with a model function and extract parameters from

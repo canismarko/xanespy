@@ -20,12 +20,12 @@ interactive visualization of X-ray frames and maps. The viewer is
 launched from the command line and takes the path to a processed HDF
 file as its input. For some extra functionality, you can give the name
 of a metal K- of L- edge using the ``-k`` or ``-l`` argument
-respectively. See ``xanes-viewer --help`` for a list of K and L edges
-available.
+respectively. See ``xanespy-viewer --help`` for a list of K and L
+edges available.
 
 .. code:: bash
 
-   $ xanes-viewer results/beamtime-analysis.h5 -k Ni
+   $ xanespy-viewer results/beamtime-analysis.h5 -k Ni
 
 The data tree on the left of the window shows the possible datasets
 than be viewed. Choosing an entry with type "frameset" will load and
