@@ -5,12 +5,13 @@ Fitting X-ray Absorbance Spectra
 
 When numerical methods are insufficient, it may be necessary to fit
 the pixel spectra with a model function and extract parameters from
-the model. The core `~xanespy.xanes_frameset.XanesFrameset` class has
-methods for common fitting-related use-cases, such as using curves to
-approximate L_3 and K edges, and linear combination fitting of
-standard spectra. If the pre-rolled options are not enough, arbitary
-callables can be created and fit against the data. The following is an
-example for fitting a single L-edge spectrum:
+the model. The core :py:class:`~xanespy.xanes_frameset.XanesFrameset`
+class has methods for common fitting-related use-cases, such as using
+curves to approximate L\ :sub:`3` and K edges, and linear
+combination fitting of standard spectra. If the pre-rolled options are
+not enough, arbitary callables can be created and fit against the
+data. The following is an example for fitting a single L-edge
+spectrum:
 
 .. code:: python
 
@@ -75,8 +76,8 @@ The naming prefix can be controlled by passing the ``name`` parameter
 to
 :py:func:`~xanespy.xanes_frameset.XanesFrameset.fit_linear_combinations`
 method. If more control is needed, the
-:py:class:`xanespy.fitting.LinearCombination` can be subclassed and
-given to the
+:py:class:`xanespy.fitting.LinearCombination` class can be subclassed
+and given to the
 :py:meth:`~xanespy.xanes_frameset.XanesFrameset.fit_spectra` method as
 described :ref:`below<roll-your-own>`.
 

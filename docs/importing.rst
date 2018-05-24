@@ -25,7 +25,7 @@ The camera at the beamline captures micrographs of 2048x2448. In most
 cases this is over-kill since the focusing power of the 60 nm
 zone-plate is not strong enough to take advantage of this. The extra
 pixel density can be converted into an improved contrast-to-noise
-ratio by the **``downsample``** parameter. This parameter controls how
+ratio by the ``downsample`` parameter. This parameter controls how
 many pixels (to a power of two) are combined. In the previous example,
 ``downsample=1`` combines to :math:`2^1 = 2\times2` blocks and results
 in a (1024, 1224) image. ``downsample=2`` combines :math:`2^2 =
@@ -41,7 +41,9 @@ discarding the corner artifacts.
  the above approach would continually overwrite the imported data,
  leaving only the last scan in the import data store. To overcome
  this, the ``timestep`` and ``total_timesteps`` parameters should be
- used, or the related ``import_aps32idc_xanes_files`` function.
+ used with :py:func:`~xanespy.importers.import_aps32idc_xanes_file`,
+ or the related
+ :py:func:`~xanespy.importers.import_aps32idc_xanes_files` function.
 
 Option 1: Loop through the files explicitly:
 

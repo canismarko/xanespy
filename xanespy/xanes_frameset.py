@@ -492,11 +492,6 @@ class XanesFrameset():
         and apply them. If commit is truthy, the staged
         transformations are reset.
         
-        Returns
-        -------
-        out : np.ndarray
-          Transformed array of the optical depth frames.
-        
         Arguments
         ---------
         crop : bool, optional
@@ -510,6 +505,11 @@ class XanesFrameset():
           optical_depth data will be transformed and returned.
         quiet : bool, optional
           Whether to suppress the progress bar, etc.
+        
+        Returns
+        -------
+        out : np.ndarray
+          Transformed array of the optical depth frames.
         
         """
         # First, see if there's anything to do
@@ -1784,7 +1784,7 @@ class XanesFrameset():
         subtract the average surrounding optical_depth from each
         frame. This effectively removes effects where the entire frame
         is brighter from one energy to the next.
-
+        
         Parameters
         ----------
         sensitivity : optional

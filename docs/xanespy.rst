@@ -28,6 +28,15 @@ xanespy.exceptions module
     :undoc-members:
     :show-inheritance:
 
+xanespy.fitting module
+-------------------------
+
+.. automodule:: xanespy.fitting
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+
 xanespy.importers module
 ------------------------
 

@@ -1,0 +1,14 @@
+numpy>=1.13.3
+h5py>=2.6
+matplotlib>=2.1
+pandas>=0.19.1
+pillow>=3.4.2
+olefile>=0.44
+PyQt5>=5.7
+pytz>=2016.10
+scikit-image>=0.12.3
+scikit-learn>=0.18.1
+scipy>=0.18.1
+tqdm>=4.10.0
+jinja2
+imageio

@@ -33,6 +33,10 @@ from xanes_math import k_edge_jump, iter_indices, foreach
 from utilities import prog
 
 
+__all__ = ('prepare_p0', 'fit_spectra', 'Curve', 'Line',
+           'LinearCombination', 'Gaussian', 'L3Curve', 'KCurve')
+
+
 def prepare_p0(p0, frame_shape, num_timesteps=1):
     """Create an initial parameter guess for fitting.
     
@@ -225,8 +229,8 @@ class Gaussian(Curve):
     Mathematically:
     
     .. math::
-        a e^{\frac{-(x-b)**2}{2c^2)}
-    
+        y = a e^{\\frac{-(x-b)**2}{2c^2}}
+
     Parameters
     ----------
     x : np.ndarray
@@ -246,7 +250,6 @@ class Gaussian(Curve):
 
 
 class L3Curve(Curve):
-
     """An L_3 absorption edge.
     
     This function is a combination of two Gaussian peaks and a step
@@ -305,8 +308,8 @@ class L3Curve(Curve):
 class KCurve(Curve):
     """A K absorption edge.
     
-    Fit Parameters
-    --------------
+    **Fit Parameters:**
+    
     scale
       Overall scale factor for curve
     voffset

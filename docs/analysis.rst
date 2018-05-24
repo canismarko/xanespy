@@ -52,12 +52,15 @@ Forking the Data
 ================
 
 After long computations it can be helpful to create a copy of the
-dataset as a sort of checkpoint. To enable this, xanespy includes the
-``fork_data_group()`` method: it creates a copy of the HDF group. The
-active set can be changed by setting the ``data_name`` attribute on a
-``XanesFrameset`` object. Most operations enabled by the
-``XanesFrameset()`` class are not idempotent, so starting from a clean
-dataset may be necessary:
+dataset as a sort of checkpoint. To enable this, the
+:py:class:`xanespy.xanes_frameset.XanesFrameset` class includes the
+:py:meth:`~xanespy.xanes_frameset.XanesFrameset.fork_data_group()`
+method: it creates a copy of the HDF group. The active set can be
+changed by setting the ``data_name`` attribute on a
+:py:class:`~xanespy.xanes_frameset.XanesFrameset()` object. Most
+operations enabled by the
+:py:class:`~xanespy.xanes_frameset.XanesFrameset` class are not
+idempotent, so starting from a clean dataset may be necessary:
 
 .. code:: python
 
@@ -93,7 +96,11 @@ damage and imperfect microscope alignment can all cause frames to be
 misaligned. **It is often necessary to align the frames before
 performing any of the subsequent steps.**
 
-This is done with the ``xanespy.XanesFrameset().align_frames()`` method::
+This is done with the
+:py:meth:`~xanespy.xanes_frameset.XanesFrameset.align_frames()`
+method:
+
+.. code:: python
 
   import xanespy
   # Select an imported hdf file to use
@@ -113,12 +120,17 @@ The alignments are generally done with subpixel resolution, which
 gives improved accuracy, but requires interpolation. To avoid problems
 with accumulated error, a cumulative translation matrix is kept and
 applied at the end to the original data. You can add your own
-translation manually using the ``stage_transformations()`` method. If
-``align_frames()`` is called with ``commit=False``, then the alignment
-parameters are added to ``stage_transformations`` but not
-applied. Once all transformations are staged, the
-``apply_transformations()`` method will apply the cumulative
-transformation matrix and (by default) save the result to disk.
+translation manually using the
+:py:meth:`~xanespy.xanes_frameset.XanesFrameset.stage_transformations()`
+method. If
+:py:meth:`~xanespy.xanes_frameset.XanesFrameset.align_frames()` is
+called with ``commit=False``, then the alignment parameters are added
+to
+:py:meth:`~xanespy.xanes_frameset.XanesFrameset.stage_transformations()`
+but not applied. Once all transformations are staged, the
+:py:meth:`~xanespy.xanes_frameset.XanesFrameset.apply_transformations()`
+method will apply the cumulative transformation matrix and (by
+default) save the result to disk.
 
 If the starting alignment is particularly sporadic, a false minimum
 can result in an exception or a very small image that doesn't provide
@@ -148,11 +160,11 @@ Filter When Importing
 ---------------------
 
 Area detectors often have some number of **bad pixels**, either hot
-pixels or dead pixels. Applying a mild median filter during import
-time to the raw data can fix most of these problems. Some beamline
-importers apply this by default. The **3D filter** can also include
-the energy dimension, but this is not recommended since the frames
-haven't been aligned yet:
+pixels or dead pixels. Applying a mild median filter when using one of
+the importers in :py:mod:`xanespy.importers`, the raw data can fix
+most of these problems. Some beamline importers apply this by
+default. The **3D filter** can also include the energy dimension, but
+this is not recommended since the frames haven't been aligned yet:
 
 .. code:: python
 
@@ -164,10 +176,12 @@ haven't been aligned yet:
 Filter When Aligning
 --------------------
 
-When aligning frames it may be helpful to apply an **aggressive median
-filter to blur each image** before registration so that noise and fine
-details have less impact. This **2D filter** is only applied to the
-images in memory, so does not apply to the final result.
+When aligning frames with
+:py:meth:`~xanespy.xanes_frameset.XanesFrameset.align_frames()`, it
+may be helpful to apply an **aggressive median filter to blur each
+image** before registration so that noise and fine details have less
+impact. This **2D filter** is only applied to the images in memory, so
+does not apply to the final result.
 
 .. code:: python
 
@@ -180,10 +194,12 @@ Filter After Aligning
 ---------------------
 
 Depending on the scientific question being addressed, a **final median
-filter after aligning** maybe desireable. This **4D filter** provides
-a trade-off between temporal, spatial and energy resolutions: The
-larger the kernel along one dimension, the less resolution you'll be
-able to see but the higher the signal-to-noise in the other
+filter after aligning** maybe desireable. This **4D filter**, applied
+with
+:py:meth:`~xanespy.xanes_frameset.XanesFrameset.apply_median_filter()`,
+provides a trade-off between temporal, spatial and energy resolutions:
+The larger the kernel along one dimension, the less resolution you'll
+be able to see but the higher the signal-to-noise in the other
 dimensions.
 
 .. code:: python
@@ -199,17 +215,23 @@ dimensions.
 Subtracting Surroundings
 ========================
 
-Some microscopes show differences in the absorbance of the whole
-frame, including background material. This can be removed from each
-frame, giving a better spectrum::
+Sometimes there are differences in the absorbance of the whole frame,
+including background material. This can be removed from each frame
+using
+:py:meth:`~xanespy.xanes_frameset.XanesFrameset.subtract_surroundings`,
+giving a better spectrum:
 
+.. code:: python
+  	  
   fs = XanesFrameset(hdf_filename="...")
   fs.subtract_surroundings()
 
 .. figure:: images/subtract-surroundings.svg
    :alt: Spectrum showing before and after subtract_surroundings
 
-   The effect of the ``subtract_surroundings()`` method.
+   The effect of the
+   :py:meth:`~xanespy.xanes_frameset.XanesFrameset.subtract_surroundings()`
+   method.
 
 Calculating Maps
 ================

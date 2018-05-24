@@ -76,6 +76,7 @@ issue`_.
 
 .. _open an issue: https://github.com/m3wolf/xanespy/issues
 
+- 32-ID-C - Advanced Photon Source
 - 8-BM-B - Advanced Photon Source
 - 6-2c - Stanford Synchrotron Radiation Lightsource
 - 5.3.2.1 - Advanced Light Source (ptychography)
@@ -87,15 +88,6 @@ Ptychography
 Xanespy has support for ptychography data from ALS beamline
 5.3.2.1. Use ``xanespy.import_nanosurveyor_frameset`` to import the .cxi
 files and ``xanespy.PtychoFrameset`` to load the data.
-
-
-Extended X-ray Absorbance Fine Structure (EXAFS)
-------------------------------------------------
-
-Currently EXAFS analysis is NOT supported. While it would be nice to
-someday include this, this technique generally requires heavy user
-involvement and does not lend itself to batch processing; if you have
-expertise in automated analysis of EXAFS data, please get in touch.
 
 
 License
