@@ -778,7 +778,7 @@ class XanesFrameset():
           Which frameset representation to use for filtering.
         
         """
-        with self.store() as store:
+        with self.store(mode='r+') as store:
             ds = store.get_dataset(representation)
             new_data = median_filter(ds, size=size)
             store.replace_dataset(representation, data=new_data)

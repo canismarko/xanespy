@@ -4,8 +4,8 @@ Xanespy
 .. image:: https://travis-ci.org/canismarko/xanespy.svg?branch=master
    :target: https://travis-ci.org/canismarko/xanespy
    :alt: Build status
-.. image:: https://coveralls.io/repos/github/m3wolf/xanespy/badge.svg?branch=master
-   :target: https://coveralls.io/github/m3wolf/xanespy?branch=master
+.. image:: https://coveralls.io/repos/github/canismarko/xanespy/badge.svg?branch=master
+   :target: https://coveralls.io/github/canismarko/xanespy?branch=master
    :alt: Test coverage status
 .. image:: https://readthedocs.org/projects/xanespy/badge/?version=latest
    :target: http://xanespy.readthedocs.io/en/latest/?badge=latest
