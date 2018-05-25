@@ -15,7 +15,7 @@ from qt_map_view import QtMapView
 
 log = logging.getLogger(__name__)
 
-def parse_args():
+def parse_args(argv):
     # Set up CLI argument parser
     parser = argparse.ArgumentParser(description='A GUI viewer for inspecting xanespy results.')
     parser.add_argument('hdf_filename', metavar='filename', type=str,
@@ -33,15 +33,13 @@ def parse_args():
                         ' %s' % l_edge_list)
     parser.add_argument('-d', '--debug', action='store_true',
                         help="Show detailed logging and disable threading.")
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
     return args
 
-def get_frameset(name):
-    return fs
 
-def main():
-    args = parse_args()
+def launch_viewer(argv, Presenter):
     # Validate arguments
+    args = parse_args(argv)
     if not os.path.exists(args.hdf_filename):
         sys.exit("File not found: {}".format(os.path.abspath(args.hdf_filename)))
     # Prepare logging
@@ -71,7 +69,7 @@ def main():
     # Lauch the Qt viewer
     is_threaded = not args.debug
     is_threaded = None
-    presenter = QtFramesetPresenter(frameset=fs)
+    presenter = Presenter(frameset=fs)
     presenter.create_app()
     presenter.add_map_view(QtMapView(), threaded=is_threaded)
     # This is a temporary workaround until frame_view signals are fixed
@@ -80,6 +78,10 @@ def main():
     presenter.prepare_ui(expand_tree=expand_tree)
     ret = presenter.launch()
     return ret
+
+
+def main():
+    return launch_viewer(sys.argv, Presenter=QtFramesetPresenter)
 
 
 if __name__ == "__main__":

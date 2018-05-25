@@ -146,7 +146,7 @@ class QtFramesetPresenter(QtCore.QObject):
             thread.start()
             self.frame_threads.append(thread)
         else:
-            log.warning("Frame view not threaded")
+            log.info("Frame view not threaded")
         # Connect to the view's signals
         view.frame_slider_moved.connect(self.change_active_frame)
         view.new_vrange_requested.connect(self.set_frame_vrange)
@@ -189,7 +189,7 @@ class QtFramesetPresenter(QtCore.QObject):
             thread.start()
             self.map_threads.append(thread)
         else:
-            log.warning('Map view not threaded.')
+            log.info('Map view not threaded.')
         # Connect to the view's signals
         view.cmap_changed.connect(self.change_map_cmap)
         view.component_changed.connect(self.change_map_component)

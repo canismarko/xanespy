@@ -23,6 +23,7 @@
 """Tests for the Qt5 viewer."""
 import unittest
 from unittest import mock, skip, skipUnless
+import warnings
 import time
 import os
 import sys
@@ -42,8 +43,10 @@ else:
     from xanespy.qt_frameset_presenter import QtFramesetPresenter
     from xanespy.qt_frame_view import FrameChangeSource, QtFrameView
 
-from xanespy import XanesFrameset, k_edges, exceptions
+from xanespy import XanesFrameset, k_edges, exceptions, xanes_viewer
 from xanespy.utilities import xycoord, Extent, shape, Pixel
+
+TEST_DIR = os.path.dirname(__file__)
 
 pp = pprint.PrettyPrinter(indent=2)
 
@@ -72,6 +75,42 @@ def MockFrameset(*args, **kwargs):
         'extent.return_value': kwargs.pop('extent.return_value', Extent(0, 1, 0, 1)),
     }
     return mock.MagicMock(*args, spec_set=XanesFrameset, **fs_attrs, **kwargs)
+
+
+class MockFramesetPresenter(QtFramesetPresenter):
+    def launch(self, *args, **kwargs):
+        pass
+    
+    def prepare_ui(self, *args, **kwargs):
+        pass
+
+
+class XanesViewerTestCase(unittest.TestCase):
+    hdf_filename = os.path.join(TEST_DIR, 'imported-ssrl-data.h5')
+    
+    def test_xanes_viewer(self):
+        # K-edge
+        argv = ('-k', 'Ni', '-g', 'ssrl-test-data', self.hdf_filename)
+        xanes_viewer.launch_viewer(argv, Presenter=MockFramesetPresenter)
+        # Now with L-edge
+        argv = ('-l', 'Ni_NCA', self.hdf_filename)
+        xanes_viewer.launch_viewer(argv, Presenter=MockFramesetPresenter)
+        # No edge
+        argv = (self.hdf_filename,)
+        with warnings.catch_warnings():
+            warnings.filterwarnings('ignore', message='``edge`` set to')
+            xanes_viewer.launch_viewer(argv, Presenter=MockFramesetPresenter)
+        # With a bad filename
+        argv = ('gibberish.nonsense', )
+        with self.assertRaises(SystemExit):
+            xanes_viewer.launch_viewer(argv, Presenter=MockFramesetPresenter)
+    
+    def test_parse_args(self):
+        filename = os.path.join(TEST_DIR, 'imported-ssrl-data.h5')
+        argv = ('-k', 'Ni', filename)
+        parsed = xanes_viewer.parse_args(argv)
+        self.assertEqual(parsed.k_edge, 'Ni')
+        self.assertEqual(parsed.hdf_filename, filename)
 
 
 class QtTestCase(unittest.TestCase):
