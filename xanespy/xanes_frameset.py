@@ -429,7 +429,7 @@ class XanesFrameset():
             if timeidx is not None:
                 Ts = Ts[timeidx]
             else:
-                Ts = Ts.value
+                Ts = Ts[:]
             # Figure out which timestamp is the earliest
             Ts = Ts.astype('datetime64').ravel()
             start_idx = np.argmax(now - Ts)
@@ -686,7 +686,7 @@ class XanesFrameset():
           plot. If omitted, a new axes will be created.
         quiet : bool, optional
           Suppress the progress bar
-
+        
         """
         logstart = time()
         log.info("Aligning frames with %s algorithm over %d passes",
@@ -700,8 +700,10 @@ class XanesFrameset():
             raise ValueError(msg)
         # Guess best reference frame to use
         if reference_frame is "max":
-            spectrum = self.xanes_spectrum(representation=component)
-            reference_frame = np.argmax(spectrum.values)
+            spectra = self.spectrum(representation=component, index=slice(None))
+            spectra = np.array([s.values for s in spectra])
+            reference_frame = np.argmax(spectra)
+            reference_frame = np.unravel_index(reference_frame, dims=spectra.shape)
         # Keep track of how many passes and where we started
         for pass_ in range(0, passes):
             log.debug("Starting alignment pass %d of %d", pass_, passes)
@@ -846,8 +848,8 @@ class XanesFrameset():
                                            edge=self.edge,
                                            min_distance=min_distance)
             store.particle_labels = particles
-            if hasattr(store.particle_labels, 'attrs'):
-                store.particle_labels.attrs['frame_source'] = 'optical_depths'
+            # Save metadata about where the data came from
+            getattr(store.particle_labels, 'attrs', {})['frame_source'] = 'optical_depths'
         # Logging
         log.info("Calculated particle labels in %d sec", time() - logstart)
     
@@ -871,45 +873,6 @@ class XanesFrameset():
         steps = np.array(steps)
         steps = np.transpose(steps)
         return steps
-    
-    def normalize(self, plot_fit=False, new_name='normalized'):
-        """Correct for background material not absorbing at this edge. Uses
-        method described in DOI 10.1038/ncomms7883: fit line against
-        material that fails edge_jump_filter and use this line to
-        correct entire frame.
-        
-        Arguments
-        ---------
-        - plot_fit: If True, will plot the background spectrum and the
-        best-fit line.
-        """
-        self.fork_group(new_name)
-        # Linear regression on "background" materials
-        spectrum = self.xanes_spectrum(edge_jump_filter="inverse")
-        regression = linear_model.LinearRegression()
-        x = np.array(spectrum.index).reshape(-1, 1)
-        regression.fit(x, spectrum.values)
-        goodness_of_fit = regression.score(x, spectrum.values)
-        # Subtract regression line from each frame
-        
-        def remove_offset(payload):
-            offset = regression.predict(payload['energy'])
-            original_data = payload['data']
-            payload['data'] = original_data - offset
-            # Remove labels since we don't need to save it
-            payload.pop('labels', None)
-            return payload
-        
-        description = "Normalizing background (R²={:.3f})"
-        description = description.format(goodness_of_fit)
-        process_with_smp(frameset=self,
-                         worker=remove_offset,
-                         description=description)
-        # Plot the background fit used to normalize
-        if plot_fit:
-            ax = plots.new_axes()
-            ax.plot(x, spectrum.values, marker="o", linestyle="None")
-            ax.plot(x, regression.predict(x))
     
     def particle_regions(self, intensity_image=None, labels=None):
         """Return a list of regions (1 for each particle) sorted by area.
@@ -1058,14 +1021,10 @@ class XanesFrameset():
                  derivative=0):
         """Collapse the frameset down to an energy spectrum.
         
-        Any dimensions (besides the energy dimension) that remain
-        after applying the arguments below, will be averaged to give
-        the final intensity at each energy.
-        
-        Returns
-        -------
-        spectrum : pd.Series
-          A pandas Series with the spectrum.
+        The x and y dimensions will be averaged to give the final
+        intensity at each energy. The ``index`` parameter will be used
+        to select a timepoint. If index is a slice(), or something
+        similar, you can retrieve mutliple spectra as a list.
         
         Parameters
         ----------
@@ -1083,13 +1042,19 @@ class XanesFrameset():
         representation : str, optional
           What kind of data to use for creating the spectrum. This
           will be passed to TXMstore.get_dataset()
-        index : int, optional
+        index : int or slice, optional
           Which step in the frameset to use. When used to index
-          store().optical_depths, this should return a 3D array like
-          (energy, rows, columns).
+          store().optical_depths, this should return a 3D or 4D array
+          like (energy, rows, columns).
         derivative : int, optional
           Calculate a derivative of the spectrum before returning
           it. If less than 1 (default), no derivative is calculated.
+        
+        Returns
+        -------
+        spectrum : pd.Series
+          A pandas Series with the spectrum, or a list of pandas
+          Series if ``index`` parameter is a slice.
         
         """
         # Retrieve data
@@ -1110,7 +1075,7 @@ class XanesFrameset():
                         log.error("Could not find pre-edge energies, ignoring mask.")
                     else:
                         mask = np.broadcast_to(array=mask,
-                                           shape=(*energies.shape, *mask.shape))
+                                               shape=(*energies.shape, *mask.shape))
                         frames = np.ma.array(frames, mask=mask)
                 # Take average of all pixel frames
                 flat = (*frames.shape[:frames.ndim-2], -1) # Collapse image dimension
@@ -1124,7 +1089,13 @@ class XanesFrameset():
             if derivative > 0 and index is not None:
                 for i in range(derivative):
                     spectrum = np.gradient(spectrum, np.array(index))
-            series = pd.Series(spectrum, index=index)
+            # Convert to pandas series
+            if spectrum.ndim == 1:
+                series = pd.Series(spectrum, index=index)
+            elif spectrum.ndim == 2:
+                series = [pd.Series(s) for s in spectrum]
+            else:
+                series = spectrum
         return series
     
     def plot_spectrum(self, ax=None, pixel=None,

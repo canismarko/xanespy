@@ -86,7 +86,7 @@ class MockFramesetPresenter(QtFramesetPresenter):
 
 
 class XanesViewerTestCase(unittest.TestCase):
-    hdf_filename = os.path.join(TEST_DIR, 'imported-ssrl-data.h5')
+    hdf_filename = os.path.join(TEST_DIR, 'txmstore-test.h5')
     
     def test_xanes_viewer(self):
         # K-edge

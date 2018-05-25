@@ -319,17 +319,35 @@ class XanesFramesetTest(TestCase):
     #     fs.fit_spectra(edge_mask=False)
     #     # No results are specified, but at least the function was
     #     # called.
-    
-    def test_plot_beamer_spectra(self):
+
+    def test_segment_materials(self):
+        # Prepare dummy data
         store = MockStore()
         store.energies = np.broadcast_to(np.linspace(850, 860, num=3), shape=(8, 3))
         store.optical_depths = np.random.rand(8, 3, 16, 16)
-        store.get_dataset = mock.MagicMock(return_value=np.random.rand(8, 16, 16))
+        store.get_dataset = mock.MagicMock(return_value=np.random.rand(8, 3, 16, 16))
         store.get_frames = store.get_dataset
         store.pixel_sizes = np.ones((8, 3, 2))
         fs_names = ['fs1', 'fs2']
         store.frameset_names = mock.MagicMock(return_value=fs_names)
         fs = self.create_frameset(store=store)
+        fs.segment_materials(thresholds=(0.3, 0.67))
+        # Check that it was turned into three sgements data
+        self.assertEqual(np.min(store.segments), 0)
+        self.assertEqual(np.max(store.segments), 2)
+    
+    def test_plot_beamer_spectra(self):
+        # Prepare dummy data
+        store = MockStore()
+        store.energies = np.broadcast_to(np.linspace(850, 860, num=3), shape=(8, 3))
+        store.optical_depths = np.random.rand(8, 3, 16, 16)
+        store.get_dataset = mock.MagicMock(return_value=np.random.rand(8, 3, 16, 16))
+        store.get_frames = store.get_dataset
+        store.pixel_sizes = np.ones((8, 3, 2))
+        fs_names = ['fs1', 'fs2']
+        store.frameset_names = mock.MagicMock(return_value=fs_names)
+        fs = self.create_frameset(store=store)
+        # Do the actual plotting
         with warnings.catch_warnings() as w:
             warnings.filterwarnings('ignore', message=".*Is LaTeX installed.*",
                                     category=RuntimeWarning)
@@ -346,6 +364,11 @@ class XanesFramesetTest(TestCase):
         with self.assertRaises(ValueError):
             context = fs.plot_beamer_spectra(basename=self.beamer_basename,
                                           groupby='map_name')
+        # Do the plotting by timestep
+        with warnings.catch_warnings() as w:
+            warnings.filterwarnings('ignore', message=".*Is LaTeX installed.*",
+                                    category=RuntimeWarning)
+            context = fs.plot_beamer_spectra(basename=self.beamer_basename, groupby='timestep')
     
     def test_plot_beamer_maps(self):
         store = MockStore()
@@ -371,6 +394,12 @@ class XanesFramesetTest(TestCase):
         with self.assertRaises(ValueError):
             context = fs.plot_beamer_maps(basename=self.beamer_basename,
                                           groupby='gibberish')
+        # Do the plotting by timestep
+        with warnings.catch_warnings() as w:
+            warnings.filterwarnings('ignore', message=".*Is LaTeX installed.*",
+                                    category=RuntimeWarning)
+            context = fs.plot_beamer_maps(basename=self.beamer_basename,
+                                          groupby='timestep', tight_layout=False)
    
     def test_export_beamer(self):
         fs = self.create_frameset()
@@ -501,6 +530,11 @@ class XanesFramesetTest(TestCase):
         result = fs.spectrum()
         np.testing.assert_equal(result.index, energies)
         np.testing.assert_almost_equal(result.values, spectrum)
+        # Check that multiple spectra can be acquired simultaneously
+        result = fs.spectrum(index=slice(0, 2))
+        result = np.array([ser.values for ser in result])
+        spectras = np.array([fs.spectrum(index=0), fs.spectrum(index=0)])
+        np.testing.assert_equal(result, spectras)
         # Check that the derivative is calculated correctly
         derivative = 4*np.pi/100 * np.cos((energies-8300)*4*np.pi/100)
         result = fs.spectrum(derivative=1)
@@ -546,11 +580,12 @@ class XanesFramesetTest(TestCase):
         ODs[0,1,32:36,32:36] = 1
         store.optical_depths = ODs
         store.get_dataset.return_value = ODs
+        store.get_frames.return_value = ODs
         fs = self.create_frameset(store=store)
         # Check that reference_frame arguments of the wrong shape are rejected
         with self.assertRaisesRegex(Exception, "does not match shape"):
             fs.align_frames(commit=False, reference_frame=0,
-                            plot_results=False)
+                            plot_results=True)
         # Perform an alignment but don't commit to disk
         fs.align_frames(commit=False, reference_frame=(0, 0),
                         plot_results=False, quiet=True)
@@ -572,6 +607,8 @@ class XanesFramesetTest(TestCase):
         store.replace_dataset.reset_mock()
         fs.align_frames(commit=True, plot_results=False, quiet=True,
                         median_filter_size=(5, 5))
+        # Check that we can align to the max frame
+        fs.align_frames(commit=False, reference_frame='max', quiet=True)
     
     def test_align_frames_invalid(self):
         """Check that the `align_frames` method throws the right exceptions on
@@ -633,6 +670,10 @@ class XanesFramesetTest(TestCase):
         store.timestamps = timestamps
         starttime = fs.starttime(timeidx=1)
         self.assertEqual(starttime, np.datetime64('2015-02-22 10:47:19'))
+        # Without timeindex
+        starttime = fs.starttime(timeidx=None)
+        self.assertEqual(starttime, np.datetime64('2015-02-21 10:47:19'))
+        # Test the end times
         endtime = fs.endtime(timeidx=1)
         self.assertEqual(endtime, np.datetime64('2015-02-22 10:55:55.500000'))
     
@@ -771,6 +812,11 @@ class XanesFramesetTest(TestCase):
         expected = "<XanesFrameset: 'ssrl-test-data'>"
         self.assertEqual(fs.__repr__(), expected)
     
+    def test_str(self):
+        fs = XanesFrameset(filename=self.hdf_filename, edge=edges.k_edges['Ni_NCA'],
+                           groupname="ssrl-test-data")
+        self.assertEqual(str(fs), 'ssrl-test-data')
+
 
 class OldXanesFramesetTest(XanespyTestCase):
     """Set of python tests that work on full framesets and require data
@@ -818,8 +864,10 @@ class OldXanesFramesetTest(XanespyTestCase):
             self.frameset._transformations[0, 1],
             t1.params
         )
-        # # Check that transformations accumulated
-        # Stage some transformations
+        # Check that the translations can be applied without commiting
+        out = self.frameset.apply_transformations(commit=False, crop=True, quiet=True)
+        # Check that transformations accumulated by staging some more
+        # transformations
         self.frameset.stage_transformations(
             translations=np.array([[[0, 0],[1, 1]]]),
             scales=np.array([[[1, 1], [0.5, 0.5]]]),
@@ -834,7 +882,7 @@ class OldXanesFramesetTest(XanespyTestCase):
         # Check that transformations are reset after being applied
         self.frameset.apply_transformations(commit=True, crop=True, quiet=True)
         self.assertEqual(self.frameset._transformations, None)
-        # # Check that cropping was successfully applied
+        # Check that cropping was successfully applied
         with self.frameset.store() as store:
             new_shape = store.optical_depths.shape
         self.assertEqual(new_shape, (1, 2, 1023, 1023))
