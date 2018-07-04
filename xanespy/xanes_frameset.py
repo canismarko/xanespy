@@ -767,7 +767,37 @@ class XanesFrameset():
             log.info("Committing final translations to disk")
             self.apply_transformations(crop=True, commit=True)
         log.info("Aligned %d passes in %d seconds", passes, time() - logstart)
-
+    
+    def crop_frames(self, slices):
+        """Reduce the image size for all frame-data in this group.
+        
+        This operation will destructively crop all data-sets that
+        contain image data, namely "framesets" and "maps". The
+        argument ``slices`` controls which data is kept. For example,
+        if the current frames are 128x128, the central 64x64 region
+        can be kept by doing the following:
+        
+        .. code:: python
+            
+            slices = [slice(31, 95), slice(31, 95)]
+            fs.crop_frames(slices=slices)
+        
+        Parameters
+        ----------
+        slices : tuple or list
+          A slice object for each image dimension. The shape of this
+          tuple should match the number of dimensions in the frame
+          data to be cropped, starting with the last (columns).
+        
+        """
+        slc_idx = (..., *slices)
+        with self.store(mode='r+') as store:
+            # Crop all the framesets and maps
+            ds_names = store.frameset_names() + store.map_names()
+            for ds_name in ds_names:
+                new_ds = store.get_dataset(ds_name).__getitem__(slc_idx)
+                store.replace_dataset(ds_name, new_ds)
+    
     def apply_median_filter(self, size, representation='optical_depths'):
         """Permanently apply a median filter to a frameset.
         

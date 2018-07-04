@@ -571,6 +571,26 @@ class XanesFramesetTest(TestCase):
             dest='new_group', src='old_group'
         )
     
+    def test_crop_frames(self):
+        store = MockStore()
+        ODs = self.dummy_frame_data()
+        store.optical_depths = ODs
+        store.get_dataset.return_value = ODs
+        store.frameset_names.return_value = ('optical_depths',)
+        store.map_names.return_value = ()
+        # Crop down to a smaller frame-size
+        fs = self.create_frameset(store=store)
+        slices = (slice(31, 95), slice(31, 95))
+        store.replace_dataset.reset_mock()
+        fs.crop_frames(slices)
+        # Check that the data-set was updated
+        self.assertEqual(store.replace_dataset.call_count, 1)
+        call_args = store.replace_dataset.call_args[0]
+        self.assertEqual(call_args[0], 'optical_depths')
+        np.testing.assert_array_equal(call_args[1], ODs[:,:,31:95,31:95])
+        # Check that the wrong number of dimensions raises an exception
+        bad_slices = (slice(31, 95), slice(31, 95))
+    
     def test_align_frames(self):
         # Prepare mismatched data to test
         store = MockStore()

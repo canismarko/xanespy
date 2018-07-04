@@ -230,7 +230,7 @@ class NCANickelKEdge(KEdge):
     pre_edge = (8249, 8320)
     post_edge = (8350, 8500)
     map_range = (8341, 8360)
-    edge_range = (8341, 8358)
+    edge_range = (8341, 8360)
 
 
 class NCANickelKEdge61(NCANickelKEdge):

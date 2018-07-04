@@ -81,7 +81,7 @@ def launch_viewer(argv, Presenter):
 
 
 def main():
-    return launch_viewer(sys.argv, Presenter=QtFramesetPresenter)
+    return launch_viewer(argv=None, Presenter=QtFramesetPresenter)
 
 
 if __name__ == "__main__":

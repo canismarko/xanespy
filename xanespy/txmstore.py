@@ -136,10 +136,10 @@ class TXMStore():
         self.close()
     
     def frameset_names(self):
-        """Returns a list of all the valid map representations."""
+        """Returns a list of all the valid frameset representations."""
         names = []
         for key in self.data_group().keys():
-            # Check if it's a "map" or not
+            # Check if it's a "frameset" or not
             grp = self.data_group()
             context = grp[key].attrs.get('context', '')
             if context == 'frameset':
