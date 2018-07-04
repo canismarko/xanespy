@@ -1,15 +1,25 @@
+# The following packages should also be installed using conda
+# 
+#   - python=3.6
+#   - pip
+#   - numpy>=1.14
+#   - scipy
+#   - nomkl
+#   - pyqt
+
 h5py >= 2.6
 matplotlib >= 2.1
 pandas>=0.19.1
 pillow>=3.4.2
 olefile>=0.44
-PyQt5>=5.7
+# PyQt5>=5.7
 pytest>=2.6.0
 pytest-cov>=2.5.1
 pytz>=2016.10
 scikit-image>=0.12.3
 scikit-learn>=0.18.1
-scipy>=0.18.1
+# scipy>=0.18.1
 tqdm>=4.10.0
 jinja2
 imageio
+coveralls

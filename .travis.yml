@@ -23,7 +23,7 @@ install:
   - conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION pip numpy>=1.14 scipy nomkl pyqt
   - source activate test-environment
   - pip install -r requirements-travis.txt
-  - pip install coveralls
+  - conda list
 script: py.test --cov=xanespy tests/
 after_success:
   - coveralls
