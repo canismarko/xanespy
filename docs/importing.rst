@@ -265,3 +265,39 @@ Example usage:
     # Once the script is done, import the data with this function
     xp.import_aps_8BM_xanes_dir("opearando_exp1/",
                                 hdf_filename="operando_experiments.h5")
+
+APS Beamline 4-ID-XTIP - Grid Scan
+----------------------------------
+
+.. warning:: This technique and beamline are very new. The data
+             structure will likely change often, so please `submit an
+             issue`_ if you run into trouble.
+
+The APS XTIP is a dedicated Synchrotron X-ray Scanning Tunneling
+Microscopy beamline in sector 4. Besides conventional STM images, a
+series of energy-resolved "Grid scans" can be done, to give 2D XAS
+data, suitable for analysis by *xanespy*.
+
+To import data, use
+:py:func:`xanespy.importers.import_aps4idc_sxstm_files`. The
+instrument creates a series of files; one for each position. Since
+they are numbered sequentially, a ``shape`` parameter must be provided
+to inform *xanespy* what the shape is of the mapping frames. The X-ray
+energy is also not saved, so this information must be explicitly
+passed in.
+
+.. code:: python
+
+   # Describe the metadata from you beamtime notes
+   frame_shape = (10, 12)
+   energies = [890, 880, 853, 852.7, 852.4, 850.8, 850.5, 850.2, 845, 835]
+   filenames = os.listdir('my_experiment')
+
+   # How to store the processed data
+   hdf_file = 'beamtime_analysis.h5' # (use a more descriptive name)
+   hdf_group = 'my_experiment'
+
+   # Now do the importing
+   xp.import_aps4idc_sxstm_files(filenames=filenames, hdf_filename=hdf_file,
+                                 hdf_groupname=hdf_group', shape=frame_shape,
+				 energies=energies)

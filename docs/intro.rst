@@ -1,5 +1,6 @@
-Introduction
-============
+===============
+ Introduction 
+===============
 
 Xanespy is a toolkit for interacting with X-ray microscopy data, most
 likely collected at a synchrotron beamline. By collecting a set of
@@ -25,7 +26,7 @@ sufficient to reproduce the results exactly.
 
 
 Installation
-------------
+============
 
 Xanespy can be installed from the **python package index (PyPI) using pip**
 
@@ -33,15 +34,61 @@ Xanespy can be installed from the **python package index (PyPI) using pip**
 
    $ pip install xanespy
 
+Development
+===========
+
+If you plan to contribute changes to xanespy, installing in developer
+mode may be more your style. This will also allow you to run tests and
+build documentation.
+
+Installation
+------------
+
+Download the source code either using the `SSH`_ or `HTTPS`_ links
+(SSH shown below). Assuming you are using conda, here are the
+steps. Any version of python >=3.5 should be ok.
+
+.. code:: bash
+
+   $ conda create -x xanespy python=3.6 numpy scipy
+   $ source activate xanespy
+   $ git clone git@github.com:canismarko/xanespy.git
+   $ pip install -r xanespy/requirements.txt
+   $ pip install -e xanespy/
+
+.. _SSH: git@github.com:canismarko/xanespy.git
+.. _HTTPS: https://github.com/canismarko/xanespy.git
+   
+Tests
+-----
+
+The easiest way to run unit-tests is with pytest:
+
+.. code:: bash
+
+   $ cd xanespy/
+   $ pip install pytest
+   $ pytest
+
+Documentation
+-------------
+
+The documentation is built using sphinx. To make HTML documents, use the following:
+
+.. code:: bash
+
+   $ pip install -r xanespy/requirements-docs.txt
+   $ cd xanespy/docs
+   $ make html
 
 X-Ray Absorbance Basics
------------------------
+=======================
 
 Coming soon...
 
 
 Example Workflow
-----------------
+================
 
 A typical prcocedure for interacting with microscope frame-sets involves the following parts:
 
