@@ -50,7 +50,7 @@ steps. Any version of python >=3.5 should be ok.
 
 .. code:: bash
 
-   $ conda create -x xanespy python=3.6 numpy scipy
+   $ conda create -n xanespy python=3.6 numpy scipy pyqt
    $ source activate xanespy
    $ git clone git@github.com:canismarko/xanespy.git
    $ pip install -r xanespy/requirements.txt
