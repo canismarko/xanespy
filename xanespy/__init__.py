@@ -31,7 +31,7 @@ from xradia import XRMFile, TXRMFile
 import beamlines
 import sxstm
 import fitting
-from fitting import L3Curve, LinearCombination, prepare_p0
+from fitting import L3Curve, LinearCombination, prepare_p0, Gaussian
 from beamlines import (sector8_xanes_script, ZoneplatePoint,
                        Zoneplate, Detector, DetectorPoint)
 from importers import (import_frameset,

@@ -19,17 +19,42 @@
 
 """Helper functions for setting up and displaying plots using matplotlib."""
 
+from contextlib import contextmanager
+from typing import List, NoReturn
+
 import numpy as np
-from matplotlib import pyplot, cm, rcParams
+from matplotlib import pyplot, cm, rcParams, rc_context, style
 from matplotlib.colors import Normalize
 from matplotlib.ticker import ScalarFormatter
 
 from utilities import pixel_to_xy, Extent, Pixel
 
-
-def latexify():
+@contextmanager
+def latexify(styles: List[str]=[], preamble: List[str]=[]):
     """Set some custom options for saving matplotlib graphics in PGF
-    format."""
+    format.
+    
+    Use this as a context manager, along with additional matplotlib styles:
+    
+    .. code:: python
+        
+        with xp.latexify(['beamer']):
+            plt.plot(...)
+            
+    
+    This will let you add in LaTeX tools and mpl styles together. By
+    default, ``siunitx`` and ``mhchem`` packages are
+    included. Additional ``\\usepackage`` statements can be included
+    using the ``preamble`` parameter.
+    
+    Parameters
+    ==========
+    styles : optional
+      Additional matplotlib styles in load in the context.
+    preamble : optional
+      Additional lines to add to the LaTeX preamble.
+    
+    """
     # Set default LaTeX PGF style
     pgf_with_latex = {                      # setup matplotlib to use latex for output# {{{
         "pgf.texsystem": "xelatex",        # change this if using xetex or lautex
@@ -43,11 +68,14 @@ def latexify():
             r"\usepackage{fontspec}",
             r"\usepackage[detect-all,locale=DE,per-mode=reciprocal]{siunitx}",
             r"\usepackage[version=4]{mhchem}",
-        ]
+        ] + preamble,
+        # 'text.usetex': True,
     }
-    rcParams.update(pgf_with_latex)
-    # Default to tight bounding box
-    # rcParams['savefig.bbox'] = "tight"
+    # Enter the context library
+    with rc_context(rc=pgf_with_latex):
+        style.use(styles)
+        # rcParams.update(pgf_with_latex)
+        yield
 
 
 def remove_extra_spines(ax):

@@ -1848,16 +1848,16 @@ class XanesFrameset():
                         bottom=bottom, top=top)
         return extent
     
-    def plot_frame(self, idx, ax=None, cmap="gray", *args, **kwargs):
+    def plot_frame(self, idx, ax=None, cmap="gray", component='modulus', *args, **kwargs):
         """Plot the frame with given index as an image."""
         if ax is None:
             ax = plots.new_image_axes()
         # Plot image data
         with self.store() as store:
-            artist = ax.imshow(store.optical_depths[idx],
-                               extent=self.extent(idx),
-                               cmap=cmap, origin="lower",
-                               *args, **kwargs)
+            data = store.optical_depths[idx]
+            data = get_component(data, component)
+            artist = ax.imshow(data, extent=self.extent(idx=idx),
+                               cmap=cmap, *args, **kwargs)
             unit = store.pixel_unit
         # Decorate axes
         ax = artist.axes

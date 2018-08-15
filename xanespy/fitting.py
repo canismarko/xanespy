@@ -24,6 +24,7 @@ against."""
 from collections import namedtuple
 from multiprocessing import Pool, cpu_count
 import warnings
+import functools
 
 import numpy as np
 from scipy.optimize import leastsq
@@ -150,7 +151,6 @@ def fit_spectra(observations, func, p0, nonnegative=False, quiet=False):
                         desc="Fitting spectra", unit='spctrm')
     # payload = zip(prog(observations, desc='Fitting spectra', unit='spctr'), p0)
     with Pool(cpu_count()) as pool:
-        import functools
         fitter = functools.partial(_fit_sources, func=func, nonnegative=nonnegative)
         params = pool.map(fitter, payload)
     # Prepare the results for returning
@@ -268,12 +268,12 @@ class L3Curve(Curve):
     
     def __init__(self, energies, num_peaks=2):
         self.num_peaks = num_peaks
-        self.params = namedtuple('L3Params', self.param_names)
         self.energies = energies
         self.dtype = energies.dtype
     
     def __call__(self, *params):
-        p = self.params(*params)
+        Params = namedtuple('L3Params', self.param_names)
+        p = Params(*params)
         Es = self.energies
         # Add two gaussian fields
         out = np.zeros_like(Es)
