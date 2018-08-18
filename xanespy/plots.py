@@ -69,12 +69,10 @@ def latexify(styles: List[str]=[], preamble: List[str]=[]):
             r"\usepackage[detect-all,locale=DE,per-mode=reciprocal]{siunitx}",
             r"\usepackage[version=4]{mhchem}",
         ] + preamble,
-        # 'text.usetex': True,
     }
     # Enter the context library
     with rc_context(rc=pgf_with_latex):
         style.use(styles)
-        # rcParams.update(pgf_with_latex)
         yield
 
 
