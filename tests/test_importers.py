@@ -20,6 +20,7 @@
 
 # flake8: noqa
 
+import logging
 import datetime as dt
 import unittest
 from unittest import TestCase, mock
@@ -27,25 +28,37 @@ import os
 import sys
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir)))
 import warnings
+import contextlib
 
 import pytz
 import numpy as np
 import pandas as pd
 import h5py
+from skimage import data
+import matplotlib.pyplot as plt
+
 
 from xanespy import exceptions
 from xanespy.xradia import XRMFile, TXRMFile
+from xanespy.nanosurveyor import CXIFile, HDRFile
 from xanespy.sxstm import SxstmDataFile
 from xanespy.importers import (magnification_correction,
                                decode_aps_params, decode_ssrl_params,
                                import_ssrl_xanes_dir, CURRENT_VERSION,
                                import_nanosurveyor_frameset,
+                               import_cosmic_frameset,
+                               resample_image,
+                               crop_image,
                                import_aps4idc_sxstm_files,
                                import_aps8bm_xanes_dir,
                                import_aps8bm_xanes_file,
                                import_aps32idc_xanes_files,
                                import_aps32idc_xanes_file,
                                read_metadata)
+from xanespy.txmstore import TXMStore
+
+
+# logging.basicConfig(level=logging.DEBUG)
 
 
 TEST_DIR = os.path.dirname(__file__)
@@ -53,6 +66,7 @@ SSRL_DIR = os.path.join(TEST_DIR, 'txm-data-ssrl')
 APS_DIR = os.path.join(TEST_DIR, 'txm-data-aps')
 APS32_DIR = os.path.join(TEST_DIR, 'txm-data-32-idc')
 PTYCHO_DIR = os.path.join(TEST_DIR, 'ptycho-data-als/NS_160406074')
+COSMIC_DIR = os.path.join(TEST_DIR, 'ptycho-data-cosmic')
 SXSTM_DIR = os.path.join(TEST_DIR, "sxstm-data-4idc/")
 
 
@@ -178,6 +192,170 @@ class APS32IDCImportTest(TestCase):
             # They should be equal since we have import the same data twice
             np.testing.assert_equal(g['intensities'][0], g['intensities'][1])
 
+
+class CosmicTest(TestCase):
+    """Test for importing STXM and ptychography data.
+    
+    From ALS Cosmic beamline. Test data taken from beamtime on
+    2018-11-09. The cxi file is a stripped down version of the
+    original (to save space). Missing crucial data should be added to
+    the cxi as needed.
+    
+    Data
+    ====
+    ptycho-scan-856eV.cxi : NS_181110188_002.cxi
+    stxm-scan-a003.xim : NS_181110203_a003.xim
+    stxm-scan-a019.xim : NS_181110203_a019.xim
+    stxm-scan.hdr : NS_181110203.hdr
+    
+    """
+    stxm_hdr = os.path.join(COSMIC_DIR, 'stxm-scan.hdr')
+    ptycho_cxi = os.path.join(COSMIC_DIR, 'ptycho-scan-856eV.cxi')
+    hdf_filename = os.path.join(COSMIC_DIR, 'cosmic-test-import.h5')
+    
+    def tearDown(self):
+        if os.path.exists(self.hdf_filename):
+            os.remove(self.hdf_filename)
+    
+    def test_import_partial_data(self):
+        """Check if the cosmic importer works if only hdr or cxi files are
+        given."""
+        # Import only STXM images
+        import_cosmic_frameset(stxm_hdr=[self.stxm_hdr],
+                               ptycho_cxi=[],
+                               hdf_filename=self.hdf_filename)
+        with TXMStore(self.hdf_filename, parent_name='stxm-scan') as store:
+            self.assertEqual(store.data_name, 'imported')
+        # Import only ptycho images
+        import_cosmic_frameset(stxm_hdr=[],
+                               ptycho_cxi=[self.ptycho_cxi],
+                               hdf_filename=self.hdf_filename)
+        with TXMStore(self.hdf_filename, parent_name='ptycho-scan-856eV') as store:
+            self.assertEqual(store.data_name, 'imported')
+    
+    def test_import_cosmic_data(self):
+        # Check that passing no data raises and exception
+        with self.assertRaises(ValueError):
+            import_cosmic_frameset(hdf_filename=self.hdf_filename)
+        import_cosmic_frameset(stxm_hdr=[self.stxm_hdr],
+                               ptycho_cxi=[self.ptycho_cxi],
+                               hdf_filename=self.hdf_filename)
+        # Does the HDF file exist
+        self.assertTrue(os.path.exists(self.hdf_filename),
+                        "%s doesn't exist" % self.hdf_filename)
+        hdf_kw = dict(hdf_filename=self.hdf_filename,
+                      parent_name='ptycho-scan-856eV',
+                      mode='r')
+        # Open ptychography TXM store and check its contents
+        with TXMStore(**hdf_kw, data_name='imported_ptychography') as store:
+            # Make sure the group exists
+            self.assertEqual(store.data_group().name,
+                             '/ptycho-scan-856eV/imported_ptychography')
+            # Check the data structure
+            self.assertEqual(store.filenames.shape, (1, 1))
+            stored_filename = store.filenames[0,0].decode('utf-8')
+            self.assertEqual(stored_filename, os.path.basename(self.ptycho_cxi))
+            np.testing.assert_equal(store.energies.value, [[855.9056362433222]])
+            np.testing.assert_equal(store.pixel_sizes.value, [[1]])
+            np.testing.assert_equal(store.pixel_unit, 'nm')
+            self.assertEqual(store.intensities.shape, (1, 1, 285, 285))
+            self.assertEqual(store.optical_depths.shape, (1, 1, 285, 285))
+            self.assertEqual(store.timestep_names[0].decode('utf-8'), 'ex-situ')
+        # Open STXM TXM store and check its contents
+        with TXMStore(**hdf_kw, data_name='imported_stxm') as store:
+            # Make sure the group exists
+            self.assertEqual(store.data_group().name,
+                             '/ptycho-scan-856eV/imported_stxm')
+            # Check the data structure
+            self.assertEqual(store.filenames.shape, (1, 2))
+            stored_filename = store.filenames[0,0].decode('utf-8')
+            expected_filename = os.path.join(COSMIC_DIR, 'stxm-scan_a003.xim')
+            self.assertEqual(stored_filename, expected_filename)
+            np.testing.assert_equal(store.energies.value, [[853, 857.75]])
+            np.testing.assert_equal(store.pixel_sizes.value, [[27.2, 27.2]])
+            self.assertEqual(store.intensities.shape, (1, 2, 120, 120))
+            self.assertEqual(store.optical_depths.shape, (1, 2, 120, 120))
+            self.assertEqual(store.timestep_names[0].decode('utf-8'), 'ex-situ')
+        # Open imported TXMStore to check its contents
+        with TXMStore(**hdf_kw, data_name='imported') as store:
+            pass
+            # self.assertEqual(store.filenames.shape, (1, 2))
+            
+    
+    def test_resample_image(self):
+        original = data.horse()
+        # Test simple cropping with no resampling
+        new_shape = (int(original.shape[0] * 0.5), int(original.shape[1] * 0.5))
+        resized = resample_image(original, new_shape=new_shape,
+                                 src_dims=(1, 1), new_dims=(0.5, 0.5))
+        self.assertEqual(resized.shape, new_shape)
+        # Test sample resizing with no cropping
+        new_shape = (int(original.shape[0] * 2), int(original.shape[1] * 2))
+        resized = resample_image(original, new_shape=new_shape,
+                                 src_dims=(1, 1), new_dims=(1, 1))
+        self.assertEqual(resized.shape, new_shape)
+    
+    def test_crop_image(self):
+        original = data.horse()
+        # Test simple cropping
+        cropped = crop_image(original, (64, 64), center=(164, 200))
+        expected = original[132:196,168:232]
+        np.testing.assert_equal(cropped, expected)
+        # Test with a center outside the window
+        cropped = crop_image(original, (64, 64), center=(30, 380))
+        expected = original[:64,336:]
+        np.testing.assert_equal(cropped, expected)
+
+
+class CosmicFileTest(TestCase):
+    stxm_hdr = os.path.join(COSMIC_DIR, 'stxm-scan.hdr')
+    ptycho_cxi = os.path.join(COSMIC_DIR, 'ptycho-scan-856eV.cxi')
+    
+    def setUp(self):
+        self.hdr = HDRFile(self.stxm_hdr)
+        self.cxi = CXIFile(self.ptycho_cxi)
+    
+    def test_hdr_filenames(self):
+        real_filenames = [os.path.join(COSMIC_DIR, f) for f in
+                          ('stxm-scan_a003.xim', 'stxm-scan_a019.xim')]
+        self.assertEqual(self.hdr.filenames(), real_filenames)
+    
+    def test_cxi_filenames(self):
+        self.assertEqual(self.cxi.filenames(), ['ptycho-scan-856eV.cxi'])
+    
+    def test_cxi_image_data(self):
+        with self.cxi:
+            self.assertEqual(self.cxi.num_images(), 1)
+            self.assertEqual(self.cxi.image_frames().shape, (1, 285, 285))
+    
+    def test_cxi_image_shape(self):
+        with self.cxi:
+            self.assertEqual(self.cxi.image_shape(), (285, 285))
+    
+    def test_cxi_energies(self):
+        with self.cxi:
+            self.assertAlmostEqual(self.cxi.energies()[0], 855.9056, places=3)
+    
+    # Fails until the pixel size is available in CXI files
+    @unittest.expectedFailure
+    def test_cxi_pixel_size(self):
+        with self.cxi:
+            self.assertAlmostEqual(self.cxi.pixel_size(), 1)
+    
+    def test_hdr_pixel_size(self):
+        with self.hdr:
+            self.assertEqual(self.hdr.pixel_size(), 27.2)
+            
+    def test_hdr_image_data(self):
+        self.assertEqual(self.hdr.num_images(), 2)
+        self.assertEqual(self.hdr.image_frames().shape, (2, 120, 120))
+    
+    def test_hdr_image_shape(self):
+        self.assertEqual(self.hdr.image_shape(), (120, 120))
+    
+    def test_hdr_energies(self):
+        with self.hdr:
+            self.assertAlmostEqual(self.hdr.energies()[0], 853., places=3)
 
 
 class XradiaTest(TestCase):

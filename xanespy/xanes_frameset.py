@@ -96,7 +96,7 @@ class XanesFrameset():
         # Validate the parent dataname
         store = TXMStore(hdf_filename=self.hdf_filename,
                          parent_name=groupname,
-                         data_name='',
+                         data_name=None,
                          mode='r')
         with store:
             self.parent_name = store.validate_parent_group(groupname)

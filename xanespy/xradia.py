@@ -65,7 +65,7 @@ class XRMFile():
       beamlines moudles.
     
     """
-    aps_old1_regex = re.compile("(\d{8})_([a-zA-Z0-9_]+)_([a-zA-Z0-9]+)_(\d{4}).xrm")
+    aps_old1_regex = re.compile(r"(\d{8})_([a-zA-Z0-9_]+)_([a-zA-Z0-9]+)_(\d{4}).xrm")
     
     def __init__(self, filename, flavor: str):
         self.filename = filename
@@ -208,7 +208,7 @@ class XRMFile():
         energy = self.ole_value('ImageInfo/Energy', '<f')
         if not energy > 0:
             # if not, read from filename
-            re_result = re.search("(\d+\.?\d?)_?eV", self.filename)
+            re_result = re.search(r"(\d+\.?\d?)_?eV", self.filename)
             if re_result:
                 energy = float(re_result.group(1))
             else:
@@ -257,7 +257,7 @@ class XRMFile():
     # def is_background(self):
     #     """Look at the file name for clues to whether this is a background
     #     frame."""
-    #     result = re.search('bkg|_ref_', self.filename)
+    #     result = re.search(r'bkg|_ref_', self.filename)
     #     return bool(result)
     
     def sample_position(self):

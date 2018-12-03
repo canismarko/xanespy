@@ -126,8 +126,9 @@ class TXMStore():
         self.mode = mode
         # Use the latest_data_name if one isn't provided
         if data_name is None:
-            data_name = self.latest_data_name
-        self._data_name = data_name
+            self.data_name = self.latest_data_name
+        else:
+            self.data_name = data_name
     
     def __enter__(self):
         return self
@@ -160,17 +161,6 @@ class TXMStore():
     
     def close(self):
         self._file.close()
-    
-    @property
-    def data_name(self):
-        return self._data_name
-    
-    @data_name.setter
-    def data_name(self, val):
-        if val not in self.parent_group().keys():
-            msg = "Group {} does not exists. Run TXMStore.fork_data_group('{}') first"
-            raise CreateGroupError(msg.format(val, val))
-        self._data_name = val
     
     def data_tree(self):
         """Create a tree of the possible groups this store could access. The
@@ -253,15 +243,18 @@ class TXMStore():
         return new_name
     
     def parent_group(self):
-    
         """Retrieve the top-level HDF5 group object for this file and
         groupname."""
         try:
-            group = self._file[self.parent_name]
+            parent_group = self.validate_parent_group(self.parent_name)
+            group = self._file[parent_group]
         except (TypeError, KeyError):
             # Invalid group name, throw an exception
             msg = 'Cannot load parent group "{group}". Valid choices are {choices}'
-            choices = list(self._file.keys())
+            try:
+                choices = list(self._file.keys())
+            except:
+                choices = 'unavailable'
             msg = msg.format(group=self.parent_name, choices=choices)
             raise GroupKeyError(msg) from None
         return group
@@ -270,6 +263,9 @@ class TXMStore():
         """Retrieve the currently active second-level HDF5 group object for
         this file and groupname. Ex. "imported" or "aligned_frames".
         """
+        if self.data_name not in self.parent_group().keys():
+            msg = "Group {} does not exists. Run TXMStore.fork_data_group('{}') first"
+            raise CreateGroupError(msg.format(self.data_name, self.data_name))
         return self.parent_group()[self.data_name]
    
     def replace_dataset(self, name, data, context=None, attrs={},
@@ -313,6 +309,7 @@ class TXMStore():
             ds.attrs['context'] = context
         for key, val in attrs.items():
             ds.attrs[key] = val
+        return ds
     
     def get_dataset(self, name):
         """Attempt to open the requested dataset.

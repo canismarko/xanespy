@@ -1,0 +1,107 @@
+
+ScanDefinition = { Label = "NS_181110203.hdr"; Type = "NEXAFS Image Scan"; Flags = "Image Stack"; Dwell = 4; Dwell2 = -6.2774386e+066;
+	Regions = (1,
+{
+			PAxis = { Name = "Sample X"; Unit = "um"; Min = -0.618; Max = 2.6435; Dir = 1;
+				Points = (120, -0.6180, -0.5908, -0.5636, -0.5365, -0.5093, -0.4821, -0.4549, -0.4277, -0.4006, -0.3734, -0.3462, -0.3190, -0.2919, -0.2647, -0.2375, -0.2103, -0.1831, -0.1560, -0.1288, -0.1016, -0.0744, -0.0472, -0.0201, 0.0071, 0.0343, 0.0615, 0.0887, 0.1158, 0.1430, 0.1702, 0.1974, 0.2246, 0.2517, 0.2789, 0.3061, 0.3333, 0.3604, 0.3876, 0.4148, 0.4420, 0.4692, 0.4963, 0.5235, 0.5507, 0.5779, 0.6051, 0.6322, 0.6594, 0.6866, 0.7138, 0.7410, 0.7681, 0.7953, 0.8225, 0.8497, 0.8769, 0.9040, 0.9312, 0.9584, 0.9856, 1.0127, 1.0399, 1.0671, 1.0943, 1.1215, 1.1486, 1.1758, 1.2030, 1.2302, 1.2574, 1.2845, 1.3117, 1.3389, 1.3661, 1.3933, 1.4204, 1.4476, 1.4748, 1.5020, 1.5292, 1.5563, 1.5835, 1.6107, 1.6379, 1.6651, 1.6922, 1.7194, 1.7466, 1.7738, 1.8009, 1.8281, 1.8553, 1.8825, 1.9097, 1.9368, 1.9640, 1.9912, 2.0184, 2.0456, 2.0727, 2.0999, 2.1271, 2.1543, 2.1815, 2.2086, 2.2358, 2.2630, 2.2902, 2.3174, 2.3445, 2.3717, 2.3989, 2.4261, 2.4532, 2.4804, 2.5076, 2.5348, 2.5620, 2.5891, 2.6163);
+};
+
+			QAxis = { Name = "Sample Y"; Unit = "um"; Min = 7.2496; Max = 10.5112; Dir = 1;
+				Points = (120, 7.2496, 7.2768, 7.3040, 7.3311, 7.3583, 7.3855, 7.4127, 7.4399, 7.4670, 7.4942, 7.5214, 7.5486, 7.5758, 7.6029, 7.6301, 7.6573, 7.6845, 7.7117, 7.7388, 7.7660, 7.7932, 7.8204, 7.8476, 7.8747, 7.9019, 7.9291, 7.9563, 7.9835, 8.0106, 8.0378, 8.0650, 8.0922, 8.1194, 8.1465, 8.1737, 8.2009, 8.2281, 8.2553, 8.2824, 8.3096, 8.3368, 8.3640, 8.3912, 8.4183, 8.4455, 8.4727, 8.4999, 8.5271, 8.5542, 8.5814, 8.6086, 8.6358, 8.6630, 8.6901, 8.7173, 8.7445, 8.7717, 8.7989, 8.8260, 8.8532, 8.8804, 8.9076, 8.9348, 8.9619, 8.9891, 9.0163, 9.0435, 9.0707, 9.0978, 9.1250, 9.1522, 9.1794, 9.2066, 9.2337, 9.2609, 9.2881, 9.3153, 9.3425, 9.3696, 9.3968, 9.4240, 9.4512, 9.4784, 9.5055, 9.5327, 9.5599, 9.5871, 9.6143, 9.6414, 9.6686, 9.6958, 9.7230, 9.7502, 9.7773, 9.8045, 9.8317, 9.8589, 9.8861, 9.9132, 9.9404, 9.9676, 9.9948, 10.0220, 10.0491, 10.0763, 10.1035, 10.1307, 10.1579, 10.1850, 10.2122, 10.2394, 10.2666, 10.2938, 10.3209, 10.3481, 10.3753, 10.4025, 10.4297, 10.4568, 10.4840);
+};
+});
+
+	StackAxis = { Name = "Energy"; Unit = "eV"; Min = 850; Max = 865; Dir = 1;
+		Points = (2, 853.0000, 857.7500);
+};
+
+	Channels = (1,
+{ Name = "V/F"; Unit = "counts";});
+};
+ Time = "2018 November 10 23:57:34"; BeamFeedback = false; ShutterAutomatic = true;
+Channels = (1,
+{ ID = 4; Type = 0; Name = "V/F"; Controller = 0; DeviceNumber = 0; UnitName = "counts"; LinearCoefficient = 1; ConstantCoefficient = 0; ProcessString = "I";});
+
+Monochromator = { Name = "Beamline Energy"; LastPosition = 849.9894; Status = 1; Type = 1; ControllerID = 64; Vel = 64;};
+
+EntranceSlit = { Name = "Entrance"; LastPosition = 100; Status = 1; Type = 5; ControllerID = 0; Vel = 1;};
+
+ExitVSlit = { Name = "XS121 Horiz Size"; LastPosition = 12.488; Status = 1; Type = 2; ControllerID = 61; Vel = 200;};
+
+ExitHSlit = { Name = "XS121 Vert Size"; LastPosition = 12.195; Status = 1; Type = 5; ControllerIhD = 62; Vel = 200;};
+
+Harmonics = { Name = "Harmonics"; LastPosition = 0; Status = 1; Type = 2; ControllerID = 0; Vel = 0;};
+
+EPU_Z = { Name = "EPU Z"; LastPosition = 0; Status = 1; Type = 2; ControllerID = 0; Vel = 200;};
+
+Grating = { Name = "Grating"; LastPosition = 0; Status = 1; Type = 1; ControllerID = 0; Vel = 0;};
+
+Cff = { Name = "Cff"; LastPosition = 0; Status = 1; Type = 1; ControllerID = 0; Vel = 0;};
+
+SampleFineX = { Name = "FineX"; LastPosition = 0.0041010965; Status = 1; Type = 0; ControllerID = 250; Vel = 100;};
+
+SampleFineY = { Name = "FineY"; LastPosition = 7.2429185; Status = 1; Type = 0; ControllerID = 251; Vel = 1000;};
+
+SampleFineZ = { Name = "Sample Z"; LastPosition = 0; Status = 1; Type = 1; ControllerID = 0; Vel = 0;};
+
+SampleCoarseX = { Name = "CoarseX"; LastPosition = 0; Status = 1; Type = 1; ControllerID = 0; Vel = 50;};
+
+SampleCoarseY = { Name = "CoarseY"; LastPosition = 0; Status = 1; Type = 1; ControllerID = 0; Vel = 50;};
+
+SampleCoarseZ = { Name = "Z_STAGE"; LastPosition = 0; Status = 1; Type = 1; ControllerID = 0; Vel = 2000;};
+
+ZonePlateZ = { Name = "ZonePlate"; LastPosition = -5656.4; Status = 1; Type = 1; ControllerID = 71; Vel = 1;};
+
+OSAX = { Name = "OSA_X"; LastPosition = 0; Status = 1; Type = 8; ControllerID = 271; Vel = 1000;};
+
+OSAY = { Name = "OSA_Y"; LastPosition = 0; Status = 1; Type = 8; ControllerID = 272; Vel = 1000;};
+
+DetectorX = { Name = "DetectorX"; LastPosition = 1.7; Status = 0; Type = 3; ControllerID = 72; Vel = 10000;};
+
+DetectorY = { Name = "DetectorY"; LastPosition = -0.3; Status = 1; Type = 3; ControllerID = 73; Vel = 10000;};
+
+DetectorZ = { Name = "CCD_Z"; LastPosition = -9962999; Status = 1; Type = 1; ControllerID = 0; Vel = 1;};
+
+AUX1 = { Name = "CCD_X"; LastPosition = 9974999; Status = 1; Type = 1; ControllerID = 0; Vel = 5;};
+
+AUX2 = { Name = "ROT"; LastPosition = -147; Status = 1; Type = 1; ControllerID = 0; Vel = 5;};
+
+AUX3 = { Name = "Unused"; LastPosition = -55494.6; Status = 1; Type = 3; ControllerID = 0; Vel = 4;};
+
+AUX4 = { Name = "PD_Y"; LastPosition = 5000; Status = 1; Type = 1; ControllerID = 0; Vel = 5;};
+
+AUX5 = { Name = "AUX5"; LastPosition = 0; Status = 1; Type = 1; ControllerID = 0; Vel = 0;};
+
+AUX6 = { Name = "AUX6"; LastPosition = 0; Status = 1; Type = 1; ControllerID = 0; Vel = 0;};
+
+AUX7 = { Name = "AUX7"; LastPosition = 0; Status = 1; Type = 1; ControllerID = 0; Vel = 0;};
+
+AUX8 = { Name = "AUX8"; LastPosition = 0; Status = 1; Type = 1; ControllerID = 0; Vel = 0;};
+
+EPUGap = { Name = "EPU Gap"; LastPosition = 15.481171; Status = 0; Type = 1; ControllerID = 66; Vel = 200;};
+
+EPU_Polarization = { Name = "EPU Polarization"; LastPosition = 0; Status = 0; Type = 2; ControllerID = 65; Vel = 200;};
+
+AUX9 = { Name = ""; LastPosition = 0; Status = 1; Type = 0; ControllerID = 0; Vel = 0;};
+
+AUX10 = { Name = "AUX10"; LastPosition = 0; Status = 1; Type = 1; ControllerID = 0; Vel = 0;};
+
+AUX11 = { Name = "OSA_Z"; LastPosition = -500.004; Status = 1; Type = 8; ControllerID = 270; Vel = 1000000;};
+
+AUX12 = { Name = "AUX12"; LastPosition = 0; Status = 1; Type = 1; ControllerID = 0; Vel = 0;};
+
+AUX13 = { Name = "AUX13"; LastPosition = 0; Status = 1; Type = 1; ControllerID = 0; Vel = 0;};
+
+AUX14 = { Name = "AUX14"; LastPosition = 0; Status = 1; Type = 1; ControllerID = 0; Vel = 0;};
+ StorageRingCurrent = 0; EPUPhase = 0; Polarization = -99.99; PMT_CounterDivider = 10; Ao = 1906.5;
+ImageScan = { ScanType = "Image (Line - unidirection)"; Stage = "Fine"; Shutter = "Automatic"; Interferometry = "On"; SingleEnergy = false; AutoShutterPointScan = false;
+	EnergyRegions = (3,
+{ StartEnergy = 850; EndEnergy = 853; Range = 3; Step = 1; Points = 4; DwellTime = 4;},
+{ StartEnergy = 854; EndEnergy = 860; Range = 6; Step = 0.25; Points = 25; DwellTime = 4;},
+{ StartEnergy = 861; EndEnergy = 865; Range = 4; Step = 1; Points = 5; DwellTime = 4;});
+ PointDelay = 0.05; LineDelay = 150; AccelDist = 0.2; MultipleRegions = false;
+	SpatialRegions = (1,
+{ CentreXPos = 1.0128; CentreYPos = 8.8804; XRange = 3.2615; YRange = 3.2615; XStep = 0.0272; YStep = 0.0272; XPoints = 120; YPoints = 120; SquareRegion = true; SquarePixels = false;});
+};
+Image003_0 = {StorageRingCurrent = 0.00; Energy = 853.00; Time = "2018 Nov 11 00:03:50"; ZP_dest= -5682.64; ZP_error = 0.55;};
+Image019_0 = {StorageRingCurrent = 0.00; Energy = 857.75; Time = "2018 Nov 11 00:28:48"; ZP_dest= -5724.94; ZP_error = 0.61;};

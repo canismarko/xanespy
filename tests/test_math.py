@@ -217,7 +217,7 @@ class XanesMathTest(unittest.TestCase):
             [1., 0.5, 0.5,  0.5, 1.],
             [1., 1.,  1.,   1.,  1.],
         ]], dtype='float64')
-        result = apply_internal_reference(d, quiet=True)
+        result = apply_internal_reference(d, desc=None)
         expected = np.array([[
             [0., 0.,  0.,   0.,  0.],
             [0., 0.7, 0.7,  0.7, 0.],
@@ -244,7 +244,7 @@ class XanesMathTest(unittest.TestCase):
             [1/4, 1/4, 1/4, 1/4, 1/4,],
         ]])
         in_data = in_modulus * (np.cos(in_phase) + j * np.sin(in_phase))
-        result = apply_internal_reference(in_data, quiet=True)
+        result = apply_internal_reference(in_data, desc=None)
         OD_expected = np.array([[
             [0., 0.,  0.,   0.,  0.],
             [0., 0.7, 0.7,  0.7, 0.],

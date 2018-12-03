@@ -57,7 +57,6 @@ class FramesPool(mp.pool.Pool):
       CPUs will be used.
     
     """
-
     def map(self, func, frames, spatial_dims=2, chunksize=None, desc=None):
         """Apply the function to each frame in ``frames`` and return the result.
         
@@ -251,73 +250,60 @@ def apply_mosaic_reference(intensity, reference):
     return od
 
 
-def apply_internal_reference(intensities, out=None, quiet=False):
-    """Apply a reference correction to complex data to convert intensities
-    into refractive index. :math:`I_0` is determined by separating the pixels
-    into background and foreground using Otsu's method.
-    
-    Arrays `intensities` and `out` must all have the same shape where
-    the last two dimensions are image rows and column.
-    """
-    is_complex = np.iscomplexobj(intensities)
+def _apply_internal_reference(frame):
+    # Calculate background intensity using thresholding
+    log.debug("Applying reference for frame")
+    # Handle complex data
+    is_complex = np.iscomplexobj(frame)
     j = complex(0, 1)
     if is_complex:
-        intensities = intensities.astype(np.complex128)
-        component = "modulus"
+        frame = frame.astype(np.complex128)
+        direct_img = get_component(frame, 'modulus')
     else:
-        intensities = intensities.astype(np.float64)
-        component = "real"
+        frame = frame.astype(np.float64)
+        direct_img = get_component(frame, 'real')
+    # Do the thresholding
+    threshold = filters.threshold_yen(direct_img)
+    graymask = direct_img > threshold
+    background = frame[graymask]
+    # Calculate an I_0 based on median modulus and phase
+    if is_complex:
+        mod = np.median(np.abs(background))
+        angle = np.median(np.angle(background))
+        j = complex(0, 1)
+        I_0 = mod * np.cos(angle) + j * mod * np.sin(angle)
+    else:
+        I_0 = np.median(background)
+    log.debug("I0 for frame = %f", I_0)
+    # Calculate optical depth based on background
+    od = np.log(I_0 / frame)
+    log.debug("Applied internal reference for frame")
+    return od
+
+
+def apply_internal_reference(intensities, desc="Applying reference"):
+    """Apply a reference correction to complex data.
+    
+    Convert intensities into refractive index. :math:`I_0` is
+    determined by separating the pixels into background and foreground
+    using Otsu's method.
+    
+    Parameters
+    ==========
+    intensities : 
+      3+ dimensional array Intensity frames, may be complex-valued.
+    desc : str
+      Description for the progress bar. ``None`` suppresses output.
+    
+    Arrays `intensities` and `out` must have the same 3-D shape where
+    the last two dimensions are image rows and column.
+    
+    """
     logstart = time()
     log.debug("Starting internal reference correction")
-    if out is None:
-        out = np.empty_like(intensities)
-    def apply_ref(idx):
-        # Calculate background intensity using thresholding
-        log.debug("Applying reference for frame %s", idx)
-        frame = intensities[idx]
-        if is_complex:
-            direct_img = get_component(frame, component)
-        else:
-            direct_img = frame
-        threshold = filters.threshold_yen(direct_img)
-        graymask = direct_img > threshold
-        background = frame[graymask]
-        # Calculate an I_0 based on median modulus and phase
-        if is_complex:
-            mod = np.median(np.abs(background))
-            angle = np.median(np.angle(background))
-            j = complex(0, 1)
-            I_0 = mod * np.cos(angle) + j * mod * np.sin(angle)
-        else:
-            I_0 = np.median(background)
-        log.debug("I0 for frame %s = %f", idx, I_0)
-        # Calculate optical depth based on background
-        od = np.log(I_0 / frame)
-        # if is_complex:
-        #     # Calculate relative phase shift if complex data is required
-        #     phase = np.angle(frame)
-        #     phase - np.median((phase * graymask)[graymask > 0])
-        #     # The phase data has a gradient in the background, so remove it
-        #     x, y = np.meshgrid(np.arange(phase.shape[-1]),
-        #                        np.arange(phase.shape[-2]))
-        #     A = np.column_stack([y.flatten(),
-        #                          x.flatten(),
-        #                          np.ones_like(x.flatten())])
-        #     p, residuals, rank, s = linalg.lstsq(A, phase.flatten())
-        #     bg = p[0] * y + p[1] * x + p[2]
-        #     # Prepare the complex output data
-        #     phase = phase - bg
-        #     j = complex(0, 1)
-        #     out[idx] = phase + j*optical_depth
-        # else:
-        #     # Real data (optical-depth) only
-        #     out[idx] = optical_depth
-        out[idx] = od
-        log.debug("Applied internal reference for frame %s", idx)
     # Call the actual function for each frame
-    iter_frames = iter_indices(intensities, leftover_dims=2,
-                               desc="Apply reference", quiet=quiet)
-    foreach(apply_ref, iter_frames)
+    with FramesPool() as pool:
+        out = pool.map(_apply_internal_reference, intensities, desc=desc)
     log.info("Internal reference applied in %f seconds",
              (time() - logstart))
     return out

@@ -138,6 +138,10 @@ class TXMStoreTest(XanespyTestCase):
         store = self.store()
         self.assertEqual(store.parent_group().name, '/ssrl-test-data')
         self.assertEqual(store.data_group().name, '/ssrl-test-data/imported')
+        # Check that data_group throws an exception if the group doesn't exist
+        store.data_name = 'nonexistent_group'
+        with self.assertRaises(exceptions.CreateGroupError):
+            store.data_group()
     
     def test_fork_group(self):
         store = self.store('r+')
@@ -178,9 +182,6 @@ class TXMStoreTest(XanespyTestCase):
         store = self.store('r+')
         store.data_name = 'imported'
         self.assertEqual(store.data_name, 'imported')
-        # Check that data_name can't be set before the group exists
-        with self.assertRaises(exceptions.CreateGroupError):
-            store.data_name = 'new_group'
         store.close()
     
     def test_setters(self):

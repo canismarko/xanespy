@@ -25,19 +25,27 @@ from collections import namedtuple
 import warnings
 import logging
 import datetime as dt
+import contextlib
+from functools import partial
 
 import pandas as pd
 from tqdm import tqdm
 import numpy as np
 from scipy.constants import physical_constants
 from scipy.ndimage.filters import median_filter
+from scipy.ndimage import center_of_mass
+from skimage.transform import resize
 import pytz
 
 from xradia import XRMFile, TXRMFile
+from nanosurveyor import CXIFile, HDRFile
 from sxstm import SxstmDataFile
-from utilities import prog
+from utilities import prog, get_component
 import exceptions
-from xanes_math import transform_images, apply_references, transformation_matrices, downsample_array
+from xanes_math import (transform_images, apply_references,
+                        transformation_matrices, downsample_array,
+                        apply_internal_reference)
+from txmstore import TXMStore
 
 
 format_classes = {
@@ -475,6 +483,262 @@ def read_metadata(filenames, flavor, quiet=False):
         log.info(msg, len(df), time() - logstart)
     # Return file metadata in order of collection time
     return df.sort_values(by=['starttime'])
+
+
+def crop_image(img, shape, center=None):
+    """Return a cropped image with shape around center
+    
+    Parameters
+    ==========
+    img
+      The 2-D image data to crop.
+    shape
+      The shape of the data to crop to.
+    center
+      The point around which the cropping should occur. If this point
+      results in cropping outside the given image, the center will be
+      moved to ensure proper image shape. If omitted, the center of
+      the image will be used.
+    
+    Returns
+    =======
+    new_img
+      The cropped image.
+    
+    """
+    # Make sure image is 2-dimensionsal
+    if img.ndim != 2:
+        raise exceptions.XanesMathError('Image must be 2-dimensional')
+    # Get default center if neeeded
+    if center is None:
+        center = (int(img.shape[0]/2), int(img.shape[1]/2))
+    # Crop the image
+    offset = np.array(shape) / 2
+    # Make sure the center position for columns is reasonable
+    if center[1] + offset[1] > img.shape[1]:
+        center_c = img.shape[1] - offset[1]
+    elif center[1] - offset[1] < 0:
+        center_c = offset[1]
+    else:
+        center_c = center[1]
+    # Make sure the center position for rows is reasonable
+    if center[0] + offset[0] > img.shape[0]:
+        center_r = img.shape[0] - offset[0]
+    elif center[0] - offset[0] < 0:
+        center_r = offset[0]
+    else:
+        center_r = center[0]
+    # Do the actual cropping
+    rows = (int(center_r - offset[0]), int(center_r + offset[0]))
+    cols = (int(center_c - offset[1]), int(center_c + offset[1]))
+    new_img = img[rows[0]:rows[1],cols[0]:cols[1]]
+    assert np.array_equal(new_img.shape, shape)
+    return new_img
+
+
+def resample_image(img, new_shape, src_dims, new_dims):
+    """Resample and crop an image to match a given parameters.
+    
+    Based on the values of ``src_dims`` and ``new_dims`` the image
+    will be cropped, this cropping will occur around the center of
+    weight for the image. For this to work well, it is necessary to
+    first have the images in the optical depth domain.
+    
+    Resampling is done using ``skimage.transform.resize``
+    
+    Parameters
+    ==========
+    img : np.ndarray
+      The image to be transformed.
+    new_shape : 2-tuple
+      The shape the image should be when it is returned.
+    src_dims : 2-tuple
+      The (x, y) dimensions of the ``img`` in physical units (eg µm)
+    new_dims : 2-tuple
+      The (x, y) dimensions of the target image in physical units (eg
+      µm). If ``new_dims`` is larger than ``src_dims``, an exception
+      will be raised.
+    
+    Returns
+    =======
+    new_img : np.ndarray
+      The re-sampled and cropped image.
+    
+    """
+    # Convert everything to numpy arrays
+    new_dims = np.array(new_dims)
+    src_dims = np.array(src_dims)
+    new_shape = np.array(new_shape)
+    # Determine how big to make the new image
+    size_ratio = new_dims / src_dims
+    full_shape = new_shape / size_ratio
+    # Resample the image
+    new_img = np.copy(img)
+    if np.array_equal(full_shape, new_shape):
+        new_img = resize(new_img, full_shape, order=3, mode='reflect')
+    # Crop the image
+    center = center_of_mass(new_img)
+    new_img = crop_image(new_img, new_shape, center=center)
+    return new_img
+
+
+@contextlib.contextmanager
+def open_files(paths, opener=open):
+    """Context manager that opens files and closes them again.
+    
+    Example usage::
+    
+        file_paths = ('file_a.txt', 'file_b.txt')
+        with open_files(file_paths) as files:
+            for f in files:
+                f.read()
+    
+    Parameters
+    ==========
+    paths :
+      Iterable of file paths to open.
+    opener : callable
+      A class or function such that one would normally run::
+        with opener(path) as f:
+          ...do stuff with f...
+    
+    """
+    files = tuple(opener(path) for path in paths)
+    yield files
+    # Close files after exiting context manager
+    [f.close() for f in files]
+
+
+def load_cosmic_files(files, store, median_filter_size=None):
+    """Take a collection of STXM or ptycho files and load their data.
+    
+    Parameters
+    ==========
+    files : iterable
+      A collection of open files (either CXIFile or HDRFile) that will
+      be loaded and saved.
+    store : TXMStore
+      The TXMStore object that will receive the loaded data.
+    median_filter_size : int or 3-tuple, optional
+      Size of median filter to apply to image data. If tuple, should
+      be in (energy, row, column) order. See
+    ``scipy.ndimage.filters.median_filter`` for more details.
+    
+    """
+    # Compile the filenames metadata
+    filenames = []
+    for f in files:
+        filenames.extend(f.filenames())
+    store.filenames = [filenames]
+    store.energies = [np.array([f.energies() for f in files]).ravel()]
+    store.timestep_names = np.array(['ex-situ'], dtype="S20")
+    # Get pixel sizes (if possible)
+    px_sizes = []
+    for f in files:
+        try:
+            this_px_size = f.pixel_size()
+        except exceptions.DataFormatError:
+            warnings.warn('Cannot load pixel sizes from %s' % f)
+            this_px_size = 1
+        px_sizes.extend([this_px_size] * f.num_images())
+    store.pixel_sizes = [px_sizes]
+    store.pixel_unit = 'nm'
+    # Load intensity data and calculate optical depths
+    Is = [I for f in files for I in f.image_frames()]
+    # Crop any over-sized frames and make sure they're all the same
+    row_min = min(I.shape[0] for I in Is)
+    row_max = max(I.shape[0] for I in Is)
+    col_min = min(I.shape[1] for I in Is)
+    col_max = max(I.shape[1] for I in Is)
+    def do_crop(img, new_shape):
+        # Convert to optical density
+        OD = apply_internal_reference(img)
+        if np.iscomplexobj(OD):
+            OD = get_component(OD, 'imag')
+        # Crop the image
+        center = center_of_mass(OD)
+        new_img = crop_image(img, center=center, shape=new_shape)
+        return new_img
+    Is = np.array(tuple(map(partial(do_crop, new_shape=(row_min, col_min)), Is)))
+    # Apply median filter if requested
+    if median_filter_size is not None:
+        Is = median_filter(Is, size=median_filter_size)
+    store.intensities = [Is]
+    # Convert to optical depths
+    ODs = apply_internal_reference(store.intensities)
+    store.optical_depths = ODs
+
+
+def import_cosmic_frameset(hdf_filename, stxm_hdr=(), ptycho_cxi=(), hdf_groupname=None):
+    """Import a combination of STXM and ptychography frames.
+    
+    Order is preserved, so later entries in ``stxm_hdr`` over-ride
+    previous ones. Additionally, ptychography frames will be given
+    precidence over stxm frames of similar energy (within +/-
+    0.125eV). If both types of files are provided, both sets may
+    potentially be scaled and/or interpolated for matching resolution.
+    
+    Parameters
+    ==========
+    hdf_filename : str
+      Path to HDF5 file that will receive the data.
+    stxm_hdr : iterable
+      A list of hdr file paths to import from.
+    ptycho_cxi : iterable
+      A list of ptychography .cxi file paths to import from.
+    hdf_groupname : str, optional
+      Name of the HDF group to use. If omitted, this value will be
+      guessed from the first file provided.
+    
+    """
+    all_paths = ptycho_cxi + stxm_hdr
+    has_ptycho = len(ptycho_cxi) > 0
+    has_stxm = len(stxm_hdr) > 0
+    # Check that at least some data are given
+    if len(all_paths) == 0:
+        raise ValueError("`stxm_hdr` and `ptycho_cxi` cannot both be empty")
+    # Decide how to arrange the data groups
+    if has_ptycho and has_stxm:
+        ptycho_data_name = 'imported_ptychography'
+        stxm_data_name = 'imported_stxm'
+    else:
+        ptycho_data_name = 'imported'
+        stxm_data_name = 'imported'
+    # Prepare the HDF5 file and sample group
+    if hdf_groupname is None:
+        hdf_groupname = os.path.splitext(os.path.basename(all_paths[0]))[0]
+    log.info("Importing to file %s", hdf_filename)
+    with h5py.File(hdf_filename) as h5file:
+        # Delete old HDF5 group
+        if hdf_groupname in h5file:
+            log.warning('Overwriting existing group: "%s"', hdf_groupname)
+            del h5file[hdf_groupname]
+        parent_group = h5file.create_group(hdf_groupname)
+        if has_stxm:
+            new_grp = parent_group.create_group(stxm_data_name)
+            log.debug("Created new STXM group: %s", new_grp.name)
+        if has_ptycho:
+            new_grp = parent_group.create_group(ptycho_data_name)
+            log.debug("Created new ptycho group: %s", new_grp.name)
+    # Load the STXM frames    
+    store_kw = dict(hdf_filename=hdf_filename, parent_name=hdf_groupname,
+                    mode='a')
+    if has_stxm:
+        log.debug("Loading STXM frames for %s", stxm_hdr)
+        stxm_store = TXMStore(**store_kw, data_name=stxm_data_name)
+        with stxm_store, open_files(stxm_hdr, HDRFile) as stxm_files:
+            # ((1, 3, 1) median filter gets rid of row artifacts)
+            load_cosmic_files(files=stxm_files, store=stxm_store,
+                              median_filter_size=(1, 3, 1))
+            stxm_store.latest_data_name = stxm_data_name
+            # 
+    # Load the ptychography frames
+    if has_ptycho:
+        log.debug("Loading ptycho frames for %s", ptycho_cxi)
+        ptycho_store = TXMStore(**store_kw, data_name=ptycho_data_name)
+        with ptycho_store, open_files(ptycho_cxi, CXIFile) as ptycho_files:
+            load_cosmic_files(files=ptycho_files, store=ptycho_store)
+            ptycho_store.latest_data_name = ptycho_data_name            
 
 
 def import_nanosurveyor_frameset(directory: str, quiet=False,
