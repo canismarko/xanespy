@@ -34,7 +34,7 @@ from utilities import get_component
 log = logging.getLogger(__name__)
 
 
-def merge_stores(base_store, new_store, destination, energy_difference=0.1, upsample=True):
+def merge_stores(base_store, new_store, destination, energy_difference=0.25, upsample=True):
     """Merge two open txm stores into a third store.
     
     Framesets will be combined from both ``base_store`` and

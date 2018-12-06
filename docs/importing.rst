@@ -1,5 +1,6 @@
-Importing Data into Xanespy
-===========================
+=============================
+ Importing Data into Xanespy
+=============================
 
 The first step in any Xanespy workflow will be to **import the raw
 data into a common format**. These importer functions are written as
@@ -7,7 +8,7 @@ needed: if your preferred beamline is not here, `submit an issue`_.
 
 
 APS Beamline 32-ID-C
---------------------
+====================
 
 The ``energy_scan`` script at 32-ID-C saves source data as an HDF
 file. Xanespy preserves the original ("source") file and saves
@@ -77,7 +78,7 @@ shape are consistent across calls: ``total_timesteps``, ``append``,
 
 
 SSRL Beamline 6-2c - Directory of XRM Files
---------------------------------------------
+===========================================
 
 In-house XANES scan scripts often save a directory full of ``.xrm``
 files with the metadata coding in the filenames. From the Xradia TXM
@@ -99,8 +100,115 @@ Example usage:
                              hdf_filename="operando_experiments.h5")
 
 
-Ptychography from 5.3.2.1 (ALS)
--------------------------------
+Xradia Image Files (.xrm and .txrm)
+===================================
+
+Xradia microscopes use the Microsoft OLE container format, which is
+not easily read [#ole]_. Individual scan files are generally not that
+helpful anyway. But in case you need it, there are some adapters to
+``.xrm`` and ``.txrm`` files, namely
+:py:class:`xanespy.xradia.XRMFile` and
+:py:class:`xanespy.xradia.TXRMFile`.
+
+.. note::
+
+   The specification for ``.xrm`` files is not public, so these
+   classes are reverse-engineered and may not be (definitely aren't)
+   perfect. If you encounter problems, please `submit an issue`_.
+
+Opening xrm or txrm files is best done via the context manager:
+
+.. code:: python
+
+   import xanespy as xp
+   import numpy as np
+
+   # Single-image xrm file
+   with xp.XRMFile('my_txm_image.xrm') as f:
+       img = f.image_data()
+       assert img.ndim == 2 # (row, col)
+
+   # Multi-image txrm energy stack file
+   with xp.TXRMFile('my_txm_stack.txrm') as f:
+       # Get images one at a time by index
+       img = f.image_data(idx=0)
+       assert img.ndim == 2 # (row, col)
+
+       # Get images all at once in one big array
+       stack = f.image_stack()
+       assert stack.ndim == 3 # (prj, row, col)
+       assert np.array_equal(img, stack[0])
+
+       # Get X-ray energies for the images
+       energies = f.energies()
+       assert len(energies) == stack.shape[0]
+
+The :py:class:`~xanespy.xradia.XRMFile` and
+:py:class:`~xanespy.xradia.TXRMFile` classes accept an optional
+``flavor`` keyword argument. This option affects several pieces of
+metadata. See the :py:class:`~xanespy.xradia.XRMFile` documentation
+for details.
+
+
+APS Beamline 8-BM-B - Energy Stack (TXRM)
+=========================================
+
+.. note:: The X-ray microscope that was temporarily at beamline 8-BM
+          has been returned to NSLS-II. These functions are retained
+          for compatibility with previously collected data.
+
+The Xradia microscope can save an entire stack in one ``.txrm``
+file. This file can be imported using the
+:py:func:`~xanespy.importers.import_aps8bm_xanes_file` function. The
+list of energies is automatically extracted from the file. The
+reference frames will then reside in a different ``.txrm`` file.
+
+Example usage:
+
+.. code:: python
+
+    import xanespy as xp
+    
+    xp.import_aps_8BM_xanes_file('exp1-sample-stack.txrm',
+                                 ref_filename='exp1-reference_stack.txrm',
+  			         hdf_filename='txm-data.h5',
+       			         groupname='experiment1')
+
+.. note:: Currently this function can only import one XANES stack;
+	  time-resolved measurement is not implemented. If you would
+	  find this feature valuable, please `submit an issue`_.
+			       
+
+APS Beamline 8-BM-B - Directory of XRM Files
+============================================
+
+.. note:: The X-ray microscope that was temporarily at beamline 8-BM
+          has been returned to NSLS-II. These functions are retained
+          for compatibility with previously collected data.
+
+In-house XANES scan scripts often save a directory full of ``.xrm``
+files with the metadata coding in the filenames. From the Xradia TXM
+at sector 8-BM-B, this XANES scan script can be generated with
+:py:func:`~xanespy.beamlines.sector8_xanes_script`, and the results
+can then be imported with
+:py:func:`~xanespy.importers.import_aps8bm_xanes_dir`. The list of
+energies is automatically extracted from the filenames. The reference
+frames will also be identified in the directory.
+
+Example usage:
+
+.. code:: python
+
+    import xanespy as xp
+
+    # First a script should be created with sector_8_xanes_script()
+    # Once the script is done, import the data with this function
+    xp.import_aps_8BM_xanes_dir("opearando_exp1/",
+                                hdf_filename="operando_experiments.h5")
+
+
+ALS Ptychography from 5.3.2.1
+=============================
 
 The output of the nanosurveyor reconstruction algorithm at 5.3.2.1
 saves the data in h5
@@ -160,114 +268,35 @@ details.
           languages. It even plays nicely with numpy out of the box.
 
 
-Xradia Image Files (.xrm and .txrm)
------------------------------------
-
-Xradia microscopes use the Microsoft OLE container format, which is
-not easily read [#ole]_. Individual scan files are generally not that
-helpful anyway. But in case you need it, there are some adapters to
-``.xrm`` and ``.txrm`` files, namely
-:py:class:`xanespy.xradia.XRMFile` and
-:py:class:`xanespy.xradia.TXRMFile`.
-
-.. note::
-
-   The specification for ``.xrm`` files is not public, so these
-   classes are reverse-engineered and may not be (definitely aren't)
-   perfect. If you encounter problems, please `submit an issue`_.
-
-Opening xrm or txrm files is best done via the context manager:
-
-.. code:: python
-
-   import xanespy as xp
-   import numpy as np
-
-   # Single-image xrm file
-   with xp.XRMFile('my_txm_image.xrm') as f:
-       img = f.image_data()
-       assert img.ndim == 2 # (row, col)
-
-   # Multi-image txrm energy stack file
-   with xp.TXRMFile('my_txm_stack.txrm') as f:
-       # Get images one at a time by index
-       img = f.image_data(idx=0)
-       assert img.ndim == 2 # (row, col)
-
-       # Get images all at once in one big array
-       stack = f.image_stack()
-       assert stack.ndim == 3 # (prj, row, col)
-       assert np.array_equal(img, stack[0])
-
-       # Get X-ray energies for the images
-       energies = f.energies()
-       assert len(energies) == stack.shape[0]
-
-The :py:class:`~xanespy.xradia.XRMFile` and
-:py:class:`~xanespy.xradia.TXRMFile` classes accept an optional
-``flavor`` keyword argument. This option affects several pieces of
-metadata. See the :py:class:`~xanespy.xradia.XRMFile` documentation
-for details.
-
-
-APS Beamline 8-BM-B - Energy Stack (TXRM)
------------------------------------------
-
-.. note:: The X-ray microscope that was temporarily at beamline 8-BM
-          has been returned to NSLS-II. These functions are retained
-          for compatibility with previously collected data.
-
-The Xradia microscope can save an entire stack in one ``.txrm``
-file. This file can be imported using the
-:py:func:`~xanespy.importers.import_aps8bm_xanes_file` function. The
-list of energies is automatically extracted from the file. The
-reference frames will then reside in a different ``.txrm`` file.
-
-Example usage:
+ALS Ptychography/STXM from COSMIC 7.0.1
+=======================================
+	 
+The new COSMIC_ beamline at ALS is similar to the 5.3.2.1 ptychography
+beamline. An additional feature is the ability to combine STXM
+(``.hdr``) and ptychography (``.cxi``)
+images. :py:func:`~xanespy.importers.import_cosmic_frameset` accepts
+lists of file paths to all the files to be imported. If ptychography
+and STXM frames are given, they will saved separately, and also merged
+into a combined frameset. The resulting merged frameset may require
+additional processing, however, since the intensities between the two
+sets may not be consistent.
 
 .. code:: python
 
     import xanespy as xp
+
+    ptycho_files = [...]
+    stxm_files = [...]
+
+    xp.import_cosmic_frameset(hdf_filename='my_data.h5', stxm_hdr=stxm_files,
+	                      ptycho_cxi=ptycho_files)
     
-    xp.import_aps_8BM_xanes_file('exp1-sample-stack.txrm',
-                                 ref_filename='exp1-reference_stack.txrm',
-  			         hdf_filename='txm-data.h5',
-       			         groupname='experiment1')
 
-.. note:: Currently this function can only import one XANES stack;
-	  time-resolved measurement is not implemented. If you would
-	  find this feature valuable, please `submit an issue`_.
-			       
-
-APS Beamline 8-BM-B - Directory of XRM Files
---------------------------------------------
-
-.. note:: The X-ray microscope that was temporarily at beamline 8-BM
-          has been returned to NSLS-II. These functions are retained
-          for compatibility with previously collected data.
-
-In-house XANES scan scripts often save a directory full of ``.xrm``
-files with the metadata coding in the filenames. From the Xradia TXM
-at sector 8-BM-B, this XANES scan script can be generated with
-:py:func:`~xanespy.beamlines.sector8_xanes_script`, and the results
-can then be imported with
-:py:func:`~xanespy.importers.import_aps8bm_xanes_dir`. The list of
-energies is automatically extracted from the filenames. The reference
-frames will also be identified in the directory.
-
-Example usage:
-
-.. code:: python
-
-    import xanespy as xp
-
-    # First a script should be created with sector_8_xanes_script()
-    # Once the script is done, import the data with this function
-    xp.import_aps_8BM_xanes_dir("opearando_exp1/",
-                                hdf_filename="operando_experiments.h5")
-
+.. _COSMIC: https://als.lbl.gov/beamlines/7-0-1/
+				
+				
 APS Beamline 4-ID-XTIP - Grid Scan
-----------------------------------
+==================================
 
 .. warning:: This technique and beamline are very new. The data
              structure will likely change often, so please `submit an

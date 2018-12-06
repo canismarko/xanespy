@@ -571,14 +571,16 @@ def load_cosmic_files(files, store, median_filter_size=None):
     store.optical_depths = ODs
 
 
-def import_cosmic_frameset(hdf_filename, stxm_hdr=(), ptycho_cxi=(), hdf_groupname=None):
+def import_cosmic_frameset(hdf_filename, stxm_hdr=(), ptycho_cxi=(),
+                           hdf_groupname=None, energy_difference=0.25):
     """Import a combination of STXM and ptychography frames.
     
     Order is preserved, so later entries in ``stxm_hdr`` over-ride
     previous ones. Additionally, ptychography frames will be given
     precidence over stxm frames of similar energy (within +/-
-    0.125eV). If both types of files are provided, both sets may
-    potentially be scaled and/or interpolated for matching resolution.
+    ``energy_difference`` eV). If both types of files are provided,
+    both sets may potentially be scaled and/or interpolated for
+    matching resolution.
     
     Parameters
     ==========
@@ -591,7 +593,10 @@ def import_cosmic_frameset(hdf_filename, stxm_hdr=(), ptycho_cxi=(), hdf_groupna
     hdf_groupname : str, optional
       Name of the HDF group to use. If omitted, this value will be
       guessed from the first file provided.
-    
+    energy_difference : float, optional
+      When merging ptycho and stxm files, how close in energy (eV) two
+      frames should be before they are considered at the same energy.
+
     """
     all_paths = ptycho_cxi + stxm_hdr
     has_ptycho = len(ptycho_cxi) > 0
@@ -654,7 +659,8 @@ def import_cosmic_frameset(hdf_filename, stxm_hdr=(), ptycho_cxi=(), hdf_groupna
         ptycho_store = TXMStore(**ro_store_kw, data_name=ptycho_data_name)
         # Do the merging
         merge_stores(base_store=stxm_store, new_store=ptycho_store,
-                     destination=merged_store)
+                     destination=merged_store,
+                     energy_difference=energy_difference)
 
 
 def import_nanosurveyor_frameset(directory: str, quiet=False,

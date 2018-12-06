@@ -24,8 +24,8 @@ Some steps in the analysis process require knowledge of the X-ray
 absorbance edge to function properly. To use these features, you'll
 need to define and absorbance edge for the element in question. You
 can also use one of the pre-defined edges, either directly or by the
-shortcuts :py:obj:`xanespy.edges.k_edges` or
-:py:obj:`xanespy.edges.l_edges`.
+shortcuts :py:obj:`xanespy.k_edges` or
+:py:obj:`xanespy.l_edges`.
 
 .. code:: python
     
@@ -93,7 +93,7 @@ Frame Alignment
 In order to acquire reliable spectra, **it is important that the
 frames be aligned properly**. Thermal expansion, motor slop, sample
 damage and imperfect microscope alignment can all cause frames to be
-misaligned. **It is often necessary to align the frames before
+misaligned. **It is almost always necessary to align the frames before
 performing any of the subsequent steps.**
 
 This is done with the
@@ -194,7 +194,7 @@ Filter After Aligning
 ---------------------
 
 Depending on the scientific question being addressed, a **final median
-filter after aligning** maybe desireable. This **4D filter**, applied
+filter after aligning** may be desireable. This **4D filter**, applied
 with
 :py:meth:`~xanespy.xanes_frameset.XanesFrameset.apply_median_filter()`,
 provides a trade-off between temporal, spatial and energy resolutions:
@@ -210,7 +210,7 @@ dimensions.
 	  fs.align_frames(...)
 	  kernel = (3, 3, 5, 5) # (time, energy, row, col)
 	  
-	  fs.median_filter(kernel)
+	  fs.apply_median_filter(kernel)
 
 Subtracting Surroundings
 ========================
@@ -219,7 +219,8 @@ Sometimes there are differences in the absorbance of the whole frame,
 including background material. This can be removed from each frame
 using
 :py:meth:`~xanespy.xanes_frameset.XanesFrameset.subtract_surroundings`,
-giving a better spectrum:
+giving a better spectrum. This is more likely to be useful for
+full-field microscopy than scanning microscopy.
 
 .. code:: python
   	  
