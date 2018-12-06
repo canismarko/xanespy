@@ -22,7 +22,7 @@
 
 """Tests for the Qt5 viewer."""
 import unittest
-from unittest import mock, skip, skipUnless
+from unittest import mock, skip, skipUnless, skipIf
 import warnings
 import time
 import os
@@ -33,15 +33,24 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardi
 import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
+
+HAS_PYQT = True
 try:
     from PyQt5 import QtWidgets, QtTest, QtCore
 except ImportError:
     HAS_PYQT = False
-else:
-    HAS_PYQT = True
+if os.environ.get('NO_QT', False):
+    HAS_PYQT = False
+if os.environ.get("IS_TRAVIS", False):
+    IS_TRAVIS = True
+
+if HAS_PYQT:
     from xanespy.qt_map_view import QtMapView
     from xanespy.qt_frameset_presenter import QtFramesetPresenter
     from xanespy.qt_frame_view import FrameChangeSource, QtFrameView
+else:
+    from unittest.mock import MagicMock as QtFramesetPresenter
+
 
 from xanespy import XanesFrameset, k_edges, exceptions, xanes_viewer
 from xanespy.utilities import xycoord, Extent, shape, Pixel
@@ -88,6 +97,7 @@ class MockFramesetPresenter(QtFramesetPresenter):
 class XanesViewerTestCase(unittest.TestCase):
     hdf_filename = os.path.join(TEST_DIR, 'txmstore-test.h5')
     
+    @skipIf(IS_TRAVIS, 'Not running on Travis')
     def test_xanes_viewer(self):
         # K-edge
         argv = ('-k', 'Ni', '-g', 'ssrl-test-data', self.hdf_filename)
@@ -145,6 +155,7 @@ class QtTestCase(unittest.TestCase):
         data = np.arange(length)
         data = np.reshape(data, shape)
         return data
+
 
 @skipUnless(HAS_PYQT, "PyQt5 required")
 class FrameViewTestCase(QtTestCase):
@@ -216,6 +227,7 @@ class FrameViewTestCase(QtTestCase):
         view.window.unsetCursor.assert_called_with()
         view.ui.statusbar.clearMessage.assert_called_once_with()
 
+
 @skipUnless(HAS_PYQT, "PyQt5 required")
 class MapViewTestCase(QtTestCase):
     def test_keyboard_nav(self):
@@ -231,7 +243,7 @@ class MapViewTestCase(QtTestCase):
         view.keyboard_nav(event)
         self.assertEqual(len(spy), 1)
         self.assertEqual(spy[0], [-10, 0])
-
+    
     def test_mouse_in_canvas(self):
         view = QtMapView()
         view.map_ax = "fake_axis"
@@ -248,7 +260,7 @@ class MapViewTestCase(QtTestCase):
         view.mouse_in_canvas(event)
         self.assertEqual(len(spy), 2)
         self.assertEqual(spy[-1], [3.54, -12.98])
-
+    
     def test_mouse_clicked(self):
         view = QtMapView()
         view.map_ax = "fake_axis"
@@ -265,7 +277,7 @@ class MapViewTestCase(QtTestCase):
         view.mouse_clicked_canvas(event)
         self.assertEqual(len(spy), 2)
         self.assertEqual(spy[-1], [3.54, -12.98])
-
+    
     def test_update_crosshairs(self):
         view = QtMapView()
         view.ui = mock.Mock()
@@ -333,6 +345,7 @@ class MapViewTestCase(QtTestCase):
         view.ui.spnVMax.setSingleStep.assert_called_once_with(0.1)
         view.ui.spnVMax.setDecimals.assert_called_once_with(3)
         view.ui.spnVMax.setValue.assert_called_once_with(10)
+
 
 @skipUnless(HAS_PYQT, "PyQt5 required")
 class PresenterTestCase(QtTestCase):

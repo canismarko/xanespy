@@ -254,7 +254,7 @@ class CosmicTest(TestCase):
             stored_filename = store.filenames[0,0].decode('utf-8')
             self.assertEqual(stored_filename, os.path.basename(self.ptycho_cxi))
             np.testing.assert_equal(store.energies.value, [[855.9056362433222]])
-            np.testing.assert_equal(store.pixel_sizes.value, [[1]])
+            np.testing.assert_equal(store.pixel_sizes.value, [[6]])
             np.testing.assert_equal(store.pixel_unit, 'nm')
             self.assertEqual(store.intensities.shape, (1, 1, 285, 285))
             self.assertEqual(store.optical_depths.shape, (1, 1, 285, 285))
@@ -278,7 +278,7 @@ class CosmicTest(TestCase):
         with TXMStore(**hdf_kw, data_name='imported') as store:
             self.assertEqual(store.filenames.shape, (1, 3))
             self.assertEqual(store.timestep_names.shape, (1,))
-            np.testing.assert_equal(store.pixel_sizes.value, [[1, 1, 1]])
+            np.testing.assert_equal(store.pixel_sizes.value, [[6, 6, 6]])
             self.assertEqual(store.pixel_unit, 'nm')
 
 
