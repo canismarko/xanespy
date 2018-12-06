@@ -47,8 +47,6 @@ from xanespy.importers import (magnification_correction,
                                import_ssrl_xanes_dir, CURRENT_VERSION,
                                import_nanosurveyor_frameset,
                                import_cosmic_frameset,
-                               resample_image,
-                               crop_image,
                                import_aps4idc_sxstm_files,
                                import_aps8bm_xanes_dir,
                                import_aps8bm_xanes_file,
@@ -278,33 +276,10 @@ class CosmicTest(TestCase):
             self.assertEqual(store.timestep_names[0].decode('utf-8'), 'ex-situ')
         # Open imported TXMStore to check its contents
         with TXMStore(**hdf_kw, data_name='imported') as store:
-            pass
-            # self.assertEqual(store.filenames.shape, (1, 2))
-            
-    
-    def test_resample_image(self):
-        original = data.horse()
-        # Test simple cropping with no resampling
-        new_shape = (int(original.shape[0] * 0.5), int(original.shape[1] * 0.5))
-        resized = resample_image(original, new_shape=new_shape,
-                                 src_dims=(1, 1), new_dims=(0.5, 0.5))
-        self.assertEqual(resized.shape, new_shape)
-        # Test sample resizing with no cropping
-        new_shape = (int(original.shape[0] * 2), int(original.shape[1] * 2))
-        resized = resample_image(original, new_shape=new_shape,
-                                 src_dims=(1, 1), new_dims=(1, 1))
-        self.assertEqual(resized.shape, new_shape)
-    
-    def test_crop_image(self):
-        original = data.horse()
-        # Test simple cropping
-        cropped = crop_image(original, (64, 64), center=(164, 200))
-        expected = original[132:196,168:232]
-        np.testing.assert_equal(cropped, expected)
-        # Test with a center outside the window
-        cropped = crop_image(original, (64, 64), center=(30, 380))
-        expected = original[:64,336:]
-        np.testing.assert_equal(cropped, expected)
+            self.assertEqual(store.filenames.shape, (1, 3))
+            self.assertEqual(store.timestep_names.shape, (1,))
+            np.testing.assert_equal(store.pixel_sizes.value, [[1, 1, 1]])
+            self.assertEqual(store.pixel_unit, 'nm')
 
 
 class CosmicFileTest(TestCase):

@@ -34,7 +34,6 @@ import numpy as np
 from scipy.constants import physical_constants
 from scipy.ndimage.filters import median_filter
 from scipy.ndimage import center_of_mass
-from skimage.transform import resize
 import pytz
 
 from xradia import XRMFile, TXRMFile
@@ -44,8 +43,8 @@ from utilities import prog, get_component
 import exceptions
 from xanes_math import (transform_images, apply_references,
                         transformation_matrices, downsample_array,
-                        apply_internal_reference)
-from txmstore import TXMStore
+                        apply_internal_reference, crop_image)
+from txmstore import TXMStore, merge_stores
 
 
 format_classes = {
@@ -485,103 +484,6 @@ def read_metadata(filenames, flavor, quiet=False):
     return df.sort_values(by=['starttime'])
 
 
-def crop_image(img, shape, center=None):
-    """Return a cropped image with shape around center
-    
-    Parameters
-    ==========
-    img
-      The 2-D image data to crop.
-    shape
-      The shape of the data to crop to.
-    center
-      The point around which the cropping should occur. If this point
-      results in cropping outside the given image, the center will be
-      moved to ensure proper image shape. If omitted, the center of
-      the image will be used.
-    
-    Returns
-    =======
-    new_img
-      The cropped image.
-    
-    """
-    # Make sure image is 2-dimensionsal
-    if img.ndim != 2:
-        raise exceptions.XanesMathError('Image must be 2-dimensional')
-    # Get default center if neeeded
-    if center is None:
-        center = (int(img.shape[0]/2), int(img.shape[1]/2))
-    # Crop the image
-    offset = np.array(shape) / 2
-    # Make sure the center position for columns is reasonable
-    if center[1] + offset[1] > img.shape[1]:
-        center_c = img.shape[1] - offset[1]
-    elif center[1] - offset[1] < 0:
-        center_c = offset[1]
-    else:
-        center_c = center[1]
-    # Make sure the center position for rows is reasonable
-    if center[0] + offset[0] > img.shape[0]:
-        center_r = img.shape[0] - offset[0]
-    elif center[0] - offset[0] < 0:
-        center_r = offset[0]
-    else:
-        center_r = center[0]
-    # Do the actual cropping
-    rows = (int(center_r - offset[0]), int(center_r + offset[0]))
-    cols = (int(center_c - offset[1]), int(center_c + offset[1]))
-    new_img = img[rows[0]:rows[1],cols[0]:cols[1]]
-    assert np.array_equal(new_img.shape, shape)
-    return new_img
-
-
-def resample_image(img, new_shape, src_dims, new_dims):
-    """Resample and crop an image to match a given parameters.
-    
-    Based on the values of ``src_dims`` and ``new_dims`` the image
-    will be cropped, this cropping will occur around the center of
-    weight for the image. For this to work well, it is necessary to
-    first have the images in the optical depth domain.
-    
-    Resampling is done using ``skimage.transform.resize``
-    
-    Parameters
-    ==========
-    img : np.ndarray
-      The image to be transformed.
-    new_shape : 2-tuple
-      The shape the image should be when it is returned.
-    src_dims : 2-tuple
-      The (x, y) dimensions of the ``img`` in physical units (eg µm)
-    new_dims : 2-tuple
-      The (x, y) dimensions of the target image in physical units (eg
-      µm). If ``new_dims`` is larger than ``src_dims``, an exception
-      will be raised.
-    
-    Returns
-    =======
-    new_img : np.ndarray
-      The re-sampled and cropped image.
-    
-    """
-    # Convert everything to numpy arrays
-    new_dims = np.array(new_dims)
-    src_dims = np.array(src_dims)
-    new_shape = np.array(new_shape)
-    # Determine how big to make the new image
-    size_ratio = new_dims / src_dims
-    full_shape = new_shape / size_ratio
-    # Resample the image
-    new_img = np.copy(img)
-    if np.array_equal(full_shape, new_shape):
-        new_img = resize(new_img, full_shape, order=3, mode='reflect')
-    # Crop the image
-    center = center_of_mass(new_img)
-    new_img = crop_image(new_img, new_shape, center=center)
-    return new_img
-
-
 @contextlib.contextmanager
 def open_files(paths, opener=open):
     """Context manager that opens files and closes them again.
@@ -639,7 +541,7 @@ def load_cosmic_files(files, store, median_filter_size=None):
             this_px_size = f.pixel_size()
         except exceptions.DataFormatError:
             warnings.warn('Cannot load pixel sizes from %s' % f)
-            this_px_size = 1
+            this_px_size = 6
         px_sizes.extend([this_px_size] * f.num_images())
     store.pixel_sizes = [px_sizes]
     store.pixel_unit = 'nm'
@@ -720,6 +622,9 @@ def import_cosmic_frameset(hdf_filename, stxm_hdr=(), ptycho_cxi=(), hdf_groupna
         if has_ptycho:
             new_grp = parent_group.create_group(ptycho_data_name)
             log.debug("Created new ptycho group: %s", new_grp.name)
+        if has_stxm and has_ptycho:
+            new_grp = parent_group.create_group('imported')
+            log.debug("Created new merged group: imported")
     # Load the STXM frames    
     store_kw = dict(hdf_filename=hdf_filename, parent_name=hdf_groupname,
                     mode='a')
@@ -738,7 +643,18 @@ def import_cosmic_frameset(hdf_filename, stxm_hdr=(), ptycho_cxi=(), hdf_groupna
         ptycho_store = TXMStore(**store_kw, data_name=ptycho_data_name)
         with ptycho_store, open_files(ptycho_cxi, CXIFile) as ptycho_files:
             load_cosmic_files(files=ptycho_files, store=ptycho_store)
-            ptycho_store.latest_data_name = ptycho_data_name            
+            ptycho_store.latest_data_name = ptycho_data_name
+    # Merge the framesets together into a new frameset
+    if has_ptycho and has_stxm:
+        # Prepare the relevant data stores
+        merged_store = TXMStore(**store_kw, data_name='imported')
+        ro_store_kw = dict(**store_kw)
+        ro_store_kw['mode'] = 'r'
+        stxm_store = TXMStore(**ro_store_kw, data_name=stxm_data_name)
+        ptycho_store = TXMStore(**ro_store_kw, data_name=ptycho_data_name)
+        # Do the merging
+        merge_stores(base_store=stxm_store, new_store=ptycho_store,
+                     destination=merged_store)
 
 
 def import_nanosurveyor_frameset(directory: str, quiet=False,

@@ -38,7 +38,7 @@ class CXIFile():
         return filenames
     
     def image_frames(self):
-        data = self.hdf_file['/entry_1/image_1/data'].value
+        data = self.hdf_file['/entry_1/image_1/data'].value[::-1]
         return np.array([data])
     
     def image_shape(self):

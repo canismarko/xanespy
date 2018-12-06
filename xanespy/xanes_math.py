@@ -33,6 +33,7 @@ from functools import partial
 
 from scipy import ndimage, linalg, stats
 from scipy.optimize import curve_fit, leastsq
+from scipy.ndimage import center_of_mass
 import numpy as np
 from skimage import transform, feature, filters, morphology, exposure, measure
 from sklearn import decomposition
@@ -97,6 +98,111 @@ class FramesPool(mp.pool.Pool):
         new_shape = (*extra_shape, *result.shape[1:])
         result = np.reshape(result, new_shape)
         return result
+
+
+def crop_image(img, shape, center=None):
+    """Return a cropped image with shape around center
+    
+    Parameters
+    ==========
+    img
+      The 2-D image data to crop.
+    shape
+      The shape of the data to crop to.
+    center
+      The point around which the cropping should occur. If this point
+      results in cropping outside the given image, the center will be
+      moved to ensure proper image shape. If omitted, the center of
+      the image will be used.
+    
+    Returns
+    =======
+    new_img
+      The cropped image.
+    
+    """
+    # Make sure image is 2-dimensionsal
+    if img.ndim != 2:
+        raise XanesMathError('Image must be 2-dimensional')
+    # Make sure the target is smaller than the current image size
+    for src_dim, new_dim in zip(img.shape, shape):
+        if new_dim > src_dim:
+            raise XanesMathError(
+                'Invalid image cropping dimensions: {} -> {}'
+                ''.format(img.shape, shape))
+    # Get default center if neeeded
+    if center is None:
+        center = (int(img.shape[0]/2), int(img.shape[1]/2))
+    # Crop the image
+    offset = np.array(shape) / 2
+    # Make sure the center position for columns is reasonable
+    if center[1] + offset[1] > img.shape[1]:
+        center_c = img.shape[1] - offset[1]
+    elif center[1] - offset[1] < 0:
+        center_c = offset[1]
+    else:
+        center_c = center[1]
+    # Make sure the center position for rows is reasonable
+    if center[0] + offset[0] > img.shape[0]:
+        center_r = img.shape[0] - offset[0]
+    elif center[0] - offset[0] < 0:
+        center_r = offset[0]
+    else:
+        center_r = center[0]
+    # Do the actual cropping
+    rows = (int(center_r - offset[0]), int(center_r + offset[0]))
+    cols = (int(center_c - offset[1]), int(center_c + offset[1]))
+    new_img = img[rows[0]:rows[1],cols[0]:cols[1]]
+    assert np.array_equal(new_img.shape, shape)
+    return new_img
+
+
+def resample_image(img, new_shape, src_dims, new_dims):
+    """Resample and crop an image to match a given parameters.
+    
+    Based on the values of ``src_dims`` and ``new_dims`` the image
+    will be cropped, this cropping will occur around the center of
+    weight for the image. For this to work well, it is necessary to
+    first have the images in the optical depth domain.
+    
+    Resampling is done using ``skimage.transform.resize``
+    
+    Parameters
+    ==========
+    img : np.ndarray
+      The image to be transformed.
+    new_shape : 2-tuple
+      The shape the image should be when it is returned.
+    src_dims : 2-tuple
+      The (x, y) dimensions of the ``img`` in physical units (eg µm)
+    new_dims : 2-tuple
+      The (x, y) dimensions of the target image in physical units (eg
+      µm). If ``new_dims`` is larger than ``src_dims``, an exception
+      will be raised.
+    
+    Returns
+    =======
+    new_img : np.ndarray
+      The re-sampled and cropped image.
+    
+    """
+    # Convert everything to numpy arrays
+    new_dims = np.array(new_dims)
+    src_dims = np.array(src_dims)
+    new_shape = np.array(new_shape)
+    # Determine how big to make the new image
+    size_ratio = new_dims / src_dims
+    full_shape = new_shape / size_ratio
+    full_shape = tuple(round(v) for v in full_shape)
+    # Resample the image
+    new_img = np.copy(img)
+    resize_needed = not np.array_equal(full_shape, new_img.shape)
+    if resize_needed:
+        new_img = transform.resize(new_img, full_shape, order=3, mode='reflect')
+    # Crop the image
+    center = center_of_mass(new_img)
+    new_img = crop_image(new_img, new_shape, center=center)
+    return new_img
 
 
 # Helpers for parallelizable code

@@ -43,7 +43,8 @@ from xanespy.xanes_math import (transform_images, direct_whitelines,
                                 apply_internal_reference,
                                 apply_mosaic_reference,
                                 register_template, register_correlations,
-                                downsample_array, FramesPool)
+                                downsample_array, FramesPool,
+                                resample_image, crop_image)
 
 TEST_DIR = os.path.dirname(__file__)
 SSRL_DIR = os.path.join(TEST_DIR, 'txm-data-ssrl')
@@ -82,6 +83,33 @@ class XanesMathTest(unittest.TestCase):
         coins = coins * (0.975 + np.random.rand(*coins.shape)/20)
         coins = coins.astype(np.int32)
         return coins
+    
+    def test_resample_image(self):
+        original = data.horse()
+        # Test simple cropping with no resampling
+        new_shape = (int(original.shape[0] * 0.5), int(original.shape[1] * 0.5))
+        resized = resample_image(original, new_shape=new_shape,
+                                 src_dims=(1, 1), new_dims=(0.5, 0.5))
+        self.assertEqual(resized.shape, new_shape)
+        # Test sample resizing with no cropping
+        new_shape = (int(original.shape[0] * 2), int(original.shape[1] * 2))
+        resized = resample_image(original, new_shape=new_shape,
+                                 src_dims=(1, 1), new_dims=(1, 1))
+        self.assertEqual(resized.shape, new_shape)
+    
+    def test_crop_image(self):
+        original = data.horse()
+        # Test simple cropping
+        cropped = crop_image(original, (64, 64), center=(164, 200))
+        expected = original[132:196,168:232]
+        np.testing.assert_equal(cropped, expected)
+        # Test with a center outside the window
+        cropped = crop_image(original, (64, 64), center=(30, 380))
+        expected = original[:64,336:]
+        np.testing.assert_equal(cropped, expected)
+        # Test what happens if the target is bigger than the destination
+        with self.assertRaises(exceptions.XanesMathError):
+            cropped = crop_image(original, (600, 600))
     
     def test_downsample_array(self):
         """Check that image downsampling works as expected."""

@@ -19,16 +19,108 @@
 
 """Tools for accessing TXM data stored in an HDF5 file."""
 
+import logging
+from collections import namedtuple
+
 import h5py
 import numpy as np
-import logging
+from tqdm import tqdm
 
 from exceptions import (GroupKeyError, CreateGroupError, FrameSourceError,)
-
 import xanes_math as xm
+from utilities import get_component
 
 
 log = logging.getLogger(__name__)
+
+
+def merge_stores(base_store, new_store, destination, energy_difference=0.1, upsample=True):
+    """Merge two open txm stores into a third store.
+    
+    Framesets will be combined from both ``base_store`` and
+    ``new_store``. If frames in both sets are within
+    ``energy_difference`` or each other, then the one from
+    ``new_store`` will be used. The resulting frames will be cropped
+    and up-sampled. Maps will not be copied, since they are unlikely
+    to be reliable with the merged framesets. The metadata will
+    reflect the merging as best as possible.
+    
+    """
+    num_timesteps = len(base_store.timestep_names)
+    M = namedtuple('M', ('energy', 'idx', 'store'))
+    # Create some arrays to hold the results
+    energies = []
+    intensities = []
+    optical_depths = []
+    filenames = []
+    pixel_sizes = []
+    for t_idx in range(num_timesteps):
+        # Prepare a "master list" of frames to used
+        num_energies_A = len(base_store.energies[t_idx])
+        energies_A = base_store.energies[t_idx]
+        master_list = [M(energies_A[E_idx], E_idx, base_store)
+                       for E_idx in range(num_energies_A)]
+        # Update the master list for each frame in the new store
+        energies_B = new_store.energies[t_idx]
+        for E_idx, E in enumerate(energies_B):
+            # Check if this entry exists in the master list already
+            matches = [m for m in master_list
+                       if abs(m.energy - E) < energy_difference]
+            if matches:
+                # It already exists, so replace it
+                for m in matches:
+                    idx = master_list.index(m)
+                    master_list[idx] = M(E, E_idx, new_store)
+            else:
+                # It doesn't exist, so add it
+                master_list.append(M(E, E_idx, new_store))
+        # Sort the master list to be in energy ascending order
+        master_list.sort(key=lambda m: m.energy)
+        # Empty array for catching processed data
+        Es = []
+        Is = []
+        ODs = []
+        fnames = []
+        # Prepare the arguments for resizing each image
+        shapes = [m.store.intensities.shape[2:] for m in master_list]
+        max_shape = (max(s[0] for s in shapes),
+                     max(s[1] for s in shapes))
+        dims = [np.array(m.store.intensities.shape[2:]) * m.store.pixel_sizes[t_idx,E_idx]
+                for m in master_list]
+        min_dims = (min(d[0] for d in dims), min(d[1] for d in dims))
+        target_px_size = min(m.store.pixel_sizes[t_idx,E_idx] for m in master_list)
+        pixel_sizes.append((target_px_size,) * len(master_list))
+        # Retrieve and resize each image
+        for m, dim in tqdm(zip(master_list, dims), total=len(master_list)):
+            Es.append(m.energy)
+            px_size = m.store.pixel_sizes[t_idx]
+            I = m.store.intensities[t_idx,m.idx]
+            if np.iscomplexobj(I):
+                comp = 'imag'
+            else:
+                comp = 'real'
+            I = get_component(I, comp)
+            I = xm.resample_image(I, new_shape=max_shape, src_dims=dim, new_dims=min_dims)
+            Is.append(I)
+            OD = m.store.optical_depths[t_idx,m.idx]
+            OD = get_component(OD, comp)
+            OD = xm.resample_image(OD, new_shape=max_shape, src_dims=dim, new_dims=min_dims)
+            ODs.append(OD)
+            # Save the necessary metadata
+            fnames.append(m.store.filenames[t_idx][m.idx])
+        # Save the combined framesets
+        energies.append(Es)
+        intensities.append(Is)
+        optical_depths.append(ODs)
+        filenames.append(fnames)
+    # Set the newly merged frames
+    destination.energies = energies
+    destination.intensities = np.array(intensities)
+    destination.optical_depths = np.array(optical_depths)
+    destination.filenames = filenames
+    destination.timestep_names = base_store.timestep_names
+    destination.pixel_sizes = pixel_sizes
+    destination.pixel_unit = base_store.pixel_unit
 
 
 class TXMDataset():
@@ -129,6 +221,14 @@ class TXMStore():
             self.data_name = self.latest_data_name
         else:
             self.data_name = data_name
+    
+    def __str__(self):
+        return self.parent_name + '-' + self.data_name
+
+    def __repr__(self):
+        fmt = '<TXMStore: {}/{}/{}>'
+        fmt = fmt.format(self.hdf_filename, self.parent_name, self.data_name)
+        return fmt
     
     def __enter__(self):
         return self
@@ -314,6 +414,11 @@ class TXMStore():
     def get_dataset(self, name):
         """Attempt to open the requested dataset.
         
+        Parameters
+        ==========
+        name : str
+          The name of the dataset to open in the data group.
+        
         Returns
         -------
         data : hyp5.Dataset
@@ -323,6 +428,7 @@ class TXMStore():
         ------
         exceptions.GroupKeyError
           If the dataset does not exist in the file.
+        
         """
         # Check for some bad dataset names
         if name is None:
