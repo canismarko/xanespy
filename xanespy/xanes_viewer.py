@@ -33,6 +33,8 @@ def parse_args(argv):
                         ' %s' % l_edge_list)
     parser.add_argument('-d', '--debug', action='store_true',
                         help="Show detailed logging and disable threading.")
+    parser.add_argument('--no-threading', action='store_true',
+                        help="Disable multi-threading.")
     args = parser.parse_args(argv)
     return args
 
@@ -67,8 +69,7 @@ def launch_viewer(argv, Presenter):
                        edge=edge,
                        groupname=groupname)
     # Lauch the Qt viewer
-    is_threaded = not args.debug
-    is_threaded = None
+    is_threaded = not (args.debug or args.no_threading)
     presenter = Presenter(frameset=fs)
     presenter.create_app()
     presenter.add_map_view(QtMapView(), threaded=is_threaded)

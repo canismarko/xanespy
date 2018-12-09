@@ -43,6 +43,8 @@ if os.environ.get('NO_QT', False):
     HAS_PYQT = False
 if os.environ.get("IS_TRAVIS", False):
     IS_TRAVIS = True
+else:
+    IS_TRAVIS = False
 
 if HAS_PYQT:
     from xanespy.qt_map_view import QtMapView
@@ -100,18 +102,18 @@ class XanesViewerTestCase(unittest.TestCase):
     @skipIf(IS_TRAVIS, 'Not running on Travis')
     def test_xanes_viewer(self):
         # K-edge
-        argv = ('-k', 'Ni', '-g', 'ssrl-test-data', self.hdf_filename)
+        argv = ('--k-edge', 'Ni', '--groupname', 'ssrl-test-data', '--no-threading', self.hdf_filename)
         xanes_viewer.launch_viewer(argv, Presenter=MockFramesetPresenter)
         # Now with L-edge
-        argv = ('-l', 'Ni_NCA', self.hdf_filename)
+        argv = ('--l-edge', 'Ni_NCA', '--no-threading', self.hdf_filename)
         xanes_viewer.launch_viewer(argv, Presenter=MockFramesetPresenter)
         # No edge
-        argv = (self.hdf_filename,)
+        argv = (self.hdf_filename, '--no-threading')
         with warnings.catch_warnings():
             warnings.filterwarnings('ignore', message='``edge`` set to')
             xanes_viewer.launch_viewer(argv, Presenter=MockFramesetPresenter)
         # With a bad filename
-        argv = ('gibberish.nonsense', )
+        argv = ('gibberish.nonsense', '--no-threading')
         with self.assertRaises(SystemExit):
             xanes_viewer.launch_viewer(argv, Presenter=MockFramesetPresenter)
     
