@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+# -*- Coding: utf-8 -*-
 #
 # Copyright © 2016 Mark Wolf
 #
@@ -1160,10 +1160,10 @@ def decode_ssrl_params(filename):
     a dictionary."""
     # Beamline 6-2c at SSRL
     ssrl_regex_bg = re.compile(
-        'rep(\d{2})_(\d{6})_ref_[0-9]+_([-a-zA-Z0-9_]+)_([0-9.]+)_eV_(\d{3})of(\d{3})\.xrm'
+        'rep(\d{2})_(\d{6})_ref_[0-9]*_?([-a-zA-Z0-9_]+)_([0-9.]+)_eV_(\d{3})of(\d{3})\.xrm'
     )
     ssrl_regex_sample = re.compile(
-        'rep(\d{2})_[0-9]+_([-a-zA-Z0-9_]+)_([0-9.]+)_eV_(\d{3})of(\d{3}).xrm'
+        'rep(\d{2})_[0-9]*_?([-a-zA-Z0-9_]+)_([0-9.]+)_eV_(\d{3})of(\d{3}).xrm'
     )
     # Check for background frames
     bg_result = ssrl_regex_bg.search(filename)
@@ -1384,7 +1384,11 @@ def import_frameset(directory, flavor, hdf_filename, groupname=None, return_val=
         msg += ' Please include a "{}" to receive the position name.'
         raise exceptions.CreateGroupError(msg)
     # Import reference frames
-    assert len(reference_files.groupby('position_name')) == 1
+    reference_names = reference_files.groupby('position_name')
+    if len(reference_names) != 1:
+        raise exceptions.DataFormatError(
+            "Found incompatible number of reference frames: {}"
+            "".format(reference_names.groups()))
     ref_groups = reference_files.groupby('timestep_name')
     imp_name = pos_name if groupname is None else groupname
     imp_group = h5file.require_group("{}/imported".format(imp_name))
@@ -1403,8 +1407,19 @@ def import_frameset(directory, flavor, hdf_filename, groupname=None, return_val=
             images = []
             for f in E_df.index:
                 with Importer(f, flavor=flavor) as E_file:
-                    images.append(E_file.image_data())
-                progbar.update(1)
+                    try:
+                        images.append(E_file.image_data())
+                    except exceptions.DataFormatError:
+                        warnings.warn(
+                            'Cannot import reference file {}'
+                            ''.format(E_file))
+                    progbar.update(1)
+            # Make sure we found at least 1 reference file
+            if len(images) == 0:
+                raise exceptions.DataFormatError(
+                    "Could not find any reference files for "
+                    "{} ({}) {}"
+                    "".format(ts_name, ts_idx, E_name))
             # Take the average of all the files and apply median filter
             images = np.mean(np.array(images), axis=0)
             Is.append(median_filter(images, footprint=median_kernel))

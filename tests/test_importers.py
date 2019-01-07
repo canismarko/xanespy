@@ -394,6 +394,7 @@ class XradiaTest(TestCase):
             expected_start = dt.datetime(2017, 7, 9, 0, 49, 2)
             self.assertEqual(result[0], expected_start)
 
+
 class PtychographyImportTest(TestCase):
     def setUp(self):
         self.hdf = os.path.join(PTYCHO_DIR, 'testdata.h5')
@@ -764,6 +765,38 @@ class SSRLImportTest(TestCase):
             'energy': 8250.0,
         }
         self.assertEqual(result, expected)
+        # This one was a problem, from 2017-04-05
+        sample_filename = (
+            "NCA_Pg71-5/Pg71-5_NCA_charge2_XANES_170405_1515/"
+            "rep01_Pg71-5_NCA_charge2_08250.0_eV_001of005.xrm")
+        result = decode_ssrl_params(sample_filename)
+        expected = {
+            'timestep_name': 'rep01',
+            'position_name': 'Pg71-5_NCA_charge2',
+            'is_background': False,
+            'energy': 8250.0,
+        }
+        self.assertEqual(result, expected)
+        # This reference was also a problem
+        ref_filename = 'rep01_000001_ref_Pg71-5_NCA_charge2_08250.0_eV_001of010.xrm'
+        result = decode_ssrl_params(ref_filename)
+        expected = {
+            'timestep_name': 'rep01',
+            'position_name': 'Pg71-5_NCA_charge2',
+            'is_background': True,
+            'energy': 8250.0,
+        }
+        self.assertEqual(result, expected)
+        # Another bad reference file
+        ref_filename = 'rep02_000182_ref_201604061951_Pg71-8_NCA_charge1_08400.0_eV_002of010.xrm'
+        result = decode_ssrl_params(ref_filename)
+        expected = {
+            'timestep_name': 'rep02',
+            'position_name': 'Pg71-8_NCA_charge1',
+            'is_background': True,
+            'energy': 8400.0,
+        }
+        self.assertEqual(result, expected)
     
     def test_magnification_correction(self):
         # Prepare some fake data
@@ -789,7 +822,7 @@ class SSRLImportTest(TestCase):
         # # Check the values for translation and scale for the changed image
         np.testing.assert_equal(scales[0, 1], (0.5, 0.5))
         np.testing.assert_equal(translations[0,1], (1., 1.))
-
+    
     def test_bad_file(self):
         # One specific file is not saved properly
         filenames = [

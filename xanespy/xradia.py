@@ -245,12 +245,17 @@ class XRMFile():
         # Return decoded image data
         try:
             stream = self.ole_file.openstream('ImageData1/Image{}'.format(idx+1))
-        except OSError:
-            raise
-            msg = "Cannot open image data {} in file {}"
-            msg = msg.format('ImageData1/Image1', self.filename)
-            raise exceptions.DataFormatError(msg)
-        img_data = struct.unpack(fmt_str, stream.read())
+        except (OSError, struct.error) as e:
+            raise exceptions.DataFormatError(
+                "Cannot open image data {} in file {}"
+                "".format('ImageData1/Image1', self.filename))
+        try:
+            data = stream.read()
+            img_data = struct.unpack(fmt_str, data)
+        except struct.error:
+            raise exceptions.DataFormatError(
+                "Invalid image data in file {}: {}"
+                "".format(self.filename, data))
         img_data = np.reshape(img_data, dimensions)
         return img_data
     
