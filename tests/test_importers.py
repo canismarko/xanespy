@@ -332,6 +332,15 @@ class CosmicFileTest(TestCase):
         with self.hdr:
             self.assertAlmostEqual(self.hdr.energies()[0], 853., places=3)
 
+    def test_specific_hdr_files(self):
+        """This test check specific HDR files that did not succeed at first.
+        
+        """
+        # This one has a negative sign in front of the x-position
+        filename1 = os.path.join(COSMIC_DIR, 'NS_181111148.hdr')
+        hdr1 = HDRFile(filename1)
+        self.assertAlmostEqual(hdr1.pixel_size(), 66.7)
+
 
 class XradiaTest(TestCase):
     txrm_filename = os.path.join(TEST_DIR, "aps-8BM-sample.txrm")

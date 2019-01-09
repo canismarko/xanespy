@@ -162,8 +162,8 @@ class HDRFile():
     
     def scan_metadata(self):
         regex = (
-            r'\{\s*CentreXPos = (?P<centerx>\d+\.?\d*);'
-            r'\s*CentreYPos = (?P<centery>\d+\.?\d*);'
+            r'\{\s*CentreXPos = (?P<centerx>-?\d+\.?\d*);'
+            r'\s*CentreYPos = (?P<centery>-?\d+\.?\d*);'
             r'\s*XRange = (?P<xrange>\d+\.?\d*);'
             r'\s*YRange = (?P<yrange>\d+\.?\d*);'
             r'\s*XStep = (?P<xstep>\d+\.?\d*);'
@@ -175,7 +175,11 @@ class HDRFile():
         )
         scan_re = re.compile(regex)
         match = scan_re.search(self._contents)
-        metadata = match.groupdict()
+        if match:
+            metadata = match.groupdict()            
+        else:
+            raise exceptions.DataFormatError('Cannot read format in file {}.'
+                                             ''.format(self.filename))
         # Convert value to proper datatypes
         to_bool = lambda x: True if x == 'true' else False
         types = {
