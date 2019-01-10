@@ -25,10 +25,13 @@ from xanes_math import k_edge_mask, l_edge_mask
 
 
 class Edge():
-    """An X-ray absorption edge. It is defined by a series of energy
-    ranges. All energies are assumed to be in units of
-    electron-volts. This class is intended to be extended into K-edge,
-    L-edge, etc.
+    """A definition for  an element's X-ray absorption edge.
+    
+    It is defined by a series of energy ranges. All energies are
+    assumed to be in units of electron-volts. This class is intended
+    to be extended into K-edge, L-edge, etc. ``pre_edge`` and
+    ``post_edge`` are used for fitting and applying edge jump filters,
+    etc.
     
     Attributes
     ----------
@@ -45,9 +48,6 @@ class Edge():
     post_edge: 2-tuple
       Energy range (start, stop) that defines points above the edge
       region, inclusive.
-    map_range : 2-tuple
-      Energy range (start, stop) used for normalizing maps. If not
-      supplied, will be determine from pre- and post-edge arguments.
     edge_range : 2-tuple
       Energy range (start, stop) used to determine the official
       beginning and edge of the edge itself.
@@ -57,9 +57,7 @@ class Edge():
     E_0 = None
     pre_edge = None
     post_edge = None
-    map_range = None
     edge_range = None
-    pre_edge_fit = None
     
     def all_energies(self):
         """Combine all the regions into one array.
@@ -82,14 +80,6 @@ class Edge():
                 energies.append(np.linspace(region[0], region[1], num))
             energies = np.concatenate(energies)
             energies = sorted(list(set(energies)))
-        return energies
-    
-    def energies_in_range(self, norm_range=None):
-        if norm_range is None:
-            norm_range = (self.map_range[0],
-                          self.map_range[1])
-        energies = [e for e in self.all_energies()
-                    if norm_range[0] <= e <= norm_range[1]]
         return energies
 
 
@@ -146,7 +136,6 @@ class NCACobaltLEdge(LEdge):
     pre_edge = (770, 775)
     post_edge = (785, 790)
     edge_range = (775, 785)
-    map_range = (0, 1)
     _peak1 = 780.5
 
 
@@ -161,7 +150,6 @@ class NCANickelLEdge(LEdge):
     pre_edge = (844, 848)
     post_edge = (857, 862)
     edge_range = (848, 857)
-    map_range = (0, 1)
     _peak1 = 850.91
     _peak2 = 853.16
 
@@ -190,7 +178,6 @@ class FeKEdge(KEdge):
     pre_edge = (7100, 7108)
     post_edge = (7150, 7250)
     edge_range = (7115, 7140)
-    map_range = (7100, 7200)
 
 
 class NCACobaltKEdge(KEdge):
@@ -199,7 +186,6 @@ class NCACobaltKEdge(KEdge):
     shell = 'K'
     pre_edge = (7600, 7715)
     post_edge = (7780, 7900)
-    map_range = (7725, 7735)
     edge_range = (7715, 7740)
 
 
@@ -211,7 +197,6 @@ class CuKEdge(KEdge):
     pre_edge = (8940, 8970)
     post_edge = (9010, 9200)
     edge_range = (8970, 9010)
-    map_range = (8970, 9010)
 
 
 class NCANickelKEdge(KEdge):
@@ -229,7 +214,6 @@ class NCANickelKEdge(KEdge):
     ]
     pre_edge = (8249, 8320)
     post_edge = (8350, 8500)
-    map_range = (8341, 8360)
     edge_range = (8341, 8360)
 
 

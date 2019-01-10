@@ -229,8 +229,6 @@ def draw_colorbar(ax, cmap, norm, energies=None, orientation="vertical",
                            spacing="proportional",
                            orientation=orientation,
                            *args, **kwargs)
-    # Annotate the colorbar
-    cbar.ax.set_title('eV')
     # Make sure the ticks don't use scientific notation
     cbar.formatter.set_useOffset(False)
     cbar.update_ticks()
@@ -351,7 +349,28 @@ def plot_kedge_fit(energies, params):
     fit = predict_edge(energies, *p)
     pyplot.plot(energies, fit, linestyle=":")
 
-def plot_spectrum(spectrum, energies, norm=Normalize(),
+
+def scale_normalizer(norm, values):
+    """Prepare the normalizer with the proper scale.
+    
+    If ``norm`` is None, a new Normalize() object will be created. If
+    ``norm`` is not None, but not scaled, then it will be scaled to
+    the range of ``values``. If ``norm`` is not None, and already
+    scaled, then it will be returned as it.
+    
+    Returns
+    =======
+    norm :
+      A properly scaled Normalize() object.
+    
+    """
+    if norm is None:
+        norm = pyplot.Normalize()
+    norm.autoscale_None(values)
+    return norm
+
+
+def plot_spectrum(spectrum, energies, norm=None,
                   show_fit=False, ax=None, ax2=None,
                   linestyle=':', color="blue", cmap="plasma",
                   polar_coords=False,
@@ -368,8 +387,9 @@ def plot_spectrum(spectrum, energies, norm=Normalize(),
     energies : np.ndarray
       Array of energy values.
     norm : optional
-      Matplotlib Normalize() object that shows the map
-      range. This will be used to annotate the plot if it is give.
+      Matplotlib Normalize() object that shows the map range. This
+      will be used to annotate the plot if it is give. If omitted, a
+      new Normalize() will be created and scaled to the data.
     show_fit : bool, optional
       Whether to plot lines showing the best fit.
     ax : mpl.Axes, optional
@@ -393,10 +413,10 @@ def plot_spectrum(spectrum, energies, norm=Normalize(),
       the absolute value.
     
     """
+    artists = []
+    # Prepare axes if necessary
     if ax is None:
         ax = new_axes()
-    if norm is not None:
-        norm.autoscale_None(np.real(spectrum))
     # Retrieve `values` in case it's a pandas series
     spectrum = getattr(spectrum, 'values', spectrum)
     # Color code the markers by energy
@@ -404,8 +424,10 @@ def plot_spectrum(spectrum, energies, norm=Normalize(),
     if is_complex:
         colors = None
     elif color == "x":
+        norm = scale_normalizer(norm, energies)
         colors = cm.get_cmap(cmap)(norm(energies))
     elif color == "y":
+        norm = scale_normalizer(norm, spectrum)
         colors = cm.get_cmap(cmap)(norm(spectrum))
     else:
         colors = [color] * len(energies)
@@ -423,29 +445,29 @@ def plot_spectrum(spectrum, energies, norm=Normalize(),
             ax2 = ax.twinx()
         # Convert complex values to two lines
         ys = spectrum
-        artist = ax.plot(energies, comp0(ys), linestyle=linestyle, color="C0")
-        artist.extend(ax2.plot(energies, comp1(ys),
-                               linestyle=linestyle, color="C1", *args, **kwargs))
+        artists.extend(ax.plot(energies, comp0(ys), linestyle=linestyle, color="C0"))
+        artists.extend(ax2.plot(energies, comp1(ys),
+                                linestyle=linestyle, color="C1", *args, **kwargs))
     else:
         # Just plot the real numbers
         ys = np.real(spectrum)
-        artist = ax.plot(energies, ys, linestyle=linestyle, *args, **kwargs)
+        artists.extend(ax.plot(energies, ys, linestyle=linestyle, *args, **kwargs))
     # save limits, since they get messed up by scatter plot
     xlim = ax.get_xlim()
     ylim = ax.get_ylim()
     # Draw scatter plot of data points
     markersize = kwargs.get('markersize', rcParams['lines.markersize'])
     if is_complex:
-        ax.scatter(energies, comp0(ys), c="C0", s=25, alpha=0.5)
+        artists.append(ax.scatter(energies, comp0(ys), c="C0", s=25, alpha=0.5))
         ax.set_ylabel(label0, color="C0")
         for t1 in ax.get_yticklabels():
             t1.set_color("C0")
-        ax2.scatter(energies, comp1(ys), c="C1", s=markersize ** 2, alpha=0.5)
+        artists.append(ax2.scatter(energies, comp1(ys), c="C1", s=markersize ** 2, alpha=0.5))
         ax2.set_ylabel(label1, color="C1")
         for t1 in ax2.get_yticklabels():
             t1.set_color("C1")
     else:
-        ax.scatter(energies, ys, c=colors, s=markersize ** 2)
+        artists.append(ax.scatter(energies, ys, c=colors, s=markersize ** 2))
         ax.set_ylabel('Optical Depth')
     ax.set_xlim(*xlim)
     ax.set_ylim(*ylim)
@@ -456,7 +478,7 @@ def plot_spectrum(spectrum, energies, norm=Normalize(),
                          color="lightgrey", zorder=0,)
         ax.axvline(norm.vmin, **vlineargs)
         ax.axvline(norm.vmax, **vlineargs)
-    return artist
+    return artists
 
 
 def plot_composite_map(data, ax=None, origin="upper", *args, **kwargs):  # pragma: no cover
@@ -471,9 +493,18 @@ def plot_composite_map(data, ax=None, origin="upper", *args, **kwargs):  # pragm
     return artist
 
 
-def plot_txm_map(data, edge=None, norm=None, ax=None, cmap='plasma',
+def plot_txm_map(data, norm=None, ax=None, cmap='plasma',
                  origin="upper", vmin=None, vmax=None,
                  *args, **kwargs):  # pragma: no cover
+    """Plot a set of 2D data on an axes.
+    
+    Returns
+    =======
+    artists : 
+      List with the imshow artist and optionally the colorbar artist.
+    
+    """
+    artists = []
     # Get a default normalizer
     if norm is None:
         norm = Normalize(vmin, vmax)
@@ -481,21 +512,14 @@ def plot_txm_map(data, edge=None, norm=None, ax=None, cmap='plasma',
     # Create axes if necessary
     if ax is None:
         ax = new_image_axes()
-        if edge is None:
-            # No specific edge is given, so use up to 10 evenly space energies
-            num_Es = round(min(abs(norm.vmax - norm.vmin + 1), 10))
-            energies = np.linspace(norm.vmin, norm.vmax, num=num_Es)
-        else:
-            energies = edge.energies_in_range(norm_range=(norm.vmin, norm.vmax))
-        draw_colorbar(ax=ax, cmap=cmap, norm=norm, energies=energies)
+        num_Es = int(round(min(abs(norm.vmax - norm.vmin + 1), 10)))
+        energies = np.linspace(norm.vmin, norm.vmax, num=num_Es)
+        artists.append(draw_colorbar(ax=ax, cmap=cmap, norm=norm, energies=energies))
     # Do the plotting
-    artist = ax.imshow(data,
-                       cmap=cmap,
-                       origin=origin,
-                       norm=norm,
-                       *args, **kwargs)
+    artists.insert(0, ax.imshow(data, cmap=cmap, origin=origin,
+                               norm=norm, *args, **kwargs))
     # Add annotations and formatting stuff
-    return artist
+    return artists
 
 
 def plot_txm_histogram(data, ax=None, norm=None, bins=None,
@@ -529,6 +553,7 @@ def plot_txm_histogram(data, ax=None, norm=None, bins=None,
       Keyword arguments passed to matplotlib's `hist` call.
     
     """
+    artists = []
     if ax is None:
         ax = new_axes()
     # Flatten the data so it can be nicely plotted
@@ -558,6 +583,7 @@ def plot_txm_histogram(data, ax=None, norm=None, bins=None,
         bins = 256
     # Plot the histogram
     n, bins, patches = ax.hist(clip_data, bins=bins, *args, **kwargs)
+    artists.extend(patches)
     # Set colors on histogram
     for patch in patches:
         x_position = patch.get_x()
@@ -571,10 +597,8 @@ def plot_txm_histogram(data, ax=None, norm=None, bins=None,
     ax.xaxis.get_major_formatter().set_useOffset(False)
     # Draw a colorbar along the bottom axes
     if add_cbar:
-        cbar = draw_histogram_colorbar(ax=ax, cmap=cmap, norm=norm)
-    else:
-        cbar = None
-    return (ax, cbar)
+        artists.append(draw_histogram_colorbar(ax=ax, cmap=cmap, norm=norm))
+    return artists
 
 
 def plot_spectra(spectra, energies, ax=None):

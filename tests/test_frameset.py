@@ -37,7 +37,8 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardi
 import h5py
 import numpy as np
 import pandas as pd
-import matplotlib
+import matplotlib as mpl
+import matplotlib.pyplot as plt
 from scipy import ndimage
 
 from matplotlib.colors import Normalize
@@ -99,12 +100,6 @@ class XrayEdgeTest(unittest.TestCase):
         self.assertEqual(
             self.edge.all_energies(),
             [8250, 8270, 8290, 8291, 8292, 8293, 8294, 8295]
-        )
-    
-    def test_norm_energies(self):
-        self.assertEqual(
-            self.edge.energies_in_range(),
-            [8291, 8292, 8293]
         )
 
 
@@ -198,7 +193,7 @@ class XanesFramesetTest(TestCase):
     #     fs.fit_spectra(edge_mask=False)
     #     # No results are specified, but at least the function was
     #     # called.
-
+    
     def test_segment_materials(self):
         # Prepare dummy data
         store = MockStore()
@@ -214,6 +209,25 @@ class XanesFramesetTest(TestCase):
         # Check that it was turned into three sgements data
         self.assertEqual(np.min(store.segments), 0)
         self.assertEqual(np.max(store.segments), 2)
+    
+    def test_plot_map(self):
+        store = MockStore()
+        store.get_dataset = mock.MagicMock(return_value=np.random.rand(1, 16, 16))
+        store.pixel_sizes = np.array([[5, 5]])
+        fs = self.create_frameset(store=store)
+        artists = fs.plot_map()
+        self.assertIsInstance(artists[0], mpl.image.AxesImage)
+    
+    def test_plot_histogram(self):
+        store = MockStore()
+        n_energies = 10
+        data = np.random.rand(10, 16, 16) * 10 + 850
+        store.get_dataset = mock.MagicMock(return_value=data)
+        store.pixel_sizes = np.array([[5, 5]])
+        store.energies = np.broadcast_to(np.linspace(850, 860, num=n_energies), shape=(1, n_energies))
+        fs = self.create_frameset(store=store)
+        artists = fs.plot_histogram()
+        self.assertIsInstance(artists[0], mpl.patches.Rectangle)
     
     def test_plot_beamer_spectra(self):
         # Prepare dummy data

@@ -266,8 +266,9 @@ class XanesFrameset():
                 fig = plt.figure(figsize=(1.65, 1.5))
                 fig.patch.set_alpha(0)
                 ax = plt.gca()
-                artist = self.plot_map(map_name=map_name, timeidx=ts, ax=ax)
-                plt.colorbar(artist, ax=ax)
+                artists = self.plot_map(map_name=map_name, timeidx=ts, ax=ax)
+                axim = artists[0]
+                plt.colorbar(axim, ax=ax)
                 ax.set_title(map_name)
                 pgfname = pgfbase.format(base=basename, map_name=map_name, ts=ts)
                 ax.set_ylabel("")
@@ -1157,8 +1158,6 @@ class XanesFrameset():
         """
         if show_fit:
             raise NotImplementedError("`show_fit` parameter coming soon")
-        if norm_range is None and self.edge is not None:
-            norm_range = (self.edge.map_range[0], self.edge.map_range[1])
         if norm_range is not None:
             norm = Normalize(*norm_range)
         else:
@@ -1178,15 +1177,6 @@ class XanesFrameset():
                                       energies=spectrum.index,
                                       norm=norm,
                                       *args, **kwargs)
-        # if pixel is not None:
-        #     # xy = pixel_to_xy(pixel, extent=self.extent(), shape=self.map_shape())
-        #     # title = 'XANES Spectrum at ({x}, {y}) = {val}'
-        #     # masked_map = self.masked_map(goodness_filter=False)
-        #     # val = masked_map[pixel.vertical][pixel.horizontal]
-        #     # title = title.format(x=round(xy.x, 2),
-        #     #                      y=round(xy.y, 2),
-        #     #                      val=val)
-        #     # ax.set_title(title)
         # Plot lines at edge of normalization range or indicate peak positions
         if edge is not None:
             edge.annotate_spectrum(ax=ax)
@@ -1894,10 +1884,6 @@ class XanesFrameset():
         
         """
         with self.store() as store:
-            # Add bounds for the colormap if given
-            # vmin = self.edge.map_range[0] if vmin is None else vmin
-            # vmax = self.edge.map_range[1] if vmax is None else vmax
-            # norm = Normalize(vmin=vmin, vmax=vmax)
             # Get the data from disk
             ds = store.get_dataset(name=map_name)
             data = get_component(ds[timeidx], component)
@@ -1907,16 +1893,15 @@ class XanesFrameset():
         # Get default value ranges
         vmin = np.min(data) if vmin is None else vmin
         vmax = np.max(data) if vmax is None else vmax
-        norm = Normalize(vmin=vmin, vmax=vmax)
         # Plot the data
-        artist = plots.plot_txm_map(
+        artists = plots.plot_txm_map(
             data=data,
             ax=ax,
-            norm=norm,
-            edge=self.edge,
+            vmin=vmin,
+            vmax=vmax,
             extent=self.extent(representation=frame_source),
             *args, **kwargs)
-        return artist
+        return artists
     
     def plot_map_pixel_spectra(self, pixels, map_ax=None,
                                spectra_ax=None,
@@ -1977,21 +1962,22 @@ class XanesFrameset():
         with self.store() as store:
             map_ds = store.get_dataset(representation)
             if timeidx is None:
-                data = map_ds.value
+                data = map_ds[:]
             else:
                 data = map_ds[timeidx]
         data = get_component(data, component)
         # Add bounds for the colormap if given
-        vmin = self.edge.map_range[0] if vmin is None else vmin
-        vmax = self.edge.map_range[1] if vmax is None else vmax
+        vmin = np.min(data) if vmin is None else vmin
+        vmax = np.max(data) if vmax is None else vmax
         norm = Normalize(vmin=vmin, vmax=vmax)
         # Get bins for the energy steps
         edge = self.edge
         if str(bins) == "energies":
-            bins = edge.energies_in_range(edge.map_range)
+            bins = self.energies()
         artists = plots.plot_txm_histogram(data=data, ax=ax,
                                            norm=norm,
                                            cmap=self.cmap, bins=bins)
+        ax = artists[0].axes
         ax.set_xlabel(representation)
         return artists
    
