@@ -534,15 +534,10 @@ def load_cosmic_files(files, store, median_filter_size=None):
     store.filenames = [filenames]
     store.energies = [np.array([f.energies() for f in files]).ravel()]
     store.timestep_names = np.array(['ex-situ'], dtype="S20")
-    # Get pixel sizes (if possible)
+    # Get pixel sizes
     px_sizes = []
     for f in files:
-        try:
-            this_px_size = f.pixel_size()
-        except exceptions.DataFormatError:
-            warnings.warn('Cannot load pixel sizes from %s' % f)
-            this_px_size = 6
-        px_sizes.extend([this_px_size] * f.num_images())
+        px_sizes.extend([f.pixel_size()] * f.num_images())
     store.pixel_sizes = [px_sizes]
     store.pixel_unit = 'nm'
     # Load intensity data and calculate optical depths

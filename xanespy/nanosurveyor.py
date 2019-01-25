@@ -54,12 +54,21 @@ class CXIFile():
         return [energy]
     
     def pixel_size(self):
+        # Some CXI files explicitely contain the reconstructed pixel size
+        # If not in the CXI file, it can be calculated from other values
+        # Calculation provided by David Shapiro
         try:
+            # retrieve pixel size directly from the cxi file
             px_size = float(self.hdf_file['/entry_1/process_1/Param/pixnm'].value)
         except KeyError:
-            raise exceptions.DataFormatError(
-                'File {} does not contain pixel size'
-                ''.format(self.filename))
+            # Calculate the radiation wavelength
+            energy = self.hdf_file['entry_1/instrument_1/source_1/energy'].value
+            wavelength = 1239.84 / energy / 6.24e18
+            # Calculate the scattering angle from the detector position
+            x, y, z = self.hdf_file['entry_1/instrument_1/detector_1/corner_position'].value
+            scattering_angle = np.arctan(x / z)
+            # Calculate the pixel size from wavelength and scatting angle
+            px_size = wavelength / 2. / np.sin(scattering_angle)
         return px_size
 
 

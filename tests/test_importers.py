@@ -254,7 +254,7 @@ class CosmicTest(TestCase):
             stored_filename = store.filenames[0,0].decode('utf-8')
             self.assertEqual(stored_filename, os.path.basename(self.ptycho_cxi))
             np.testing.assert_equal(store.energies.value, [[855.9056362433222]])
-            np.testing.assert_equal(store.pixel_sizes.value, [[6]])
+            np.testing.assert_equal(store.pixel_sizes.value, [[6.0435606480754585]])
             np.testing.assert_equal(store.pixel_unit, 'nm')
             self.assertEqual(store.intensities.shape, (1, 1, 285, 285))
             self.assertEqual(store.optical_depths.shape, (1, 1, 285, 285))
@@ -278,7 +278,9 @@ class CosmicTest(TestCase):
         with TXMStore(**hdf_kw, data_name='imported') as store:
             self.assertEqual(store.filenames.shape, (1, 3))
             self.assertEqual(store.timestep_names.shape, (1,))
-            np.testing.assert_equal(store.pixel_sizes.value, [[6, 6, 6]])
+            real_px_size = 6.0435606480754585
+            np.testing.assert_equal(store.pixel_sizes.value,
+                                    [[real_px_size, real_px_size, real_px_size]])
             self.assertEqual(store.pixel_unit, 'nm')
 
 
@@ -311,11 +313,10 @@ class CosmicFileTest(TestCase):
         with self.cxi:
             self.assertAlmostEqual(self.cxi.energies()[0], 855.9056, places=3)
     
-    # Fails until the pixel size is available in CXI files
-    @unittest.expectedFailure
     def test_cxi_pixel_size(self):
+        real_px_size = 6.0435606480754585
         with self.cxi:
-            self.assertAlmostEqual(self.cxi.pixel_size(), 1)
+            self.assertAlmostEqual(self.cxi.pixel_size(), real_px_size)
     
     def test_hdr_pixel_size(self):
         with self.hdr:
