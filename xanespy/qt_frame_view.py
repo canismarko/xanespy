@@ -370,7 +370,7 @@ class QtFrameView(QtCore.QObject):  # pragma: no cover
                                                linestyle=":",
                                                animated=True,
                                                color="gray")
-            artists.append([im_artist, line_artist, edge_artist])
+            artists.append([*im_artist, line_artist, edge_artist])
         # Create animations from the collected artists
         self._frame_animation = FrameAnimation(
             fig=self.fig,

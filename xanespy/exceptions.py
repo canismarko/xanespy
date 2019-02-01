@@ -24,6 +24,12 @@ handling."""
 #########################
 # X-ray microscopy errors
 #########################
+
+class ShapeMismatchError(ValueError):
+    """Shapes are not compatible, eg. different number of dimensions."""
+    pass
+
+
 class DataNotFoundError(FileNotFoundError):
     """Expected a directory containing data but found none."""
     pass

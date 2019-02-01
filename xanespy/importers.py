@@ -1150,16 +1150,87 @@ def import_ssrl_xanes_dir(directory, hdf_filename, groupname=None, *args, **kwar
     return imp_group
 
 
+ssrl_regex_bg = re.compile(
+        'rep(\d{2})_(\d{6})_ref_[0-9]*_?([-a-zA-Z0-9_]+)_([0-9.]+)_eV_(\d{3})of(\d{3})\.xrm'
+)
+ssrl_regex_sample = re.compile(
+        'rep(\d{2})_[0-9]*_?([-a-zA-Z0-9_]+)_([0-9.]+)_eV_(\d{3})of(\d{3}).xrm'
+)
+
+def minimum_shape(shapes):
+    """Determine the minimum shape for a given list of shapes.
+    
+    This function only allows powers of 2 difference between shapes.
+    
+    Parameters
+    ==========
+    shapes : iterable
+      A list of shapes (as tuples). Eg. [(1024, 1024), (2048, 2048)]
+    
+    Returns
+    =======
+    min_shape : tuple
+      The smallest shape in the list.
+    
+    Raises
+    ======
+    ShapeMismatchError :
+      The shapes are not powers of two from each other or do not have
+      compatible dimensions.
+    
+    """
+    # Check that all dimensions match
+    ndims = set(len(s) for s in shapes)
+    if len(ndims) > 1:
+        raise exceptions.ShapeMismatchError('Shapes have incompatible dimensions: {}'
+                                            ''.format(shapes))
+    # Get the minimum shape that's allowed
+    shapes = tuple(tuple(s) for s in shapes)
+    shapes = np.array(shapes)
+    min_shape = np.min(shapes, axis=0)
+    # Check that each shape is a power of two
+    logs = np.log2(shapes/min_shape)
+    is_round = not np.any(logs - logs.astype(int))
+    if not is_round:
+        raise exceptions.ShapeMismatchError('Shapes must vary by powers of 2: {}'
+                                            ''.format(shapes))
+    return tuple(min_shape)
+
+
+def rebin_image(image, new_shape):
+    """Downsample an image to a new shape, if it's compatible.
+    
+    Parameters
+    ==========
+    image : np.ndarray
+      The input image to rebin.
+    new_shape : The shape to transform to.
+    
+    Returns
+    =======
+    new_image : np.ndarray
+      The rebinned image, with shape ``new_shape``.
+    
+    Raises
+    ======
+    ShapeMismatchError : 
+      The shape of ``image`` and ``new_shape`` will not transform
+      symmetrically.
+    
+    """
+    new_image = image
+    factors = tuple(int(np.log2(s1 / s2)) for s1, s2 in zip(image.shape, new_shape))
+    for factor in set(factors):
+        axis = [i for i, x in enumerate(factors) if x == factor]
+        if factor != 0:
+            new_image = downsample_array(new_image, factor=int(factor), axis=axis)
+    return new_image
+
+
 def decode_ssrl_params(filename):
     """Accept the filename of an XRM file and return sample parameters as
     a dictionary."""
     # Beamline 6-2c at SSRL
-    ssrl_regex_bg = re.compile(
-        'rep(\d{2})_(\d{6})_ref_[0-9]*_?([-a-zA-Z0-9_]+)_([0-9.]+)_eV_(\d{3})of(\d{3})\.xrm'
-    )
-    ssrl_regex_sample = re.compile(
-        'rep(\d{2})_[0-9]*_?([-a-zA-Z0-9_]+)_([0-9.]+)_eV_(\d{3})of(\d{3}).xrm'
-    )
     # Check for background frames
     bg_result = ssrl_regex_bg.search(filename)
     sample_result = ssrl_regex_sample.search(filename)
@@ -1364,7 +1435,7 @@ def import_frameset(directory, flavor, hdf_filename, groupname=None, return_val=
     h5file = h5py.File(hdf_filename)
     # Get some shape information for all the datasets
     shapes = metadata['shape'].unique()
-    assert len(shapes) == 1
+    min_shape = minimum_shape(shapes)
     num_samples = len(reference_files['timestep_name'].unique())
     num_positions = len(sample_files['position_name'].unique())
     pos_name = sample_files['position_name'].unique()[0]
@@ -1381,9 +1452,10 @@ def import_frameset(directory, flavor, hdf_filename, groupname=None, return_val=
     # Import reference frames
     reference_names = reference_files.groupby('position_name')
     if len(reference_names) != 1:
+        import pdb; pdb.set_trace()
         raise exceptions.DataFormatError(
             "Found incompatible number of reference frames: {}"
-            "".format(reference_names.groups()))
+            "".format(reference_names.groups))
     ref_groups = reference_files.groupby('timestep_name')
     imp_name = pos_name if groupname is None else groupname
     imp_group = h5file.require_group("{}/imported".format(imp_name))
@@ -1415,8 +1487,9 @@ def import_frameset(directory, flavor, hdf_filename, groupname=None, return_val=
                     "Could not find any reference files for "
                     "{} ({}) {}"
                     "".format(ts_name, ts_idx, E_name))
-            # Take the average of all the files and apply median filter
+            # Combine the images into a single frame for this energy
             images = np.mean(np.array(images), axis=0)
+            images = rebin_image(images, new_shape=min_shape)
             Is.append(median_filter(images, footprint=median_kernel))
         # Save to disk
         ref_ds[ts_idx] = np.array(Is)
@@ -1506,6 +1579,7 @@ def import_frameset(directory, flavor, hdf_filename, groupname=None, return_val=
                 # ...intensity data...
                 #   (Combine and store the image arrays with a median filter)
                 images = np.mean(np.array(images), axis=0)
+                images = rebin_image(images, new_shape=min_shape)
                 image = median_filter(images, footprint=median_kernel)
                 int_ds[ts_idx, E_idx] = image
                 # ...position data...

@@ -38,7 +38,7 @@ from skimage import data
 import matplotlib.pyplot as plt
 
 
-from xanespy import exceptions
+from xanespy import exceptions, utilities
 from xanespy.xradia import XRMFile, TXRMFile
 from xanespy.nanosurveyor import CXIFile, HDRFile
 from xanespy.sxstm import SxstmDataFile
@@ -52,7 +52,8 @@ from xanespy.importers import (magnification_correction,
                                import_aps8bm_xanes_file,
                                import_aps32idc_xanes_files,
                                import_aps32idc_xanes_file,
-                               read_metadata)
+                               read_metadata, minimum_shape,
+                               rebin_image, )
 from xanespy.txmstore import TXMStore
 
 
@@ -710,6 +711,34 @@ class SSRLImportTest(TestCase):
         if os.path.exists(self.hdf):
             os.remove(self.hdf)
     
+    def test_minimum_shape(self):
+        shape_list = [(1024, 512), (1024, 1024), (2048, 2048)]
+        min_shape = minimum_shape(shape_list)
+        self.assertEqual(min_shape, (1024, 512))
+        # Check with incompatible shape dimensions
+        shape_list = [(1024, 1024), (1024, 1024), (2048, 2048, 2048)]
+        with self.assertRaises(exceptions.ShapeMismatchError):
+            minimum_shape(shape_list)
+        # Check that non-power-of-two shapes raise an exception
+        shape_list = [(5, 1024), (1024, 1024), (2048, 2048)]
+        with self.assertRaises(exceptions.ShapeMismatchError):
+            minimum_shape(shape_list)
+        # Check with using named tuples
+        shape_list = [utilities.shape(1024, 1024), utilities.shape(1024, 1024)]
+        min_shape = minimum_shape(shape_list)
+        print(min_shape)
+    
+    def test_rebin_image(self):
+        my_list = [1, 2, 2, 3, 3, 3]
+        # Test a symmetrical reshape
+        img = np.ones((64, 64))
+        new_img = rebin_image(img, (32, 32))
+        self.assertEqual(new_img.shape, (32, 32))
+        # Test an asymmetrical reshape
+        img = np.ones((64, 64))
+        new_img = rebin_image(img, (32, 16))
+        self.assertEqual(new_img.shape, (32, 16))
+            
     def test_imported_hdf(self):
         with warnings.catch_warnings() as w:
             # warnings.simplefilter('ignore', RuntimeWarning, 104)
@@ -753,7 +782,7 @@ class SSRLImportTest(TestCase):
             self.assertIn('timestep_names', keys)
             self.assertEqual(group['relative_positions'].attrs['context'], 'metadata')
             self.assertEqual(group['timestep_names'][0], "rep01")
-    
+   
     def test_params_from_ssrl(self):
         # First a reference frame
         ref_filename = "rep01_000001_ref_201511202114_NCA_INSITU_OCV_FOV01_Ni_08250.0_eV_001of010.xrm"

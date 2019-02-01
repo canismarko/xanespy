@@ -76,9 +76,10 @@ def _fit_sources(inputs, func, nonnegative=False):
     spectrum, p0 = inputs
     # Don't bother fitting if there's NaN values
     if np.any(np.isnan(spectrum)):
-        params[idx] = np.nan
-        residuals[idx] = np.nan
-        return
+        p_fit = np.empty(p0.shape)
+        p_fit[()] = np.nan
+        res_ = np.nan
+        return p_fit, res_
     # Valid data, so fit the spectrum
     results = leastsq(func=error, x0=p0, args=(spectrum, func, nonnegative), full_output=True)
     p_fit, cov_x, infodict, mesg, status = results
@@ -90,6 +91,13 @@ def _fit_sources(inputs, func, nonnegative=False):
     res_ = (spectrum - func(*p_fit))
     res_ = np.sqrt(np.mean(np.power(res_, 2)))
     return (p_fit, res_)
+
+
+def find_whiteline(params, curve):
+    fit = curve(*params)
+    whiteline = curve.energies[np.argmax(fit)]
+    return whiteline
+
 
 def fit_spectra(observations, func, p0, nonnegative=False, quiet=False):
     """Fit a function to a series observations.

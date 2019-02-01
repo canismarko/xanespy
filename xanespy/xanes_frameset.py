@@ -34,6 +34,7 @@ from collections import namedtuple
 import math
 import subprocess
 import warnings
+import multiprocessing as mp
 
 import pandas as pd
 from matplotlib import pyplot, cm, pyplot as plt
@@ -44,12 +45,13 @@ from scipy.ndimage import median_filter
 from skimage import morphology, filters, transform,  measure
 from sklearn import linear_model, cluster
 import jinja2 as j2
+import tqdm
 
 from utilities import (prog, xycoord, Pixel, Extent, pixel_to_xy,
                        get_component, broadcast_reverse, xy_to_pixel)
 from txmstore import TXMStore
 import plots
-from fitting import LinearCombination, fit_spectra, prepare_p0
+from fitting import LinearCombination, fit_spectra, prepare_p0, KCurve, find_whiteline
 import exceptions
 import xanes_math as xm
 from edges import Edge
@@ -701,7 +703,7 @@ class XanesFrameset():
             raise ValueError(msg)
         # Guess best reference frame to use
         if reference_frame is "max":
-            spectra = self.spectrum(representation=component, index=slice(None))
+            spectra = self.spectrum(representation='optical_depths', index=slice(None))
             spectra = np.array([s.values for s in spectra])
             reference_frame = np.argmax(spectra)
             reference_frame = np.unravel_index(reference_frame, dims=spectra.shape)
@@ -930,21 +932,48 @@ class XanesFrameset():
         regions.sort(key=lambda p: p.area, reverse=True)
         return regions
     
-    def plot_mean_image(self, ax=None, component="modulus",
+    def plot_mean_frame(self, ax=None, component="modulus",
                         representation="optical_depths",
-                        cmap="gray", *args, **kwargs):
+                        cmap="gray", timeidx=..., *args, **kwargs):
+        """Plot the mean image from the selected frames.
+        
+        Parameters
+        ==========
+        ax : mpl.Axes, optional
+          An axes object to receive the plot. If ommitted, new Axes
+          will be created.
+        component : str, optional
+          Which component (real, imag, modulus, phase) to plot. Only
+          relevant for complex-valued data.
+        representation : str, optional
+          Which dataset representation to use.
+        cmap : str, optional
+          Matplotlib colormap to use for the image.
+        timeidx : tuple or int, optional
+          Numpy index for which timestep to include. May include
+          slices for either (timestep, energy), eg. ``timeidx=(1,
+          slice(10, 15))`` will only select 5 energies in the first
+          timestep.
+        *args, **kwargs : 
+          Passed to the matplotlib ``imshow`` function.
+        
+        Returns
+        =======
+        artist
+          The imshow ImageArtist.
+        """
         if ax is None:
             ax = plots.new_image_axes()
         with self.store() as store:
-            data = store.get_dataset(representation)
-            data = np.reshape(data,
-                              (-1, *data.shape[-2:]))
-            data = np.mean(data, axis=0)
+            data = store.get_dataset(representation)[timeidx]
+            mean_axis = tuple(range(data.ndim - 2))
+            data = np.mean(data, axis=mean_axis)
             ax_unit = store.pixel_unit
         data = get_component(data, component)
         artist = ax.imshow(data,
                            extent=self.extent(representation='optical_depths'),
                            cmap=cmap, *args, **kwargs)
+        # Decorate the axes
         ax.set_xlabel(ax_unit)
         ax.set_ylabel(ax_unit)
         return artist
@@ -1262,6 +1291,35 @@ class XanesFrameset():
             store.replace_dataset("%s_sources" % name, sources,
                                   context='metadata')
         return results
+    
+    def fit_kedge(self):
+        k_edge = KCurve(energies=self.energies())
+        # Prepare intial guess at parameters
+        p0 = k_edge.guess_params(self.spectrum(edge_jump_filter=True), edge=self.edge)
+        p0 = prepare_p0(p0, self.frame_shape(), self.num_timesteps)
+        # Fit all the spectra
+        self.fit_spectra(k_edge, p0)
+        # Calculate the maximum whiteline fit
+        new_Es = np.linspace(*self.edge.edge_range, num=200)
+        kcurve = KCurve(new_Es)
+        with self.store() as store:
+            params = store.get_dataset('{}_parameters'.format(kcurve.name))[()]
+        # Reshape to be flat
+        params = np.moveaxis(params, 1, -1)
+        map_shape = params.shape[:-1]
+        p_shape = params.shape[-1]
+        params = params.reshape(-1, p_shape)
+        params = tqdm.tqdm(params, desc="Calculating whitelines", unit='spctrm')
+        # Process all the spectra
+        with mp.Pool(mp.cpu_count()) as pool:
+            _find_whiteline = functools.partial(find_whiteline, curve=kcurve)
+            whitelines = pool.map(_find_whiteline, params)
+            whitelines = np.array(whitelines)
+        # Return to the original shape
+        whitelines = whitelines.reshape(map_shape)
+        with self.store(mode='a') as store:
+            store.whiteline_fit = whitelines
+            store.whiteline_fit.attrs['frame_source'] = 'optical_depths'
     
     def fit_spectra(self, func, p0, pnames=None, name=None,
                     edge_filter=True, nonnegative=False,
@@ -1838,21 +1896,37 @@ class XanesFrameset():
                         bottom=bottom, top=top)
         return extent
     
-    def plot_frame(self, idx, ax=None, cmap="gray", component='modulus', *args, **kwargs):
-        """Plot the frame with given index as an image."""
-        if ax is None:
-            ax = plots.new_image_axes()
-        # Plot image data
-        with self.store() as store:
-            data = store.optical_depths[idx]
-            data = get_component(data, component)
-            artist = ax.imshow(data, extent=self.extent(idx=idx),
-                               cmap=cmap, *args, **kwargs)
-            unit = store.pixel_unit
-        # Decorate axes
-        ax = artist.axes
-        ax.set_ylabel(unit)
-        ax.set_xlabel(unit)
+    def plot_frame(self, idx, ax=None, cmap="gray",
+                   representation="optical_depths", component='modulus', *args,
+                   **kwargs):
+        """Plot the frame with given index as an image.
+        
+        Parameters
+        ==========
+        idx : 2-tuple(int)
+          Index of the frame to plot in order of (timestep,
+          energy).
+        ax : mpl.Axes, optional
+          Axes to receive the plot.
+        cmap : str, optional
+          Maptlotlib colormap string for the image.
+        component : str, optional
+          The complex component (real, imag, modulus, phase) to use
+          for plotting. Only applicable to complex-valued data.
+        *args, **kwargs : 
+          Passed to the matplotlib ``imshow`` function.
+        
+        Returns
+        =======
+        artist
+          The imshow ImageArtist.
+        
+        """
+        if len(idx) != 2:
+            raise ValueError("Index must be a 2-tuple in (timestep, energy) order.")
+        return self.plot_mean_frame(ax=ax, component=component,
+                                    representation=representation, cmap=cmap, timeidx=idx, *args,
+                                    **kwargs)
         return artist
     
     @property
@@ -1860,12 +1934,13 @@ class XanesFrameset():
         with self.store() as store:
             val = store.optical_depths.shape[0]
         return val
-
+    
     @property
     def timestep_names(self):
         with self.store() as store:
-            val = store.timestep_names.value
-        return val
+            names = store.timestep_names.value
+            names = names.astype('unicode')
+        return names
     
     @property
     def num_energies(self):

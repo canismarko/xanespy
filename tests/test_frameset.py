@@ -521,7 +521,9 @@ class XanesFramesetTest(TestCase):
         fs.align_frames(commit=True, plot_results=False, quiet=True,
                         median_filter_size=(5, 5))
         # Check that we can align to the max frame
+        self.assertEqual(len(store.get_fraes.mock_calls), 0)
         fs.align_frames(commit=False, reference_frame='max', quiet=True)
+        store.get_frames.assert_called_with('optical_depths')
     
     def test_align_frames_invalid(self):
         """Check that the `align_frames` method throws the right exceptions on
