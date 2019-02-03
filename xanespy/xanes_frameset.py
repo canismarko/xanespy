@@ -887,8 +887,7 @@ class XanesFrameset():
         log.info("Calculated particle labels in %d sec", time() - logstart)
     
     def particle_series(self, map_name="whiteline_max"):
-        """Generate an array of values from map_name averaged across each
-        particle.
+        """Generate median values from map_name across each particle.
         
         Returns: A 2D array where the first dimension is particles and
         the second is the first dimension of the map dataset (usually time).
@@ -1730,7 +1729,7 @@ class XanesFrameset():
             store.cluster_fit = label_frame
     
     @functools.lru_cache(maxsize=2)
-    def map_data(self, timeidx=0, representation="optical_depths"):
+    def map_data(self, *, timeidx=0, representation="optical_depths"):
         """Return map data for the given time index and representation.
         
         If `representation` is not really mapping data, then the
