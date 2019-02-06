@@ -27,6 +27,7 @@ import logging
 import datetime as dt
 import contextlib
 from functools import partial
+from six import string_types
 
 import pandas as pd
 from tqdm import tqdm
@@ -1258,19 +1259,27 @@ def decode_ssrl_params(filename):
 def decode_aps_params(filename):
     """Accept the filename of an XRM file and return sample parameters as
     a dictionary."""
-    regex = re.compile(
+    fname = os.path.basename(filename)
+    # Parse the regular expressions for different styles
+    regexs = [
+        # Written from 2015-11-11 dataset
+        '[0-9]+_[a-zA-Z0-9]+_XANES(?P<sam>[0-9]+)_(?P<pos>[a-zA-Z0-9_]+)_(?P<E_int>[0-9]+).xrm',
+        # More general APS scheme
         '(?P<pos>[a-zA-Z0-9_]+)_xanes(?P<sam>[a-zA-Z0-9_]+)_(?P<E_int>[0-9]+)_(?P<E_dec>[0-9]+)eV.xrm'
-    )
-    match = regex.search(filename)
+    ]
+    for regex in regexs:
+        match = re.search(regex, fname)
+        if match:
+            break
     if not match:
         msg = "{filename} does not match {regex}"
         raise RuntimeError(msg.format(regex=regex, filename=filename))
     match = match.groupdict()
-    energy = float("{}.{}".format(match['E_int'], match['E_dec']))
+    energy = float("{}.{}".format(match['E_int'], match.get('E_dec', 0)))
     result = {
         'timestep_name': match['sam'],
         'position_name': match['pos'],
-        'is_background': match['pos'] == 'ref',
+        'is_background': match['pos'] in ('ref', 'bkg'),
         'energy': energy,
     }
     return result
@@ -1362,9 +1371,9 @@ def import_aps8bm_xanes_file(filename, ref_filename, hdf_filename,
     h5file.close()
 
 
-def import_aps8bm_xanes_dir(directory, hdf_filename, groupname=None,
+def import_aps8bm_xanes_dir(directories, hdf_filename, groupname=None,
                              *args, **kwargs):
-    imp_group = import_frameset(directory=directory, flavor="aps",
+    imp_group = import_frameset(directories=directories, flavor="aps",
                                 hdf_filename=hdf_filename, return_val="group",
                                 groupname=groupname, *args, **kwargs)
     # Set some beamline specific metadata
@@ -1375,9 +1384,9 @@ def import_aps8bm_xanes_dir(directory, hdf_filename, groupname=None,
     return imp_group
 
 
-def import_frameset(directory, flavor, hdf_filename, groupname=None, return_val=None,
+def import_frameset(directories, flavor, hdf_filename, groupname=None, return_val=None,
                     quiet=False):
-    """Import all files in the given directory collected at an X-ray
+    """Import all files in the given directories collected at an X-ray
     microscope beamline.
     
     Images are assumed to full-field transmission X-ray micrographs.
@@ -1389,8 +1398,9 @@ def import_frameset(directory, flavor, hdf_filename, groupname=None, return_val=
     
     Parameters
     ----------
-    directory : str
-      A valid path to a directory containing the frame data to import.
+    directories : str, list
+      Paths to the directories containing the frame data to import. A
+      single path can be passed, or an iterable of paths.
     flavor : str
       Indicates what type of naming conventions and data structure to
       assume. See documentation for ``xanespy.xradia.XRMFile`` for
@@ -1410,16 +1420,23 @@ def import_frameset(directory, flavor, hdf_filename, groupname=None, return_val=
       - "group": The open HDF5 group for this experiment.
     quiet : bool, optional
       Whether to suppress the progress bar
-    
+
     """
     # Check arguments for sanity
     valid_return_vals = ["group", None]
     if return_val not in valid_return_vals:
         msg = "Invalid `return_val`: {}. Choices are {}"
         raise ValueError(msg.format(return_val, valid_return_vals))
+    # Determine whether a single string or list of strings was passed
+    if isinstance(directories, string_types):
+        dirs = [directories]
+    else:
+        dirs = directories
     # Get list of all possible files in the directory tree
-    files = [os.path.join(dp, f) for dp, dn, filenames in
-             os.walk(directory) for f in filenames]
+    files = []
+    for directory in dirs:
+        files.extend([os.path.join(dp, f) for dp, dn, filenames in
+                              os.walk(directory) for f in filenames])
     # Process filename metadata into separate dataframes
     metadata = read_metadata(files, flavor=flavor, quiet=quiet)
     reference_files = metadata[metadata['is_background'] == True]

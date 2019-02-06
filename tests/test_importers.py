@@ -682,7 +682,21 @@ class APS8BMDirImportTest(TestCase):
             'energy': 8250.0,
         }
         self.assertEqual(result, expected)
-
+        # An example reference filename from 2015-11-11 beamtime
+        ref_filename = 'ncm111-cell1-chargeC15/operando-xanes00/20151111_UIC_XANES00_bkg_8313.xrm'
+        result = decode_aps_params(ref_filename)
+        self.assertTrue(result['is_background'])
+        self.assertEqual(result['energy'], 8313.0)
+        self.assertEqual(result['position_name'], 'bkg')
+        self.assertEqual(result['timestep_name'], '00')
+        # An example reference filename from 2015-11-11 beamtime
+        sam_filename = 'ncm111-cell1-chargeC15/operando-xanes05/20151111_UIC_XANES05_sam02_8381.xrm'
+        result = decode_aps_params(sam_filename)
+        self.assertFalse(result['is_background'])
+        self.assertEqual(result['energy'], 8381.0)
+        self.assertEqual(result['position_name'], 'sam02')
+        self.assertEqual(result['timestep_name'], '05')
+    
     def test_file_metadata(self):
         filenames = [os.path.join(APS_DIR, 'fov03_xanessoc01_8353_0eV.xrm')]
         df = read_metadata(filenames=filenames, flavor='aps', quiet=True)
