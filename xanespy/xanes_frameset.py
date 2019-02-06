@@ -1678,6 +1678,9 @@ class XanesFrameset():
         # Get the edge mask so only active material is included
         dummy_mask = np.ones(frame_shape, dtype=np.bool)
         if edge_mask:
+            # Clear caches to make sure we don't use stale mask data
+            self.clear_caches()
+            # Now retrieve the mask
             try:
                 mask = ~self.edge_mask()
             except exceptions.XanesMathError as e:
@@ -1697,6 +1700,8 @@ class XanesFrameset():
         weight_shape = (n_timesteps, *frame_shape, n_components)
         weight_frames = np.zeros(shape=weight_shape)
         weight_frames[:, mask, :] = weights
+        # Move the signal axis so it's in the same place as the energy axis
+        weight_frames = np.moveaxis(weight_frames, -1, 1)
         # Save the calculated signals and weights
         method_names = {
             "nmf": "Non-Negative Matrix Factorization",
@@ -1786,7 +1791,7 @@ class XanesFrameset():
             timestamps = store.timestamps.value
             timestamps = timestamps.astype(np.datetime64)
         return timestamps
-    
+
     @functools.lru_cache(maxsize=2)
     def frames(self, representation="optical_depths", timeidx=0):
         """Return the frames for the given time index.

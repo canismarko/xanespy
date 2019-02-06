@@ -186,7 +186,7 @@ class TXMStore():
     # HDF5 Descriptors
     # ----------------
     energies = TXMDataset('energies', context='metadata')
-    signals = TXMDataset('extracted_signals', context='metadata')
+    signals = TXMDataset('signals', context='metadata')
     original_positions = TXMDataset('original_positions', context='metadata')
     timestep_names = TXMDataset('timestep_names', context='metadata')
     pixel_sizes = TXMDataset('pixel_sizes', context='metadata')
@@ -195,7 +195,7 @@ class TXMStore():
     intensities = TXMDataset('intensities', context='frameset')
     optical_depths = TXMDataset('optical_depths', context='frameset')
     references = TXMDataset('references', context='frameset')
-    signal_weights = TXMDataset('extracted_signal_weights', context='frameset')
+    signal_weights = TXMDataset('signal_weights', context='frameset')
     linear_combination_parameters = TXMDataset('linear_combination_parameters', context='frameset')
     
     optical_depth_mean = TXMDataset('optical_depth_mean', context='map')
@@ -436,8 +436,11 @@ class TXMStore():
             msg = msg.format(self.hdf_filename)
             raise GroupKeyError(msg)
         elif name not in self.data_group().keys():
-            msg = "dataset '{}' not found in group '{}' file '{}'"
-            msg = msg.format(name, self.data_group().name, self.hdf_filename)
+            all_valid_names = self.frameset_names() + self.map_names()
+            msg = ("dataset '{}' not found in group '{}' file '{}'. "
+                   "Valid choices are: {}."
+                   "".format(name, self.data_group().name,
+                             self.hdf_filename, all_valid_names))
             raise GroupKeyError(msg)
         else:
             data = self.data_group()[name]
@@ -517,11 +520,11 @@ class TXMStore():
         """String describing how the previously extracted signals were
         calculated.
         """
-        return self.data_group()['extracted_signals'].attrs['method']
+        return self.data_group()['signals'].attrs['method']
     
     @signal_method.setter
     def signal_method(self, val):
-        self.data_group()['extracted_signals'].attrs['method'] = val
+        self.data_group()['signals'].attrs['method'] = val
     
     @property
     def timestamps(self):
