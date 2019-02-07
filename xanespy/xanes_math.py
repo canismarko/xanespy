@@ -748,7 +748,7 @@ def transform_images(data, transformations, out=None, mode='median', quiet=False
     It is assumed that the first dimension of `data` is the same as
     the length of `transformations`. The transformation matrices can
     be generated from translation, rotation and scale parameters via
-    the :py:meth:`xanespy.xanes_math.transformation_matrics`
+    the :py:meth:`xanespy.xanes_math.transformation_matrices`
     function. Data will be written to `out` if given, otherwise
     returned as a new array.
     
@@ -918,6 +918,13 @@ def transformation_matrices(translations=None, rotations=None,
     new_transforms = np.array([ihat, jhat, khat]).swapaxes(0, 1)
     # Move the transformations so they're in frame order
     new_transforms = np.moveaxis(np.moveaxis(new_transforms, 0, -1), 0, -1)
+    # If the rotation center is not zero, apply a pre- and post- translation
+    if center != (0, 0):
+        center_translation = np.empty_like(translations)
+        center_translation[()] = center
+        center_transform = transformation_matrices(translations=center_translation)
+        uncenter_transform = transformation_matrices(translations=-center_translation)
+        new_transforms = center_transform @ new_transforms @ uncenter_transform
     return new_transforms
 
 

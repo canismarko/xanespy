@@ -1474,7 +1474,7 @@ def import_frameset(directories, flavor, hdf_filename, groupname=None, return_va
             "Found incompatible number of reference frames: {}"
             "".format(reference_names.groups))
     ref_groups = reference_files.groupby('timestep_name')
-    imp_name = pos_name if groupname is None else groupname
+    imp_name = pos_name if groupname is None else groupname.format(shared)
     imp_group = h5file.require_group("{}/imported".format(imp_name))
     ref_ds = imp_group.require_dataset('references', shape=ds_shape,
                                        maxshape=ds_shape,
