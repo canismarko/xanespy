@@ -500,7 +500,7 @@ class XanesFrameset():
         crop : bool, optional
           If truthy, the images will be cropped after being
           translated, so there are not edges. If falsy, the images
-          will be wrapped.
+          will be padded with zeros.
         commit : bool, optional
           If truthy, the changes will be saved to the HDF5 store for
           optical depths, intensities and references, and the staged
@@ -670,7 +670,7 @@ class XanesFrameset():
         commit : bool, optional
           If truthy (default), the final translation will be applied
           to the data stored on disk by calling
-          `self.apply_translations(crop=True)` after all passes have
+          `self.apply_transformations(crop=True)` after all passes have
           finished.  component : What component of the data to use:
           'modulus', 'phase', 'imag' or 'real'.  plot_results : If
           truthy (default), plot the root-mean-square of the
@@ -898,8 +898,11 @@ class XanesFrameset():
             data = store.get_dataset(map_name)
             for stepdata in data:
                 particles = self.particle_regions(intensity_image=stepdata)
-                imgs = [p.intensity_image for p in particles]
-                vals = [np.median(im[~np.isnan(im)]) for im in imgs]
+                def particle_value(particle):
+                    im = particle.intensity_image
+                    mask = particle.image
+                    return np.nanmedian(im[mask])
+                vals = list(map(particle_value, particles))
                 steps.append(vals)
         # Convert from (steps, particles) to (particles, steps)
         steps = np.array(steps)
@@ -1847,6 +1850,7 @@ class XanesFrameset():
           statistics but are less likely to include active material.
         
         """
+        self.clear_caches()
         with self.store(mode='r+') as store:
             log.debug('Subtracting surroundings')
             # Get the mask and make it compatible with XANES shape
@@ -1953,7 +1957,8 @@ class XanesFrameset():
         return val
     
     def plot_map(self, ax=None, map_name="whiteline_fit", timeidx=0,
-                 vmin=None, vmax=None, median_size=0, component="real", *args, **kwargs):
+                 vmin=None, vmax=None, median_size=0,
+                 component="real", edge_filter=False, *args, **kwargs):
         """Prepare data and plot a map of whiteline positions.
         
         Parameters
@@ -1972,6 +1977,10 @@ class XanesFrameset():
         # Get default value ranges
         vmin = np.min(data) if vmin is None else vmin
         vmax = np.max(data) if vmax is None else vmax
+        # Apply the edge jump filter if necessary
+        if edge_filter:
+            mask = self.edge_mask()
+            data = np.ma.array(data, mask=mask)
         # Plot the data
         artists = plots.plot_txm_map(
             data=data,

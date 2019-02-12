@@ -155,8 +155,10 @@ def fit_spectra(observations, func, p0, nonnegative=False, quiet=False):
     indices = iter_indices(observations, desc="Fitting spectra",
                            leftover_dims=1, quiet=quiet)
     # Execute fitting (with multiprocessing)
-    payload = tqdm.tqdm(zip(observations, p0), total=len(observations),
-                        desc="Fitting spectra", unit='spctrm')
+    payload = zip(observations, p0)
+    if not quiet:
+        payload = tqdm.tqdm(payload, total=len(observations),
+                            desc="Fitting spectra", unit='spctrm')
     # payload = zip(prog(observations, desc='Fitting spectra', unit='spctr'), p0)
     with Pool(cpu_count()) as pool:
         fitter = functools.partial(_fit_sources, func=func, nonnegative=nonnegative)
@@ -175,6 +177,11 @@ class Curve():
     """Base class for a callabled Curve."""
     name = "curve"
     param_names = ()
+    
+    def NamedTuple(self, *params):
+        """Return a named tuple with the given parameters."""
+        Params = namedtuple('{}_params'.format(self.name), self.param_names)
+        return Params(*params)
 
 
 class Line(Curve):
@@ -337,7 +344,7 @@ class KCurve(Curve):
       Width parameter for Gaussian whiteline peak
     
     """
-    name = "K-edge-curve"
+    name = "K_edge_curve"
     param_names = (
         'scale', 'voffset', 'E0',  # Global parameters
         'sigw',  # Sharpness of the edge sigmoid
