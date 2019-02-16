@@ -21,6 +21,7 @@
 
 from contextlib import contextmanager
 from typing import List, NoReturn
+import math
 
 import numpy as np
 from matplotlib import pyplot, cm, rcParams, rc_context, style
@@ -136,6 +137,56 @@ def new_image_axes(height=5, width=5):  # pragma: no cover
 def big_axes():  # pragma: no cover
     """Return a new Axes object, but larger than the default."""
     return new_axes(height=9, width=16)
+
+
+def make_subplots(n_plots: int, n_cols: int=4, ax_width: int=4, vmin=None, vmax=None, cmap=None):
+    """Create a grid of subplots.
+    
+    The height of the figure will be determined automatically from the
+    other parameters.
+    
+    Parameters
+    ==========
+    n_plots
+      The total number of panels to put in the figure.
+    n_cols : optional
+      How many columns of subplots to use.
+    ax_width : optional
+      How wide to make each Axes in the subplot.
+    vmin, vmax : optional
+      Min and max values. If both are given, a colorbar will be added
+      at the bottom of the subplots.
+    
+    Returns
+    =======
+    fig
+      The matplotlib figure.
+    axs
+      Arrays of axes created in the subplots.
+
+    """
+    colorbar_size = 0.025 # Relative to the figure size
+    # Calculate the other layout parameters
+    cbar_is_needed = vmin is not None and vmax is not None
+    n_rows = math.ceil(n_plots/n_cols)
+    fig_width = ax_width * n_cols
+    fig_height = fig_width / n_cols * n_rows
+    if cbar_is_needed:
+        fig_height = fig_height / (1 - colorbar_size - 0.02)
+    # Do the plotting
+    fig, axs = pyplot.subplots(n_rows, n_cols, figsize=(fig_width, fig_height), constrained_layout=True)
+    # Delete unused axes
+    for idx in range(n_rows * n_cols - n_plots):
+        ax_idx = -(idx + 1)
+        axs[-1][ax_idx].remove()
+    # Add a colorbar
+    if cbar_is_needed:
+        fig.subplots_adjust(top=1, bottom=colorbar_size+0.02, left=0, right=1)
+        cax = fig.add_axes([0, 0, 1, colorbar_size])
+        mappable = pyplot.cm.ScalarMappable(cmap=cmap)
+        mappable.set_array(np.linspace(vmin, vmax, 10))
+        fig.colorbar(cax=cax, mappable=mappable, orientation='horizontal', cmap=cmap)
+    return fig, axs
 
 
 def dual_axes(fig=None, longdim=13.8, shortdim=6.9, orientation='horizontal'):  # pragma: no cover
