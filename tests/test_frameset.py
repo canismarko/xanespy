@@ -194,6 +194,36 @@ class XanesFramesetTest(TestCase):
     #     # No results are specified, but at least the function was
     #     # called.
     
+    def test_calculate_clusters(self):
+        """Check the the data are separated into signals and discretized by
+        k-means clustering."""
+        N_COMPONENTS = 3
+        n_energies = 3
+        store = MockStore()
+        store.get_dataset.return_value = np.random.rand(1, n_energies, 16, 16)
+        frameset = self.create_frameset(store=store)
+        mask = np.zeros(shape=(16, 16), dtype='bool')
+        frameset.edge_mask = mock.MagicMock(return_value=mask)
+        # Post/pre-edge identification is known to fail
+        frameset.calculate_signals(n_components=N_COMPONENTS,
+                                   method="nmf")
+        # Check that nmf signals and weights are saved
+        good_shape = (N_COMPONENTS, n_energies)
+        self.assertEqual(store.signals.shape, good_shape)
+        self.assertEqual(
+            store.signal_method,
+            "Non-Negative Matrix Factorization")
+        # Check for shape of weights
+        good_shape = (1, N_COMPONENTS, 16, 16)
+        self.assertEqual(store.signal_weights.shape, good_shape)
+        # Check that a composite RGB map is saved
+        good_shape = (1, 3, 16, 16)
+        self.assertEqual(store.signal_map.shape, good_shape)
+        # Check that k-means cluster map is saved
+        good_shape = (1, 16, 16)
+        self.assertEqual(store.cluster_fit.shape, good_shape)
+    
+    
     def test_segment_materials(self):
         # Prepare dummy data
         store = MockStore()
@@ -801,34 +831,6 @@ class OldXanesFramesetTest(XanespyTestCase):
         with self.frameset.store() as store:
             new_shape = store.optical_depths.shape
         self.assertEqual(new_shape, (1, 2, 1023, 1023))
-    
-    def test_calculate_clusters(self):
-        """Check the the data are separated into signals and discretized by
-        k-means clustering."""
-        N_COMPONENTS = 3
-        with self.assertLogs(level=logging.WARNING):
-            # Post/pre-edge identification is known to fail
-            self.frameset.calculate_signals(n_components=N_COMPONENTS,
-                                            method="nmf")
-        # Check that nmf signals and weights are saved
-        with self.frameset.store() as store:
-            n_energies = store.optical_depths.shape[1]  # Expecting: 2
-            good_shape = (N_COMPONENTS, n_energies)
-            self.assertEqual(store.signals.shape, good_shape)
-            self.assertEqual(
-                store.signal_method,
-                "Non-Negative Matrix Factorization")
-            # Check for shape of weights
-            good_shape = (1, *self.frameset.frame_shape(), N_COMPONENTS)
-            self.assertEqual(store.signal_weights.shape, good_shape)
-        # Check that a composite RGB map is saved
-        with self.frameset.store() as store:
-            good_shape = (1, *self.frameset.frame_shape(), 3)
-            self.assertEqual(store.signal_map.shape, good_shape)
-        # Check that k-means cluster map is saved
-        with self.frameset.store() as store:
-            good_shape = (1, *self.frameset.frame_shape())
-            self.assertEqual(store.cluster_fit.shape, good_shape)
 
 
 # Launch the tests if this is run as a script

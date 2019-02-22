@@ -297,9 +297,9 @@ class XanesMathTest(unittest.TestCase):
         # Rotation not around a non-zero center
         res = transformation_matrices(rotations=r, center=(512, 512))
         expected = np.array([
-            [0, -1, 0],
+            [0, -1, 1024],
             [1,  0, 0],
-            [0,  1, 1],
+            [0,  0, 1],
         ])
         np.testing.assert_almost_equal(res, expected)
         # Translation only

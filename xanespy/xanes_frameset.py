@@ -1228,7 +1228,7 @@ class XanesFrameset():
         min_size : optional
           Objects below this size (in pixels) will be removed. Passing
           zero (default) will result in no effect.
-
+        
         """
         with self.store() as store:
             if store.has_dataset('edge_mask'):
@@ -1695,7 +1695,6 @@ class XanesFrameset():
         else:
             log.debug("No edge mask for signal extraction")
             mask = dummy_mask
-        
         # Separate the data into signals
         signals, weights = xm.extract_signals_nmf(
             spectra=spectra[mask.flatten()], n_components=n_components)
@@ -1713,8 +1712,10 @@ class XanesFrameset():
             store.signals = signals
             store.signal_method = method_names[method]
             store.signal_weights = weight_frames
-            store.signals.attrs['frame_source'] = frame_source
-        
+            try:
+                store.signals.attrs['frame_source'] = frame_source
+            except AttributeError:
+                pass
         # ## Construct a composite RGB signal map
         # Calculate a mean frame to normalize the weights
         mean = np.imag(self.mean_frame())
@@ -1725,7 +1726,10 @@ class XanesFrameset():
         # Make sure the composite has three color components (RGB)
         with self.store(mode="r+") as store:
             store.signal_map = composite
-            store.signal_map.attrs['frame_source'] = frame_source
+            try:
+                store.signal_map.attrs['frame_source'] = frame_source
+            except AttributeError:
+                pass
         # ## Perform k-means clustering
         k_results = cluster.k_means(weights, n_clusters=n_components)
         centroid, labels, intertia = k_results
