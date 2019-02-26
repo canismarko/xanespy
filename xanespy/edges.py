@@ -201,7 +201,7 @@ class CuKEdge(KEdge):
 
 class NCANickelKEdge(KEdge):
     name = "Ni_NCA"
-    E_0 = 8333
+    E_0 = 8345
     shell = 'K'
     regions = [
         (8250, 8310, 20),

@@ -371,6 +371,27 @@ class XanesFramesetTest(TestCase):
         saved_data = store.replace_dataset.call_args[1]['data']
         np.testing.assert_equal(new_data, saved_data)
     
+    def test_fit_kedge(self):
+        store = MockStore()
+        store.energies = np.array([np.linspace(8310, 8360, num=40)])
+        ODs = np.ones((1, 40, 1, 2))
+        store.optical_depths = ODs
+        def get_dataset(name):
+            if name == 'optical_depths':
+                return ODs
+            elif name == 'K_edge_curve_parameters':
+                wl_fit = np.ones((1, 8, 1, 2))
+                return wl_fit
+        store.get_dataset = get_dataset
+        # store.get_dataset.return_value = np.zeros((1, 40, 1, 2))
+        fs = self.create_frameset(store=store)
+        spectra = np.array([
+            np.sin(store.energies[0]),
+            np.sin(store.energies[0]),
+        ])
+        fs.spectra = mock.MagicMock(return_value=spectra)
+        fs.fit_kedge(quiet=True)
+    
     def test_fit_spectra(self):
         store = MockStore()
         od_data = np.random.rand(1, 6, 16, 16)

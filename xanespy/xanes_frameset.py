@@ -60,6 +60,9 @@ from edges import Edge
 log = logging.getLogger(__name__)
 
 
+guess_params = lambda x: x
+
+
 class XanesFrameset():
     """A collection of TXM frames at different energies moving across an
     absorption edge. Iterating over this object gives the individual
@@ -1026,11 +1029,10 @@ class XanesFrameset():
             calculated with a more conservative threshold.
         """
         with self.store() as store:
-            As = store.optical_depths
-            # Mangle axes to be in (pixel, energy) order
-            img_shape = As.shape[-2:]
-            spectra = np.reshape(As, (-1, np.prod(img_shape)))
-            spectra = np.moveaxis(spectra, 0, -1)
+            E_axis = 1
+            ODs = store.optical_depths
+            ODs = np.moveaxis(ODs, E_axis, -1)
+            spectra = np.reshape(ODs, (-1, self.num_energies))
         return spectra
     
     def line_spectra(self, xy0, xy1, representation="optical_depths", timestep=0):
@@ -1294,13 +1296,20 @@ class XanesFrameset():
                                   context='metadata')
         return results
     
-    def fit_kedge(self):
+    def fit_kedge(self, quiet=False):
         k_edge = KCurve(energies=self.energies())
         # Prepare intial guess at parameters
-        p0 = k_edge.guess_params(self.spectrum(edge_jump_filter=True), edge=self.edge)
-        p0 = prepare_p0(p0, self.frame_shape(), self.num_timesteps)
+        spectra = self.spectra(edge_filter=False)
+        if not quiet:
+            spectra = tqdm.tqdm(spectra, desc="Guessing initial params", unit='px')
+        guess_params = functools.partial(k_edge.guess_params, edge=self.edge,
+                                         named_tuple=False)
+        with mp.Pool(mp.cpu_count()) as pool:
+            p0 = np.array(pool.map(guess_params, spectra, chunksize=2000))
+        p0 = p0.reshape((self.num_timesteps, *self.frame_shape(), -1))
+        p0 = np.moveaxis(p0, -1, 1)
         # Fit all the spectra
-        self.fit_spectra(k_edge, p0)
+        self.fit_spectra(k_edge, p0, quiet=quiet)
         # Calculate the maximum whiteline fit
         new_Es = np.linspace(*self.edge.edge_range, num=200)
         kcurve = KCurve(new_Es)
@@ -1311,17 +1320,21 @@ class XanesFrameset():
         map_shape = params.shape[:-1]
         p_shape = params.shape[-1]
         params = params.reshape(-1, p_shape)
-        params = tqdm.tqdm(params, desc="Calculating whitelines", unit='spctrm')
+        if not quiet:
+            params = tqdm.tqdm(params, desc="Calculating whitelines", unit='px')
         # Process all the spectra
         with mp.Pool(mp.cpu_count()) as pool:
             _find_whiteline = functools.partial(find_whiteline, curve=kcurve)
-            whitelines = pool.map(_find_whiteline, params)
+            whitelines = pool.map(_find_whiteline, params, chunksize=1000)
             whitelines = np.array(whitelines)
         # Return to the original shape
         whitelines = whitelines.reshape(map_shape)
         with self.store(mode='a') as store:
             store.whiteline_fit = whitelines
-            store.whiteline_fit.attrs['frame_source'] = 'optical_depths'
+            try:
+                store.whiteline_fit.attrs['frame_source'] = 'optical_depths'
+            except AttributeError:
+                pass
     
     def fit_spectra(self, func, p0, pnames=None, name=None,
                     edge_filter=True, nonnegative=False,

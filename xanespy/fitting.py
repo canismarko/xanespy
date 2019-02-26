@@ -355,7 +355,7 @@ class KCurve(Curve):
     def __init__(self, energies):
         self.energies = energies
     
-    def guess_params(self, intensities, edge):
+    def guess_params(self, intensities, edge, named_tuple=True):
         """Guess initial starting parameters for a k-edge curve. This will
         give a rough estimate, appropriate for giving to the fit_kedge
         function as the starting parameters, p0.
@@ -369,16 +369,20 @@ class KCurve(Curve):
         edge : xanespy.edges.KEdge
           An X-ray Edge object, will be used for estimating the actual
           edge energy itself.
+        named_tuple : bool, optional
+          If truthy, the result will be a named tuple, otherwise a simple tuple.
         
         Returns
         -------
         p0 : tuple
-          A named tuple with the estimated parameters (see KEdgeParams
+          An iterable with the estimated parameters (see KEdgeParams
           for definition)
         
         """
         Is = np.array(intensities)
-        assert Is.shape == self.energies.shape
+        if Is.shape != self.energies.shape:
+            raise ValueError('Intensities and energies do not have the same shape: {} vs {}'
+                             ''.format(Is.shape, self.energies.shape))
         # Guess the overall scale and offset parameters
         scale = k_edge_jump(frames=Is, energies=self.energies, edge=edge)
         voffset = np.min(Is)
@@ -391,8 +395,10 @@ class KCurve(Curve):
         # Construct the parameters tuple
         KParams = namedtuple('KParams', self.param_names)
         p0 = KParams(scale=scale, voffset=voffset, E0=E0,
-                             sigw=0.5, bg_slope=0,
-                             ga=ga, gb=gb, gc=gc)
+                     sigw=0.5, bg_slope=0,
+                     ga=ga, gb=gb, gc=gc)
+        if not named_tuple:
+            p0 = tuple(p0)
         return p0
     
     def __call__(self, *params):
