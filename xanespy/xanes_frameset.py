@@ -1065,9 +1065,13 @@ class XanesFrameset():
         x = np.linspace(px0.horizontal, px1.horizontal, length)
         y = np.linspace(px0.vertical, px1.vertical, length)
         # Extract the values along the line
-        frames = self.frames(representation=representation)
-        spectra = frames[:,y.astype(np.int), x.astype(np.int)]
-        spectra = np.swapaxes(spectra, 0, 1)
+        with self.store(mode='r') as store:
+            frames = store.get_dataset(representation)[timestep]
+            if frames.ndim > 2:
+                spectra = frames[:, y.astype(np.int), x.astype(np.int)]
+                spectra = np.swapaxes(spectra, 0, 1)
+            else:
+                spectra = frames[y.astype(np.int), x.astype(np.int)]
         # And we're done
         return spectra
     
