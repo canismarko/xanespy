@@ -1314,7 +1314,7 @@ class XanesFrameset():
         p0 = np.moveaxis(p0, -1, 1)
         # Fit all the spectra
         self.fit_spectra(k_edge, p0, quiet=quiet)
-        # Calculate the maximum whiteline fit
+        # Use higher energy precision to calculate whitelines
         new_Es = np.linspace(*self.edge.edge_range, num=200)
         kcurve = KCurve(new_Es)
         with self.store() as store:
@@ -1325,14 +1325,15 @@ class XanesFrameset():
         p_shape = params.shape[-1]
         params = params.reshape(-1, p_shape)
         if not quiet:
-            params = tqdm.tqdm(params, desc="Calculating whitelines", unit='px')
+            params = tqdm.tqdm(params, desc="Calculating whitelines", unit='px', total=params.shape[0])
         # Process all the spectra
         with mp.Pool(mp.cpu_count()) as pool:
             _find_whiteline = functools.partial(find_whiteline, curve=kcurve)
             whitelines = pool.map(_find_whiteline, params, chunksize=1000)
-            whitelines = np.array(whitelines)
         # Return to the original shape
+        whitelines = np.array(whitelines)
         whitelines = whitelines.reshape(map_shape)
+        # Save data to disk
         with self.store(mode='a') as store:
             store.whiteline_fit = whitelines
             try:
