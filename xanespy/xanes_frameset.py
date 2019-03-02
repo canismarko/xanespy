@@ -1016,17 +1016,10 @@ class XanesFrameset():
             unit = store.pixel_unit
         return unit
     
-    def spectra(self, edge_filter=False):
+    def spectra(self):
         """Return a two-dimensional array of spectra for all the pixels in
         shape of (pixel, energy).
         
-        Arguments
-        ---------
-        edge_jump_filter (bool or str): [NOT YET IMPLEMENTED] If
-            truthy, only pixels that pass the edge jump filter are
-            used to calculate the spectrum. If "inverse" is given,
-            then the edge jump filter is logically not-ted and
-            calculated with a more conservative threshold.
         """
         with self.store() as store:
             E_axis = 1
@@ -1245,8 +1238,6 @@ class XanesFrameset():
             else:
                 # Check for complex values and convert to optical_depths only
                 ODs = np.real(store.optical_depths.value)
-                # if np.iscomplexobj(ODs):
-                #     ODs = np.(ODs)
                 mask = self.edge.mask(frames=ODs,
                                       energies=store.energies,
                                       sensitivity=sensitivity,
