@@ -876,7 +876,7 @@ class XanesFrameset():
         """
         with self.store('r+') as store:
             logstart = time()
-            frames = store.optical_depths.value
+            frames = store.optical_depths[()]
             # Average across all timesteps
             frames = np.median(frames, axis=0)
             Es = np.median(store.energies, axis=0)
@@ -1237,7 +1237,7 @@ class XanesFrameset():
                 mask = np.zeros(shape=store.intensities.shape[-2:])
             else:
                 # Check for complex values and convert to optical_depths only
-                ODs = np.real(store.optical_depths.value)
+                ODs = np.real(store.optical_depths[()])
                 mask = self.edge.mask(frames=ODs,
                                       energies=store.energies,
                                       sensitivity=sensitivity,
@@ -1455,7 +1455,7 @@ class XanesFrameset():
         with self.store() as store:
             frames = store.optical_depths
             # Insert two axes into energies for image row/cols
-            energies = store.energies.value[:, np.newaxis, np.newaxis, :]
+            energies = store.energies[:, np.newaxis, np.newaxis, :]
             # Convert numpy axes to be in (pixel, energy) form
             spectra = np.moveaxis(frames, 1, -1)
             # Calculate whiteline positions
@@ -1569,9 +1569,9 @@ class XanesFrameset():
         
         """
         with self.store() as store:
-            signals = store.signals.value
+            signals = store.signals[()]
             n_signals = signals.shape[0]
-            weights = store.signal_weights.value
+            weights = store.signal_weights[()]
             energies = store.energies[0]
             px_unit = store.pixel_unit
         figsize = (10, 3*signals.shape[0])
@@ -1804,7 +1804,7 @@ class XanesFrameset():
         
         """
         with self.store() as store:
-            timestamps = store.timestamps.value
+            timestamps = store.timestamps[()]
             timestamps = timestamps.astype(np.datetime64)
         return timestamps
 
@@ -1959,7 +1959,7 @@ class XanesFrameset():
     @property
     def timestep_names(self):
         with self.store() as store:
-            names = store.timestep_names.value
+            names = store.timestep_names[()]
             names = names.astype('unicode')
         return names
     
@@ -1971,13 +1971,37 @@ class XanesFrameset():
     
     def plot_map(self, ax=None, map_name="whiteline_fit", timeidx=0,
                  vmin=None, vmax=None, median_size=0,
-                 component="real", edge_filter=False, *args, **kwargs):
-        """Prepare data and plot a map of whiteline positions.
+                 component="real", edge_filter=False, edge_filter_kw={}, *args, **kwargs):
+        """Prepare data and plot a map of processed data.
         
         Parameters
-        ----------
-        median_size : int
+        ==========
+        ax : optional
+          A matplotlib Axes to receive the plotted map.
+        map_name : str, optional
+          Which map in the HDF file to plot.
+        timeidx : int, optional
+          Which timestep to use (default=0).
+        vmin : float, optional
+          Minimum value used for image plotting.
+        vmax : float, optional
+          Maximum value used for image plotting.
+        median_size : int, optional
           Kernel size for the median rank filter.
+        component : str, optional
+          If complex-valued data is found, which component to plot.
+        edge_filter : bool, optional
+          If true, only pixels with a considerable XAS edge will be
+          shown.
+        edge_filter_kw : dict, optional
+          Dictionary of extra parameters to pass to the
+          ``XanesFrameset.edge_mask()`` method.
+        
+        Returns
+        =======
+        artists
+          A list of matplotlib artists returned when calling
+          ``ax.imshow()`` or similar routines.
         
         """
         with self.store() as store:
@@ -1992,7 +2016,7 @@ class XanesFrameset():
         vmax = np.max(data) if vmax is None else vmax
         # Apply the edge jump filter if necessary
         if edge_filter:
-            mask = self.edge_mask()
+            mask = self.edge_mask(**edge_filter_kw)
             data = np.ma.array(data, mask=mask)
         # Plot the data
         artists = plots.plot_txm_map(
@@ -2114,7 +2138,7 @@ class XanesFrameset():
         
         """
         with self.store() as store:
-            Is = store.intensities.value
+            Is = store.intensities[()]
             ODs = xm.apply_internal_reference(Is)
         # Save complex image as refractive index (real part is phase change)
         with self.store('r+') as store:
