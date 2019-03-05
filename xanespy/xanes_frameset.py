@@ -1291,15 +1291,35 @@ class XanesFrameset():
                                   context='metadata')
         return results
     
-    def fit_kedge(self, quiet=False):
-        k_edge = KCurve(energies=self.energies())
+    def fit_kedge(self, quiet=False, ncore=None):
+        """Fit all spectra with a K-Edge curve.
+
+        Parameters
+        ==========
+        quiet : bool, optional
+          If true, no progress bar will be displayed.
+        ncore : int, optional
+          How many processes to use in the pool. If omitted, all cores
+          will be used. If negative, the number of cores will be
+          subtracted from the total CPU count. Eg. ``ncore=-2`` on an
+          8-core machine will use 6 cores.
+        
+        """
+        # Determine how many processes to spawn
+        if ncore is None:
+            nproc = mp.cpu_count()
+        elif ncore < 0:
+            nproc = np.max([mp.cpu_count() + ncore, 1])
+        else:
+            nproc = ncore
         # Prepare intial guess at parameters
+        k_edge = KCurve(energies=self.energies())
         spectra = self.spectra(edge_filter=False)
         if not quiet:
             spectra = tqdm.tqdm(spectra, desc="Guessing initial params", unit='px')
         guess_params = functools.partial(k_edge.guess_params, edge=self.edge,
                                          named_tuple=False)
-        with mp.Pool(mp.cpu_count()) as pool:
+        with mp.Pool(nproc) as pool:
             p0 = np.array(pool.map(guess_params, spectra, chunksize=2000))
         p0 = p0.reshape((self.num_timesteps, *self.frame_shape(), -1))
         p0 = np.moveaxis(p0, -1, 1)
@@ -1318,7 +1338,7 @@ class XanesFrameset():
         if not quiet:
             params = tqdm.tqdm(params, desc="Calculating whitelines", unit='px', total=params.shape[0])
         # Process all the spectra
-        with mp.Pool(mp.cpu_count()) as pool:
+        with mp.Pool(nproc) as pool:
             _find_whiteline = functools.partial(find_whiteline, curve=kcurve)
             whitelines = pool.map(_find_whiteline, params, chunksize=1000)
         # Return to the original shape
@@ -1336,6 +1356,7 @@ class XanesFrameset():
                     edge_filter=True, nonnegative=False,
                     component='real', representation='optical_depths',
                     dtype=None, quiet=False):
+
         """Fit a given function to the spectra at each pixel.
         
         The fit parameters will be saved in the HDF dataset
