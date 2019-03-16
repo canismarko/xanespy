@@ -179,6 +179,20 @@ class FeKEdge(KEdge):
     post_edge = (7150, 7250)
     edge_range = (7115, 7140)
 
+class GeKEdge(KEdge):
+    name = "Ge"
+    E_0 = 11100.0
+    shell = "K"
+    regions = [
+        (11050, 11075, 5),
+        (11075, 11150, 1.5),
+        (11150, 11300, 4),
+    ]
+    pre_edge = (11050, 11075)
+    post_edge = (11075, 11150)
+    edge_range = (11150, 11300)
+    map_range = (11050, 11300)
+
 
 class NCACobaltKEdge(KEdge):
     name = "Co_NCA"
@@ -257,6 +271,7 @@ k_edges = {
     'Mn_LMO': LMOMnKEdge(),
     'Ni': NCANickelKEdge(),
     'Cu': CuKEdge(),
+    'Ge': GeKEdge()
 }
 
 
