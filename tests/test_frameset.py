@@ -376,6 +376,8 @@ class XanesFramesetTest(TestCase):
         store.energies = np.array([np.linspace(8310, 8360, num=40)])
         ODs = np.ones((1, 40, 1, 2))
         store.optical_depths = ODs
+        store.intensities = ODs
+        store.edge_mask = np.zeros((1, 1, 2), dtype=bool)
         def get_dataset(name):
             if name == 'optical_depths':
                 return ODs
@@ -390,6 +392,7 @@ class XanesFramesetTest(TestCase):
             np.sin(store.energies[0]),
         ])
         fs.spectra = mock.MagicMock(return_value=spectra)
+        fs.clear_caches()
         fs.fit_kedge(quiet=True)
     
     def test_fit_spectra(self):
@@ -458,6 +461,8 @@ class XanesFramesetTest(TestCase):
         fs = self.create_frameset(store=store)
         # Check that the new edge mask has same shape as intensities
         np.testing.assert_equal(fs.edge_mask(), np.zeros(shape=(128, 128)))
+        # Check that the new edge mask is a boolean array
+        self.assertEqual(fs.edge_mask().dtype, bool)
     
     def test_spectrum(self):
         store = MockStore()
@@ -594,7 +599,7 @@ class XanesFramesetTest(TestCase):
         num_E = 10
         E_step = 50
         frames = np.random.rand(5, num_E, 128, 128)
-        store.optical_depths.value = frames
+        store.optical_depths = frames
         store.get_frames = mock.Mock(return_value=frames)
         # Prepare fake range of energies
         energies = np.arange(8250, 8250 + E_step * num_E, step=E_step)

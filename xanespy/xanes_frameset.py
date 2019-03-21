@@ -1234,7 +1234,7 @@ class XanesFrameset():
                 mask = store.edge_mask[0]
             elif not store.has_dataset('optical_depths'):
                 # Store has no optical_depth data so just return a blank array
-                mask = np.zeros(shape=store.intensities.shape[-2:])
+                mask = np.zeros(shape=store.intensities.shape[-2:], dtype='bool')
             else:
                 # Check for complex values and convert to optical_depths only
                 ODs = np.real(store.optical_depths[()])
@@ -1413,7 +1413,9 @@ class XanesFrameset():
         with self.store() as store:
             frames = get_component(store.get_dataset(representation), component)
         if edge_filter:
-            frames[...,self.edge_mask()] = np.nan
+            print(self.edge_mask().dtype, self.edge_mask().shape)
+            print(frames.shape)
+            frames[..., self.edge_mask()] = np.nan
         # Get the default curve name if necessary
         if name is None:
             name = getattr(func, 'name', 'fit')
