@@ -1314,7 +1314,7 @@ class XanesFrameset():
             nproc = ncore
         # Prepare intial guess at parameters
         k_edge = KCurve(energies=self.energies())
-        spectra = self.spectra(edge_filter=False)
+        spectra = self.spectra()
         if not quiet:
             spectra = tqdm.tqdm(spectra, desc="Guessing initial params", unit='px')
         guess_params = functools.partial(k_edge.guess_params, edge=self.edge,
@@ -1478,7 +1478,7 @@ class XanesFrameset():
         with self.store() as store:
             frames = store.optical_depths
             # Insert two axes into energies for image row/cols
-            energies = store.energies[:, np.newaxis, np.newaxis, :]
+            energies = store.energies[()][:, np.newaxis, np.newaxis, :]
             # Convert numpy axes to be in (pixel, energy) form
             spectra = np.moveaxis(frames, 1, -1)
             # Calculate whiteline positions
