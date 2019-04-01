@@ -24,3 +24,6 @@ xanespy.egg-info/
 
 # Documentation
 docs/_build/
+
+# pycharm editer
+.idea/

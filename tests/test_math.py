@@ -31,6 +31,7 @@ import unittest
 import numpy as np
 from skimage import data
 import pandas as pd
+import matplotlib.pyplot as plt
 
 from xanespy import exceptions, edges
 from xanespy.utilities import prog
@@ -39,6 +40,7 @@ from xanespy.xanes_math import (transform_images, direct_whitelines,
                                 k_edge_mask, l_edge_mask,
                                 apply_references, iter_indices,
                                 extract_signals_nmf,
+                                extract_signals_pca,
                                 transformation_matrices,
                                 apply_internal_reference,
                                 apply_mosaic_reference,
@@ -425,21 +427,58 @@ class XanesMathTest(unittest.TestCase):
         ret = transform_images(data_imag, transformations=Ts, quiet=True)
         self.assertEqual(ret.dtype, np.complex)
 
-    # def test_extract_signals(self):
-    #     # Prepare some testing data
-    #     x = np.linspace(0, 2*np.pi, num=2*np.pi*50)
-    #     signal0 = np.sin(2*x)
-    #     signal1 = np.sin(3*x)
-    #     in_weights = np.array([[0, 0.25, 0.5, 0.75, 1],
-    #                         [1, 0.75, 0.5, 0.25, 0]])
-    #     features = np.outer(in_weights[0], signal0)
-    #     features += np.outer(in_weights[1], signal1)
-    #     self.assertEqual(features.shape, (5, 314))
-    #     # Extract the signals
-    #     comps, weights = extract_signals_nmf(spectra=features, energies=x,
-    #                                      n_components=2)
-    #     # Check the results
-    #     np.testing.assert_allclose(comps, [signal0, signal1])
+    def test_extract_signals_nmf(self):
+        # Prepare some testing data
+        x = np.linspace(0, 2*np.pi, num=int(2*np.pi*50))
+        signal0 = np.sin(2*x)**2
+        signal1 = np.sin(3*x)**2
+        in_weights = np.array([[0, 0.25, 0.5, 0.75, 1],
+                               [1, 0.75, 0.5, 0.25, 0]])
+        features = np.outer(in_weights[0], signal0)
+        features += np.outer(in_weights[1], signal1)
+        self.assertEqual(features.shape, (5, 314))
+        # Extract the signals
+        comps, weights = extract_signals_nmf(spectra=features,
+                                          n_components=2)
+        weights = np.swapaxes(weights, 0, 1)
+        # Check the results
+        new_features = np.outer(weights[0], comps[0])
+        new_features += np.outer(weights[1], comps[1])
+        self.assertEqual(comps.shape, (2, len(x)))
+        self.assertEqual(weights.shape, in_weights.shape)
+        np.testing.assert_allclose(features, new_features, atol=0.01)
+
+    def test_extract_signals_pca(self):
+        # Prepare some testing data
+        x = np.linspace(0, 2*np.pi, num=int(2*np.pi*50))
+        signal0 = np.sin(2*x)
+        signal1 = np.sin(3*x)
+        in_weights = np.array([[0, 0.25, 0.5, 0.75, 1],
+                               [1, 0.75, 0.5, 0.25, 0]])
+        features = np.outer(in_weights[0], signal0)
+        features += np.outer(in_weights[1], signal1)
+        self.assertEqual(features.shape, (5, 314))
+        # Extract the signals
+        comps, weights = extract_signals_pca(spectra=features,
+                                          n_components=2)
+        weights = np.swapaxes(weights, 0, 1)
+        # Check the results
+        new_features = np.outer(weights[0], comps[0])
+        new_features += np.outer(weights[1], comps[1])
+        self.assertEqual(comps.shape, (2, len(x)))
+        self.assertEqual(weights.shape, in_weights.shape)
+
+        plt.plot(x, comps[0], label='c0')
+        plt.plot(x, comps[1], label='c1')
+        plt.plot(x, features[0], label='f0')
+        plt.plot(x, features[1], label='f1')
+        plt.plot(x, new_features[0], label='nf0')
+        plt.plot(x, new_features[1], label='nf1')
+        plt.legend()
+        plt.show()
+
+        #np.testing.assert_allclose(features, new_features, atol=0.01)
+
 
 
 # Launch the tests if this is run as a script

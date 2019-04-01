@@ -1413,8 +1413,6 @@ class XanesFrameset():
         with self.store() as store:
             frames = get_component(store.get_dataset(representation), component)
         if edge_filter:
-            print(self.edge_mask().dtype, self.edge_mask().shape)
-            print(frames.shape)
             frames[..., self.edge_mask()] = np.nan
         # Get the default curve name if necessary
         if name is None:
@@ -1680,22 +1678,22 @@ class XanesFrameset():
         resulting RGB cluster map.
         
         Parameters
-        ----------
+        ==========
         n_components : int, optional
           The number of signals and number of clusters into which the
           data will be separated.
-        
         method : str, optional
-          The technique to use for extracting signals. Currently only
-          "nmf" is supported.
-        
+          The technique to use for extracting signals. Available options are
+          'nmf' and 'pca'.
         frame_source : str, optional
           Name of the frame-set to use as the input data.
-        
         edge_mask : bool, optional
           If truthy (default), only those pixels passing the edge
           filter will be considered.
-        
+
+        Returns
+        =======
+        signals : np.
         """
         frame_source = "optical_depths"
         msg = "Performing {} signal extraction with {} components"
@@ -1728,8 +1726,14 @@ class XanesFrameset():
             log.debug("No edge mask for signal extraction")
             mask = dummy_mask
         # Separate the data into signals
-        signals, weights = xm.extract_signals_nmf(
-            spectra=spectra[mask.flatten()], n_components=n_components)
+        if method.lower() == 'nmf':
+            signals, weights = xm.extract_signals_nmf(
+                spectra=spectra[mask.flatten()], n_components=n_components)
+        elif method.lower() == 'pca':
+            signals, weights = xm.extract_signals_pca(
+                spectra=spectra[mask.flatten()], n_components=n_components)
+        else:
+            raise ValueError('Recieved Invalid Method : {method}'.format(method=method))
         # Reshape weights into frame dimensions
         weight_shape = (n_timesteps, *frame_shape, n_components)
         weight_frames = np.zeros(shape=weight_shape)
@@ -1739,10 +1743,11 @@ class XanesFrameset():
         # Save the calculated signals and weights
         method_names = {
             "nmf": "Non-Negative Matrix Factorization",
+            "pca": "Principal Component Analysis",
         }
         with self.store(mode="r+") as store:
             store.signals = signals
-            store.signal_method = method_names[method]
+            store.signal_method = method_names[method.lower()]
             store.signal_weights = weight_frames
             try:
                 store.signals.attrs['frame_source'] = frame_source
@@ -1771,6 +1776,8 @@ class XanesFrameset():
         # Save the resulting k-means cluster map
         with self.store(mode="r+") as store:
             store.cluster_fit = label_frame
+        # Return the signals and weights
+        return signals, weight_frames
     
     @functools.lru_cache(maxsize=2)
     def map_data(self, *, timeidx=0, representation="optical_depths"):

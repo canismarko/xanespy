@@ -415,44 +415,84 @@ def apply_internal_reference(intensities, desc="Applying reference"):
     return out
 
 
-def extract_signals_nmf(spectra, n_components, nmf_kwargs=None, mask=None):
+def extract_signals_nmf(spectra, n_components, extra_kwargs=None, mask=None):
     """Extract the signal components present in the given spectra using
     non-negative matrix factorization. Input data can be negative, but
     it will be shifted up, processed, then shifted down again.
-    
+
     Arguments
     ---------
     spectra : numpy.ndarray
       A numpy array of observations where the last axis is energy.
     n_components : int
       How many components to extract from the data.
-    nmf_kwargs : dict, optional
+    extra_kwargs : dict, optional
       Keyword arguments to be passed to the constructor of the
       estimator.
-    
+
     Returns
     -------
     components, weights : numpy.ndarray
       Extracted components and weights for each pixel-component
-    combination.
-    
+      combination. The ``weights`` array is in (M, N) order with
+      N components across M observations.
+
     """
-    if nmf_kwargs is None:
-        _nmf_kwargs = {}
-    max_iter = _nmf_kwargs.pop('max_iter', 200)
+    if extra_kwargs is None:
+        extra_kwargs = {}
+    max_iter = extra_kwargs.pop('max_iter', 200)
     # Make sure all the values are non-negative
     _spectra = np.abs(spectra)
     # Perform NMF fitting
     nmf = decomposition.NMF(n_components=n_components,
                             max_iter=max_iter,
-                            **_nmf_kwargs)
+                            **extra_kwargs)
     weights = nmf.fit_transform(_spectra)
     # Extract results and calculate weights
     signals = nmf.components_
     # Log the results
     log.info("NMF of %d samples in %d of %d iterations.", len(spectra),
-             nmf.n_iter_+1, max_iter)
+             nmf.n_iter_ + 1, max_iter)
     log.info("NMF reconstruction error = %f", nmf.reconstruction_err_)
+    return signals, weights
+
+
+def extract_signals_pca(spectra, n_components, extra_kwargs=None, mask=None):
+    """Extract the signal components present in the given spectra using
+    Principal component analysis.
+
+    Arguments
+    ---------
+    spectra : numpy.ndarray
+      A numpy array of observations where the last axis is energy.
+    n_components : int
+      How many components to extract from the data.
+    extra_kwargs : dict, optional
+      Keyword arguments to be passed to the constructor of the
+      estimator.
+
+    Returns
+    -------
+    components, weights : numpy.ndarray
+      Extracted components and weights for each pixel-component
+      combination. The ``weights`` array is in (M, N) order with
+      N components across M observations.
+
+    """
+    if extra_kwargs is None:
+        extra_kwargs = {}
+
+    # Make sure all the values are non-negative
+    _spectra = np.abs(spectra)
+    # Perform NMF fitting
+    pca = decomposition.PCA(n_components=n_components,
+                            **extra_kwargs)
+    weights = pca.fit_transform(_spectra)
+    # Extract results and calculate weights
+    signals = pca.components_
+    # Log the results
+    log.info("PCA of %d samples in %d of %d .", len(spectra))
+    #log.info("PCA reconstruction error = %f", pca.reconstruction_err_)
     return signals, weights
 
 
