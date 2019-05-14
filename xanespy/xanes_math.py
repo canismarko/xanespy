@@ -615,6 +615,7 @@ def l_edge_mask(frames: np.ndarray, energies: np.ndarray, edge,
     overlap = np.dot(spectrum, pixels)
     # Threshold the pixel overlap to find foreground vs background
     threshold = filters.threshold_otsu(overlap) * sensitivity
+    print(threshold, sensitivity)
     mask = overlap > threshold
     # Recreate the original image shape as a boolean array
     mask = np.reshape(mask, frame_shape)

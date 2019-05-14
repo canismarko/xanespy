@@ -39,6 +39,16 @@ from utilities import shape, Pixel
 # https://github.com/data-exchange/data-exchange/blob/master/xtomo/src/xtomo_reader.py
 
 
+class XRMProperty():
+    def __init__(self, stream, fmt=None, as_array=False):
+        self.stream = stream
+        self.fmt = fmt
+        self.as_array = as_array
+    
+    def __get__(self, instance, owner):
+        return instance.ole_value(self.stream, fmt=self.fmt, as_array=self.as_array)
+
+
 class XRMFile():
     """Single X-ray micrscopy frame created using XRadia XRM format.
     
@@ -66,6 +76,13 @@ class XRMFile():
     
     """
     aps_old1_regex = re.compile(r"(\d{8})_([a-zA-Z0-9_]+)_([a-zA-Z0-9]+)_(\d{4}).xrm")
+    mosaic_columns = XRMProperty('ImageInfo/MosiacColumns', fmt='<I')
+    mosaic_rows = XRMProperty('ImageInfo/MosiacRows', fmt='<I')
+    is_ref_corrected = XRMProperty('ImageInfo/OriginalDataRefCorrected', fmt='<I')
+    vertical_bin = XRMProperty('ImageInfo/VerticalalBin', fmt='<L')
+    horizontal_bin = XRMProperty('ImageInfo/HorizontalBin', fmt='<L')
+    reference_file = XRMProperty('ImageInfo/ReferenceFile')
+    _pixel_size = XRMProperty('ImageInfo/PixelSize', fmt='<f')
     
     def __init__(self, filename, flavor: str):
         self.filename = filename
@@ -106,10 +123,11 @@ class XRMFile():
         if self.flavor == "ssrl":
             energy = self.energy()
             field_size = 36.39296 * energy / 9000
+            num_pixels = self.image_data().shape[1]
+            pixel_size = field_size / num_pixels
         else:
-            field_size = 40
-        num_pixels = max(self.image_data().shape)
-        pixel_size = field_size / num_pixels
+            pixel_size = self._pixel_size
+            # field_size = 40 * self.mosaic_rows
         return pixel_size
     
     def ole_value(self, stream, fmt=None, as_array=False):
@@ -138,7 +156,10 @@ class XRMFile():
     
     def print_ole(self):  # pragma: no cover
         for l in self.ole_file.listdir():
-            if l[0] == 'ImageInfo':
+            is_useful = (l[0] == 'ImageInfo' or
+                         l[0][:9] == 'ImageData' or
+                         True)
+            if is_useful:
                 try:
                     val = self.ole_value(l, '<f')
                 except:
@@ -280,10 +301,8 @@ class XRMFile():
         with binning 4 would produce a 512 x 512 image.
         
         """
-        vertical = self.ole_value('ImageInfo/VerticalalBin', '<L')
-        horizontal = self.ole_value('ImageInfo/HorizontalBin', '<L')
-        binning = namedtuple('binning', ('horizontal', 'vertical'))
-        return binning(horizontal, vertical)
+        binning = namedtuple('binning', ('vertical', 'horizontal'))
+        return binning(self.vertical_bin, self.horizontal_bin)
     
     def image_dtype(self):
         dtypes = {

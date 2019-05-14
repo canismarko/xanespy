@@ -379,6 +379,17 @@ class XradiaTest(TestCase):
             end = end.astimezone(pytz.utc).replace(tzinfo=None)
             self.assertEqual(xrm.endtime(), end)
     
+    def test_mosaic(self):
+        # txm-2015-11-11-aps/ncm111-cell1-chargeC15/20151111_002_mosaic_5x5_bin8_5s.xrm
+        mosaic_filename = 'mosaic_4x4_bin8.xrm'
+        with XRMFile(os.path.join(TEST_DIR, mosaic_filename), flavor='aps') as xrm:
+            img_data = xrm.image_data()
+            # Check basic shape details
+            self.assertEqual(img_data.shape, (1024, 1024))
+            self.assertEqual(xrm.mosaic_columns, 4)
+            self.assertEqual(xrm.mosaic_rows, 4)
+            self.assertEqual(xrm.um_per_pixel(), 0.15578947961330414)
+    
     def test_str_and_repr(self):
         sample_filename = "rep01_20161456_ssrl-test-data_08324.0_eV_001of003.xrm"
         with XRMFile(os.path.join(SSRL_DIR, sample_filename), flavor="ssrl") as xrm:
