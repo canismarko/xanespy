@@ -340,11 +340,11 @@ class XanesFrameset():
         # Prepare the Jinja2 templates
         env = j2.Environment(
             loader=j2.PackageLoader('xanespy', 'templates'),
-            block_start_string = '\BLOCK{',
+            block_start_string = r'\BLOCK{',
 	    block_end_string = '}',
-	    variable_start_string = '\VAR{',
+	    variable_start_string = r'\VAR{',
 	    variable_end_string = '}',
-	    comment_start_string = '\#{',
+	    comment_start_string = r'\#{',
 	    comment_end_string = '}',
 	    line_statement_prefix = '%%',
 	    line_comment_prefix = '%#',
@@ -1816,14 +1816,24 @@ class XanesFrameset():
                 map_data = np.array(map_data)
         return map_data
     
-    def timestamps(self):
+    def timestamps(self, relative=False, t0=None):
         """Retrieve an array with the timestamp for each scan.
         
-        This will be a numpy array with the ``datetime64`` dtype. Each
-        frame has both a start and end time-stamp. Depending on the
-        beamline, the individual energy frames might have timestamps
-        based on the whole XANES scan. These timestamps are in UTC
-        since numpy's ``datetime64`` has no timezone support.
+        This will be a numpy array with the ``datetime64`` (absolute)
+        or ``float64`` (relative) dtype. Each frame has both a start
+        and end time-stamp. Depending on the beamline, the individual
+        energy frames might have timestamps based on the whole XANES
+        scan. These timestamps are timezone naive, with a timezone
+        based on the specifics of the beamline.
+        
+        Parameters
+        ----------
+        relative : bool, optional
+          If true, the timestamps will be in seconds from ``t0``.
+        t0 : datetime, optional
+          If ``relative`` is truthy, this value be used as the start
+          time for the frameset. If omitted, the earliest timestamp in
+          the frameset will be used.
         
         Returns
         -------
@@ -1833,9 +1843,19 @@ class XanesFrameset():
           for the start and end of the frame.
         
         """
+        datetime_dtype = 'datetime64[ms]'
         with self.store() as store:
             timestamps = store.timestamps[()]
-            timestamps = timestamps.astype(np.datetime64)
+        timestamps = timestamps.astype(datetime_dtype)
+        # Convert to relative timestamps if necessary
+        if relative:
+            if t0 is None:
+                t0 = np.min(timestamps)
+            else:
+                t0 = np.datetime64(t0)
+            t0 = t0.astype(datetime_dtype)
+            timestamps = (timestamps - t0).astype(np.float64) / 1000
+        # Return calculated timestamps
         return timestamps
 
     @functools.lru_cache(maxsize=2)

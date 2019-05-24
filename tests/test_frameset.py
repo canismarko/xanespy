@@ -194,6 +194,42 @@ class XanesFramesetTest(TestCase):
     #     # No results are specified, but at least the function was
     #     # called.
     
+    def test_timestamps(self):
+        # Create a (timestep, energy, start/end) array of timestamps
+        real_timestamps = np.array(
+            [[
+                ['2014-08-01T13:19:42', '2014-08-01T13:19:55.172'],
+                ['2014-08-01T13:20:17', '2014-08-01T13:20:33.321'],
+                ['2014-08-01T13:20:47', '2014-08-01T13:21:03.172'],
+            ]],
+            dtype='datetime64')
+        store = MockStore()
+        store.timestamps = real_timestamps
+        frameset = self.create_frameset(store=store)
+        # Check that the timestamps are returned
+        np.testing.assert_equal(frameset.timestamps(), real_timestamps)
+        # Check that relative timestamps are properly calculated
+        t0 = dt.datetime(2014, 8, 1, 13, 18, 42)
+        rel_timestamps = np.array(
+            [[
+                [60.,  73.172],
+                [95, 111.321],
+                [125., 141.172],
+            ]],
+        )
+        np.testing.assert_equal(frameset.timestamps(relative=True, t0=t0),
+                                rel_timestamps)
+        # Check relative timestamps without t0
+        rel_timestamps = np.array(
+            [[
+                [0.,  13.172],
+                [35, 51.321],
+                [65., 81.172],
+            ]],
+        )
+        np.testing.assert_equal(frameset.timestamps(relative=True),
+                                rel_timestamps)
+    
     def test_calculate_clusters(self):
         """Check the the data are separated into signals and discretized by
         k-means clustering."""
@@ -651,7 +687,7 @@ class XanesFramesetTest(TestCase):
     def test_components(self):
         fs = self.create_frameset()
         self.assertEqual(fs.components(), ['modulus'])
-    
+   
     def test_mean_frame(self):
         # Prepare frameset and mock store
         frames = self.dummy_frame_data()
