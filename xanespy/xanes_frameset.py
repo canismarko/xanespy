@@ -935,11 +935,11 @@ class XanesFrameset():
                                           intensity_image=intensity_image)
         # Put in order of descending area
         regions.sort(key=lambda p: p.area, reverse=True)
-        return regions
+        return np.array(regions)
     
     def plot_mean_frame(self, ax=None, component="modulus",
                         representation="optical_depths",
-                        cmap="gray", timeidx=..., *args, **kwargs):
+                        cmap="bone", timeidx=..., *args, **kwargs):
         """Plot the mean image from the selected frames.
         
         Parameters
@@ -1967,7 +1967,7 @@ class XanesFrameset():
                         bottom=bottom, top=top)
         return extent
     
-    def plot_frame(self, idx, ax=None, cmap="gray",
+    def plot_frame(self, idx, ax=None, cmap="bone",
                    representation="optical_depths", component='modulus', *args,
                    **kwargs):
         """Plot the frame with given index as an image.
