@@ -1077,7 +1077,7 @@ class XanesFrameset():
         names = [n.strip() for n in names]
         return names
     
-    def spectrum(self, pixel=None, edge_jump_filter=False,
+    def spectrum(self, pixel=None, edge_filter=False,
                  representation="optical_depths", index=0,
                  derivative=0):
         """Collapse the frameset down to an energy spectrum.
@@ -1094,7 +1094,7 @@ class XanesFrameset():
           the spectrum for only 1 pixel in the frameset. If None, a
           larger part of the frame will be used, depending on the
           other arguments.
-        edge_jump_filter : bool or str, optional
+        edge_filter : bool or str, optional
           If truthy, only pixels that
           pass the edge jump filter are used to calculate the
           spectrum. If "inverse" is given, then the edge jump filter
@@ -1128,7 +1128,7 @@ class XanesFrameset():
                 spectrum = store.get_frames(representation)[spectrum_idx]
             else:
                 frames = store.get_frames(representation)[index]
-                if edge_jump_filter:
+                if edge_filter:
                     # Filter out background pixels using edge mask
                     try:
                         mask = self.edge_mask()
@@ -1162,7 +1162,7 @@ class XanesFrameset():
     def plot_spectrum(self, ax=None, pixel=None,
                       norm_range=None, normalize=False,
                       representation="optical_depths",
-                      show_fit=False, edge_jump_filter=False,
+                      show_fit=False, edge_filter=False,
                       linestyle=":", timeidx=0,
                       *args, **kwargs):
         """Calculate and plot the xanes spectrum for this field-of-view.
@@ -1179,7 +1179,7 @@ class XanesFrameset():
         show_fit : bool, optional
           If truthy, will use the edge object to fit the data and plot
           the resulting fit line.
-        edge_jump_filter : bool, optional
+        edge_filter : bool, optional
           If truthy, will only include those values that show a strong
           absorbtion jump across this edge.
         args, kwargs : optional
@@ -1193,7 +1193,7 @@ class XanesFrameset():
         else:
             norm = None
         spectrum = self.spectrum(pixel=pixel,
-                                 edge_jump_filter=edge_jump_filter,
+                                 edge_filter=edge_filter,
                                  representation=representation,
                                  index=timeidx)
         edge = self.edge
@@ -2020,8 +2020,9 @@ class XanesFrameset():
         return val
     
     def plot_map(self, ax=None, map_name="whiteline_fit", timeidx=0,
-                 vmin=None, vmax=None, median_size=0,
-                 component="real", edge_filter=False, edge_filter_kw={}, *args, **kwargs):
+                 vmin=None, vmax=None, v0=0, median_size=0,
+                 component="real", edge_filter=False, edge_filter_kw={},
+                 *args, **kwargs):
         """Prepare data and plot a map of processed data.
         
         Parameters
@@ -2046,6 +2047,10 @@ class XanesFrameset():
         edge_filter_kw : dict, optional
           Dictionary of extra parameters to pass to the
           ``XanesFrameset.edge_mask()`` method.
+        v0 : float, optional
+          The zero point for mapping values. This is subtracted from
+          each reported map value. This is done before vmin and vmax
+          are applied.
         
         Returns
         =======
@@ -2070,7 +2075,7 @@ class XanesFrameset():
             data = np.ma.array(data, mask=mask)
         # Plot the data
         artists = plots.plot_txm_map(
-            data=data,
+            data=(data - v0),
             ax=ax,
             vmin=vmin,
             vmax=vmax,
