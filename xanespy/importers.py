@@ -37,15 +37,15 @@ from scipy.ndimage.filters import median_filter
 from scipy.ndimage import center_of_mass
 import pytz
 
-from xradia import XRMFile, TXRMFile
-from nanosurveyor import CXIFile, HDRFile
-from sxstm import SxstmDataFile
-from utilities import prog, get_component
-import exceptions
-from xanes_math import (transform_images, apply_references,
+from .xradia import XRMFile, TXRMFile
+from .nanosurveyor import CXIFile, HDRFile
+from .sxstm import SxstmDataFile
+from .utilities import prog, get_component
+from . import exceptions
+from .xanes_math import (transform_images, apply_references,
                         transformation_matrices, downsample_array,
                         apply_internal_reference, crop_image)
-from txmstore import TXMStore, merge_stores
+from .txmstore import TXMStore, merge_stores
 
 
 format_classes = {

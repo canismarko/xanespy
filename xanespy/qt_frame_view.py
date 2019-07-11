@@ -15,8 +15,8 @@ from matplotlib.backends.backend_qt5agg import (
 from matplotlib.animation import ArtistAnimation
 import numpy as np
 
-import plots
-from utilities import xycoord
+from . import plots
+from .utilities import xycoord
 
 
 UI_FILE = os.path.join(os.path.dirname(__file__), 'qt_frame_window.ui')

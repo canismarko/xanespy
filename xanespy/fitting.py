@@ -25,13 +25,14 @@ from collections import namedtuple
 from multiprocessing import Pool, cpu_count
 import warnings
 import functools
+from typing import Tuple
 
 import numpy as np
 from scipy.optimize import leastsq
 import tqdm
 
-from xanes_math import k_edge_jump, iter_indices, foreach
-from utilities import prog
+from .xanes_math import k_edge_jump, iter_indices, foreach
+from .utilities import prog
 
 
 __all__ = ('prepare_p0', 'fit_spectra', 'Curve', 'Line',
@@ -176,7 +177,7 @@ def fit_spectra(observations, func, p0, nonnegative=False, quiet=False):
 class Curve():
     """Base class for a callabled Curve."""
     name = "curve"
-    param_names = ()
+    param_names = () # type: Tuple[str, ...]
     
     def NamedTuple(self, *params):
         """Return a named tuple with the given parameters."""

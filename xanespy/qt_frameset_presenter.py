@@ -29,9 +29,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
-import exceptions
-
-from utilities import xy_to_pixel, pixel_to_xy, xycoord, Pixel, get_component
+from . import exceptions
+from .utilities import xy_to_pixel, pixel_to_xy, xycoord, Pixel, get_component
 
 
 CMAPS = ['plasma', 'viridis', 'inferno', 'magma', 'gray', 'bone',

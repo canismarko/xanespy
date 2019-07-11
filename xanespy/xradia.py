@@ -31,8 +31,8 @@ import olefile
 import numpy as np
 import pytz
 
-import exceptions
-from utilities import shape, Pixel
+from . import exceptions
+from .utilities import shape, Pixel
 
 
 # Some of the byte decoding was taken from

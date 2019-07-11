@@ -25,16 +25,16 @@ import os
 # Make sure this directory is in python path for imports
 sys.path.append(os.path.dirname(__file__))
 
-import exceptions
-import xradia
-from xradia import XRMFile, TXRMFile
-import beamlines
-import sxstm
-import fitting
-from fitting import L3Curve, LinearCombination, prepare_p0, Gaussian
-from beamlines import (sector8_xanes_script, ZoneplatePoint,
+from . import exceptions
+from . import xradia
+from .xradia import XRMFile, TXRMFile
+from . import beamlines
+from . import sxstm
+from . import fitting
+from .fitting import L3Curve, LinearCombination, prepare_p0, Gaussian
+from .beamlines import (sector8_xanes_script, ZoneplatePoint,
                        Zoneplate, Detector, DetectorPoint)
-from importers import (import_frameset,
+from .importers import (import_frameset,
                        import_ssrl_xanes_dir,
                        import_aps4idc_sxstm_files,
                        import_aps8bm_xanes_dir,
@@ -44,17 +44,17 @@ from importers import (import_frameset,
                        import_stxm_frameset,
                        import_aps32idc_xanes_files,
                        import_aps32idc_xanes_file)
-from xanes_frameset import XanesFrameset
-import edges
-from edges import k_edges, l_edges, Edge, KEdge, LEdge
-from plots import (dual_axes, new_axes, new_image_axes, plot_txm_map,
+from .xanes_frameset import XanesFrameset
+from . import edges
+from .edges import k_edges, l_edges, Edge, KEdge, LEdge
+from .plots import (dual_axes, new_axes, new_image_axes, plot_txm_map,
                    set_axes_color, plot_pixel_spectra,
                    plot_txm_histogram, plot_spectrum, latexify,
                    remove_extra_spines, plot_kedge_fit)
-import plots
-import xanes_math as xanes_math
-import utilities
-from utilities import get_component, xy_to_pixel, pixel_to_xy, xycoord, Pixel
+from . import plots
+from . import xanes_math as xanes_math
+from . import utilities
+from .utilities import get_component, xy_to_pixel, pixel_to_xy, xycoord, Pixel
 # from qt_frameset_presenter import QtFramesetPresenter
 # from qt_frame_view import QtFrameView
 # from qt_map_view import QtMapView

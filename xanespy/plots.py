@@ -28,7 +28,7 @@ from matplotlib import pyplot, cm, rcParams, rc_context, style
 from matplotlib.colors import Normalize
 from matplotlib.ticker import ScalarFormatter
 
-from utilities import pixel_to_xy, Extent, Pixel
+from .utilities import pixel_to_xy, Extent, Pixel
 
 @contextmanager
 def latexify(styles: List[str]=[], preamble: List[str]=[]):

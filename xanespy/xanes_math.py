@@ -40,8 +40,8 @@ from sklearn import decomposition
 import matplotlib.pyplot as plt
 from tqdm import tqdm
 
-from utilities import prog, foreach, get_component
-from exceptions import XanesMathError
+from .utilities import prog, foreach, get_component
+from .exceptions import XanesMathError
 
 
 log = logging.getLogger(__name__)
@@ -615,7 +615,6 @@ def l_edge_mask(frames: np.ndarray, energies: np.ndarray, edge,
     overlap = np.dot(spectrum, pixels)
     # Threshold the pixel overlap to find foreground vs background
     threshold = filters.threshold_otsu(overlap) * sensitivity
-    print(threshold, sensitivity)
     mask = overlap > threshold
     # Recreate the original image shape as a boolean array
     mask = np.reshape(mask, frame_shape)

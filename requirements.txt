@@ -16,3 +16,8 @@ ipywidgets
 twine~=1.8
 jinja2
 imageio
+
+# Type hinting
+pytest-mypy>=0.3.3
+mypy>=0.57
+git+https://github.com/numpy/numpy-stubs.git

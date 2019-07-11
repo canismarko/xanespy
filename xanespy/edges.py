@@ -19,9 +19,11 @@
 
 """Descriptions of X-ray energy absorption edge."""
 
+from typing import List, Tuple
+
 import numpy as np
 
-from xanes_math import k_edge_mask, l_edge_mask
+from .xanes_math import k_edge_mask, l_edge_mask
 
 
 class Edge():
@@ -53,11 +55,11 @@ class Edge():
       beginning and edge of the edge itself.
     
     """
-    regions = []
-    E_0 = None
-    pre_edge = None
-    post_edge = None
-    edge_range = None
+    regions = [] # type: List[Tuple[float, float, float]]
+    E_0 = None # type: float
+    pre_edge = None # type: Tuple[float, float]
+    post_edge = None # type: Tuple[float, float]
+    edge_range = None # type: Tuple[float, float]
     
     def all_energies(self):
         """Combine all the regions into one array.
@@ -129,7 +131,7 @@ class NCACobaltLEdge(LEdge):
     name = "Co_NCA"
     E_0 = 793.2
     regions = [
-        (770, 775, 1),
+        (770, 775, 1.0),
         (775, 785, 0.5),
         (785, 790, 1),
     ]
@@ -207,7 +209,6 @@ class CuKEdge(KEdge):
     name = 'Cu'
     E_0 = 8978.9
     shell = "K"
-    regions = []
     pre_edge = (8940, 8970)
     post_edge = (9010, 9200)
     edge_range = (8970, 9010)

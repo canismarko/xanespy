@@ -7,11 +7,11 @@ import os
 
 import h5py
 
-from xanes_frameset import XanesFrameset
-from edges import k_edges, l_edges
-from qt_frameset_presenter import QtFramesetPresenter
-from qt_frame_view import QtFrameView
-from qt_map_view import QtMapView
+from .xanes_frameset import XanesFrameset
+from .edges import k_edges, l_edges
+from .qt_frameset_presenter import QtFramesetPresenter
+from .qt_frame_view import QtFrameView
+from .qt_map_view import QtMapView
 
 log = logging.getLogger(__name__)
 

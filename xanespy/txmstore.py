@@ -26,9 +26,9 @@ import h5py
 import numpy as np
 from tqdm import tqdm
 
-from exceptions import (GroupKeyError, CreateGroupError, FrameSourceError,)
-import xanes_math as xm
-from utilities import get_component
+from .exceptions import (GroupKeyError, CreateGroupError, FrameSourceError,)
+from . import xanes_math as xm
+from .utilities import get_component
 
 
 log = logging.getLogger(__name__)
@@ -441,6 +441,7 @@ class TXMStore():
                    "Valid choices are: {}."
                    "".format(name, self.data_group().name,
                              self.hdf_filename, all_valid_names))
+            print(GroupKeyError)
             raise GroupKeyError(msg)
         else:
             data = self.data_group()[name]

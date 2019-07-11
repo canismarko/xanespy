@@ -10,7 +10,7 @@ from matplotlib.backends.backend_qt5agg import (
     FigureCanvasQTAgg as FigureCanvas
 )
 
-import plots
+from . import plots
 
 log = logging.getLogger(__name__)
 

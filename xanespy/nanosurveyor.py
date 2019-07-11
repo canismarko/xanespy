@@ -8,7 +8,7 @@ import h5py
 import numpy as np
 from scipy.constants import physical_constants
 
-import exceptions
+from . import exceptions
 
 class CXIFile():
     """A ptychography CXI file.

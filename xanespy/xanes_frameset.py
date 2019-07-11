@@ -47,14 +47,14 @@ from sklearn import linear_model, cluster
 import jinja2 as j2
 import tqdm
 
-from utilities import (prog, xycoord, Pixel, Extent, pixel_to_xy,
+from .utilities import (prog, xycoord, Pixel, Extent, pixel_to_xy,
                        get_component, broadcast_reverse, xy_to_pixel)
-from txmstore import TXMStore
-import plots
-from fitting import LinearCombination, fit_spectra, prepare_p0, KCurve, find_whiteline
-import exceptions
-import xanes_math as xm
-from edges import Edge
+from .txmstore import TXMStore
+from . import plots
+from .fitting import LinearCombination, fit_spectra, prepare_p0, KCurve, find_whiteline
+from . import exceptions
+from . import xanes_math as xm
+from .edges import Edge
 
 
 log = logging.getLogger(__name__)
@@ -757,8 +757,8 @@ class XanesFrameset():
             # Save translations for deferred calculation
             self.stage_transformations(translations=translations)
             log.debug("Finished alignment pass %d of %d", pass_, passes)
-        # Plot the results if requested
         pass_distances = np.array(pass_distances)
+        # Plot the results if requested
         if plot_results:
             x = range(0, passes)
             if results_ax is None:
