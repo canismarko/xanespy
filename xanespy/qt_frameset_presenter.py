@@ -673,12 +673,12 @@ class QtFramesetPresenter(QtCore.QObject):
             mean_spectrum = self.frameset.spectrum(
                 index=self.active_timestep,
                 pixel=None,
-                edge_jump_filter=self.use_edge_mask,
+                edge_filter=self.use_edge_mask,
                 representation=self.active_representation)
             map_spectrum = self.frameset.spectrum(
                 index=self.active_timestep,
                 pixel=self._map_pixel,
-                edge_jump_filter=self.use_edge_mask,
+                edge_filter=self.use_edge_mask,
                 representation=self.active_representation)
         except exceptions.GroupKeyError:
             pass

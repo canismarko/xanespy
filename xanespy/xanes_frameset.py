@@ -1028,7 +1028,8 @@ class XanesFrameset():
             spectra = np.reshape(ODs, (-1, self.num_energies))
         return spectra
     
-    def line_spectra(self, xy0, xy1, representation="optical_depths", timestep=0):
+    def line_spectra(self, xy0, xy1, representation="optical_depths",
+                     timestep=0, edge_filter=False, edge_filter_kw={}):
         """Return an array of spectra on a line between two points.
         
         This is effectively nearest neighbor interpolation between two (x,
@@ -1045,6 +1046,15 @@ class XanesFrameset():
           Starting point for the line.
         xy1 : 2-tuple
           Ending point for the line.
+        representation : str, optional
+          Which type of data to use for extracting line profiles.
+        timestep : int, optional
+          Which time step to use for extracting line profiles.
+        edge_filter : bool, optional
+          Whether to first apply an edge filter mask to the data
+          before calculating line profile.
+        edge_filter_kw : dict, optional
+          Extra keyword arguments to pass to the edge_mask() method.
         
         """
         xy0 = xycoord(*xy0)
@@ -1057,9 +1067,15 @@ class XanesFrameset():
         length = int(np.hypot(px1.horizontal-px0.horizontal, px1.vertical-px0.vertical))
         x = np.linspace(px0.horizontal, px1.horizontal, length)
         y = np.linspace(px0.vertical, px1.vertical, length)
+        # Check if an edge mask is needed
+        if edge_filter:
+            mask = self.edge_mask(**edge_filter_kw)
+        else:
+            mask = np.zeros(shape=self.frame_shape())
         # Extract the values along the line
         with self.store(mode='r') as store:
             frames = store.get_dataset(representation)[timestep]
+            frames = np.ma.array(frames, mask=mask)
             if frames.ndim > 2:
                 spectra = frames[:, y.astype(np.int), x.astype(np.int)]
                 spectra = np.swapaxes(spectra, 0, 1)
