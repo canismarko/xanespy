@@ -3,6 +3,7 @@ import logging
 import math
 from time import time
 import threading
+from typing import Callable, List
 
 from PyQt5 import QtWidgets, uic, QtCore, QtGui
 from matplotlib import animation, cm
@@ -48,7 +49,7 @@ class FrameAnimation(animation.ArtistAnimation):  # pragma: no cover
 
 class FrameChangeSource(QtCore.QObject):
     _is_running = False
-    callbacks = []
+    callbacks = [] # type: List[Callable]
     
     def __init__(self, view, *args, **kwargs):
         log.debug('creating source')

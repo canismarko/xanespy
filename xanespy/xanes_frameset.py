@@ -26,7 +26,7 @@ row, column).
 
 import datetime as dt
 import functools
-from typing import Callable
+from typing import Callable, Optional
 import os
 from time import time
 import logging
@@ -73,7 +73,7 @@ class XanesFrameset():
     active_group = ''
     parent_name = None
     cmap = 'plasma'
-    edge = None
+    edge = Edge()
     _data_name = None
     # Places to store staged image transformations
     _transformations = None
@@ -697,7 +697,7 @@ class XanesFrameset():
         logstart = time()
         log.info("Aligning frames with %s algorithm over %d passes",
                  method, passes)
-        pass_distances = []
+        pass_distances = np.zeros(shape=(passes, self.num_energies), dtype=float)
         # Sanity check on `method` argument
         valid_methods = ['cross_correlation', 'template_match']
         if method not in valid_methods:
@@ -735,7 +735,7 @@ class XanesFrameset():
                     raise IndexError(msg)
             # Calculate translations for each frame
             if not quiet:
-                desc = "Registering pass {}".format(pass_)
+                desc = "Registering pass {}".format(pass_) # type: Optional[str]
             else:
                 desc = None
             if method == "cross_correlation":
@@ -753,11 +753,10 @@ class XanesFrameset():
             # Add the root-mean-square to the list of distances translated
             rms = np.sqrt((translations**2).sum(axis=-1).mean())
             log.info("RMS of translations for pass %d = %f", pass_, rms)
-            pass_distances.append(np.sqrt((translations**2).sum(-1)).flatten())
+            pass_distances[pass_] = np.sqrt((translations**2).sum(-1)).flatten()
             # Save translations for deferred calculation
             self.stage_transformations(translations=translations)
             log.debug("Finished alignment pass %d of %d", pass_, passes)
-        pass_distances = np.array(pass_distances)
         # Plot the results if requested
         if plot_results:
             x = range(0, passes)
@@ -1229,7 +1228,7 @@ class XanesFrameset():
         return scatter
     
     @functools.lru_cache()
-    def edge_mask(self, sensitivity: float=1, min_size=0):
+    def edge_mask(self, sensitivity: float=1, min_size: int=0) -> np.ndarray:
         """Calculate a mask for what is likely active material at this
         edge.
         
@@ -1246,18 +1245,23 @@ class XanesFrameset():
         
         """
         with self.store() as store:
-            if store.has_dataset('edge_mask'):
+            mask_is_possible = store.has_dataset('optical_depths') and self.edge is not None
+            is_cached = store.has_dataset('edge_mask')
+            if is_cached:
                 mask = store.edge_mask[0]
-            elif not store.has_dataset('optical_depths'):
-                # Store has no optical_depth data so just return a blank array
-                mask = np.zeros(shape=store.intensities.shape[-2:], dtype='bool')
-            else:
+            elif mask_is_possible:
                 # Check for complex values and convert to optical_depths only
                 ODs = np.real(store.optical_depths[()])
                 mask = self.edge.mask(frames=ODs,
                                       energies=store.energies,
                                       sensitivity=sensitivity,
                                       min_size=min_size)
+            else:
+                # Store has no optical_depth data so just return a blank array
+                mask = np.zeros(shape=store.intensities.shape[-2:], dtype='bool')
+                warnings.warn('No edge mask calculated. '
+                              'Could not find either optical_depth frames '
+                              'or `edge` attribute.')
         return mask
     
     def fit_linear_combinations(self, sources, component='real', name='linear_combination',

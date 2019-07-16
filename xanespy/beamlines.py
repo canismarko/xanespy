@@ -20,7 +20,7 @@
 """Functions and classes that prepare experiments at specific
 synchrotron beamlines."""
 
-from typing import List, Tuple, Iterable
+from typing import List, Tuple, Iterable, Sequence
 from collections import namedtuple
 import os
 
@@ -67,7 +67,7 @@ class Zoneplate():
         elif z_step is not None and end is not None:
             msg = "Passing both `step` or `end` is confusing."
             raise ValueError(msg)
-        elif None in [x_step, y_step, z_step]:
+        elif (None in [x_step, y_step, z_step]) and (start is not None) and (end is not None):
             # Calculate the step from start and end points
             self.step = position(
                 x=(end.x - start.x) / (end.energy - start.energy),
@@ -123,7 +123,7 @@ def ssrl6_xanes_script(dest,
                        zoneplate: Zoneplate,
                        positions: List[position],
                        reference_position: position,
-                       iterations: Iterable,
+                       iterations: Sequence,
                        iteration_rest: int=0,
                        frame_rest: int=0,
                        binning: int=2,

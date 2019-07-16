@@ -83,6 +83,9 @@ class Edge():
             energies = np.concatenate(energies)
             energies = sorted(list(set(energies)))
         return energies
+    
+    def mask(self, frames, *args, **kwargs):
+        return np.zeros(shape=frames.shape[-2:])
 
 
 class LEdge(Edge):

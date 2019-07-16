@@ -661,6 +661,8 @@ def k_edge_mask(frames: np.ndarray, energies: np.ndarray, edge,
     ej = k_edge_jump(frames=frames, energies=energies, edge=edge)
     stdev = np.std(frames, axis=tuple(range(0, len(frames.shape)-2)))
     edge_ratio = ej / stdev
+    if np.any(np.isnan(edge_ratio)):
+        raise XanesMathError('Invalid nan found in edge ratio.')
     # Thresholding to separate background from foreground
     img_bottom = edge_ratio.min()
     threshold = filters.threshold_otsu(edge_ratio)

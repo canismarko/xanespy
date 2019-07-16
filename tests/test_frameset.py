@@ -361,7 +361,12 @@ class XanesFramesetTest(TestCase):
                                           groupby='timestep', tight_layout=False)
    
     def test_export_beamer(self):
-        fs = self.create_frameset()
+        store = MockStore()
+        store.optical_depths = np.ones(shape=(2, 3, 16, 16))
+        store.energies = np.array([[530, 532, 534], [530, 532, 534]])
+        store.get_frames.return_value = store.optical_depths
+        store.frameset_names.return_value = ['optical_depths']
+        fs = self.create_frameset(store=store)
         maps_fname = self.beamer_basename + '_maps.tex'
         # Check that the file was created
         self.assertFalse(os.path.exists(maps_fname))
@@ -410,10 +415,12 @@ class XanesFramesetTest(TestCase):
     def test_fit_kedge(self):
         store = MockStore()
         store.energies = np.array([np.linspace(8310, 8360, num=40)])
-        ODs = np.ones((1, 40, 1, 2))
+        ODs = np.random.rand(1, 40, 1, 2)
         store.optical_depths = ODs
         store.intensities = ODs
         store.edge_mask = np.zeros((1, 1, 2), dtype=bool)
+        store.has_dataset.return_value = False
+        del store.edge_mask
         def get_dataset(name):
             if name == 'optical_depths':
                 return ODs
@@ -429,7 +436,7 @@ class XanesFramesetTest(TestCase):
         ])
         fs.spectra = mock.MagicMock(return_value=spectra)
         fs.clear_caches()
-        fs.fit_kedge(quiet=True)
+        fs.fit_kedge()
     
     def test_fit_spectra(self):
         store = MockStore()
@@ -494,9 +501,12 @@ class XanesFramesetTest(TestCase):
         store = MockStore()
         store.has_dataset = mock.MagicMock(return_value=False)
         store.intensities = np.random.rand(128, 128)
+        store.optical_depths = np.random.rand(2, 3, 128, 128)
+        store.energies = np.array([[8250, 8325, 8360], [8250, 8325, 8360]])
         fs = self.create_frameset(store=store)
         # Check that the new edge mask has same shape as intensities
-        np.testing.assert_equal(fs.edge_mask(), np.zeros(shape=(128, 128)))
+        # np.testing.assert_equal(fs.edge_mask(), np.zeros(shape=(128, 128)))
+        np.testing.assert_equal(fs.edge_mask().shape, (128, 128))
         # Check that the new edge mask is a boolean array
         self.assertEqual(fs.edge_mask().dtype, bool)
     
@@ -584,6 +594,7 @@ class XanesFramesetTest(TestCase):
         ODs[0,0,30:34,30:34] = 1
         ODs[0,1,32:36,32:36] = 1
         store.optical_depths = ODs
+        store.energies = np.array([[850, 853]])
         store.get_dataset.return_value = ODs
         store.get_frames.return_value = ODs
         fs = self.create_frameset(store=store)
