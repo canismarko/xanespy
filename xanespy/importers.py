@@ -28,6 +28,7 @@ import datetime as dt
 import contextlib
 from functools import partial
 from six import string_types
+from typing import List
 
 import pandas as pd
 from tqdm import tqdm
@@ -745,8 +746,8 @@ def import_nanosurveyor_frameset(directory: str, quiet=False,
         raise exceptions.DataNotFoundError(msg)
     # Import any cxi files that were found
     intensities = []
-    energies = []
-    filenames = []
+    energies_list = []
+    filenames_list = []
     stxm_frames = []
     pixel_sizes = []
     log.info("Importing %d .cxi files", len(cxifiles))
@@ -770,8 +771,8 @@ def import_nanosurveyor_frameset(directory: str, quiet=False,
                          filename, energy)
                 continue
             log.debug("Importing %s -> %f eV", filename, energy)
-            filenames.append(os.path.relpath(filename))
-            energies.append(energy)
+            filenames_list.append(os.path.relpath(filename))
+            energies_list.append(energy)
             # Import complex reconstructed image
             if frame_shape is not None:
                 # User requested the frames be cropped
@@ -787,6 +788,11 @@ def import_nanosurveyor_frameset(directory: str, quiet=False,
             px_size = float(f['/entry_1/process_1/Param/pixnm'].value)
             log.debug("Scan %s has pixel size %f", filename, px_size)
             pixel_sizes.append(px_size)
+    # Convert data to numpy arrays
+    energies = np.array(energies_list)
+    del energies_list
+    filenames = np.array(filenames_list, dtype='S100')
+    del filenames_list
     # Check that we have actual data to import
     if len(intensities) == 0:
         msg = "No files in directory {} pass import filters. "
@@ -812,7 +818,6 @@ def import_nanosurveyor_frameset(directory: str, quiet=False,
         log.info("Appending data from %s", directory)
         # Check for redundant energies
         old_energies = imported['energies'][0]
-        energies = np.array(energies)
         overlap = np.in1d(energies.astype(old_energies.dtype), old_energies)
         if np.any(overlap):
             msg = "Imported redundant energies from {directory}: {energies}"
@@ -832,11 +837,11 @@ def import_nanosurveyor_frameset(directory: str, quiet=False,
                                 data=np.array([sam_name], dtype="S50"))
     # Sort all the datasets by energy
     sort_idx = np.argsort(energies)
-    energies = np.array(energies)[sort_idx]
+    energies = energies[sort_idx]
     intensities = np.array(intensities)[sort_idx]
     stxm_frames = np.array(stxm_frames)[sort_idx]
     pixel_sizes = np.array(pixel_sizes)[sort_idx]
-    filenames = np.array(filenames)[sort_idx]
+    filenames = filenames[sort_idx]
     # Save updated data to HDF file
     replace_ds('intensities', parent=imported, data=[intensities],
                dtype=np.complex64)
@@ -849,8 +854,7 @@ def import_nanosurveyor_frameset(directory: str, quiet=False,
     px_unit = 'nm'
     px_grp.attrs['unit'] = px_unit
     # Save metadata
-    filenames = np.array(filenames, dtype="S100")
-    replace_ds('filenames', parent=imported, data=[filenames], dtype="S100")
+    replace_ds('filenames', parent=imported, data=[filenames])
     zero_positions = [np.zeros(shape=(*filenames.shape, 3), dtype=np.float32)]
     imported.create_dataset('relative_positions', data=zero_positions)
     imported['intensities'].attrs['context'] = 'frameset'
@@ -866,10 +870,10 @@ def import_stxm_frameset(directory: str, quiet=False,
                          hdf_filename=None, hdf_groupname=None,
                          energy_range=None, exclude_re=None, append=False):
     """Import a set of images from scanning microscope data.
-
+    
     This generates Scanning Tranmission X-ray Microscopy chemical maps
     based on data collected at ALS beamline 5.3.2.1
-
+    
     Parameters
     ----------
     directory : str
@@ -942,9 +946,10 @@ def import_stxm_frameset(directory: str, quiet=False,
         msg = msg.format(directory)
         raise exceptions.DataNotFoundError(msg)
     # Import any xim files that were found
-    intensities = []
+    intensities = [] # type: List[np.ndarray]
     filenames = ximfiles
-    pixel_sizes = []
+    assert False
+    pixel_sizes = [] # type: List[float]
     log.info("Importing %d .xim files", len(ximfiles))
     # Load data from header file
     hdrfile = os.path.join(directory, '{}.hdr'.format(sam_name))

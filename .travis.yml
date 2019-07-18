@@ -26,6 +26,6 @@ install:
   - source activate test-environment
   - pip install -r requirements-travis.txt
   - conda list
-script: py.test --cov=xanespy tests/
+script: py.test --mypy --cov=xanespy tests/
 after_success:
   - coveralls

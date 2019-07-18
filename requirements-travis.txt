@@ -23,3 +23,8 @@ tqdm>=4.10.0
 jinja2
 imageio
 coveralls
+
+# Type hinting
+pytest-mypy>=0.3.3
+mypy>=0.57
+git+https://github.com/numpy/numpy-stubs.git
