@@ -134,19 +134,7 @@ class XanesFramesetTest(TestCase):
     from multiple frames to make sense.
     
     """
-    beamer_basename = os.path.join(TEST_DIR, 'beamer_output_test')
     hdf_filename = os.path.join(TEST_DIR, 'txmstore-test.h5')
-    
-    def tearDown(self):
-        # Remove temporary beamer output file
-        if os.path.exists(self.beamer_basename + "_maps.tex"):
-            os.remove(self.beamer_basename + "_maps.tex")
-            os.remove(self.beamer_basename + "_spectra.tex")
-        # Remove temporary pgffile output
-        pgffiles = glob.glob('%s*.pgf' % self.beamer_basename)
-        [os.remove(f) for f in pgffiles]
-        pngfiles = glob.glob('%s*.png' % self.beamer_basename)
-        [os.remove(f) for f in pngfiles]
     
     def dummy_frame_data(self, shape=(5, 5, 128, 128)):
         """Create some dummy data with a given shape. It's pretty much just an
@@ -169,30 +157,6 @@ class XanesFramesetTest(TestCase):
         fs.store = mock.Mock(return_value=store)
         self.store = store
         return fs
-    
-    # @unittest.skipIf(not mpi_support, 'No support for MPI.')
-    # def test_fit_spectra(self):
-    #     """This test does not evaluate the quality of the fit, only that the
-    #     method selects the correct data and passes it on to the
-    #     correct math routine.
-        
-    #     """
-    #     FRAME_SHAPE = (16, 16)
-    #     # Prepare some fake data
-    #     fake_As = np.zeros((2, 10, *FRAME_SHAPE))
-    #     fake_Es = np.linspace(8250, 8640, num=10)
-    #     fake_Es = np.broadcast_to(fake_Es, (2, 10))
-    #     store = MockStore()
-    #     store.optical_depths = fake_As
-    #     type(store).whiteline_fit = mock.PropertyMock()
-    #     store.energies.value = fake_Es
-    #     # Prepare a fake frameset
-    #     fs = self.create_frameset(store=store)
-    #     fs.frame_shape = mock.Mock(return_value=FRAME_SHAPE)
-    #     # Call the method begin tested
-    #     fs.fit_spectra(edge_mask=False)
-    #     # No results are specified, but at least the function was
-    #     # called.
     
     def test_timestamps(self):
         # Create a (timestep, energy, start/end) array of timestamps
@@ -294,84 +258,6 @@ class XanesFramesetTest(TestCase):
         fs = self.create_frameset(store=store)
         artists = fs.plot_histogram()
         self.assertIsInstance(artists[0], mpl.patches.Rectangle)
-    
-    def test_plot_beamer_spectra(self):
-        # Prepare dummy data
-        store = MockStore()
-        store.energies = np.broadcast_to(np.linspace(850, 860, num=3), shape=(8, 3))
-        store.optical_depths = np.random.rand(8, 3, 16, 16)
-        store.get_dataset = mock.MagicMock(return_value=np.random.rand(8, 3, 16, 16))
-        store.get_frames = store.get_dataset
-        store.pixel_sizes = np.ones((8, 3, 2))
-        fs_names = ['fs1', 'fs2']
-        store.frameset_names = mock.MagicMock(return_value=fs_names)
-        fs = self.create_frameset(store=store)
-        # Do the actual plotting
-        with warnings.catch_warnings() as w:
-            warnings.filterwarnings('ignore', message=".*Is LaTeX installed.*",
-                                    category=RuntimeWarning)
-            context = fs.plot_beamer_spectra(basename=self.beamer_basename)
-        # Check that the PGF files were created
-        pgffiles = glob.glob('%s*.pgf' % self.beamer_basename)
-        self.assertEqual(len(pgffiles), 16)
-        # Check that the context was returned properly
-        self.assertIsInstance(context, dict)
-        self.assertIn('frames', context.keys())
-        self.assertEqual(context['frames'][0]['title'], 'ssrl-test-data - fs1')
-        self.assertEqual(len(context['frames'][0]['plots']), 6)
-        # Check that using a bad groupby argument throws exception
-        with self.assertRaises(ValueError):
-            context = fs.plot_beamer_spectra(basename=self.beamer_basename,
-                                          groupby='map_name')
-        # Do the plotting by timestep
-        with warnings.catch_warnings() as w:
-            warnings.filterwarnings('ignore', message=".*Is LaTeX installed.*",
-                                    category=RuntimeWarning)
-            context = fs.plot_beamer_spectra(basename=self.beamer_basename, groupby='timestep')
-    
-    def test_plot_beamer_maps(self):
-        store = MockStore()
-        store.optical_depths = np.random.rand(8, 3, 16, 16)
-        store.get_dataset = mock.MagicMock(return_value=np.random.rand(8, 16, 16))
-        store.pixel_sizes = np.ones((8, 3, 2))
-        map_names = ['map1', 'map2']
-        store.map_names = mock.MagicMock(return_value=map_names)
-        fs = self.create_frameset(store=store)
-        with warnings.catch_warnings() as w:
-            warnings.filterwarnings('ignore', message=".*Is LaTeX installed.*",
-                                    category=RuntimeWarning)
-            context = fs.plot_beamer_maps(basename=self.beamer_basename, tight_layout=False)
-        # Check that the PGF files were created
-        pgffiles = glob.glob('%s*.pgf' % self.beamer_basename)
-        self.assertEqual(len(pgffiles), 16)
-        # Check that the context was returned properly
-        self.assertIsInstance(context, dict)
-        self.assertIn('frames', context.keys())
-        self.assertEqual(context['frames'][0]['title'], 'ssrl-test-data - map1')
-        self.assertEqual(len(context['frames'][0]['plots']), 6)
-        # Check that using a bad groupby argument throws exception
-        with self.assertRaises(ValueError):
-            context = fs.plot_beamer_maps(basename=self.beamer_basename,
-                                          groupby='gibberish')
-        # Do the plotting by timestep
-        with warnings.catch_warnings() as w:
-            warnings.filterwarnings('ignore', message=".*Is LaTeX installed.*",
-                                    category=RuntimeWarning)
-            context = fs.plot_beamer_maps(basename=self.beamer_basename,
-                                          groupby='timestep', tight_layout=False)
-   
-    def test_export_beamer(self):
-        store = MockStore()
-        store.optical_depths = np.ones(shape=(2, 3, 16, 16))
-        store.energies = np.array([[530, 532, 534], [530, 532, 534]])
-        store.get_frames.return_value = store.optical_depths
-        store.frameset_names.return_value = ['optical_depths']
-        fs = self.create_frameset(store=store)
-        maps_fname = self.beamer_basename + '_maps.tex'
-        # Check that the file was created
-        self.assertFalse(os.path.exists(maps_fname))
-        fs.export_beamer_file(basename=self.beamer_basename)
-        self.assertTrue(os.path.exists(maps_fname))
     
     def test_lc_fitting(self):
         # Prepare stubbed data

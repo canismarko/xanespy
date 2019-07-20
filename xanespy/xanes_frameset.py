@@ -35,6 +35,7 @@ import math
 import subprocess
 import warnings
 import multiprocessing as mp
+from typing import Any, List, Dict, Mapping, Sequence, Iterable
 
 import pandas as pd
 from matplotlib import pyplot, cm, pyplot as plt
@@ -114,12 +115,12 @@ class XanesFrameset():
         s = "<{cls}: '{name}'>"
         return s.format(cls=self.__class__.__name__, name=self.parent_name)
     
-    def hdf_path(self, representation=None):
+    def hdf_path(self, representation: Optional[str]=None):
         """Return the hdf path for the active group.
         
         Parameters
         ----------
-        representation: str, optional
+        representation
           Name of third-level group to use. If omitted, the path to
           the parent group will be given.
         
@@ -137,229 +138,6 @@ class XanesFrameset():
                 group = store.get_dataset(representation=representation)
             path = group.name
         return path
-    
-    def plot_beamer_spectra(self, basename, frameset_names=None,
-                            time_idxs=None, groupby='dataset'):
-        """Export spectra to pgf and prepare a jinja context.
-        
-        This method is similar to ``export_beamer_file`` except that
-        it doesn't actually create the .tex file. This can be useful
-        if you desire more control over the beamer layout.
-        
-        Parameters
-        ----------
-        basename : str
-          The base name to be used for generating the ``.pgf`` files.
-        frameset_names : list, optional
-          Representations to use for plotting maps. If omitted,
-          anything resembling a map will be used.
-        time_idxs : list, optional
-          Indices of timesteps to use for plotting maps. If omittedd,
-          all timesteps will be used.
-        groupby : str, optional
-          Determines which dimension changes quickly. Options are
-          "dataset" and "timestep".
-        
-        Returns
-        -------
-        context : dict
-          Context dictionary appropriate for passing into the jinja2
-          template engine.
-        
-        """
-        if time_idxs is None:
-            time_idxs = range(self.num_timesteps)
-        with self.store() as store:
-            fs_names = store.frameset_names()
-        # Decide what order to run through the combinations in
-        if groupby == 'timestep':
-            combos = [[(ts, name) for name in fs_names] for ts in time_idxs]
-        elif groupby == 'dataset':
-            combos = [[(ts, name) for ts in time_idxs] for name in fs_names]
-        else:
-            raise ValueError("Cannot group by '{}'. Must be either "
-                             "'dataset' or 'timestep'".format(groupby))
-        # Restructure the combinations so they're ordered by frame
-        N = 6 # Plots per beamer frame
-        combos = [[c[i*N:i*N+N] for i in range(int(len(c) / N)+1)] for c in combos]
-        combos = [c for cx in combos for c in cx]
-        # Iterate through each combination and plot it
-        frames = []
-        pgfbase = "{base}_{fs_name}_spectrum{ts}.pgf"
-        for combo in combos:
-            frame = dict(plots=[])
-            for ts, fs_name in combo:
-                fig = plt.figure(figsize=(1.3, 1))
-                fig.patch.set_alpha(0)
-                ax = plt.gca()
-                self.plot_spectrum(representation=fs_name, timeidx=ts, ax=ax, markersize=1)
-                ax.set_title(fs_name)
-                pgfname = pgfbase.format(base=basename, fs_name=fs_name, ts=ts)
-                try:
-                    ax.figure.savefig(pgfname)
-                except (RuntimeError, FileNotFoundError):
-                    warnings.warn("Could not save figure. Is LaTeX installed?", RuntimeWarning)
-                frame['plots'].append(pgfname)
-                plt.close(fig)
-            # Save metadata
-            if groupby == 'dataset':
-                frame['title'] = "{} - {}".format(self.parent_name, fs_name).replace('_', ' ')
-            else:
-                frame['title'] = ("{} - Time-step {}"
-                                  "".format(self.parent_name, ts).replace('_', ' '))
-            frames.append(frame)
-        # Prepare the context for returning
-        context = {
-            'frames': frames
-        }
-        return context
-    
-    def plot_beamer_maps(self, basename, map_names=None,
-                         time_idxs=None, groupby='dataset', tight_layout=True):
-        """Export maps to pgf and prepare a jinja context.
-        
-        This method is similar to ``export_beamer_file`` except that
-        it doesn't actually create the .tex file. This can be useful
-        if you desire more control over the beamer layout.
-        
-        Parameters
-        ----------
-        basename : str
-          The base name to be used for generating the ``.pgf`` files.
-        map_names : list, optional
-          Representations to use for plotting maps. If omitted,
-          anything resembling a map will be used.
-        time_idxs : list, optional
-          Indices of timesteps to use for plotting maps. If omittedd,
-          all timesteps will be used.
-        groupby : str, optional
-          Determines which dimension changes quickly. Options are
-          "dataset" and "timestep".
-        tight_layout : bool, optional
-          Whether to call the matplotlib.tight_layout() function,
-          useful for things with colorbars, etc.
-        
-        Returns
-        -------
-        context : dict
-          Context dictionary appropriate for passing into the jinja2
-          template engine.
-        
-        """
-        if time_idxs is None:
-            time_idxs = range(self.num_timesteps)
-        with self.store() as store:
-            map_names = store.map_names()
-        # Decide what order to run through the combinations in
-        if groupby == 'timestep':
-            combos = [[(ts, name) for name in map_names] for ts in time_idxs]
-        elif groupby == 'dataset':
-            combos = [[(ts, name) for ts in time_idxs] for name in map_names]
-        else:
-            raise ValueError("Cannot group by '{}'. Must be either "
-                             "'dataset' or 'timestep'".format(groupby))
-        # Restructure the combinations so they're ordered by frame
-        N = 6 # Plots per beamer frame
-        combos = [[c[i*N:i*N+N] for i in range(int(len(c) / N)+1)] for c in combos]
-        combos = [c for cx in combos for c in cx]
-        # Iterate through each combination and plot it
-        frames = []
-        pgfbase = "{base}_{map_name}_ts{ts}.pgf"
-        for combo in combos:
-            frame = dict(plots=[])
-            for ts, map_name in combo:
-                fig = plt.figure(figsize=(1.65, 1.5))
-                fig.patch.set_alpha(0)
-                ax = plt.gca()
-                artists = self.plot_map(map_name=map_name, timeidx=ts, ax=ax)
-                axim = artists[0]
-                plt.colorbar(axim, ax=ax)
-                ax.set_title(map_name)
-                pgfname = pgfbase.format(base=basename, map_name=map_name, ts=ts)
-                ax.set_ylabel("")
-                ax.yaxis.set_ticks([])
-                ax.set_xlabel(self.pixel_unit())
-                if tight_layout:
-                    ax.figure.tight_layout()
-                try:
-                    ax.figure.savefig(pgfname)
-                except (RuntimeError, FileNotFoundError):
-                    warnings.warn("Could not save figure. Is LaTeX installed?", RuntimeWarning)
-                frame['plots'].append(pgfname)
-                plt.close(fig)
-            # Save metadata
-            if groupby == 'dataset':
-                frame['title'] = "{} - {}".format(self.parent_name, map_name).replace('_', ' ')
-            else:
-                frame['title'] = "{} - Time-step {}".format(self.parent_name, ts).replace('_', ' ')
-            frames.append(frame)
-        # Prepare the context for returning
-        context = {
-            'frames': frames
-        }
-        return context
-    
-    def export_beamer_file(self, basename, map_names=None,
-                           frameset_names=None, time_idxs=None, groupby='dataset'):
-        """Plot maps and create a beamer file.
-        
-        The resulting beamer file won't be compilable by itself, but
-        should be included in a beamer slide-deck with the
-        ``\\input{}`` directive. The pgf package must be included with
-        ``\\usepackage{pgf}`` in the preamble.
-        
-        Parameters
-        ----------
-        basename : str
-          Filename of the beamer output. Will be overwritten if it
-          exists. Pgf figures will use this as a prefix.
-        map_names : list, optional
-          Representations to use for plotting maps. If omitted,
-          anything resembling a map will be used.
-        frameset_names : list, optional
-          Representations to use for plotting spectra. If omitted,
-          anything resembling a frameset will be used.
-        time_idx : list, optional
-          Indices of timesteps to use for plotting maps. If omittedd,
-          all timesteps will be used.
-        dataset : str, optional
-          Determines which dimension changes quickly. Options are
-          "dataset" and "timestep".
-        
-        """
-        # Plot maps/spectra and prepare contexts for each
-        context = {}
-        map_context = self.plot_beamer_maps(basename=basename,
-                                           map_names=map_names,
-                                           time_idxs=time_idxs,
-                                           groupby=groupby)
-        spec_context = self.plot_beamer_spectra(basename=basename,
-                                                frameset_names=frameset_names,
-                                                time_idxs=time_idxs,
-                                                groupby=groupby)
-        # Prepare the Jinja2 templates
-        env = j2.Environment(
-            loader=j2.PackageLoader('xanespy', 'templates'),
-            block_start_string = r'\BLOCK{',
-	    block_end_string = '}',
-	    variable_start_string = r'\VAR{',
-	    variable_end_string = '}',
-	    comment_start_string = r'\#{',
-	    comment_end_string = '}',
-	    line_statement_prefix = '%%',
-	    line_comment_prefix = '%#',
-            trim_blocks=True,
-            autoescape=False,
-        )
-        map_template = env.get_template('beamer_maps.tex')
-        spec_template = env.get_template('beamer_spectra.tex')
-        # Render and write the templates
-        map_tex = map_template.render(**map_context)
-        spec_tex = spec_template.render(**spec_context)
-        with open(basename+'_maps.tex', mode='w') as f:
-            f.write(map_tex)
-        with open(basename+'_spectra.tex', mode='w') as f:
-            f.write(spec_tex)
     
     def has_representation(self, representation):
         with self.store() as store:
