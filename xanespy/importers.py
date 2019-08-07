@@ -53,7 +53,6 @@ format_classes = {
     '.xrm': XRMFile
 }
 
-
 CURRENT_VERSION = "0.3" # Lets file loaders deal with changes to storage
 
 log = logging.getLogger(__name__)
@@ -126,95 +125,107 @@ def import_aps4idc_sxstm_files(filenames, hdf_filename, hdf_groupname,
         if hdf_groupname in f.keys():
             del f[hdf_groupname]
             log.warn('Overwriting existing group "%s."' % hdf_groupname)
+
         parent_group = f.create_group(hdf_groupname)
-        data_group = parent_group.create_group('imported')
-        parent_group.attrs['latest_data_name'] = 'imported'
-        # Set some metadata for the experiment
-        new_attrs = {
-            'technique': 'Synchrotron X-ray Scanning Tunneling Microscopy',
-            'xanespy_version': CURRENT_VERSION,
-            'beamline': 'APS 4-ID-C',
-            'original_directory': os.path.abspath(directory),
-        }
-        parent_group.attrs.update(new_attrs)
-        # Calculate the desired shape
-        num_Es = len(metadata.E_idx.unique())
-        full_shape = (1, num_Es, *shape)
-        # Create empty datasets to hold the data
-        ds_names = {
-            'Bias calc (V)': 'bias_calc',
-            'Current (A)': 'current',
-            'LIA Tip Ch1 (V)': 'LIA_tip_ch1',
-            'LIA Tip Ch2 (V)': 'LIA_tip_ch2',
-            'LIA Sample Ch1 (V)': 'LIA_sample',
-            'LIA Gold Shielding Ch1 (V)': 'LIA_shielding',
-            'LIA topo Ch1 (V)': 'LIA_topo',
-            'Gold Shielding (V)': 'shielding',
-            'Flux (V)': 'flux',
-            'Bias (V)': 'bias',
-            'Z (m)': 'height',
-        }
-        for ds_name in ds_names.values():
-            ds = data_group.create_dataset(ds_name, shape=full_shape,
-                                           dtype='float32', compression='gzip')
-            ds.attrs['context'] = 'frameset'
-        # Load each source file one at a time
+        import_types = ['imported_mean', 'imported_median', 'imported_stdev']
         Xs, Ys = [], []
-        for row in prog(metadata.itertuples(), desc='Importing', total=len(filenames)):
-            with SxstmDataFile(row.filename) as sxstm_file:
-                df = sxstm_file.dataframe()
-            medians = df.median()
-            Xs.append(medians['X (m)'] / 1e-6)
-            Ys.append(medians['Y (m)'] / 1e-6)
-            full_idx = (0,row.E_idx,*row.pos_idx)
-            # Import each data column to the HDF5 file
-            for old_name, new_name in ds_names.items():
-                if new_name == 'height':
-                    data = medians[old_name] / 1e-9
-                else:
-                    data = medians[old_name]
-                data_group[new_name][full_idx] = data
-        # Determine the pixel sizes
-        px_size_X = (np.max(Xs) - np.min(Xs)) / (shape[1] - 1)
-        px_size_Y = (np.max(Ys) - np.min(Ys)) / (shape[0] - 1)
-        # 1D line-scans produce NaN values
-        if np.isnan(px_size_X) or np.isinf(px_size_X):
-            px_size_X = px_size_Y
-        elif np.isnan(px_size_Y) or np.isinf(px_size_Y):
-            px_size_Y = px_size_X
-        elif px_size_X != px_size_Y:
-            warnings.warn("X and Y pixel sizes do not match (%f vs %f). "
-                          "X axis values will be unreliable."
-                          "" % (px_size_X, px_size_Y))
-        px_ds = data_group.create_dataset('pixel_sizes', shape=(1, num_Es),
-                                       dtype='float32')
-        px_ds[:,:] = px_size_Y
-        px_ds.attrs['unit'] = 'µm'
-        px_ds.attrs['context'] = 'metadata'
-        # Save the beam energy list
-        Es = np.reshape(energies, (1, len(energies)))
-        E_ds = data_group.create_dataset('energies', data=Es)
-        E_ds.attrs['context'] = 'metadata'
-        # Save an array for filenames
-        filenames = np.array(filenames, dtype="S100")
-        filenames = np.reshape(filenames, (*shape, num_Es))
-        filenames = np.moveaxis(filenames, -1, 0)
-        filename_ds = data_group.create_dataset('filenames', data=filenames)
-        filename_ds.attrs['context'] = 'metadata'
-        # Save a time step name
-        ts_names = np.array(['ex-situ'], dtype="S30")
-        ts_names = data_group.create_dataset('timestep_names', data=ts_names)
-        ts_names.attrs['context'] = 'metadata'
-        # Correct some channels for flux changes
-        if flux_correction:
-            log.debug("Fixing flux")
-            flux = data_group['flux'].value
-            def fix_flux(ds):
-                ds.write_direct(ds.value / flux)
-            fix_flux(data_group['LIA_topo'])
-            fix_flux(data_group['LIA_tip_ch1'])
-            fix_flux(data_group['LIA_tip_ch2'])
-            fix_flux(data_group['LIA_sample'])
+        for import_type in import_types:
+            data_group = parent_group.create_group(import_type)
+            parent_group.attrs['latest_data_name'] = import_type
+
+            # Set some metadata for the experiment
+            new_attrs = {
+                'technique': 'Synchrotron X-ray Scanning Tunneling Microscopy',
+                'xanespy_version': CURRENT_VERSION,
+                'beamline': 'APS 4-ID-C',
+                'original_directory': os.path.abspath(directory),
+            }
+            parent_group.attrs.update(new_attrs)
+            # Calculate the desired shape
+            num_Es = len(metadata.E_idx.unique())
+            full_shape = (1, num_Es, *shape)
+            # Create empty datasets to hold the data
+            ds_names = {
+                'Bias calc (V)': 'bias_calc',
+                'Current (A)': 'current',
+                'LIA Tip Ch1 (V)': 'LIA_tip_ch1',
+                'LIA Tip Ch2 (V)': 'LIA_tip_ch2',
+                'LIA Sample Ch1 (V)': 'LIA_sample',
+                'LIA Gold Shielding Ch1 (V)': 'LIA_shielding',
+                'LIA topo Ch1 (V)': 'LIA_topo',
+                'Gold Shielding (V)': 'shielding',
+                'Flux (V)': 'flux',
+                'Bias (V)': 'bias',
+                'Z (m)': 'height',
+            }
+            for ds_name in ds_names.values():
+                ds = data_group.create_dataset(ds_name, shape=full_shape,
+                                               dtype='float32', compression='gzip')
+                ds.attrs['context'] = 'frameset'
+            # Load each source file one at a time
+            for row in prog(metadata.itertuples(), desc='Importing', total=len(filenames)):
+                with SxstmDataFile(row.filename) as sxstm_file:
+                    df = sxstm_file.dataframe()
+                if import_type == 'imported_mean':
+                    import_math = df.mean()
+                    Xs.append(import_math['X (m)'] / 1e-6)
+                    Ys.append(import_math['Y (m)'] / 1e-6)
+                elif import_type == 'imported_stdev':
+                    import_math = df.std()
+                elif import_type == 'imported_median':
+                    import_math = df.median()
+                #medians = df.median()
+                #stdev = df.std()
+                full_idx = (0,row.E_idx,*row.pos_idx)
+                # Import each data column to the HDF5 file
+                for old_name, new_name in ds_names.items():
+                    if new_name == 'height':
+                        data = import_math[old_name] / 1e-9
+                    else:
+                        data = import_math[old_name]
+                    data_group[new_name][full_idx] = data
+
+            # Determine the pixel sizes
+            px_size_X = (np.max(Xs) - np.min(Xs)) / (shape[1] - 1)
+            px_size_Y = (np.max(Ys) - np.min(Ys)) / (shape[0] - 1)
+            # 1D line-scans produce NaN values
+            if np.isnan(px_size_X) or np.isinf(px_size_X):
+                px_size_X = px_size_Y
+            elif np.isnan(px_size_Y) or np.isinf(px_size_Y):
+                px_size_Y = px_size_X
+            elif px_size_X != px_size_Y:
+                warnings.warn("X and Y pixel sizes do not match (%f vs %f). "
+                              "X axis values will be unreliable."
+                              "" % (px_size_X, px_size_Y))
+            px_ds = data_group.create_dataset('pixel_sizes', shape=(1, num_Es),
+                                           dtype='float32')
+            px_ds[:,:] = px_size_Y
+            px_ds.attrs['unit'] = 'µm'
+            px_ds.attrs['context'] = 'metadata'
+            # Save the beam energy list
+            Es = np.reshape(energies, (1, len(energies)))
+            E_ds = data_group.create_dataset('energies', data=Es)
+            E_ds.attrs['context'] = 'metadata'
+            # Save an array for filenames
+            filenames = np.array(filenames, dtype="S100")
+            filenames = np.reshape(filenames, (*shape, num_Es))
+            filenames = np.moveaxis(filenames, -1, 0)
+            filename_ds = data_group.create_dataset('filenames', data=filenames)
+            filename_ds.attrs['context'] = 'metadata'
+            # Save a time step name
+            ts_names = np.array(['ex-situ'], dtype="S30")
+            ts_names = data_group.create_dataset('timestep_names', data=ts_names)
+            ts_names.attrs['context'] = 'metadata'
+            # Correct some channels for flux changes
+            if flux_correction:
+                log.debug("Fixing flux")
+                flux = data_group['flux'].value
+                def fix_flux(ds):
+                    ds.write_direct(ds.value / flux)
+                fix_flux(data_group['LIA_topo'])
+                fix_flux(data_group['LIA_tip_ch1'])
+                fix_flux(data_group['LIA_tip_ch2'])
+                fix_flux(data_group['LIA_sample'])
 
 
 def _average_frames(*frames):
@@ -489,14 +500,14 @@ def read_metadata(filenames, flavor, quiet=False):
 @contextlib.contextmanager
 def open_files(paths, opener=open):
     """Context manager that opens files and closes them again.
-
+    
     Example usage::
-
+    
         file_paths = ('file_a.txt', 'file_b.txt')
         with open_files(file_paths) as files:
             for f in files:
                 f.read()
-
+    
     Parameters
     ==========
     paths :
@@ -505,7 +516,7 @@ def open_files(paths, opener=open):
       A class or function such that one would normally run::
         with opener(path) as f:
           ...do stuff with f...
-
+    
     """
     files_pre = tuple(opener(path) for path in paths)
 
