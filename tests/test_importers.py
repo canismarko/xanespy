@@ -53,7 +53,7 @@ from xanespy.importers import (magnification_correction,
                                import_aps32idc_xanes_files,
                                import_aps32idc_xanes_file,
                                read_metadata, minimum_shape,
-                               rebin_image, )
+                               rebin_image, open_files)
 from xanespy.txmstore import TXMStore
 
 
@@ -1000,3 +1000,37 @@ class SxstmImportTestCase(unittest.TestCase):
                                        hdf_groupname=self.parent_groupname,
                                        shape=(2, 2),
                                        energies=[8324., 8354.])
+
+
+class UtilitiesTestCase(unittest.TestCase):
+    """Holds tests for general purpose function and class."""
+
+    class DummyOpener():
+        def __init__(self, paths):
+            self.path = paths
+
+        def energies(self):
+            if self.path == 'file1':
+                return [853]
+            if self.path == 'file2':
+                return [851]
+            if self.path == 'file3':
+                return [852.4]
+
+        def close(self):
+            pass
+
+    def test_open_files(self):
+        # Create dummy paths
+        fake_paths = ['file1', 'file2', 'file3']
+
+        # Open fake files
+        with open_files(paths=fake_paths, opener=self.DummyOpener) as opened_files:
+            # Test the ordering of the returned open_files
+            self.assertEqual(opened_files[0].energies(), [851])
+            self.assertEqual(opened_files[1].energies(), [852.4])
+            self.assertEqual(opened_files[2].energies(), [853])
+
+            self.assertEqual(opened_files[0].path, 'file2')
+            self.assertEqual(opened_files[1].path, 'file3')
+            self.assertEqual(opened_files[2].path, 'file1')

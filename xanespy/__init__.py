@@ -51,10 +51,12 @@ from .plots import (dual_axes, new_axes, new_image_axes, plot_txm_map,
                    set_axes_color, plot_pixel_spectra,
                    plot_txm_histogram, plot_spectrum, latexify,
                    remove_extra_spines, plot_kedge_fit)
+
 from . import plots
 from . import xanes_math as xanes_math
 from . import utilities
 from .utilities import get_component, xy_to_pixel, pixel_to_xy, xycoord, Pixel
+# from . import map_merge
 # from qt_frameset_presenter import QtFramesetPresenter
 # from qt_frame_view import QtFrameView
 # from qt_map_view import QtMapView

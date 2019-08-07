@@ -489,14 +489,14 @@ def read_metadata(filenames, flavor, quiet=False):
 @contextlib.contextmanager
 def open_files(paths, opener=open):
     """Context manager that opens files and closes them again.
-    
+
     Example usage::
-    
+
         file_paths = ('file_a.txt', 'file_b.txt')
         with open_files(file_paths) as files:
             for f in files:
                 f.read()
-    
+
     Parameters
     ==========
     paths :
@@ -505,9 +505,17 @@ def open_files(paths, opener=open):
       A class or function such that one would normally run::
         with opener(path) as f:
           ...do stuff with f...
-    
+
     """
-    files = tuple(opener(path) for path in paths)
+    files_pre = tuple(opener(path) for path in paths)
+
+    # Order Files Based On Energy Order
+    energies_pre = [f.energies()[0] for f in files_pre]
+    energies_pre = np.array(energies_pre)
+    idx = energies_pre.argsort()
+
+    files = [files_pre[ind] for ind in idx]
+
     yield files
     # Close files after exiting context manager
     [f.close() for f in files]
