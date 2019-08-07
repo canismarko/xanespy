@@ -266,6 +266,15 @@ class NMCNickelKEdge29(NCANickelKEdge):
     ]
 
 
+class OKEdge(KEdge):
+    name = 'O'
+    E_0 = 530
+    shell = "K"
+    pre_edge = (525, 528)
+    post_edge = (538, 550)
+    edge_range = (528, 537)
+    map_range = (528, 537)
+
 # Dictionaries make it more intuitive to access these edges by element
 k_edges = {
     'Fe': FeKEdge(),
