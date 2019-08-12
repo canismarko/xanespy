@@ -480,11 +480,12 @@ class XanesMathTest(unittest.TestCase):
     def test_contrast_mask(self):
 
         # The first time idx - User selected in the xp.XanesFrameset.frames() method
-        frames = self.coins()[0]
+        frames = self.coins()
 
+        print(np.shape(frames))
         # Set up the initial numpy frames
-        mean_frames_image = np.mean(frames, axis=0)
-        single_frame_image = frames[10]
+        mean_frames_image = np.mean(frames, axis=(0, 1))
+        single_frame_image = frames[0][10]
 
         # Check difference input values
         sensitivity_vals = [1, 0.5, 1.8]
@@ -520,7 +521,7 @@ class XanesMathTest(unittest.TestCase):
                 single_frames_check.append(contrast_mask(frames=frames,
                                                        sensitivity=sensitivity,
                                                        min_size=min_size,
-                                                       frame_idx=10))
+                                                       frame_idx=(0, 10)))
 
         # Check all the values
         np.testing.assert_equal(all_masks[0], mean_frames_check[0])
