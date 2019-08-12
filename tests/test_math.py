@@ -31,7 +31,6 @@ import unittest
 import numpy as np
 from skimage import data
 import pandas as pd
-import matplotlib.pyplot as plt
 
 from xanespy import exceptions, edges
 from xanespy.utilities import prog
@@ -468,16 +467,15 @@ class XanesMathTest(unittest.TestCase):
         self.assertEqual(comps.shape, (2, len(x)))
         self.assertEqual(weights.shape, in_weights.shape)
 
-        plt.plot(x, comps[0], label='c0')
-        plt.plot(x, comps[1], label='c1')
-        plt.plot(x, features[0], label='f0')
-        plt.plot(x, features[1], label='f1')
-        plt.plot(x, new_features[0], label='nf0')
-        plt.plot(x, new_features[1], label='nf1')
-        plt.legend()
-        plt.show()
-
-        #np.testing.assert_allclose(features, new_features, atol=0.01)
+        # plt.plot(x, comps[0], label='c0')
+        # plt.plot(x, comps[1], label='c1')
+        # plt.plot(x, features[0], label='f0')
+        # plt.plot(x, features[1], label='f1')
+        # plt.plot(x, new_features[0], label='nf0')
+        # plt.plot(x, new_features[1], label='nf1')
+        # plt.legend()
+        # plt.show()
+        # np.testing.assert_allclose(features, new_features, atol=0.01)
 
 
 

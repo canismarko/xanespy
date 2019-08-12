@@ -125,14 +125,11 @@ def import_aps4idc_sxstm_files(filenames, hdf_filename, hdf_groupname,
         if hdf_groupname in f.keys():
             del f[hdf_groupname]
             log.warn('Overwriting existing group "%s."' % hdf_groupname)
-
         parent_group = f.create_group(hdf_groupname)
         import_types = ['imported_mean', 'imported_median', 'imported_stdev']
         Xs, Ys = [], []
         for import_type in import_types:
             data_group = parent_group.create_group(import_type)
-            parent_group.attrs['latest_data_name'] = import_type
-
             # Set some metadata for the experiment
             new_attrs = {
                 'technique': 'Synchrotron X-ray Scanning Tunneling Microscopy',
@@ -174,8 +171,6 @@ def import_aps4idc_sxstm_files(filenames, hdf_filename, hdf_groupname,
                     import_math = df.std()
                 elif import_type == 'imported_median':
                     import_math = df.median()
-                #medians = df.median()
-                #stdev = df.std()
                 full_idx = (0,row.E_idx,*row.pos_idx)
                 # Import each data column to the HDF5 file
                 for old_name, new_name in ds_names.items():
@@ -184,7 +179,6 @@ def import_aps4idc_sxstm_files(filenames, hdf_filename, hdf_groupname,
                     else:
                         data = import_math[old_name]
                     data_group[new_name][full_idx] = data
-
             # Determine the pixel sizes
             px_size_X = (np.max(Xs) - np.min(Xs)) / (shape[1] - 1)
             px_size_Y = (np.max(Ys) - np.min(Ys)) / (shape[0] - 1)
@@ -219,13 +213,14 @@ def import_aps4idc_sxstm_files(filenames, hdf_filename, hdf_groupname,
             # Correct some channels for flux changes
             if flux_correction:
                 log.debug("Fixing flux")
-                flux = data_group['flux'].value
+                flux = data_group['flux'][()]
                 def fix_flux(ds):
-                    ds.write_direct(ds.value / flux)
+                    ds.write_direct(ds[()] / flux)
                 fix_flux(data_group['LIA_topo'])
                 fix_flux(data_group['LIA_tip_ch1'])
                 fix_flux(data_group['LIA_tip_ch2'])
                 fix_flux(data_group['LIA_sample'])
+        parent_group.attrs['latest_data_name'] = 'imported_median'
 
 
 def _average_frames(*frames):
@@ -780,7 +775,7 @@ def import_nanosurveyor_frameset(directory: str, quiet=False,
         # Open the hdf5 file and get the data
         with h5py.File(filename, mode='r') as f:
             # Extract energy in Joules and convert to eV
-            energy = f['/entry_1/instrument_1/source_1/energy'].value
+            energy = f['/entry_1/instrument_1/source_1/energy'][()]
             energy = energy / physical_constants['electron volt'][0]
             # Skip this energy if it's outside the desired range
             is_in_range = (energy_range is None or
@@ -798,13 +793,13 @@ def import_nanosurveyor_frameset(directory: str, quiet=False,
                 data = f['/entry_1/image_1/data'][:frame_shape[0], :frame_shape[1]]
             else:
                 # No cropping, import full frames
-                data = f['/entry_1/image_1/data'].value
+                data = f['/entry_1/image_1/data'][()]
             intensities.append(data)
             # Import STXM interpretation
-            stxm = f['entry_1/instrument_1/detector_1/STXM'].value
+            stxm = f['entry_1/instrument_1/detector_1/STXM'][()]
             stxm_frames.append(stxm)
             # Save pixel size
-            px_size = float(f['/entry_1/process_1/Param/pixnm'].value)
+            px_size = float(f['/entry_1/process_1/Param/pixnm'][()])
             log.debug("Scan %s has pixel size %f", filename, px_size)
             pixel_sizes.append(px_size)
     # Convert data to numpy arrays
@@ -994,33 +989,6 @@ def import_stxm_frameset(directory: str, quiet=False,
         # Load the XIM file
         data = np.loadtxt(filename, dtype='int')
         intensities.append(data)
-        # Get the energy
-        # Open the hdf5 file and get the data
-        # with h5py.File(filename, mode='r') as f:
-        #     # Extract energy in Joules and convert to eV
-        #     energy = f['/entry_1/instrument_1/source_1/energy'].value
-        #     energy = energy / physical_constants['electron volt'][0]
-        #     # Skip this energy if it's outside the desired range
-        #     is_in_range = (energy_range is None or
-        #                    min(energy_range) <= energy <= max(energy_range))
-        #     if not is_in_range:
-        #         log.info('Skipping %s (%f eV is outside of range)',
-        #                  filename, energy)
-        #         continue
-        #     log.debug("Importing %s -> %f eV", filename, energy)
-        #     filenames.append(os.path.relpath(filename))
-        #     energies.append(energy)
-        #     # Import complex reconstructed image
-        #     data = f['/entry_1/image_1/data'].value
-        #     intensities.append(data)
-        #     # Import STXM interpretation
-        #     stxm = f['entry_1/instrument_1/detector_1/STXM'].value
-        #     stxm_frames.append(stxm)
-        #     # Save pixel size
-        #     px_size = float(f['/entry_1/process_1/Param/pixnm'].value)
-        #     log.debug("Scan %s has pixel size %f", filename, px_size)
-        #     pixel_sizes.append(px_size)
-
     # Check that we have actual data to import
     if len(intensities) == 0:
         msg = "No files in directory {} pass import filters. "

@@ -108,9 +108,6 @@ class FittingTestCase(TestCase):
         OD_df = pd.Series(ODs, index=Es)
         # Do the guessing
         kcurve = KCurve(Es)
-        import matplotlib.pyplot as plt
-        plt.plot(OD_df)
-        plt.show()
         result = kcurve.guess_params(OD_df, edge=edge)
         # Check resultant guessed parameters
         self.assertAlmostEqual(result.scale, 0.244, places=2)

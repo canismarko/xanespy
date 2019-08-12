@@ -1091,7 +1091,7 @@ class XanesFrameset():
     
     def fit_kedge(self, quiet=False, ncore=None):
         """Fit all spectra with a K-Edge curve.
-
+        
         Parameters
         ==========
         quiet : bool, optional

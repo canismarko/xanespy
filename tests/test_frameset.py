@@ -322,7 +322,8 @@ class XanesFramesetTest(TestCase):
         ])
         fs.spectra = mock.MagicMock(return_value=spectra)
         fs.clear_caches()
-        fs.fit_kedge()
+        with warnings.catch_warnings(record=True) as w:
+            fs.fit_kedge()
     
     def test_fit_spectra(self):
         store = MockStore()
@@ -391,10 +392,13 @@ class XanesFramesetTest(TestCase):
         store.energies = np.array([[8250, 8325, 8360], [8250, 8325, 8360]])
         fs = self.create_frameset(store=store)
         # Check that the new edge mask has same shape as intensities
-        # np.testing.assert_equal(fs.edge_mask(), np.zeros(shape=(128, 128)))
-        np.testing.assert_equal(fs.edge_mask().shape, (128, 128))
-        # Check that the new edge mask is a boolean array
-        self.assertEqual(fs.edge_mask().dtype, bool)
+        with warnings.catch_warnings(record=True) as w:
+            warnings.resetwarnings()
+            np.testing.assert_equal(fs.edge_mask(), np.zeros(shape=(128, 128)))
+            self.assertEqual(len(w), 1, 'Edge warning not emitted.')
+            np.testing.assert_equal(fs.edge_mask().shape, (128, 128))
+            # Check that the new edge mask is a boolean array
+            self.assertEqual(fs.edge_mask().dtype, bool)
     
     def test_spectrum(self):
         store = MockStore()

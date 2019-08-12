@@ -121,17 +121,16 @@ class APS32IDCImportTest(TestCase):
             self.assertEqual(data_group['pixel_sizes'].attrs['unit'], 'µm')
             self.assertEqual(data_group['pixel_sizes'].shape, (1, 3))
             # Original pixel size is 29.99nm but we have downsampling factor 1
-            self.assertTrue(np.all(data_group['pixel_sizes'].value == 0.02999 * 2))
+            self.assertTrue(np.all(np.equal(data_group['pixel_sizes'], 0.02999 * 2)))
             self.assertEqual(data_group['energies'].shape, (1, 3))
             expected_Es = np.array([[8340, 8350, 8360]])
-            np.testing.assert_array_almost_equal(data_group['energies'].value,
+            np.testing.assert_array_almost_equal(data_group['energies'],
                                                  expected_Es, decimal=3)
             self.assertIn('timestamps', keys)
             expected_timestamp = np.empty(shape=(1, 3, 2), dtype="S32")
             expected_timestamp[...,0] = b'2016-10-07 18:24:42'
             expected_timestamp[...,1] = b'2016-10-07 18:37:42'
-            np.testing.assert_equal(data_group['timestamps'].value,
-                                    expected_timestamp)
+            np.testing.assert_equal(data_group['timestamps'], expected_timestamp)
             self.assertIn('timestep_names', keys)
             self.assertEqual(data_group['timestep_names'][0], bytes("soc000", 'ascii'))
             self.assertIn('filenames', keys)
@@ -233,6 +232,9 @@ class CosmicTest(TestCase):
             self.assertEqual(store.data_name, 'imported')
     
     def test_import_cosmic_data(self):
+        # def failure(*args, **kw):
+        #     assert False
+        # warnings.showwarning = failure
         # Check that passing no data raises and exception
         with self.assertRaises(ValueError):
             import_cosmic_frameset(hdf_filename=self.hdf_filename)
@@ -254,8 +256,8 @@ class CosmicTest(TestCase):
             self.assertEqual(store.filenames.shape, (1, 1))
             stored_filename = store.filenames[0,0].decode('utf-8')
             self.assertEqual(stored_filename, os.path.basename(self.ptycho_cxi))
-            np.testing.assert_equal(store.energies.value, [[855.9056362433222]])
-            np.testing.assert_equal(store.pixel_sizes.value, [[6.0435606480754585]])
+            np.testing.assert_equal(store.energies[()], [[855.9056362433222]])
+            np.testing.assert_equal(store.pixel_sizes[()], [[6.0435606480754585]])
             np.testing.assert_equal(store.pixel_unit, 'nm')
             self.assertEqual(store.intensities.shape, (1, 1, 285, 285))
             self.assertEqual(store.optical_depths.shape, (1, 1, 285, 285))
@@ -270,8 +272,8 @@ class CosmicTest(TestCase):
             stored_filename = store.filenames[0,0].decode('utf-8')
             expected_filename = os.path.join(COSMIC_DIR, 'stxm-scan_a003.xim')
             self.assertEqual(stored_filename, expected_filename)
-            np.testing.assert_equal(store.energies.value, [[853, 857.75]])
-            np.testing.assert_equal(store.pixel_sizes.value, [[27.2, 27.2]])
+            np.testing.assert_equal(store.energies[()], [[853, 857.75]])
+            np.testing.assert_equal(store.pixel_sizes[()], [[27.2, 27.2]])
             self.assertEqual(store.intensities.shape, (1, 2, 120, 120))
             self.assertEqual(store.optical_depths.shape, (1, 2, 120, 120))
             self.assertEqual(store.timestep_names[0].decode('utf-8'), 'ex-situ')
@@ -280,7 +282,7 @@ class CosmicTest(TestCase):
             self.assertEqual(store.filenames.shape, (1, 3))
             self.assertEqual(store.timestep_names.shape, (1,))
             real_px_size = 6.0435606480754585
-            np.testing.assert_equal(store.pixel_sizes.value,
+            np.testing.assert_equal(store.pixel_sizes[()],
                                     [[real_px_size, real_px_size, real_px_size]])
             self.assertEqual(store.pixel_unit, 'nm')
 
@@ -445,19 +447,19 @@ class PtychographyImportTest(TestCase):
             # Check metadata about beamline
             self.assertEqual(parent.attrs['technique'], 'ptychography STXM')
             # Check data is structured properly
-            self.assertEqual(group['timestep_names'].value[0], bytes(dataset_name, 'ascii'))
+            self.assertEqual(group['timestep_names'][0], bytes(dataset_name, 'ascii'))
             self.assertIn('intensities', keys)
             self.assertEqual(group['intensities'].shape, (1, 3, 228, 228))
             self.assertEqual(group['intensities'].attrs['context'], 'frameset')
             self.assertIn('stxm', keys)
             self.assertEqual(group['stxm'].shape, (1, 3, 20, 20))
             self.assertEqual(group['pixel_sizes'].attrs['unit'], 'nm')
-            self.assertTrue(np.all(group['pixel_sizes'].value == 4.16667),
-                            msg=group['pixel_sizes'].value)
+            self.assertTrue(np.all(group['pixel_sizes'][()] == 4.16667),
+                            msg=group['pixel_sizes'][()])
             self.assertEqual(group['pixel_sizes'].shape, (1, 3))
             expected_Es = np.array([[843.9069591, 847.90651815,
                                      850.15627011]])
-            np.testing.assert_allclose(group['energies'].value, expected_Es)
+            np.testing.assert_allclose(group['energies'][()], expected_Es)
             self.assertEqual(group['energies'].shape, (1, 3))
             ## NB: Timestamps not available in the cxi files
             # self.assertIn('timestamps', keys)
@@ -467,7 +469,7 @@ class PtychographyImportTest(TestCase):
             #     [[b'2016-07-02 22:19:23-05:51', b'2016-07-02 22:19:58-05:51'],
             #      [b'2016-07-02 23:21:21-05:51', b'2016-07-02 23:21:56-05:51']],
             # ], dtype="S32")
-            # self.assertTrue(np.array_equal(group['timestamps'].value,
+            # self.assertTrue(np.array_equal(group['timestamps'][()],
             #                                expected_timestamp))
             self.assertIn('filenames', keys)
             self.assertEqual(group['filenames'].shape, (1, 3))
@@ -534,7 +536,7 @@ class PtychographyImportTest(TestCase):
         with h5py.File(self.hdf) as f:
             self.assertIn('merged', f.keys())
             # Check that things are ordered by energy
-            saved_Es = f['/merged/imported/energies'].value
+            saved_Es = f['/merged/imported/energies']
             np.testing.assert_array_equal(saved_Es, np.sort(saved_Es))
             # Construct the expected path relative to the current directory
             relpath = "ptycho-data-als/NS_160406074-{}-energy/160406074/{}/NS_160406074.cxi"
@@ -586,14 +588,14 @@ class APS8BMFileImportTest(TestCase):
             self.assertIn('optical_depths', keys)
             self.assertEqual(group['pixel_sizes'].attrs['unit'], 'µm')
             self.assertEqual(group['pixel_sizes'].shape, (1, 3))
-            self.assertTrue(np.any(group['pixel_sizes'].value > 0))
-            expected_Es = np.array([[8312.9287109,  8363.0078125,  8412.9541016]])
-            np.testing.assert_almost_equal(group['energies'].value, expected_Es)
+            self.assertTrue(np.any(np.greater(group['pixel_sizes'], 0)))
+            expected_Es = np.array([[8312.9287109, 8363.0078125, 8412.9541016]])
+            np.testing.assert_almost_equal(group['energies'], expected_Es)
             self.assertIn('timestamps', keys)
             expected_timestamp = np.array([
                 [b'2017-07-09 00:49:02', b'2017-07-09 00:49:30', b'2017-07-09 00:49:58'],
             ], dtype="S32")
-            np.testing.assert_equal(group['timestamps'].value,
+            np.testing.assert_equal(group['timestamps'],
                                     expected_timestamp)
             self.assertIn('filenames', keys)
             self.assertIn('original_positions', keys)
@@ -664,10 +666,10 @@ class APS8BMDirImportTest(TestCase):
             self.assertIn('optical_depths', keys)
             self.assertEqual(group['pixel_sizes'].attrs['unit'], 'µm')
             self.assertEqual(group['pixel_sizes'].shape, (2,2))
-            self.assertTrue(np.any(group['pixel_sizes'].value > 0))
+            self.assertTrue(np.any(np.greater(group['pixel_sizes'], 0)))
             expected_Es = np.array([[8249.9365234375, 8353.0322265625],
                                     [8249.9365234375, 8353.0322265625]])
-            self.assertTrue(np.array_equal(group['energies'].value, expected_Es))
+            self.assertTrue(np.array_equal(group['energies'], expected_Es))
             self.assertIn('timestamps', keys)
             expected_timestamp = np.array([
                 [[b'2016-07-02 21:31:36', b'2016-07-02 21:32:26'],
@@ -675,8 +677,7 @@ class APS8BMDirImportTest(TestCase):
                 [[b'2016-07-03 03:19:23', b'2016-07-03 03:19:58'],
                  [b'2016-07-03 04:21:21', b'2016-07-03 04:21:56']],
             ], dtype="S32")
-            np.testing.assert_equal(group['timestamps'].value,
-                                    expected_timestamp)
+            np.testing.assert_equal(group['timestamps'], expected_timestamp)
             self.assertIn('filenames', keys)
             self.assertIn('original_positions', keys)
             # self.assertIn('relative_positions', keys)
@@ -792,9 +793,7 @@ class SSRLImportTest(TestCase):
             self.assertEqual(group['optical_depths'].attrs['context'], 'frameset')
             self.assertEqual(group['pixel_sizes'].attrs['unit'], 'µm')
             self.assertEqual(group['pixel_sizes'].attrs['context'], 'metadata')
-            isEqual = np.array_equal(group['energies'].value,
-                                     np.array([[8324., 8354.]]))
-            self.assertTrue(isEqual, msg=group['energies'].value)
+            np.testing.assert_equal(group['energies'], np.array([[8324., 8354.]]))
             self.assertEqual(group['energies'].attrs['context'], 'metadata')
             self.assertIn('timestamps', keys)
             self.assertEqual(group['timestamps'].attrs['context'], 'metadata')
@@ -946,18 +945,22 @@ class SxstmImportTestCase(unittest.TestCase):
             # Check that the group structure is correct
             self.assertIn(self.parent_groupname, list(f.keys()))
             parent = f[self.parent_groupname]
-            self.assertIn('imported', list(parent.keys()),
-                          "Importer didn't create '/%s/imported'" % self.parent_groupname)
+            self.assertIn('imported_mean', list(parent.keys()),
+                          "Importer didn't create '/%s/imported_mean'" % self.parent_groupname)
+            self.assertIn('imported_median', list(parent.keys()),
+                          "Importer didn't create '/%s/imported_median'" % self.parent_groupname)
+            self.assertIn('imported_stdev', list(parent.keys()),
+                          "Importer didn't create '/%s/imported_stdev'" % self.parent_groupname)
             # Check metadata about beamline
             self.assertEqual(parent.attrs['technique'],
                              'Synchrotron X-ray Scanning Tunneling Microscopy')
             self.assertEqual(parent.attrs['xanespy_version'], CURRENT_VERSION)
             self.assertEqual(parent.attrs['beamline'], "APS 4-ID-C")
-            self.assertEqual(parent.attrs['latest_data_name'], 'imported')
+            self.assertEqual(parent.attrs['latest_data_name'], 'imported_median')
             full_path = os.path.abspath(SXSTM_DIR)
             self.assertEqual(parent.attrs['original_directory'], full_path)
-            # Check that the datasets are created
-            group = parent['imported']
+            # Check that the datasets are created using median as an example
+            group = parent['imported_median']
             keys = list(group.keys())
             columns = ['bias_calc', 'current', 'LIA_tip_ch1',
                        'LIA_tip_ch2', 'LIA_sample', 'LIA_shielding',
@@ -973,22 +976,14 @@ class SxstmImportTestCase(unittest.TestCase):
                 self.assertTrue(np.any(group[col]))
             self.assertEqual(group['pixel_sizes'].attrs['unit'], 'µm')
             self.assertEqual(group['pixel_sizes'].attrs['context'], 'metadata')
-            isEqual = np.array_equal(group['energies'].value,
-                                     np.array([[8324., 8354.]]))
-            self.assertTrue(isEqual, msg=group['energies'].value)
+            np.testing.assert_equal(group['energies'], np.array([[8324., 8354.]]))
             self.assertEqual(group['energies'].attrs['context'], 'metadata')
             self.assertIn('filenames', keys)
             self.assertEqual(group['filenames'].attrs['context'], 'metadata')
             self.assertIn('timestep_names', keys)
             self.assertEqual(group['timestep_names'].attrs['context'], 'metadata')
             self.assertEqual(group['timestep_names'][0], b"ex-situ")
-            # self.assertIn('timestamps', keys)
-            # self.assertEqual(group['timestamps'].attrs['context'], 'metadata')
-            # self.assertIn('original_positions', keys)
-            # self.assertEqual(group['original_positions'].attrs['context'], 'metadata')
-            # self.assertIn('relative_positions', keys)
-            # self.assertEqual(group['relative_positions'].attrs['context'], 'metadata')
-
+    
     def test_file_list(self):
         """See if a file list can be passed instead of a directory name."""
         filelist = [os.path.join(SXSTM_DIR, f) for f in os.listdir(SXSTM_DIR)]

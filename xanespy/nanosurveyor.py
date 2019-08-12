@@ -38,7 +38,7 @@ class CXIFile():
         return filenames
     
     def image_frames(self):
-        data = self.hdf_file['/entry_1/image_1/data'].value[::-1]
+        data = self.hdf_file['/entry_1/image_1/data'][()][::-1]
         return np.array([data])
     
     def image_shape(self):
@@ -49,7 +49,7 @@ class CXIFile():
         return 1
     
     def energies(self):
-        energy = self.hdf_file['/entry_1/instrument_1/source_1/energy'].value
+        energy = self.hdf_file['/entry_1/instrument_1/source_1/energy'][()]
         energy = energy / physical_constants['electron volt'][0]
         return [energy]
     
@@ -59,13 +59,13 @@ class CXIFile():
         # Calculation provided by David Shapiro
         try:
             # retrieve pixel size directly from the cxi file
-            px_size = float(self.hdf_file['/entry_1/process_1/Param/pixnm'].value)
+            px_size = float(self.hdf_file['/entry_1/process_1/Param/pixnm'][()])
         except KeyError:
             # Calculate the radiation wavelength
-            energy = self.hdf_file['entry_1/instrument_1/source_1/energy'].value
+            energy = self.hdf_file['entry_1/instrument_1/source_1/energy'][()]
             wavelength = 1239.84 / energy / 6.24e18
             # Calculate the scattering angle from the detector position
-            x, y, z = self.hdf_file['entry_1/instrument_1/detector_1/corner_position'].value
+            x, y, z = self.hdf_file['entry_1/instrument_1/detector_1/corner_position'][()]
             scattering_angle = np.arctan(x / z)
             # Calculate the pixel size from wavelength and scatting angle
             px_size = wavelength / 2. / np.sin(scattering_angle)

@@ -198,7 +198,8 @@ def resample_image(img, new_shape, src_dims, new_dims):
     new_img = np.copy(img)
     resize_needed = not np.array_equal(full_shape, new_img.shape)
     if resize_needed:
-        new_img = transform.resize(new_img, full_shape, order=3, mode='reflect')
+        new_img = transform.resize(new_img.astype(float), full_shape,
+                                   order=3, mode='reflect', anti_aliasing=True)
     # Crop the image
     center = center_of_mass(new_img)
     new_img = crop_image(new_img, new_shape, center=center)
