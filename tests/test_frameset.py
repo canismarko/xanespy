@@ -158,6 +158,21 @@ class XanesFramesetTest(TestCase):
         self.store = store
         return fs
     
+    def test_init(self):
+        # Check if we can pass edges as objects by calling the edge methods
+        edge = edges.Edge()
+        fs = XanesFrameset(filename=self.hdf_filename, edge=edge)
+        fs.edge.mask(self.dummy_frame_data())
+        # Check if we can pass an edge as a class
+        Edge = edges.Edge
+        fs = XanesFrameset(filename=self.hdf_filename, edge=Edge)
+        fs.edge.mask(self.dummy_frame_data())
+        # Check that passing an edge of None raises a warning
+        with warnings.catch_warnings(record=True) as w:
+            warnings.resetwarnings()
+            fs = XanesFrameset(filename=self.hdf_filename, edge=None)
+            self.assertEqual(len(w), 1, 'No "edge is None" warning raised.')
+    
     def test_timestamps(self):
         # Create a (timestep, energy, start/end) array of timestamps
         real_timestamps = np.array(

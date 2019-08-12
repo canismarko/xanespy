@@ -35,6 +35,7 @@ import math
 import subprocess
 import warnings
 import multiprocessing as mp
+import inspect
 from typing import Any, List, Dict, Mapping, Sequence, Iterable
 
 import pandas as pd
@@ -80,25 +81,29 @@ class XanesFrameset():
     _transformations = None
     
     def __init__(self, filename, edge, groupname=None):
-        """
-        Parameters
+        """Parameters
         ----------
-        filename : str, optional
+        filename : str
           Path to the HDF file that holds these data.
         edge
-          An Edge object describing the meterial's X-ray energy response
-          characteristics. Can be ``None`` but not recommended.
-       groupname : str, optional
+          An Edge object (or class) describing the meterial's X-ray
+          energy response characteristics. Can be ``None`` but not
+          recommended.
+        groupname : str, optional
           Top level HDF group corresponding to this frameset. This
           argument is only required if there is more than one top-level
           group.
         
         """
         self.hdf_filename = filename
+        # Validate the edge object
         if edge is None:
             warnings.warn('``edge`` set to ``None``.'
                           'Some operations will fail.')
-        self.edge = edge
+        elif inspect.isclass(edge):
+            self.edge = edge()
+        else:
+            self.edge = edge
         # Validate the parent dataname
         store = TXMStore(hdf_filename=self.hdf_filename,
                          parent_name=groupname,
