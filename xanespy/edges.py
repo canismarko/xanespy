@@ -271,8 +271,8 @@ class OKEdge(KEdge):
     E_0 = 530
     shell = "K"
     pre_edge = (525, 528)
-    post_edge = (538, 550)
-    edge_range = (528, 537)
+    post_edge = (545, 550)
+    edge_range = (537, 545)
     map_range = (528, 537)
 
 # Dictionaries make it more intuitive to access these edges by element
