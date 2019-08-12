@@ -29,7 +29,7 @@ from functools import partial
 import matplotlib
 import unittest
 import numpy as np
-from skimage import data
+from skimage import data, filters, morphology
 import pandas as pd
 
 from xanespy import exceptions, edges
@@ -45,7 +45,7 @@ from xanespy.xanes_math import (transform_images, direct_whitelines,
                                 apply_mosaic_reference,
                                 register_template, register_correlations,
                                 downsample_array, FramesPool,
-                                resample_image, crop_image)
+                                resample_image, crop_image, contrast_mask)
 
 TEST_DIR = os.path.dirname(__file__)
 SSRL_DIR = os.path.join(TEST_DIR, 'txm-data-ssrl')
@@ -477,6 +477,67 @@ class XanesMathTest(unittest.TestCase):
         # plt.show()
         # np.testing.assert_allclose(features, new_features, atol=0.01)
 
+    def test_contrast_mask(self):
+
+        # The first time idx - User selected in the xp.XanesFrameset.frames() method
+        frames = self.coins()[0]
+
+        # Set up the initial numpy frames
+        mean_frames_image = np.mean(frames, axis=0)
+        single_frame_image = frames[10]
+
+        # Check difference input values
+        sensitivity_vals = [1, 0.5, 1.8]
+        min_size_vals = [0, 10]
+
+        # Determining masks for difference input values
+        all_masks = []
+        for image in [mean_frames_image, single_frame_image]:
+            for sensitivity in sensitivity_vals:
+                for min_size in min_size_vals:
+                    # Determining threshold
+                    img_bottom = image.min()
+                    threshold = filters.threshold_otsu(image)
+                    threshold = img_bottom + sensitivity * (threshold - img_bottom)
+                    mask = image > threshold
+
+                    # Min size thresholding
+                    if min_size > 0:
+                        mask = morphology.opening(mask, selem=morphology.disk(min_size))
+
+                    all_masks.append(mask)
+
+
+        # Use the contrast_mask function
+        mean_frames_check = []
+        single_frames_check = []
+        for sensitivity in sensitivity_vals:
+            for min_size in min_size_vals:
+                mean_frames_check.append(contrast_mask(frames=frames,
+                                                       sensitivity=sensitivity,
+                                                       min_size=min_size,
+                                                       frame_idx='mean'))
+                single_frames_check.append(contrast_mask(frames=frames,
+                                                       sensitivity=sensitivity,
+                                                       min_size=min_size,
+                                                       frame_idx=10))
+
+        # Check all the values
+        np.testing.assert_equal(all_masks[0], mean_frames_check[0])
+        np.testing.assert_equal(all_masks[0], mean_frames_check[0])
+        np.testing.assert_equal(all_masks[1], mean_frames_check[1])
+        np.testing.assert_equal(all_masks[2], mean_frames_check[2])
+        np.testing.assert_equal(all_masks[3], mean_frames_check[3])
+        np.testing.assert_equal(all_masks[4], mean_frames_check[4])
+        np.testing.assert_equal(all_masks[5], mean_frames_check[5])
+
+
+        np.testing.assert_equal(all_masks[6], single_frames_check[0])
+        np.testing.assert_equal(all_masks[7], single_frames_check[1])
+        np.testing.assert_equal(all_masks[8], single_frames_check[2])
+        np.testing.assert_equal(all_masks[9], single_frames_check[3])
+        np.testing.assert_equal(all_masks[10], single_frames_check[4])
+        np.testing.assert_equal(all_masks[11], single_frames_check[5])
 
 
 # Launch the tests if this is run as a script

@@ -1099,3 +1099,51 @@ def register_template(frames, reference, template, desc="Registering",
     # Negative in order to properly register with transform_images method
     translations = -translations
     return translations
+
+
+def contrast_mask(frames: np.ndarray, sensitivity: float = 1, min_size=0, frame_idx='mean'):
+    """Determine a particle mask based on the image contrast of the mean or individual frame
+
+    Parameters
+    ----------
+    frames : np.ndarray
+      Array with images at different energies.
+    sensitivity : float, optional
+      A multiplier for the otsu value to determine the actual
+      threshold.
+    min_size : float, optional
+      Objects below this size (in pixels) will be
+      removed. Passing zero (default) will result in no effect.
+    frame_idx : str, int, optional
+      Allows the user to select which image to
+
+    Returns:
+    -------
+    mask : np.ndarray
+      A boolean mask with the same shape as the last two dimensions of
+      `frames` where True pixels are likely to be background material.
+    """
+
+    # Make sure we are using the real numbers
+    frames = np.real(frames)
+
+    # Obtain the correct image set
+    if frame_idx == 'mean':
+        image = np.mean(frames, axis=0)
+
+    elif isinstance(frame_idx, int):
+        image = frames[frame_idx]
+
+    # Determining threshold
+    img_bottom = image.min()
+    threshold = filters.threshold_otsu(image)
+    threshold = img_bottom + sensitivity * (threshold - img_bottom)
+    mask = image > threshold
+
+    # Min size thresholding
+    if min_size > 0:
+        mask = morphology.opening(mask, selem=morphology.disk(min_size))
+
+    return mask
+
+
