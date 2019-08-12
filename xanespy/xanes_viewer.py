@@ -65,7 +65,7 @@ def launch_viewer(argv, Presenter):
     else:
         edge = None
     # Get the xanes frameset object
-    fs = XanesFrameset(filename=args.hdf_filename,
+    fs = XanesFrameset(hdf_filename=args.hdf_filename,
                        edge=edge,
                        groupname=groupname)
     # Lauch the Qt viewer

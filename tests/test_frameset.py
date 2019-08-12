@@ -148,7 +148,7 @@ class XanesFramesetTest(TestCase):
         if edge is None:
             edge = edges.k_edges['Ni_NCA']
         # Create new frameset object
-        fs = XanesFrameset(filename=self.hdf_filename, edge=edge)
+        fs = XanesFrameset(hdf_filename=self.hdf_filename, edge=edge)
         # Mock out the `store` retrieval so we can control it
         if store is None:
             store = MockStore()
@@ -161,16 +161,16 @@ class XanesFramesetTest(TestCase):
     def test_init(self):
         # Check if we can pass edges as objects by calling the edge methods
         edge = edges.Edge()
-        fs = XanesFrameset(filename=self.hdf_filename, edge=edge)
+        fs = XanesFrameset(hdf_filename=self.hdf_filename, edge=edge)
         fs.edge.mask(self.dummy_frame_data())
         # Check if we can pass an edge as a class
         Edge = edges.Edge
-        fs = XanesFrameset(filename=self.hdf_filename, edge=Edge)
+        fs = XanesFrameset(hdf_filename=self.hdf_filename, edge=Edge)
         fs.edge.mask(self.dummy_frame_data())
         # Check that passing an edge of None raises a warning
         with warnings.catch_warnings(record=True) as w:
             warnings.resetwarnings()
-            fs = XanesFrameset(filename=self.hdf_filename, edge=None)
+            fs = XanesFrameset(hdf_filename=self.hdf_filename, edge=None)
             self.assertEqual(len(w), 1, 'No "edge is None" warning raised.')
     
     def test_timestamps(self):
@@ -730,13 +730,13 @@ class XanesFramesetTest(TestCase):
         self.assertEqual(fs.data_name, 'new_group')
     
     def test_repr(self):
-        fs = XanesFrameset(filename=self.hdf_filename, edge=edges.k_edges['Ni_NCA'],
+        fs = XanesFrameset(hdf_filename=self.hdf_filename, edge=edges.k_edges['Ni_NCA'],
                            groupname="ssrl-test-data")
         expected = "<XanesFrameset: 'ssrl-test-data'>"
         self.assertEqual(fs.__repr__(), expected)
     
     def test_str(self):
-        fs = XanesFrameset(filename=self.hdf_filename, edge=edges.k_edges['Ni_NCA'],
+        fs = XanesFrameset(hdf_filename=self.hdf_filename, edge=edges.k_edges['Ni_NCA'],
                            groupname="ssrl-test-data")
         self.assertEqual(str(fs), 'ssrl-test-data')
 
@@ -755,7 +755,7 @@ class OldXanesFramesetTest(XanespyTestCase):
     def setUp(self):
         # Copy the HDF5 file so we can safely make changes
         shutil.copy(self.originhdf, self.temphdf)
-        self.frameset = XanesFrameset(filename=self.temphdf,
+        self.frameset = XanesFrameset(hdf_filename=self.temphdf,
                                       groupname='ssrl-test-data',
                                       edge=edges.k_edges['Ni_NCA'])
     

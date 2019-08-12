@@ -80,10 +80,10 @@ class XanesFrameset():
     # Places to store staged image transformations
     _transformations = None
     
-    def __init__(self, filename, edge, groupname=None):
+    def __init__(self, hdf_filename, edge, groupname=None):
         """Parameters
         ----------
-        filename : str
+        hdf_filename : str
           Path to the HDF file that holds these data.
         edge
           An Edge object (or class) describing the meterial's X-ray
@@ -95,7 +95,7 @@ class XanesFrameset():
           group.
         
         """
-        self.hdf_filename = filename
+        self.hdf_filename = hdf_filename
         # Validate the edge object
         if edge is None:
             warnings.warn('``edge`` set to ``None``.'
