@@ -100,3 +100,8 @@ class RefinementError(RuntimeError):
 
 class XanesMathError(RuntimeError):
     pass
+
+
+class GuessParamsError(AttributeError):
+    """Guessing of fitting params not possible."""
+    pass

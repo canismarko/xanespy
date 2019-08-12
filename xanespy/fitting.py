@@ -22,7 +22,7 @@ against."""
 
 
 from collections import namedtuple
-from multiprocessing import Pool, cpu_count
+from multiprocessing import Pool
 import warnings
 import functools
 from typing import Tuple
@@ -31,12 +31,50 @@ import numpy as np
 from scipy.optimize import leastsq
 import tqdm
 
+from . import exceptions
 from .xanes_math import k_edge_jump, iter_indices, foreach
-from .utilities import prog
+from .utilities import nproc
 
 
 __all__ = ('prepare_p0', 'fit_spectra', 'Curve', 'Line',
            'LinearCombination', 'Gaussian', 'L3Curve', 'KCurve')
+
+
+def guess_p0(func, spectra, edge=None, quiet=False, ncore=None):
+    """Accept a number of spectra and try to get a good guess for initial
+    fitting params.
+    
+    Parameters
+    ----------
+    func : callable
+      The function that will be fit. It must have a ``guess_params``
+      method.
+    spectra : np.ndarray
+      A 2D array with the second dimension representing Energy (or
+      whatever the x axis is).
+    edge : optional
+      An XAS edge.
+    ncore : int, optional
+      How many processes to use in the pool. See
+      :func:`~xanespy.utilities.nproc` for more details.
+    
+    Returns
+    -------
+    p0 : np.ndarray
+      A 2D array, the first dimension matches ``spectra`` and the
+      second dimension corresponds to the number of fitting parameters
+      for *func*.
+    
+    """
+    # Prepare a progress bar
+    if not quiet:
+        spectra = tqdm.tqdm(spectra, desc="Guessing initial params", unit='px')
+        guess_params = functools.partial(func.guess_params, edge=edge,
+                                         named_tuple=False)
+    # Execute the parameters guessing with multiprocessing
+    with Pool(nproc(ncore)) as pool:
+        p0 = np.array(pool.map(guess_params, spectra, chunksize=2000))
+    return p0
 
 
 def prepare_p0(p0, frame_shape, num_timesteps=1):
@@ -100,7 +138,7 @@ def find_whiteline(params, curve):
     return whiteline
 
 
-def fit_spectra(observations, func, p0, nonnegative=False, quiet=False):
+def fit_spectra(observations, func, p0, nonnegative=False, quiet=False, ncore=None):
     """Fit a function to a series observations.
     
     The shapes of ``observations`` and ``p0`` parameters must match in
@@ -131,6 +169,9 @@ def fit_spectra(observations, func, p0, nonnegative=False, quiet=False):
       of the two parameters.
     quiet : bool, optional
       Whether to suppress the progress bar, etc.
+    ncore : int, optional
+      How many processes to use in the pool. See
+      :func:`~xanespy.utilities.nproc` for more details.
     
     Returns
     -------
@@ -160,8 +201,7 @@ def fit_spectra(observations, func, p0, nonnegative=False, quiet=False):
     if not quiet:
         payload = tqdm.tqdm(payload, total=len(observations),
                             desc="Fitting spectra", unit='spctrm')
-    # payload = zip(prog(observations, desc='Fitting spectra', unit='spctr'), p0)
-    with Pool(cpu_count()) as pool:
+    with Pool(nproc(ncore)) as pool:
         fitter = functools.partial(_fit_sources, func=func, nonnegative=nonnegative)
         params = pool.map(fitter, payload)
     # Prepare the results for returning
@@ -178,6 +218,12 @@ class Curve():
     """Base class for a callabled Curve."""
     name = "curve"
     param_names = () # type: Tuple[str, ...]
+
+    def __init__(self, x):
+        self.x = x
+
+    def guess_params(self, intensities, edge, named_tuple=True):
+        raise NotImplementedError()
     
     def NamedTuple(self, *params):
         """Return a named tuple with the given parameters."""
@@ -186,8 +232,8 @@ class Curve():
 
 
 class Line(Curve):
-    def __init__(self, x):
-        self.x = x
+    def guess_params(self, intensities, edge, named_tuple=True):
+        return (1, 0)
     
     def __call__(self, m, b):
         return m*self.x + b
@@ -256,9 +302,6 @@ class Gaussian(Curve):
     name = "gaussian"
     param_names = ('height', 'center', 'width')
     
-    def __init__(self, x):
-        self.x = x
-    
     def __call__(self, height, center, width):
         x = self.x
         a, b, c = (height, center, width)
@@ -282,15 +325,15 @@ class L3Curve(Curve):
     """
     name = "L3-gaussian"
     
-    def __init__(self, energies, num_peaks=2):
+    def __init__(self, x, num_peaks=2):
+        self.x = x
         self.num_peaks = num_peaks
-        self.energies = energies
-        self.dtype = energies.dtype
+        self.dtype = x.dtype
     
     def __call__(self, *params):
         Params = namedtuple('L3Params', self.param_names)
         p = Params(*params)
-        Es = self.energies
+        Es = self.x
         # Add two gaussian fields
         out = np.zeros_like(Es)
         gaussian = Gaussian(x=Es)

@@ -46,7 +46,7 @@ import pytz
 from skimage import data, transform
 
 from cases import XanespyTestCase
-from xanespy import exceptions, edges
+from xanespy import exceptions, edges, fitting
 from xanespy.utilities import (xycoord, prog, position, Extent,
                                xy_to_pixel, pixel_to_xy,
                                get_component, Pixel, broadcast_reverse)
@@ -360,6 +360,27 @@ class XanesFramesetTest(TestCase):
         store.replace_dataset.assert_any_call('fit_residuals', residuals, context='map',
                                               attrs={'frame_source': 'optical_depths'})
     
+    def test_fit_spectra_defaults(self):
+        """Check that the default curves for the edge are being used, and
+        default params are guessed.
+        
+        """
+        store = MockStore()
+        od_data = np.random.rand(1, 6, 16, 16)
+        store.get_dataset = mock.MagicMock(return_value=od_data)
+        store.optical_depths = od_data
+        Es = np.array([np.linspace(840, 862, num=6, dtype=np.float32)])
+        store.energies = Es
+        edge = edges.k_edges['Ni']
+        fs = self.create_frameset(store=store, edge=edge)
+        x = np.linspace(0, 1, num=6)
+        line = fitting.Line(x)
+        fs.fit_spectra(line, edge_filter=False)
+        # Make sure an exception is raised if guess_params is not defined
+        curve = fitting.Curve(x)
+        with self.assertRaises(exceptions.GuessParamsError):
+            fs.fit_spectra(curve, edge_filter=False)
+    
     def test_particle_series(self):
         store = MockStore()
         fake_data = np.random.rand(4, 256, 256)
@@ -441,6 +462,7 @@ class XanesFramesetTest(TestCase):
         np.testing.assert_almost_equal(result.values, derivative, decimal=3)
     
     def test_nonenergy_spectrum(self):
+
         """If the frames aren't in energy order"""
         store = MockStore()
         # Prepare fake energy data

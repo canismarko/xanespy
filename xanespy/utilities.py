@@ -49,6 +49,23 @@ Extent = namedtuple('extent', ('left', 'right', 'bottom', 'top'))
 
 CPU_COUNT = multiprocessing.cpu_count()
 
+def nproc(ncore):
+    """How many processes to use in the pool with n cores.
+    
+    If None, all cores will be used. If negative, the number of cores
+    will be subtracted from the total CPU count. Eg. ``ncore=-2`` on
+    an 8-core machine will spawn 6 processes.
+    
+    """
+    # Determine how many processes to spawn
+    if ncore is None:
+        nproc = CPU_COUNT
+    elif ncore < 0:
+        nproc = np.max([CPU_COUNT + ncore, 1])
+    else:
+        nproc = ncore
+
+
 def foreach(f, l, threads=CPU_COUNT, return_=False):
     """
     Apply f to each element of l, in parallel

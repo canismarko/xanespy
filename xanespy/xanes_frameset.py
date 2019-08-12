@@ -50,10 +50,10 @@ import jinja2 as j2
 import tqdm
 
 from .utilities import (prog, xycoord, Pixel, Extent, pixel_to_xy,
-                       get_component, broadcast_reverse, xy_to_pixel)
+                        get_component, broadcast_reverse, xy_to_pixel, nproc)
 from .txmstore import TXMStore
 from . import plots
-from .fitting import LinearCombination, fit_spectra, prepare_p0, KCurve, find_whiteline
+from .fitting import LinearCombination, fit_spectra, prepare_p0, guess_p0, KCurve, find_whiteline
 from . import exceptions
 from . import xanes_math as xm
 from .edges import Edge
@@ -1102,32 +1102,14 @@ class XanesFrameset():
         quiet : bool, optional
           If true, no progress bar will be displayed.
         ncore : int, optional
-          How many processes to use in the pool. If omitted, all cores
-          will be used. If negative, the number of cores will be
-          subtracted from the total CPU count. Eg. ``ncore=-2`` on an
-          8-core machine will use 6 cores.
+          How many processes to use in the pool. See
+          :func:`~xanespy.utilities.nproc` for more details.
         
         """
-        # Determine how many processes to spawn
-        if ncore is None:
-            nproc = mp.cpu_count()
-        elif ncore < 0:
-            nproc = np.max([mp.cpu_count() + ncore, 1])
-        else:
-            nproc = ncore
         # Prepare intial guess at parameters
         k_edge = KCurve(energies=self.energies())
-        spectra = self.spectra()
-        if not quiet:
-            spectra = tqdm.tqdm(spectra, desc="Guessing initial params", unit='px')
-        guess_params = functools.partial(k_edge.guess_params, edge=self.edge,
-                                         named_tuple=False)
-        with mp.Pool(nproc) as pool:
-            p0 = np.array(pool.map(guess_params, spectra, chunksize=2000))
-        p0 = p0.reshape((self.num_timesteps, *self.frame_shape(), -1))
-        p0 = np.moveaxis(p0, -1, 1)
         # Fit all the spectra
-        self.fit_spectra(k_edge, p0, quiet=quiet)
+        self.fit_spectra(k_edge, quiet=quiet, ncore=ncore)
         # Use higher energy precision to calculate whitelines
         new_Es = np.linspace(*self.edge.edge_range, num=200)
         kcurve = KCurve(new_Es)
@@ -1141,7 +1123,7 @@ class XanesFrameset():
         if not quiet:
             params = tqdm.tqdm(params, desc="Calculating whitelines", unit='px', total=params.shape[0])
         # Process all the spectra
-        with mp.Pool(nproc) as pool:
+        with mp.Pool(nproc(ncore)) as pool:
             _find_whiteline = functools.partial(find_whiteline, curve=kcurve)
             whitelines = pool.map(_find_whiteline, params, chunksize=1000)
         # Return to the original shape
@@ -1155,11 +1137,10 @@ class XanesFrameset():
             except AttributeError:
                 pass
     
-    def fit_spectra(self, func, p0, pnames=None, name=None,
+    def fit_spectra(self, func, p0=None, pnames=None, name=None,
                     edge_filter=True, nonnegative=False,
                     component='real', representation='optical_depths',
-                    dtype=None, quiet=False):
-
+                    dtype=None, quiet=False, ncore=None):
         """Fit a given function to the spectra at each pixel.
         
         The fit parameters will be saved in the HDF dataset
@@ -1168,16 +1149,20 @@ class XanesFrameset():
         
         Parameters
         ----------
-        func : callable, str
+        func : callable, optional
           The function that will be used for fitting. It should match
           ``func(p0, p1, ...)`` where p0, p1, etc are the fitting
           parameters. Some useful functions can be found in the
-          ``xanespy.fitting`` module.
-        p0 : np.ndarray
+          ``xanespy.fitting`` module. If not given, a default curve
+          based on the XAS edge will be used.
+        p0 : np.ndarray, optional
           Initial guess for parameters, with similar dimensions to a
           frameset. Example, fitting 3 sources (plus offset) for a (1,
           40, 256, 256) 40-energy frameset requires p0 to be (1, 4,
-          256, 256).
+          256, 256). If not given, default parameters will be guessed
+          based on the curve if the curve has a *guess_params* method
+          matching the call signature of
+          :meth:`~xanespy.fitting.Curve.guess_params`.
         pnames : str, optional
           An object with __str__ that will be saved as metadata giving
           the parameters' names.
@@ -1203,6 +1188,9 @@ class XanesFrameset():
           function will also check for ``func.dtype``.
         quiet : bool, optional
           Whether to suppress the progress bar, etc.
+        ncore : int, optional
+          How many processes to use in the pool. See
+          :func:`~xanespy.utilities.nproc` for more details.
         
         Returns
         -------
@@ -1210,6 +1198,13 @@ class XanesFrameset():
           The fit parameters (as frames) for each source.
         residuals : numpy.ndarray
           Residual error after fitting, as maps.
+        
+        Raises
+        ------
+        GuessParamsError
+          If the *func* callable doesn't have a *guess_params*
+          method. This can be solved by either using a callable with a
+          *guess_params()* method, or explicitly supplying *p0*.
         
         """
         # Get data
@@ -1220,6 +1215,20 @@ class XanesFrameset():
         # Get the default curve name if necessary
         if name is None:
             name = getattr(func, 'name', 'fit')
+        # Make a default set of guess for params
+        if p0 is None:
+            spectra = self.spectra()
+            try:
+                p0 = guess_p0(func, spectra, edge=self.edge, quiet=quiet, ncore=ncore)
+            except NotImplementedError:
+                raise exceptions.GuessParamsError(
+                    "Fitting function {} has no ``guess_params`` method. "
+                    "Initial parameters *p0* is required.".format(func)) from None
+            print(p0.shape)
+            p0 = p0.reshape((self.num_timesteps, *self.frame_shape(), -1))
+            print(p0.shape)
+            p0 = np.moveaxis(p0, -1, 1)
+            print(p0.shape)
         # Make sure p0 is the right shape
         if p0.ndim < 4:
             p0 = prepare_p0(p0, self.frame_shape(), self.num_timesteps)
@@ -1236,10 +1245,11 @@ class XanesFrameset():
             spectra = spectra.astype(dtype)
             p0 = p0.astype(dtype)
         # Perform the actual fitting
+        print(spectra.shape, p0.shape)
         params, residuals = fit_spectra(observations=spectra,
                                         func=func, p0=p0,
                                         nonnegative=nonnegative,
-                                        quiet=quiet)
+                                        quiet=quiet, ncore=ncore)
         # Reshape to have maps of LC source weight
         params = params.reshape((*map_shape, -1))
         params = np.moveaxis(params, -1, 1)

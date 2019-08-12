@@ -35,6 +35,14 @@ spectrum:
 
 .. figure:: images/l3-curve.svg
 
+.. note:: If no *p0* is given to
+    :meth:`~xanespy.xanes_frameset.XanesFrameset.fit_spectra`, xanespy
+    will attempt to guess starting parameters. Not every callable in
+    ``xanespy.fitting`` supports this feature. If trying to fit
+    spectra without *p0* raises a
+    :class:`~xanespy.exceptions.GuessParamsError`, then *p0* is
+    required.
+
 Linear Combination Fitting
 --------------------------
 
@@ -81,13 +89,16 @@ and given to the
 :py:meth:`~xanespy.xanes_frameset.XanesFrameset.fit_spectra` method as
 described :ref:`below<roll-your-own>`.
 
-Fitting K- and L- Spectral Edges
---------------------------------
+Shortcuts for Common Use-Cases
+------------------------------
 
-A common use case is to fit the spectra with either a K-edge or L-edge
-shape. This can be done easily with the
-:py:meth:`~xanespy.xanes_frameset.fit_l_edge` or
-:py:meth:`~xanespy.xanes_frameset.fit_k_edge` methods.
+The :py:class:`~xanespy.xanes_frameset.XanesFrameset` class has
+several shortcuts for common fitting tasks. Fitting the spectra with a
+K-edge spectra can be done easily with the
+:py:meth:`~xanespy.xanes_frameset.XanesFrameset.fit_kedge`
+method. Linear combinations of existing functions can be easily fit
+using
+:py:meth:`~xanespy.xanes_frameset.XanesFrameset.fit_linear_combinations`.
 
 .. _roll-your-own:
 
@@ -124,15 +135,23 @@ method. This is illustrated below by fitting a variable number of sine
 waves, making a sort of horribly inefficient fourier transform. Since
 the number of sine waves is not known at import-time, the use of
 star-arguments makes the result more dynamic. Adding the
-``param_names`` saves us the trouble of passing it in every time.
+``param_names`` saves us the trouble of passing it in every
+time. Providing a ``guess_params`` method allows
+:meth:`~xanespy.xanes_frameset.XanesFrameset.fit_spectra`` to
+automatically guess the parameters for each spectrum before fitting.
 
 .. code:: python
-
+    
+    import random
+    
+    import xanespy as xp
+    import numpy as np
+    
     # Define a new callable for passing to the fitting function
-    class SineCurves():
+    class SineCurves(xp.fitting.Curve):
         def __init__(self, theta, num_sines=1):
 	    self.theta = theta
-	    self.num_sines = num_sinces
+	    self.num_sines = num_sines
 	
 	def __call__(self, *params):
 	    out = np.zeros_like(self.theta)
@@ -153,12 +172,22 @@ star-arguments makes the result more dynamic. Adding the
 		names.append('phase%d' % num)
 	    return names
 
+	def guess_params(self, intensities, edge, named_tuple=True):
+            # To start with, guess sensible parameters for each sine wave
+            p0 = []
+            for i in range(self.num_sines):
+                p0 += [1, 2*i+1, 0]
+            # Convert to named tuple for user convenience (optional)
+            if named_tuple:
+                Params = namedtuple('Params', self.param_names)
+                p0 = Params(*p0)
+            else:
+                p0 = tuple(p0)
+            return p0
+
     # Create the actual callable object
     theta = np.linspace(0, 2*pi, num=100)
-    sines = SineCurves(theta=theta, num_curves=3)
-    # Load the data
+    sines = SineCurves(theta=theta, num_sines=3)
+    # Load the data and do the fitting
     fs = xp.XanesFrameset(...)
-    p0 = []
-    for i in range(3):
-        p0.append(1, 2*i+1, 0)
     fs.fit_spectra(func=sines, p0=p0, name='sine_curve_fit')

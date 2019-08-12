@@ -63,7 +63,7 @@ class FittingTestCase(TestCase):
     def test_L3_curve(self):
         # Prepare input data
         Es = np.arange(855, 871, 0.25)
-        l3 = L3Curve(energies=Es, num_peaks=1)
+        l3 = L3Curve(x=Es, num_peaks=1)
         # confirm right number of param names
         names = ('height_0', 'center_0', 'sigma_0',
                  'sig_height', 'sig_center', 'sig_sigma',
