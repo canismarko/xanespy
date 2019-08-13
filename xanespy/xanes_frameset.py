@@ -962,16 +962,15 @@ class XanesFrameset():
             else:
                 series = spectrum
         return series
-    
+
     def plot_spectrum(self, ax=None, pixel=None,
                       norm_range=None, normalize=False,
                       representation="optical_depths",
-                      show_fit=False, frame_filter=False,
-                      frame_filter_kw: Mapping={},
+                      show_fit=False, edge_filter=False,
                       linestyle=":", timeidx=0,
                       *args, **kwargs):
         """Calculate and plot the xanes spectrum for this field-of-view.
-        
+
         Arguments
         ---------
         ax : optional
@@ -984,14 +983,12 @@ class XanesFrameset():
         show_fit : bool, optional
           If truthy, will use the edge object to fit the data and plot
           the resulting fit line.
-        frame_filter : bool, optional
-          If truthy, will allow the User to define an area filter type
-          in the frame_filter_kw **kwargs
-        frame_filter_kw : dict
-            kwags to be passed into xp.XanesFrameset.frame_mask()
+        edge_filter : bool, optional
+          If truthy, will only include those values that show a strong
+          absorbtion jump across this edge.
         args, kwargs : optional
           Passed to plotting functions.
-        
+
         """
         if show_fit:
             raise NotImplementedError("`show_fit` parameter coming soon")
@@ -1000,8 +997,7 @@ class XanesFrameset():
         else:
             norm = None
         spectrum = self.spectrum(pixel=pixel,
-                                 frame_filter=frame_filter,
-                                 frame_filter_kw=frame_filter_kw,
+                                 edge_filter=edge_filter,
                                  representation=representation,
                                  index=timeidx)
         edge = self.edge
@@ -1175,19 +1171,17 @@ class XanesFrameset():
                 store.whiteline_fit.attrs['frame_source'] = 'optical_depths'
             except AttributeError:
                 pass
-    
-    def fit_spectra(self, func, p0=None, pnames=None, name=None,
-                    frame_filter=True, frame_filter_kw: Mapping={},
-                    nonnegative=False, component='real',
-                    representation='optical_depths', dtype=None,
-                    quiet=False, ncore=None):
 
+    def fit_spectra(self, func, p0=None, pnames=None, name=None,
+                    edge_filter=True, nonnegative=False,
+                    component='real', representation='optical_depths',
+                    dtype=None, quiet=False, ncore=None):
         """Fit a given function to the spectra at each pixel.
-        
+
         The fit parameters will be saved in the HDF dataset
         "{name}_params" based on the parameter ``name``. RMS residuals
         for each pixel will be saved in "{name}_residuals".
-        
+
         Parameters
         ----------
         func : callable, optional
@@ -1212,10 +1206,8 @@ class XanesFrameset():
           subsequent fits against the same dataset to be saved. If
           ``None``, we will attempt look for ``func.name``, then
           lastly we'll use "fit".
-        frame_filter : bool, optional
-          If true, only compute pixels that pass the frame_mask.
-        frame_filter_kw : dict, optional
-          **kwargs to be passed into xp.XaneFrameset.frame_mask()
+        edge_filter : bool, optional
+          If true, only compute pixels that pass an edge filter.
         nonnegative : bool, optional
           If true (default), negative parameters will be avoided. This
           can also be a tuple to allow for fine-grained control. Eg:
@@ -1234,27 +1226,27 @@ class XanesFrameset():
         ncore : int, optional
           How many processes to use in the pool. See
           :func:`~xanespy.utilities.nproc` for more details.
-        
+
         Returns
         -------
         params : numpy.ndarray
           The fit parameters (as frames) for each source.
         residuals : numpy.ndarray
           Residual error after fitting, as maps.
-        
+
         Raises
         ------
         GuessParamsError
           If the *func* callable doesn't have a *guess_params*
           method. This can be solved by either using a callable with a
           *guess_params()* method, or explicitly supplying *p0*.
-        
+
         """
         # Get data
         with self.store() as store:
             frames = get_component(store.get_dataset(representation), component)
-        if frame_filter:
-            frames[..., self.frame_mask(**frame_filter_kw)] = np.nan
+        if edge_filter:
+            frames[..., self.edge_mask()] = np.nan
         # Get the default curve name if necessary
         if name is None:
             name = getattr(func, 'name', 'fit')
@@ -1307,7 +1299,7 @@ class XanesFrameset():
         with self.store('r+') as store:
             store.replace_dataset("%s_parameters" % name, params,
                                   context='frameset',
-                                  attrs={'parameter_names' : str(pnames)})
+                                  attrs={'parameter_names': str(pnames)})
             store.replace_dataset("%s_residuals" % name, residuals,
                                   context='map',
                                   attrs={'frame_source': representation})
