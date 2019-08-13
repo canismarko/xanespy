@@ -1145,6 +1145,6 @@ def contrast_mask(frames: np.ndarray, sensitivity: float = 1, min_size=0, frame_
     if min_size > 0:
         mask = morphology.opening(mask, selem=morphology.disk(min_size))
 
-    return mask
+    return ~mask
 
 
