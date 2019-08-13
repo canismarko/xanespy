@@ -966,7 +966,8 @@ class XanesFrameset():
     def plot_spectrum(self, ax=None, pixel=None,
                       norm_range=None, normalize=False,
                       representation="optical_depths",
-                      show_fit=False, edge_filter=False,
+                      show_fit=False, frame_filter=False,
+                      frame_filter_kw: Mapping={},
                       linestyle=":", timeidx=0,
                       *args, **kwargs):
         """Calculate and plot the xanes spectrum for this field-of-view.
@@ -983,9 +984,11 @@ class XanesFrameset():
         show_fit : bool, optional
           If truthy, will use the edge object to fit the data and plot
           the resulting fit line.
-        edge_filter : bool, optional
-          If truthy, will only include those values that show a strong
-          absorbtion jump across this edge.
+        frame_filter : bool, optional
+          If truthy, will allow the User to define an area filter type
+          in the frame_filter_kw **kwargs
+        frame_filter_kw : dict
+            kwags to be passed into xp.XanesFrameset.frame_mask()
         args, kwargs : optional
           Passed to plotting functions.
         
@@ -997,7 +1000,8 @@ class XanesFrameset():
         else:
             norm = None
         spectrum = self.spectrum(pixel=pixel,
-                                 edge_filter=edge_filter,
+                                 frame_filter=frame_filter,
+                                 frame_filter_kw=frame_filter_kw,
                                  representation=representation,
                                  index=timeidx)
         edge = self.edge
