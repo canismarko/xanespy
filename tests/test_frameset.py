@@ -348,7 +348,7 @@ class XanesFramesetTest(TestCase):
         store.energies = Es
         fs = self.create_frameset(store=store)
         params, residuals = fs.fit_spectra(line, p0=np.zeros((1, 2, 16, 16)),
-                                           nonnegative=True, edge_filter=False,
+                                           nonnegative=True, frame_filter=False,
                                            pnames=('slope', 'intercept'), quiet=True)
         self.assertFalse(np.any(params<0))
         self.assertEqual(params.shape, (1, 2, 16, 16))
@@ -375,11 +375,11 @@ class XanesFramesetTest(TestCase):
         fs = self.create_frameset(store=store, edge=edge)
         x = np.linspace(0, 1, num=6)
         line = fitting.Line(x)
-        fs.fit_spectra(line, edge_filter=False)
+        fs.fit_spectra(line, frame_filter=False)
         # Make sure an exception is raised if guess_params is not defined
         curve = fitting.Curve(x)
         with self.assertRaises(exceptions.GuessParamsError):
-            fs.fit_spectra(curve, edge_filter=False)
+            fs.fit_spectra(curve, frame_filter=False)
     
     def test_particle_series(self):
         store = MockStore()

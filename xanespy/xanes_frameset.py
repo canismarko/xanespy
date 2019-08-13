@@ -1177,9 +1177,11 @@ class XanesFrameset():
                 pass
     
     def fit_spectra(self, func, p0=None, pnames=None, name=None,
-                    edge_filter=True, nonnegative=False,
-                    component='real', representation='optical_depths',
-                    dtype=None, quiet=False, ncore=None):
+                    frame_filter=True, frame_filter_kw: Mapping={},
+                    nonnegative=False, component='real',
+                    representation='optical_depths', dtype=None,
+                    quiet=False, ncore=None):
+
         """Fit a given function to the spectra at each pixel.
         
         The fit parameters will be saved in the HDF dataset
@@ -1210,8 +1212,10 @@ class XanesFrameset():
           subsequent fits against the same dataset to be saved. If
           ``None``, we will attempt look for ``func.name``, then
           lastly we'll use "fit".
-        edge_filter : bool, optional
-          If true, only compute pixels that pass an edge filter.
+        frame_filter : bool, optional
+          If true, only compute pixels that pass the frame_mask.
+        frame_filter_kw : dict, optional
+          **kwargs to be passed into xp.XaneFrameset.frame_mask()
         nonnegative : bool, optional
           If true (default), negative parameters will be avoided. This
           can also be a tuple to allow for fine-grained control. Eg:
@@ -1249,8 +1253,8 @@ class XanesFrameset():
         # Get data
         with self.store() as store:
             frames = get_component(store.get_dataset(representation), component)
-        if edge_filter:
-            frames[..., self.edge_mask()] = np.nan
+        if frame_filter:
+            frames[..., self.frame_mask(**frame_filter_kw)] = np.nan
         # Get the default curve name if necessary
         if name is None:
             name = getattr(func, 'name', 'fit')
