@@ -673,12 +673,12 @@ class QtFramesetPresenter(QtCore.QObject):
             mean_spectrum = self.frameset.spectrum(
                 index=self.active_timestep,
                 pixel=None,
-                edge_filter=self.use_edge_mask,
+                frame_filter=self.use_edge_mask,
                 representation=self.active_representation)
             map_spectrum = self.frameset.spectrum(
                 index=self.active_timestep,
                 pixel=self._map_pixel,
-                edge_filter=self.use_edge_mask,
+                frame_filter=self.use_edge_mask,
                 representation=self.active_representation)
         except exceptions.GroupKeyError:
             pass
@@ -687,6 +687,8 @@ class QtFramesetPresenter(QtCore.QObject):
             energies = map_spectrum.index
             map_spectrum = get_component(map_spectrum, self.active_map_component)
             map_spectrum = pd.Series(map_spectrum, index=energies)
+            mean_spectrum = get_component(mean_spectrum, self.active_frame_component)
+            mean_spectrum = pd.Series(mean_spectrum, index=energies)
             # Get the fitted spectrum if available
             if self.show_spectrum_fit:
                 log.warning('Plotting of spectrum fits not implemented.')

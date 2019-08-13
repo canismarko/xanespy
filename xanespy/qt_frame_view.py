@@ -265,6 +265,8 @@ class QtFrameView(QtCore.QObject):  # pragma: no cover
     def connect_presenter(self, presenter):
         presenter.frame_data_changed.connect(self.animate_frames)
         presenter.frame_data_changed.connect(self.set_status_metadata)
+        presenter.frame_data_changed.connect(self.toggle_controls)
+        presenter.frame_data_cleared.connect(self.toggle_controls)
         presenter.frame_data_changed.connect(self.draw_histogram)
         presenter.frame_data_cleared.connect(self.clear_axes)
         presenter.mean_spectrum_changed.connect(self.draw_spectrum)
@@ -298,12 +300,28 @@ class QtFrameView(QtCore.QObject):  # pragma: no cover
         self.file_opened.emit(filename)
         return filename
     
+    def status_labels(self):
+        """Gives a list of all status bar label widgets."""
+        widgets = [self.ui.lblShapeTitle, self.ui.lblShape,
+                   self.ui.lblDtypeTitle, self.ui.lblDtype,
+                   self.ui.lblEnergyTitle, self.ui.lblEnergy,
+                   self.ui.lblCursorTitle, self.ui.lblUnit, self.ui.lblCursor,
+                   self.ui.lblPixelTitle, self.ui.lblPixel, self.ui.lblValueTitle,
+                   self.ui.lblValue]
+        return widgets
+    
     def frame_controls(self):
         """Gives a list of all the UI buttons that are associated with
         changing the currently active frame."""
         widgets = [self.ui.btnFirst, self.ui.btnBack, self.ui.btnPlay,
                    self.ui.btnForward, self.ui.btnLast,
                    self.ui.sldPlaySpeed, self.ui.sldFrameSlider]
+        return widgets
+    
+    def frame_labels(self):
+        """Gives a list of non-interactive UI elements that are associated
+        with the current active frame."""
+        widgets = [self.ui.lblIndex]
         return widgets
     
     def plotting_controls(self):
@@ -314,11 +332,33 @@ class QtFrameView(QtCore.QObject):  # pragma: no cover
                    self.ui.btnApplyLimits, self.ui.btnResetLimits]
         return widgets
     
+    def plotting_labels(self):
+        """Gives a list of non-interactive UI elements that are associated
+        with how the frameset is plotted."""
+        widgets = [self.ui.lblTimestep, self.ui.lblComponent,
+                   self.ui.lblCmap, self.ui.lblVMin, self.ui.lblVMax]
+        return widgets
+    
     def move_slider(self, val):
         curr = self.ui.sldFrameSlider.value()
         log.debug("Moving slider %d -> %d", curr, val)
         self.ui.sldFrameSlider.setValue(val)
         self.ui.lblIndex.setText(str(val))
+    
+    def toggle_controls(self, data=None, energies=None, norm=None, cmap=None):
+        """Enable or disable the UI controls depending on whether there are data.
+        
+        If the first argument *data* is None, then controls will be
+        disable, if *data* is not None, then controls will be
+        enabled..
+        
+        """
+        is_disabled = data is None
+        controls = (self.frame_controls() + self.plotting_controls() +
+                    self.status_labels() + self.plotting_labels() +
+                    self.frame_labels())
+        for ctrl in controls:
+            ctrl.setDisabled(is_disabled)
     
     def set_busy_mode(self, status):
         """Either enable or disable the busy mode.
@@ -333,7 +373,9 @@ class QtFrameView(QtCore.QObject):  # pragma: no cover
         
         """
         # Disable all the controls so the user can't interact
-        controls = self.frame_controls() + self.plotting_controls()
+        controls = (self.frame_controls() + self.plotting_controls() +
+                    self.status_labels() + self.plotting_labels() +
+                    self.frame_labels())
         for ctrl in controls:
             ctrl.setDisabled(status)
         # Use the busy cursor for the window

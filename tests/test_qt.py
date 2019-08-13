@@ -228,6 +228,32 @@ class FrameViewTestCase(QtTestCase):
         view.set_busy_mode(False)
         view.window.unsetCursor.assert_called_with()
         view.ui.statusbar.clearMessage.assert_called_once_with()
+    
+    def test_toggle_controls(self):
+        view = QtFrameView()
+        view.ui = mock.MagicMock()
+        view.window = mock.MagicMock()
+        # Check that controls are disabled
+        is_disabled = True
+        view.toggle_controls(None)
+        view.ui.btnFirst.setDisabled.assert_called_once_with(is_disabled)
+        view.ui.btnBack.setDisabled.assert_called_once_with(is_disabled)
+        view.ui.btnPlay.setDisabled.assert_called_once_with(is_disabled)
+        view.ui.btnForward.setDisabled.assert_called_once_with(is_disabled)
+        view.ui.btnLast.setDisabled.assert_called_once_with(is_disabled)
+        view.ui.sldPlaySpeed.setDisabled.assert_called_once_with(is_disabled)
+        view.ui.sldFrameSlider.setDisabled.assert_called_once_with(is_disabled)
+        view.ui.cmbTimestep.setDisabled.assert_called_once_with(is_disabled)
+        view.ui.cmbComponent.setDisabled.assert_called_once_with(is_disabled)
+        view.ui.cmbTimestep.setDisabled.assert_called_once_with(is_disabled)
+        view.ui.cmbCmap.setDisabled.assert_called_once_with(is_disabled)
+        view.ui.spnVMin.setDisabled.assert_called_once_with(is_disabled)
+        view.ui.spnVMax.setDisabled.assert_called_once_with(is_disabled)
+        view.ui.btnApplyLimits.setDisabled.assert_called_once_with(is_disabled)
+        view.ui.btnResetLimits.setDisabled.assert_called_once_with(is_disabled)
+        view.ui.lblShapeTitle.setDisabled.assert_called_once_with(is_disabled)
+        view.ui.lblIndex.setDisabled.assert_called_once_with(is_disabled)
+        view.ui.lblTimestep.setDisabled.assert_called_once_with(is_disabled)
 
 
 @skipUnless(HAS_PYQT, "PyQt5 required")
@@ -818,6 +844,7 @@ class PresenterTestCase(QtTestCase):
         presenter.update_spectra()
         kwargs = fs.spectrum.call_args[1]
         self.assertEqual(kwargs['pixel'], (0, 0))
+        self.assertEqual(kwargs['frame_filter'], False)
     
     def test_change_map_limits(self):
         presenter = self.create_presenter()
