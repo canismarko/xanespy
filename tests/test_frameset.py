@@ -431,7 +431,7 @@ class XanesFramesetTest(TestCase):
         with warnings.catch_warnings(record=True) as w:
             warnings.resetwarnings()
             np.testing.assert_equal(fs.edge_mask(), np.zeros(shape=(128, 128)))
-            self.assertEqual(len(w), 1, 'Edge warning not emitted.')
+            self.assertEqual(len(w), 2, 'Edge warning not emitted.')
             np.testing.assert_equal(fs.edge_mask().shape, (128, 128))
             # Check that the new edge mask is a boolean array
             self.assertEqual(fs.edge_mask().dtype, bool)
@@ -762,6 +762,22 @@ class XanesFramesetTest(TestCase):
                            groupname="ssrl-test-data")
         self.assertEqual(str(fs), 'ssrl-test-data')
 
+    def test_frame_mask(self):
+        store = MockStore()
+        store.has_dataset = mock.MagicMock(return_value=False)
+        store.intensities = np.random.rand(128, 128)
+        store.optical_depths = np.random.rand(2, 3, 128, 128)
+        store.energies = np.array([[8250, 8325, 8360], [8250, 8325, 8360]])
+        fs = self.create_frameset(store=store)
+        # Check that the new edge mask has same shape as intensities
+        with warnings.catch_warnings(record=True) as w:
+            warnings.resetwarnings()
+            np.testing.assert_equal(fs.frame_mask(), np.zeros(shape=(128, 128)))
+            self.assertEqual(len(w), 1, 'Edge warning not emitted.')
+            np.testing.assert_equal(fs.frame_mask().shape, (128, 128))
+            # Check that the new edge mask is a boolean array
+            self.assertEqual(fs.frame_mask().dtype, bool)
+
 
 class OldXanesFramesetTest(XanespyTestCase):
     """Set of python tests that work on full framesets and require data
@@ -831,7 +847,6 @@ class OldXanesFramesetTest(XanespyTestCase):
         with self.frameset.store() as store:
             new_shape = store.optical_depths.shape
         self.assertEqual(new_shape, (1, 2, 1023, 1023))
-
 
 # Launch the tests if this is run as a script
 if __name__ == '__main__':

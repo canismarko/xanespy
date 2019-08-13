@@ -36,7 +36,7 @@ import subprocess
 import warnings
 import multiprocessing as mp
 import inspect
-from typing import Any, List, Dict, Mapping, Sequence, Iterable
+from typing import Any, List, Dict, Mapping, Sequence, Iterable, Tuple
 
 import pandas as pd
 from matplotlib import pyplot, cm, pyplot as plt
@@ -188,7 +188,7 @@ class XanesFrameset():
         data
         
         """
-        self.edge_mask.cache_clear()
+        self.frame_mask.cache_clear()
         self.frames.cache_clear()
         self.map_data.cache_clear()
         self.energies.cache_clear()
@@ -758,7 +758,7 @@ class XanesFrameset():
             ax_unit = store.pixel_unit
         data = get_component(data, component)
         artist = ax.imshow(data,
-                           extent=self.extent(representation='optical_depths'),
+                           extent=self.extent(representation=representation),
                            cmap=cmap, *args, **kwargs)
         # Decorate the axes
         ax.set_xlabel(ax_unit)
@@ -810,7 +810,8 @@ class XanesFrameset():
             spectra = np.reshape(ODs, (-1, self.num_energies))
         return spectra
     
-    def line_spectra(self, xy0, xy1, representation="optical_depths",
+    def line_spectra(self, xy0: Tuple[int, int], xy1: Tuple[int, int],
+                     representation="optical_depths",
                      timestep=0, edge_filter=False, edge_filter_kw={}):
         """Return an array of spectra on a line between two points.
         
@@ -875,7 +876,7 @@ class XanesFrameset():
         names = [n.strip() for n in names]
         return names
     
-    def spectrum(self, pixel=None, edge_filter=False,
+    def spectrum(self, pixel=None, edge_filter=False, edge_filter_kw: Mapping={},
                  representation="optical_depths", index=0,
                  derivative=0):
         """Collapse the frameset down to an energy spectrum.
@@ -898,6 +899,10 @@ class XanesFrameset():
           spectrum. If "inverse" is given, then the edge jump filter
           is logically not-ted and calculated with a more
           conservative threshold.
+        edge_filter_kw
+          Additional arguments to be used for producing an edge_mask.
+           See :meth:`~xanespy.xanes_frameset.XanesFrameset.edge_mask`
+           for possible values.
         representation : str, optional
           What kind of data to use for creating the spectrum. This
           will be passed to TXMstore.get_dataset()
@@ -929,7 +934,7 @@ class XanesFrameset():
                 if edge_filter:
                     # Filter out background pixels using edge mask
                     try:
-                        mask = self.edge_mask()
+                        mask = self.edge_mask(**edge_filter_kw)
                     except exceptions.XanesMathError:
                         log.error("Could not find pre-edge energies, ignoring mask.")
                     else:
@@ -1009,14 +1014,21 @@ class XanesFrameset():
         if edge is not None:
             edge.annotate_spectrum(ax=ax)
         return scatter
-    
+
+    def edge_mask(self, *args, **kwargs):
+        warnings.warn("edge_mask is deprecated, use frame_mask() instead.")
+        return self.frame_mask(mask_type='edge', *args, **kwargs)
+
     @functools.lru_cache()
-    def edge_mask(self, sensitivity: float=1, min_size: int=0) -> np.ndarray:
-        """Calculate a mask for what is likely active material at this
-        edge.
-        
+    def frame_mask(self, mask_type=None, sensitivity: float = 1, min_size: int = 0, frame_idx='mean') -> np.ndarray:
+        """Calculate a mask for what is likely active material based on either
+        the edge or the contrast of the first time index.
+
         Parameters
         ----------
+        mask_type : str, bool
+         Sets which type of mask to apply to the frame(s)
+         (e.g) 'edge_maks', 'contrast_mask', None
         sensitivity : optional
           A multiplier for the otsu value to determine the actual
           threshold. Higher values give better statistics, but might
@@ -1025,20 +1037,42 @@ class XanesFrameset():
         min_size : optional
           Objects below this size (in pixels) will be removed. Passing
           zero (default) will result in no effect.
-        
+        frame_idx : tuple, optional
+          A tuple of (time_index, energy_index) used to pass into
+          xp.xanes_math.contrast_mask(). Allows User to create a
+          contrast map from an individual (timestep - energy) rather
+          than the mean image.
+
         """
         with self.store() as store:
             mask_is_possible = store.has_dataset('optical_depths') and self.edge is not None
-            is_cached = store.has_dataset('edge_mask')
-            if is_cached:
-                mask = store.edge_mask[0]
-            elif mask_is_possible:
+            if mask_is_possible:
                 # Check for complex values and convert to optical_depths only
                 ODs = np.real(store.optical_depths[()])
-                mask = self.edge.mask(frames=ODs,
-                                      energies=store.energies,
-                                      sensitivity=sensitivity,
-                                      min_size=min_size)
+
+                if mask_type == 'contrast':
+                    # Create mask based on contrast maps
+                    mask = xm.contrast_mask(frames=ODs,
+                                        sensitivity=sensitivity,
+                                        min_size=min_size,
+                                        frame_idx=frame_idx)
+
+
+                elif mask_type == 'edge':
+                    # Create mask based on edge jump
+                    mask = self.edge.mask(frames=ODs,
+                                          energies=store.energies,
+                                          sensitivity=sensitivity,
+                                          min_size=min_size)
+
+                elif not mask_type:
+                    # Create blank mask array
+                    mask = np.zeros(shape=store.intensities.shape[-2:], dtype='bool')
+
+                else:
+                    # Show warning if all of these fail
+                    warning.warn('Incorrect User input or invalid frames() dimensions')
+
             else:
                 # Store has no optical_depth data so just return a blank array
                 mask = np.zeros(shape=store.intensities.shape[-2:], dtype='bool')
@@ -1046,7 +1080,7 @@ class XanesFrameset():
                               'Could not find either optical_depth frames '
                               'or `edge` attribute.')
         return mask
-    
+
     def fit_linear_combinations(self, sources, component='real', name='linear_combination',
                                 representation="optical_depths", *args, **kwargs):
         """Take a set of sources and fit the spectra with them.
@@ -1542,9 +1576,11 @@ class XanesFrameset():
         if method.lower() == 'nmf':
             signals, weights = xm.extract_signals_nmf(
                 spectra=spectra[mask.flatten()], n_components=n_components)
+
         elif method.lower() == 'pca':
             signals, weights = xm.extract_signals_pca(
                 spectra=spectra[mask.flatten()], n_components=n_components)
+
         else:
             raise ValueError('Recieved Invalid Method : {method}'.format(method=method))
         # Reshape weights into frame dimensions
@@ -2011,3 +2047,4 @@ class XanesFrameset():
         # Save complex image as refractive index (real part is phase change)
         with self.store('r+') as store:
             store.optical_depths = ODs
+
