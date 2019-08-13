@@ -875,7 +875,7 @@ class XanesFrameset():
         names = name_str[1:-1].split(',')
         names = [n.strip() for n in names]
         return names
-    
+
     def spectrum(self, pixel=None, frame_filter=False, frame_filter_kw: Mapping={},
                  representation="optical_depths", index=0,
                  derivative=0):
