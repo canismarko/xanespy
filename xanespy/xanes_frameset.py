@@ -979,8 +979,8 @@ class XanesFrameset():
         pixel : 2-tuple, optional
           Coordinates of a specific pixel on the image to plot.
         normalize : bool, optional
-          If truthy, will set the pre-edge at zero and the post-edge
-          at 1.
+          If truthy, will normalize the spectrum based on the behavior
+          of the XAS absorbance edge.
         show_fit : bool, optional
           If truthy, will use the edge object to fit the data and plot
           the resulting fit line.

@@ -87,6 +87,9 @@ class Edge():
     def mask(self, frames, *args, **kwargs):
         return np.zeros(shape=frames.shape[-2:])
 
+    def normalize(self, *args, **kwargs):
+        raise NotImplementedError()
+
 
 class LEdge(Edge):
     """An X-ray absorption K-edge corresponding to a 2s or 2p
