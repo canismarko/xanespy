@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# Copyright © 2017 Mark Wolf
+# Copyright © 2017 Mark Wolfman
 #
 # This file is part of Xanespy.
 #
@@ -17,15 +17,14 @@
 # You should have received a copy of the GNU General Public License
 # along with Xanespy. If not, see <http://www.gnu.org/licenses/>.
 
-"""A collection of callables that can be used for fitting spectra
-against."""
+"""A collection of callables that can be used for fitting spectra."""
 
 
 from collections import namedtuple
 from multiprocessing import Pool
 import warnings
 import functools
-from typing import Tuple
+from typing import Tuple, Callable
 
 import numpy as np
 from scipy.optimize import leastsq
@@ -69,9 +68,9 @@ def guess_p0(func, spectra, edge=None, quiet=False, ncore=None):
     # Prepare a progress bar
     if not quiet:
         spectra = tqdm.tqdm(spectra, desc="Guessing initial params", unit='px')
-        guess_params = functools.partial(func.guess_params, edge=edge,
-                                         named_tuple=False)
     # Execute the parameters guessing with multiprocessing
+    guess_params = functools.partial(func.guess_params, edge=edge,
+                                     named_tuple=False)
     with Pool(nproc(ncore)) as pool:
         p0 = np.array(pool.map(guess_params, spectra, chunksize=2000))
     return p0
@@ -97,20 +96,43 @@ def prepare_p0(p0, frame_shape, num_timesteps=1):
     return out
 
 
-def error(guess, obs, func, nonnegative=False):
+def error(guess: np.ndarray, obs: np.ndarray, func: Callable, nonnegative: bool=False) -> np.ndarray:
+    """Compare observed and predicted signal and return the difference.
+    
+    Parameters
+    ----------
+    guess
+      Parameters given to *func* to calculate predicted data.
+    obs
+      Observed data
+    func
+      A function that accepts *guess* parameters and returns the predicted signal. It will be used as
+      ``predicted = func(*guess)``.
+    nonnegative
+      If truthy, negative parameters in *guess* will be heavily
+      punished. This can also be an array of booleans for each entry
+      in *guess* (eg ``(True, False, False, ...)``).
+    
+    Returns
+    -------
+    diff
+      An array of difference values between the predicted values and
+      the observed values.
+    
+    """
     # Prepare error function
     if np.any(np.logical_and(guess < 0, nonnegative)):
         # Punish negative values
         diff = np.empty_like(obs)
         diff[:] = 1e6
     else:
-        # Calculate error for this guess
-        predicted = func(*guess)
         # Compare predicted with observed values
+        predicted = func(*guess)
         diff = np.abs(obs - predicted)
     assert not np.any(np.isnan(diff))
     return diff
-    
+
+
 def _fit_sources(inputs, func, nonnegative=False):
     spectrum, p0 = inputs
     # Don't bother fitting if there's NaN values
@@ -134,7 +156,7 @@ def _fit_sources(inputs, func, nonnegative=False):
 
 def find_whiteline(params, curve):
     fit = curve(*params)
-    whiteline = curve.energies[np.argmax(fit)]
+    whiteline = curve.x[np.argmax(fit)]
     return whiteline
 
 
@@ -233,7 +255,11 @@ class Curve():
 
 class Line(Curve):
     def guess_params(self, intensities, edge, named_tuple=True):
-        return (1, 0)
+        # Get slope from first and last points
+        m = (intensities[-1] - intensities[0]) / (self.x[-1] - self.x[0])
+        # Extrapolate to y-intercept
+        b = intensities[0] - m * self.x[0]
+        return (m, b)
     
     def __call__(self, m, b):
         return m*self.x + b
@@ -396,9 +422,6 @@ class KCurve(Curve):
         'ga', 'gb', 'gc',  # Gaussian height, center and width
     )
     
-    def __init__(self, energies):
-        self.energies = energies
-    
     def guess_params(self, intensities, edge, named_tuple=True):
         """Guess initial starting parameters for a k-edge curve. This will
         give a rough estimate, appropriate for giving to the fit_kedge
@@ -424,17 +447,17 @@ class KCurve(Curve):
         
         """
         Is = np.array(intensities)
-        if Is.shape != self.energies.shape:
+        if Is.shape != self.x.shape:
             raise ValueError('Intensities and energies do not have the same shape: {} vs {}'
-                             ''.format(Is.shape, self.energies.shape))
+                             ''.format(Is.shape, self.x.shape))
         # Guess the overall scale and offset parameters
-        scale = k_edge_jump(frames=Is, energies=self.energies, edge=edge)
+        scale = k_edge_jump(frames=Is, energies=self.x, edge=edge)
         voffset = np.min(Is)
         # Estimate the edge position
         E0 = edge.E_0
         # Estimate the whiteline Gaussian parameters
         ga = 5 * (np.max(Is) - scale - voffset)
-        gb = self.energies[np.argmax(Is)] - E0
+        gb = self.x[np.argmax(Is)] - E0
         gc = 2  # Arbitrary choice, should improve this in the future
         # Construct the parameters tuple
         KParams = namedtuple('KParams', self.param_names)
@@ -449,7 +472,7 @@ class KCurve(Curve):
         # Named tuple to help keep track of parameters
         Params = namedtuple('Params', self.param_names)
         p = Params(*params)
-        x = self.energies
+        x = self.x
         # Adjust the x's to be relative to E_0
         x = x - p.E0
         # Sigmoid

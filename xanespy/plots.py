@@ -226,10 +226,10 @@ def draw_histogram_colorbar(ax, *args, **kwargs):  # pragma: no cover
     ax.tick_params(
         axis='x',          # changes apply to the x-axis
         which='both',      # both major and minor ticks are affected
-        bottom='off',      # ticks along the bottom edge are off
-        top='off',         # ticks along the top edge are off
-        labelbottom='off',
-        labeltop='off')
+        bottom=False,      # ticks along the bottom edge are off
+        top=False,         # ticks along the top edge are off
+        labelbottom=False,
+        labeltop=False)
     ax.spines['bottom'].set_visible(False)
     cbar.ax.set_xlabel(ax.get_xlabel())
     ax.xaxis.set_visible(False)
@@ -240,9 +240,9 @@ def draw_histogram_colorbar(ax, *args, **kwargs):  # pragma: no cover
     cbar.ax.tick_params(
         axis='x',
         which='both',
-        bottom='on',
-        top='on',
-        labelbottom="on",
+        bottom=True,
+        top=True,
+        labelbottom=True,
     )
     return cbar
 

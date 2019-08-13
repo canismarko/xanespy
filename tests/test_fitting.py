@@ -24,13 +24,16 @@ import unittest
 from unittest import TestCase, mock
 from collections import namedtuple
 import os
+import math
+import warnings
 
 import numpy as np
 import pandas as pd
 
 from xanespy.fitting import (LinearCombination, KCurve, Gaussian,
-                             L3Curve, prepare_p0, fit_spectra, Curve,
-                             Line)
+                             L3Curve, prepare_p0, _fit_sources,
+                             fit_spectra, Curve, Line, error,
+                             guess_p0, find_whiteline)
 from xanespy import edges
 
 
@@ -39,6 +42,30 @@ SSRL_DIR = os.path.join(TEST_DIR, 'txm-data-ssrl')
 
 
 class FittingTestCase(TestCase):
+    def test_base_curve(self):
+        curve = Curve(x=None)
+        # Check that basic methods are stubbed
+        with self.assertRaises(NotImplementedError):
+            curve.guess_params(None, None)
+        # Check the NamedTuple produced from param_names
+        n_tuple = curve.NamedTuple()
+        self.assertEqual(str(n_tuple), 'curve_params()')
+    
+    def test_line(self):
+        # Prepare a basic line
+        x = np.linspace(1, 2, num=10)
+        m, b = (2, -1)
+        noise = [0.094, 0.0485, 0.087, 0.004, 0.053, 0.097, 0.015,
+                 0.0725, 0.025, 0.051]
+        y = m * x + b + noise
+        # Check the calculated line
+        line = Line(x=x)
+        predicted = line(m, b)
+        np.testing.assert_almost_equal(predicted, y, decimal=1)
+        # Create and check the guessed parameters
+        guessed_params = line.guess_params(y, edge=None)
+        np.testing.assert_almost_equal(guessed_params, (m, b), decimal=1)
+        
     def test_linear_combination(self):
         # Prepare test sources
         x = np.linspace(0, 2*np.pi, num=361)
@@ -77,7 +104,7 @@ class FittingTestCase(TestCase):
     def test_K_curve(self):
         # Prepare input data
         Es = np.linspace(8250, 8650, num=100)
-        k_curve = KCurve(energies=Es)
+        k_curve = KCurve(x=Es)
         # Confirm correct number of parameter names
         names = ('scale', 'voffset', 'E0',  # Global parameters
                  'sigw',  # Sharpness of the edge sigmoid
@@ -116,6 +143,17 @@ class FittingTestCase(TestCase):
         self.assertAlmostEqual(result.ga, 0.75, places=2)
         self.assertAlmostEqual(result.gb, 5, places=1)
         self.assertAlmostEqual(result.bg_slope, 0, places=5)
+        # Check non-named tuple
+        result = kcurve.guess_params(OD_df, edge=edge, named_tuple=False)
+        self.assertIsInstance(result, tuple)
+        self.assertNotIn('KParams', str(result))
+        # Check mismatched array shapes
+        kcurve = KCurve(Es)
+        with self.assertRaises(ValueError) as cm:
+            bad_ODs = np.linspace(0, 1, num=len(Es)-1)
+            kcurve.guess_params(bad_ODs, edge=edge)
+        self.assertEqual(str(cm.exception),
+                         'Intensities and energies do not have the same shape: (60,) vs (61,)')
     
     def test_prepare_p0(self):
         # Run the function with known inputs
@@ -128,6 +166,21 @@ class FittingTestCase(TestCase):
         expected[:,2,:,:] = 1
         # Check that the arrays match
         np.testing.assert_equal(out, expected)
+    
+    def test_guess_p0(self):
+        x = np.linspace(0, 1)
+        line = Line(x)
+        spectra = [line(1, 1)]
+        guessed_params = guess_p0(func=line, spectra=spectra, quiet=True)
+        np.testing.assert_equal(guessed_params, [[1, 1]])
+    
+    def test_find_whiteline(self):
+        x = np.linspace(-1, 1, num=51)
+        gauss = Gaussian(x)
+        center = 0.2
+        params = (1, center, 0.5)
+        whiteline = find_whiteline(params=params, curve=gauss)
+        self.assertAlmostEqual(whiteline, center)
     
     def test_fit_spectra(self):
         # Define a function to fit
@@ -147,3 +200,45 @@ class FittingTestCase(TestCase):
                                         func=line, p0=(1, 0))
         np.testing.assert_almost_equal(params, real_params[0])
         self.assertTrue(0 < residuals < 1e-9, residuals)
+    
+    def test_fit_sources(self):
+        # Prepare some test data
+        x = np.linspace(0, 1, num=10)
+        line = Line(x)
+        p0 = np.array([2, 1]) # m, b
+        noise = [0.094, 0.0485, 0.087, 0.004, 0.053, 0.097, 0.015,
+                 0.0725, 0.025, 0.051]
+        # Do a straight-forward fitting
+        y = line(*p0) + noise
+        p_fit, res_ = _fit_sources(inputs=[y, p0], func=line)
+        np.testing.assert_almost_equal(p_fit, p0, decimal=1)
+        self.assertLess(res_, 0.03)
+        # Check for precision errors
+        with mock.patch('xanespy.fitting.leastsq') as leastsq:
+            leastsq.return_value = (p0, None, {}, '', 4)
+            with warnings.catch_warnings(record=True) as w:
+                warnings.resetwarnings()
+                p_fit, res_ = _fit_sources(inputs=[y, p0], func=line)
+            self.assertEqual(len(w), 1)
+            self.assertIn('Precision errors', str(w[0].message))
+        # Check NaN values
+        y[3] = np.nan
+        p_fit, res_ = _fit_sources(inputs=[y, p0], func=line)
+        np.testing.assert_equal(p_fit, [np.nan, np.nan])
+        self.assertTrue(math.isnan(res_))
+    
+    def test_error_function(self):
+        x = np.linspace(0, 2*np.pi)
+        def func(scale, offset):
+            return scale * np.sin(x) + offset
+        output = error(func=func, guess=np.array((1, 0)), obs=func(1, 1))
+        np.testing.assert_almost_equal(output, np.ones_like(output))
+        # Test non-negative constraint, but with only non-negative parameters
+        output = error(func=func, guess=np.array((1, 1)), obs=func(1, 2), nonnegative=True)
+        np.testing.assert_almost_equal(output, np.full_like(output, 1.))
+        # Test non-negative constraint, including some negative parameters
+        output = error(func=func, guess=np.array((-1, 2)), obs=func(1, 2), nonnegative=True)
+        np.testing.assert_almost_equal(output, np.full_like(output, 1e6))
+        # Test non-negative constraint, with a array instead of individual values
+        output = error(func=func, guess=np.array((-1, 1)), obs=func(-1, 2), nonnegative=(False, True))
+        np.testing.assert_almost_equal(output, np.full_like(output, 1))

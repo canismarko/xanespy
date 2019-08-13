@@ -1107,7 +1107,7 @@ class XanesFrameset():
         
         """
         # Prepare intial guess at parameters
-        k_edge = KCurve(energies=self.energies())
+        k_edge = KCurve(x=self.energies())
         # Fit all the spectra
         self.fit_spectra(k_edge, quiet=quiet, ncore=ncore)
         # Use higher energy precision to calculate whitelines
