@@ -876,7 +876,7 @@ class XanesFrameset():
         names = [n.strip() for n in names]
         return names
     
-    def spectrum(self, pixel=None, edge_filter=False, edge_filter_kw: Mapping={},
+    def spectrum(self, pixel=None, frame_filter=False, frame_filter_kw: Mapping={},
                  representation="optical_depths", index=0,
                  derivative=0):
         """Collapse the frameset down to an energy spectrum.
@@ -893,15 +893,16 @@ class XanesFrameset():
           the spectrum for only 1 pixel in the frameset. If None, a
           larger part of the frame will be used, depending on the
           other arguments.
-        edge_filter : bool or str, optional
-          If truthy, only pixels that
-          pass the edge jump filter are used to calculate the
-          spectrum. If "inverse" is given, then the edge jump filter
+        frame_filter : bool or str, optional
+          If truthy, allows the User to pass mask_method **kwarg
+           and other **kwargs into frame_mask(). Can mask frames by
+           the calulated edge jump filter or contrast filter.
+         If "inverse" is given, then the no mask filter
           is logically not-ted and calculated with a more
           conservative threshold.
-        edge_filter_kw
-          Additional arguments to be used for producing an edge_mask.
-           See :meth:`~xanespy.xanes_frameset.XanesFrameset.edge_mask`
+        frame_filter_kw
+          Additional arguments to be used for producing an frame_mask.
+           See :meth:`~xanespy.xanes_frameset.XanesFrameset.frame_mask`
            for possible values.
         representation : str, optional
           What kind of data to use for creating the spectrum. This
@@ -931,10 +932,10 @@ class XanesFrameset():
                 spectrum = store.get_frames(representation)[spectrum_idx]
             else:
                 frames = store.get_frames(representation)[index]
-                if edge_filter:
+                if frame_filter:
                     # Filter out background pixels using edge mask
                     try:
-                        mask = self.edge_mask(**edge_filter_kw)
+                        mask = self.frame_mask(**frame_filter_kw)
                     except exceptions.XanesMathError:
                         log.error("Could not find pre-edge energies, ignoring mask.")
                     else:
