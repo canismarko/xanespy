@@ -1071,7 +1071,7 @@ class XanesFrameset():
 
                 else:
                     # Show warning if all of these fail
-                    warning.warn('Incorrect User input or invalid frames() dimensions')
+                    warnings.warn('Incorrect User input or invalid frames() dimensions')
 
             else:
                 # Store has no optical_depth data so just return a blank array
