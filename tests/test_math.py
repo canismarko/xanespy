@@ -506,8 +506,7 @@ class XanesMathTest(unittest.TestCase):
                     if min_size > 0:
                         mask = morphology.opening(mask, selem=morphology.disk(min_size))
 
-                    all_masks.append(mask)
-
+                    all_masks.append(~mask)
 
         # Use the contrast_mask function
         mean_frames_check = []
