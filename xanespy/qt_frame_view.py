@@ -236,30 +236,23 @@ class QtFrameView(QtCore.QObject):  # pragma: no cover
     
     def create_canvas(self):
         # Add the canvas to the UI
-        self.fig = Figure()
+        self.fig = Figure(constrained_layout=True)
         canvas = FigureCanvas(self.fig)
         self.ui.mainLayout.addWidget(canvas)
         # Add subplots
-        gridspec = GridSpec(2, 4)
-        self.img_ax = self.fig.add_subplot(
-            gridspec.new_subplotspec((0, 0), rowspan=2, colspan=2)
-        )
-        self.spectrum_ax = self.fig.add_subplot(
-            gridspec.new_subplotspec((0, 2), rowspan=1, colspan=2)
-        )
-        self.hist_ax = self.fig.add_subplot(
-            gridspec.new_subplotspec((1, 2), rowspan=1, colspan=1)
-        )
-        self.edge_ax = self.fig.add_subplot(
-            gridspec.new_subplotspec((1, 3), rowspan=1, colspan=1)
-        )
+        gridspec = GridSpec(3, 4, figure=self.fig, height_ratios=[1, 1, 0.1])
+        self.img_ax = self.fig.add_subplot(gridspec[:, 0:2])
+        self.spectrum_ax = self.fig.add_subplot(gridspec[0, 2:])
+        self.hist_ax = self.fig.add_subplot(gridspec[1, 2])
+        self.edge_ax = self.fig.add_subplot(gridspec[1, 3])
         # Create the colorbar on the histogram axes
-        self.cbar = plots.draw_histogram_colorbar(ax=self.hist_ax,
-                                                  cmap="viridis",
-                                                  norm=Normalize(0, 1))
+        cax = self.fig.add_subplot(gridspec[2, 2:])
+        self.cbar = plots.draw_colorbar(ax=self.hist_ax,
+                                        cax=cax,
+                                        cmap="viridis",
+                                        orientation='horizontal',
+                                        norm=Normalize(0, 1))
         self.cbar.ax.set_xlabel("Intensity")
-        # Adjust the margins
-        self.fig.tight_layout(pad=0)
         self.fig.canvas.draw_idle()
     
     def connect_presenter(self, presenter):

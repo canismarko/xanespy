@@ -102,7 +102,7 @@ def import_aps4idc_sxstm_files(filenames, hdf_filename, hdf_groupname,
         directory = os.getcwd()
     # Process the metadata from filenames
     metadata = []
-    file_re = re.compile('([a-zA-Z0-9_]+)_(\d+)_(\d+).3ds')
+    file_re = re.compile(r'([a-zA-Z0-9_]+)_(\d+)_(\d+).3ds')
     for f in filenames:
         # Extract metadata from filenames
         file_match = file_re.match(os.path.basename(f))
@@ -972,7 +972,7 @@ def import_stxm_frameset(directory: str, quiet=False,
         lines = f.readlines()
         lines = [l.replace('\t', '').replace('\n', '') for l in lines]
         # Extract energies
-        energy_re = "Points = \(\d+, ([0-9., ]+)\);"
+        energy_re = r"Points = \(\d+, ([0-9., ]+)\);"
         e_string = re.search(energy_re, lines[14]).groups()[0]
         energies = [float(s) for s in e_string.split(', ')]
         # Fake pixel sizes for now
@@ -1144,10 +1144,10 @@ def import_ssrl_xanes_dir(directory, hdf_filename, groupname=None, *args, **kwar
 
 
 ssrl_regex_bg = re.compile(
-        'rep(\d{2})_(\d{6})_ref_[0-9]*_?([-a-zA-Z0-9_]+)_([0-9.]+)_eV_(\d{3})of(\d{3})\.xrm'
+        r'rep(\d{2})_(\d{6})_ref_[0-9]*_?([-a-zA-Z0-9_]+)_([0-9.]+)_eV_(\d{3})of(\d{3})\.xrm'
 )
 ssrl_regex_sample = re.compile(
-        'rep(\d{2})_[0-9]*_?([-a-zA-Z0-9_]+)_([0-9.]+)_eV_(\d{3})of(\d{3}).xrm'
+        r'rep(\d{2})_[0-9]*_?([-a-zA-Z0-9_]+)_([0-9.]+)_eV_(\d{3})of(\d{3}).xrm'
 )
 
 def minimum_shape(shapes):

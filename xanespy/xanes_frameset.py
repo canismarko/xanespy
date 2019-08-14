@@ -492,7 +492,7 @@ class XanesFrameset():
             spectra = self.spectrum(representation='optical_depths', index=slice(None))
             spectra = np.array([s.values for s in spectra])
             reference_frame = np.argmax(spectra)
-            reference_frame = np.unravel_index(reference_frame, dims=spectra.shape)
+            reference_frame = np.unravel_index(reference_frame, shape=spectra.shape)
         # Keep track of how many passes and where we started
         for pass_ in range(0, passes):
             log.debug("Starting alignment pass %d of %d", pass_, passes)

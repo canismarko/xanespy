@@ -86,9 +86,12 @@ class Edge():
     
     def mask(self, frames, *args, **kwargs):
         return np.zeros(shape=frames.shape[-2:])
-
+    
     def normalize(self, *args, **kwargs):
         raise NotImplementedError()
+    
+    def annotate_spectrum(ax):
+        pass
 
 
 class LEdge(Edge):

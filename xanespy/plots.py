@@ -251,7 +251,7 @@ def draw_colorbar(ax, cmap, norm, energies=None, orientation="vertical",
                   *args, **kwargs):  # pragma: no cover
     """Draw a colorbar on the side of a mapping axes to show the range of
     colors used. Returns the newly created colorbar object.
-
+    
     Parameters
     ---------
     ax
@@ -465,6 +465,9 @@ def plot_spectrum(spectrum, energies, norm=None,
     
     """
     artists = []
+    # Make sure we have numpy arrays for everything
+    energies = np.asanyarray(energies)
+    spectrum = np.asanyarray(spectrum)
     # Prepare axes if necessary
     if ax is None:
         ax = new_axes()

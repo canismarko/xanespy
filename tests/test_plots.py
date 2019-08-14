@@ -21,6 +21,7 @@
 from unittest import TestCase
 
 import matplotlib.pyplot as plt
+import pandas as pd
 import numpy as np
 
 from xanespy import plots
@@ -39,6 +40,11 @@ class PlotSpectrumTest(TestCase):
         ODs = np.sin(Es /2)
         artist = plots.plot_spectrum(ax=self.fig.gca(), energies=Es, spectrum=ODs)
         self.assertIsInstance(artist[0], plt.Line2D)
+
+    def test_pandas_index(self):
+        Es = pd.Float64Index([8324.0, 8354.0])
+        ODs =  [0.5837463, 0.690377]
+        artist = plots.plot_spectrum(ax=self.fig.gca(), energies=Es, spectrum=ODs)
     
     def test_colors(self):
         Es = np.linspace(8353, 8560, num=20)

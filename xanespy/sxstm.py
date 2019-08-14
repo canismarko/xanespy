@@ -82,7 +82,7 @@ class SxstmDataFile():
         
     def num_points(self):
         hdr = self.header_lines()
-        reg = re.compile('^Points=(\d+)')
+        reg = re.compile(r'^Points=(\d+)')
         for l in hdr:
             match = reg.match(l)
             if match:
