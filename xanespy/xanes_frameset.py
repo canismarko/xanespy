@@ -893,13 +893,9 @@ class XanesFrameset():
           the spectrum for only 1 pixel in the frameset. If None, a
           larger part of the frame will be used, depending on the
           other arguments.
-        frame_filter : bool or str, optional
-          If truthy, allows the User to pass mask_method **kwarg
-           and other **kwargs into frame_mask(). Can mask frames by
-           the calulated edge jump filter or contrast filter.
-         If "inverse" is given, then the no mask filter
-          is logically not-ted and calculated with a more
-          conservative threshold.
+        frame_filter : str or bool, optional
+          Allow the User to define which type of mask to apply.
+          (e.g 'edge', 'contrast', None)
         frame_filter_kw
           Additional arguments to be used for producing an frame_mask.
            See :meth:`~xanespy.xanes_frameset.XanesFrameset.frame_mask`
@@ -1543,11 +1539,13 @@ class XanesFrameset():
           'nmf' and 'pca'.
         frame_source : str, optional
           Name of the frame-set to use as the input data.
-        frame_filter : bool, optional
-          If truthy, will allow the user to define a type of mask
-          to apply to the data (e.g  'edge', 'contrast', None)
-        frame_filter_kw : dict, optional
-          **kwargs to be passed into xp.XanesFrameset.frame_mask()
+        frame_filter : str or bool, optional
+          Allow the User to define which type of mask to apply.
+          (e.g 'edge', 'contrast', None)
+        frame_filter_kw
+          Additional arguments to be used for producing an frame_mask.
+           See :meth:`~xanespy.xanes_frameset.XanesFrameset.frame_mask`
+           for possible values.
 
         Returns
         =======
@@ -1568,21 +1566,25 @@ class XanesFrameset():
             spectra = np.moveaxis(As, 0, 1)
         # Get the edge mask so only active material is included
         dummy_mask = np.ones(frame_shape, dtype=np.bool)
-        if frame_filter:
+
+        # See if we need a mask
+        if frame_filter == 'edge' or frame_filter == 'contrast':
             # Clear caches to make sure we don't use stale mask data
             self.clear_caches()
-            # Now retrieve the mask
-            try:
-                mask = ~self.frame_mask(**frame_filter_kw)
-            except exceptions.XanesMathError as e:
-                log.error(e)
-                log.warning("Failed to calculate mask, using all pixels.")
-                mask = dummy_mask
-            else:
-                log.debug("Using edge mask for signal extraction")
         else:
             log.debug("No edge mask for signal extraction")
             mask = dummy_mask
+
+        # Now retrieve the mask - redundant, but makes it easier to place into code
+        try:
+            mask = ~self.frame_mask(frame_filter=frame_filter, **frame_filter_kw)
+        except exceptions.XanesMathError as e:
+            log.error(e)
+            log.warning("Failed to calculate mask, using all pixels.")
+            mask = dummy_mask
+        else:
+            log.debug("Using edge mask for signal extraction")
+
         # Separate the data into signals
         if method.lower() == 'nmf':
             signals, weights = xm.extract_signals_nmf(
