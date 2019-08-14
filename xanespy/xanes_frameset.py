@@ -492,7 +492,7 @@ class XanesFrameset():
             spectra = self.spectrum(representation='optical_depths', index=slice(None))
             spectra = np.array([s.values for s in spectra])
             reference_frame = np.argmax(spectra)
-            reference_frame = np.unravel_index(reference_frame, shape=spectra.shape)
+            reference_frame = np.unravel_index(reference_frame, dims=spectra.shape)
         # Keep track of how many passes and where we started
         for pass_ in range(0, passes):
             log.debug("Starting alignment pass %d of %d", pass_, passes)
@@ -1528,7 +1528,7 @@ class XanesFrameset():
     
     def calculate_signals(self, n_components=2, method="nmf",
                           frame_source='optical_depths',
-                          edge_mask=True):
+                          frame_filter=True, frame_filter_kw: Mapping={}):
         """Extract signals and assign each pixel to a group, then save the
         resulting RGB cluster map.
         
@@ -1542,9 +1542,11 @@ class XanesFrameset():
           'nmf' and 'pca'.
         frame_source : str, optional
           Name of the frame-set to use as the input data.
-        edge_mask : bool, optional
-          If truthy (default), only those pixels passing the edge
-          filter will be considered.
+        frame_filter : bool, optional
+          If truthy, will allow the user to define a type of mask
+          to apply to the data (e.g  'edge', 'contrast', None)
+        frame_filter_kw : dict, optional
+          **kwargs to be passed into xp.XanesFrameset.frame_mask()
 
         Returns
         =======
@@ -1565,12 +1567,12 @@ class XanesFrameset():
             spectra = np.moveaxis(As, 0, 1)
         # Get the edge mask so only active material is included
         dummy_mask = np.ones(frame_shape, dtype=np.bool)
-        if edge_mask:
+        if frame_filter:
             # Clear caches to make sure we don't use stale mask data
             self.clear_caches()
             # Now retrieve the mask
             try:
-                mask = ~self.edge_mask()
+                mask = ~self.frame_mask(**frame_filter_kw)
             except exceptions.XanesMathError as e:
                 log.error(e)
                 log.warning("Failed to calculate mask, using all pixels.")

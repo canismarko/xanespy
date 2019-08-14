@@ -218,7 +218,7 @@ class XanesFramesetTest(TestCase):
         store.get_dataset.return_value = np.random.rand(1, n_energies, 16, 16)
         frameset = self.create_frameset(store=store)
         mask = np.zeros(shape=(16, 16), dtype='bool')
-        frameset.edge_mask = mock.MagicMock(return_value=mask)
+        frameset.frame_mask = mock.MagicMock(return_value=mask)
         # Post/pre-edge identification is known to fail
         frameset.calculate_signals(n_components=N_COMPONENTS,
                                    method="nmf")

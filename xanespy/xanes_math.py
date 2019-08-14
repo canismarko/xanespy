@@ -1117,11 +1117,12 @@ def contrast_mask(frames: np.ndarray, sensitivity: float = 1, min_size=0, frame_
     frame_idx : str, tuple(time_step_index, energy_index), optional
       Allows the user to select which image to
 
-    Returns:
+    Returns
     -------
     mask : np.ndarray
       A boolean mask with the same shape as the last two dimensions of
       `frames` where True pixels are likely to be background material.
+
     """
 
     # Make sure we are using the real numbers
