@@ -6,7 +6,7 @@ tests/testdata
 tests/.ipynb_checkpoints
 docs/.ipynb_checkpoints
 .venv/
-.coverage
+.coverage*
 .pytest_cache/
 .mypy_cache/
 
