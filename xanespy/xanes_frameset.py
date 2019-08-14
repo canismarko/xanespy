@@ -70,7 +70,7 @@ class XanesFrameset():
     absorption edge. Iterating over this object gives the individual
     Frame() objects. The class assumes that the data have been
     imported into an HDF file.
-    
+
     """
     active_group = ''
     parent_name = None
@@ -79,7 +79,7 @@ class XanesFrameset():
     _data_name = None
     # Places to store staged image transformations
     _transformations = None
-    
+
     def __init__(self, hdf_filename, edge, groupname=None):
         """Parameters
         ----------
@@ -93,7 +93,7 @@ class XanesFrameset():
           Top level HDF group corresponding to this frameset. This
           argument is only required if there is more than one top-level
           group.
-        
+
         """
         self.hdf_filename = hdf_filename
         # Validate the edge object
@@ -111,30 +111,30 @@ class XanesFrameset():
                          mode='r')
         with store:
             self.parent_name = store.validate_parent_group(groupname)
-    
+
     def __str__(self):
         s = "{name}"
         return s.format(cls=self.__class__.__name__, name=self.parent_name)
-    
+
     def __repr__(self):
         s = "<{cls}: '{name}'>"
         return s.format(cls=self.__class__.__name__, name=self.parent_name)
-    
+
     def hdf_path(self, representation: Optional[str]=None):
         """Return the hdf path for the active group.
-        
+
         Parameters
         ----------
         representation
           Name of third-level group to use. If omitted, the path to
           the parent group will be given.
-        
+
         Returns
         -------
         path : str
           The path to the current group in the HDF5 file. Returns an
           empty string if the representation does not exists.
-        
+
         """
         with self.store() as store:
             if representation is None:
@@ -143,36 +143,36 @@ class XanesFrameset():
                 group = store.get_dataset(representation=representation)
             path = group.name
         return path
-    
+
     def has_representation(self, representation):
         with self.store() as store:
             result = store.has_dataset(representation)
         return result
-    
+
     @property
     def data_name(self):
         return self._data_name
-    
+
     @data_name.setter
     def data_name(self, val):
         self._data_name = val
         # Clear any cached values since the data are probably different
         self.clear_caches()
-    
+
     def data_tree(self):
         """Wrapper around the TXMStore.data_tree() method."""
         with self.store() as store:
             tree = store.data_tree()
         return tree
-    
+
     def store(self, mode='r'):
         """Get a TXM Store object that saves and retrieves data from the HDF5
         file. The mode argument is passed to h5py as is. This method
         should be used as a context manager, especially if mode is
         something writeable:
-        
+
         .. code:: python
-        
+
            # The 'r+' creates the file or appends if one exists
            with self.store(mode='r+') as store:
                # Do stuff with the store...
@@ -182,34 +182,34 @@ class XanesFrameset():
                         parent_name=self.parent_name,
                         data_name=self.data_name,
                         mode=mode)
-    
+
     def clear_caches(self):
         """Clear cached function values so they will be recomputed with fresh
         data
-        
+
         """
         self.frame_mask.cache_clear()
         self.frames.cache_clear()
         self.map_data.cache_clear()
         self.energies.cache_clear()
         self.extent.cache_clear()
-    
+
     def starttime(self, timeidx=None):
         """Determine the earliest timestamp amongst all of the frames.
-        
+
         Parameters
         ----------
         timeidx : int, optional
           Which timestep to use for finding the start time. If
           omitted or None (default), all timesteps will be checked.
-        
+
         Returns
         -------
         start_time : np.datetime64
           Naive datetime representing the earliest known frame for
           this timeidx. Timezone will always be UTC no matter where
           the data were collected.
-        
+
         """
         now = np.datetime64(dt.datetime.now())
         with self.store() as store:
@@ -225,23 +225,23 @@ class XanesFrameset():
             start_time = Ts[start_idx]
         # Return the earliest timestamp
         return start_time
-    
+
     def endtime(self, timeidx=None):
         """Determine the latest timestamp amongst all of the frames.
-        
+
         Parameters
         ----------
         timeidx : int, optional
           Which timestep to use for finding the end time. If
           omitted or None (default), all timesteps will be checked.
-        
+
         Returns
         -------
         start_time : np.datetime64
           Naive datetime representing the latest known frame for
           this time index. Timezone will always be UTC no matter where
           the data were collected.
-        
+
         """
         now = np.datetime64(dt.datetime.now())
         with self.store() as store:
@@ -252,17 +252,17 @@ class XanesFrameset():
             end_idx = np.argmin(now - Ts)
             end_time = Ts[end_idx]
         return end_time
-    
+
     def components(self):
         """Retrieve a list of valid representations for these data."""
         comps = ['modulus']
         return comps
-    
+
     def fork_data_group(self, dest, src=None):
         """Turn on different active data for this frameset's store
         object. Similar to `switch_data_group` except that this method
         deletes the existing group and copies symlinks from the current one.
-        
+
         Arguments
         ---------
         dest : str
@@ -275,12 +275,12 @@ class XanesFrameset():
         with self.store(mode='r+') as store:
             store.fork_data_group(dest=dest, src=src)
         self.data_name = dest
-    
+
     def apply_transformations(self, crop=True, commit=True, quiet=False):
         """Take any transformations staged with `self.stage_transformations()`
         and apply them. If commit is truthy, the staged
         transformations are reset.
-        
+
         Arguments
         ---------
         crop : bool, optional
@@ -294,12 +294,12 @@ class XanesFrameset():
           optical_depth data will be transformed and returned.
         quiet : bool, optional
           Whether to suppress the progress bar, etc.
-        
+
         Returns
         -------
         out : np.ndarray
           Transformed array of the optical depth frames.
-        
+
         """
         # First, see if there's anything to do
         if self._transformations is None:
@@ -350,25 +350,25 @@ class XanesFrameset():
             log.debug("Clearing staged transformations")
             self._transformations = None
         return out
- 
+
     def stage_transformations(self, translations=None, rotations=None, center=(0, 0),
                               scales=None):
         """Allows for deferred transformation of the frame data.
-        
+
         Since each transformation introduces interpolation error, the
         best results occur when the translations are saved up and then
         applied all in one shot. Takes a combination of arrays of
         translations (x, y), rotations and/or scales and saves them
         for later application. This method should be used in
         conjunction apply_transformations().
-        
+
         All three arguments should have shapes that are compatible
         with the frame data, though this is not strictly enforced for
         now. Rotation will necessarily have one less degree of freedom
         than translation/scale values.
-        
+
         Example Shapes:
-        
+
         +----------------------------+--------------+-------------+-------------+
         | Frames                     | Translations | Rotations   | Scales      |
         +============================+==============+=============+=============+
@@ -376,7 +376,7 @@ class XanesFrameset():
         +----------------------------+--------------+-------------+-------------+
         | (10, 48, 1024, 1024, 1024) | (10, 48, 3)  | (10, 48, 2) | (10, 48, 3) |
         +----------------------------+--------------+-------------+-------------+
-        
+
         Parameters
         ----------
         translations : np.ndarray
@@ -389,7 +389,7 @@ class XanesFrameset():
         scales : np.ndarray
           How much to scale the image by in each dimension (x, y[,
           z]).
-        
+
         """
         # Compute the new transformation matrics for the given transformations
         new_transforms = xm.transformation_matrices(scales=scales,
@@ -401,7 +401,7 @@ class XanesFrameset():
             new_transforms =  self._transformations @ new_transforms
         # Save transformation matrix for later
         self._transformations = new_transforms
-    
+
     def align_frames(self,
                      reference_frame="mean",
                      method: str="cross_correlation",
@@ -414,7 +414,7 @@ class XanesFrameset():
                      results_ax=None,
                      quiet=False):
         """Use cross correlation algorithm to line up the frames.
-        
+
         All frames will have their sample position set to (0, 0) since
         we don't know which one is the real position. This operation
         will interpolate between pixels so introduces error. If
@@ -424,7 +424,7 @@ class XanesFrameset():
         different types of registration to be performed in sequence,
         since uncommitted translations will be applied before the next
         round of registration.
-        
+
         Parameters
         ----------
         reference_frame : 2-tuple, str, optional
@@ -437,10 +437,10 @@ class XanesFrameset():
           template matching is used.
         method : str, optional
           Which technique to use to calculate the translation
-          
+
             - "cross_correlation" (default)
             - "template_match"
-          
+
           (If "template_match" is used, the `template` argument should
           also be provided.)
         template : np.ndarray, optional
@@ -475,7 +475,7 @@ class XanesFrameset():
           plot. If omitted, a new axes will be created.
         quiet : bool, optional
           Suppress the progress bar
-        
+
         """
         logstart = time()
         log.info("Aligning frames with %s algorithm over %d passes",
@@ -555,28 +555,28 @@ class XanesFrameset():
             log.info("Committing final translations to disk")
             self.apply_transformations(crop=True, commit=True)
         log.info("Aligned %d passes in %d seconds", passes, time() - logstart)
-    
+
     def crop_frames(self, slices):
         """Reduce the image size for all frame-data in this group.
-        
+
         This operation will destructively crop all data-sets that
         contain image data, namely "framesets" and "maps". The
         argument ``slices`` controls which data is kept. For example,
         if the current frames are 128x128, the central 64x64 region
         can be kept by doing the following:
-        
+
         .. code:: python
-            
+
             slices = [slice(31, 95), slice(31, 95)]
             fs.crop_frames(slices=slices)
-        
+
         Parameters
         ----------
         slices : tuple or list
           A slice object for each image dimension. The shape of this
           tuple should match the number of dimensions in the frame
           data to be cropped, starting with the last (columns).
-        
+
         """
         slc_idx = (..., *slices)
         with self.store(mode='r+') as store:
@@ -585,10 +585,10 @@ class XanesFrameset():
             for ds_name in ds_names:
                 new_ds = store.get_dataset(ds_name).__getitem__(slc_idx)
                 store.replace_dataset(ds_name, new_ds)
-    
+
     def apply_median_filter(self, size, representation='optical_depths'):
         """Permanently apply a median filter to a frameset.
-        
+
         Parameters
         ----------
         size : 4-tuple
@@ -596,24 +596,24 @@ class XanesFrameset():
           (time, energy, row, col).
         representation : str, optional
           Which frameset representation to use for filtering.
-        
+
         """
         with self.store(mode='r+') as store:
             ds = store.get_dataset(representation)
             new_data = median_filter(ds, size=size)
             store.replace_dataset(representation, data=new_data)
-    
+
     def segment_materials(self, thresholds,
                           representation='optical_depths',
                           component='real'):
         """Split the frames into different materials based on mean values.
-        
+
         This is most useful with a metric that is unique to a given
         material. For example, the phase representation of
         ptychography data can be used to determine which material is
         which. Results will be stored in
         ``XanesFrameset().store().segments``.
-        
+
         Parameters
         ----------
         thresholds : tuple
@@ -624,7 +624,7 @@ class XanesFrameset():
         component : str, optional
           Complex-value representation to use. Default is real
           value. For ptychography data, 'phase' is probably better.
-        
+
         """
         # Load the intensity data
         with self.store() as store:
@@ -644,17 +644,17 @@ class XanesFrameset():
         # Save data to data store
         with self.store(mode='r+') as store:
             store.segments = out
-    
+
     def label_particles(self, min_distance=20):
         """Use watershed segmentation to identify particles.
-        
+
         Parameters
         ----------
         min_distance : int, optional
           Controls how selective the algorithm is at grouping areas
           into particles. Lower numbers means more particles, but
           might split large particles into two.
-        
+
         """
         with self.store('r+') as store:
             logstart = time()
@@ -670,13 +670,13 @@ class XanesFrameset():
             getattr(store.particle_labels, 'attrs', {})['frame_source'] = 'optical_depths'
         # Logging
         log.info("Calculated particle labels in %d sec", time() - logstart)
-    
+
     def particle_series(self, map_name="whiteline_max"):
         """Generate median values from map_name across each particle.
-        
+
         Returns: A 2D array where the first dimension is particles and
         the second is the first dimension of the map dataset (usually time).
-        
+
         """
         steps = []
         with self.store() as store:
@@ -693,12 +693,12 @@ class XanesFrameset():
         steps = np.array(steps)
         steps = np.transpose(steps)
         return steps
-    
+
     def particle_regions(self, intensity_image=None, labels=None):
         """Return a list of regions (1 for each particle) sorted by area.
         (largest first). This requires that the `label_particles`
         method be called first.
-        
+
         Arguments
         ---------
         intensity_image : np.ndarray, optional
@@ -708,7 +708,7 @@ class XanesFrameset():
           Array of the same shape as the map, with the particles
           segmented. If None (default), the `particle_labels`
           attribute of the TXM store will be used.
-        
+
         """
         with self.store() as store:
             if labels is None:
@@ -718,12 +718,12 @@ class XanesFrameset():
         # Put in order of descending area
         regions.sort(key=lambda p: p.area, reverse=True)
         return np.array(regions)
-    
+
     def plot_mean_frame(self, ax=None, component="modulus",
                         representation="optical_depths",
                         cmap="bone", timeidx=..., *args, **kwargs):
         """Plot the mean image from the selected frames.
-        
+
         Parameters
         ==========
         ax : mpl.Axes, optional
@@ -741,9 +741,9 @@ class XanesFrameset():
           slices for either (timestep, energy), eg. ``timeidx=(1,
           slice(10, 15))`` will only select 5 energies in the first
           timestep.
-        *args, **kwargs : 
+        *args, **kwargs :
           Passed to the matplotlib ``imshow`` function.
-        
+
         Returns
         =======
         artist
@@ -764,11 +764,11 @@ class XanesFrameset():
         ax.set_xlabel(ax_unit)
         ax.set_ylabel(ax_unit)
         return artist
-    
+
     def mean_frame(self, representation="optical_depths"):
         """Return the mean value with the same shape as an individual
         frame.
-        
+
         """
         with self.store() as store:
             Is = store.get_dataset(representation)
@@ -776,13 +776,13 @@ class XanesFrameset():
             Is = np.reshape(Is, (-1, *frame_shape))
             mean = np.mean(Is, axis=0)
         return mean
-    
+
     def frame_shape(self, representation="optical_depths"):
         """Return the shape of the individual energy frames."""
         with self.store() as store:
             imshape = store.get_dataset(representation).shape[-2:]
         return imshape
-    
+
     def pixel_size(self, representation='optical_depths', timestep=0):
         """Return the size of the pixel (with units set by ``pixel_unit``)."""
         with self.store() as store:
@@ -791,17 +791,17 @@ class XanesFrameset():
             # Take the median across all pixel sizes (except the xy dim)
             pixel_size = np.median(pixel_size)
         return pixel_size
-    
+
     def pixel_unit(self):
         """Return the unit of measure for the size of a pixel."""
         with self.store() as store:
             unit = store.pixel_unit
         return unit
-    
+
     def spectra(self):
         """Return a two-dimensional array of spectra for all the pixels in
         shape of (pixel, energy).
-        
+
         """
         with self.store() as store:
             E_axis = 1
@@ -809,20 +809,20 @@ class XanesFrameset():
             ODs = np.moveaxis(ODs, E_axis, -1)
             spectra = np.reshape(ODs, (-1, self.num_energies))
         return spectra
-    
+
     def line_spectra(self, xy0: Tuple[int, int], xy1: Tuple[int, int],
                      representation="optical_depths",
                      timestep=0, edge_filter=False, edge_filter_kw={}):
         """Return an array of spectra on a line between two points.
-        
+
         This is effectively nearest neighbor interpolation between two (x,
         y) pairs on the frames.
-        
+
         Returns
         -------
         spectra : np.ndarray
           An array of spectra, one for each point on the line.
-        
+
         Parameters
         ----------
         xy0 : 2-tuple
@@ -838,7 +838,7 @@ class XanesFrameset():
           before calculating line profile.
         edge_filter_kw : dict, optional
           Extra keyword arguments to pass to the edge_mask() method.
-        
+
         """
         xy0 = xycoord(*xy0)
         xy1 = xycoord(*xy1)
@@ -866,7 +866,7 @@ class XanesFrameset():
                 spectra = frames[y.astype(np.int), x.astype(np.int)]
         # And we're done
         return spectra
-    
+
     def fitting_param_names(self, representation="fit_parameters"):
         """Get the human-readable names of the fit parameters."""
         with self.store() as store:
@@ -880,12 +880,12 @@ class XanesFrameset():
                  representation="optical_depths", index=0,
                  derivative=0):
         """Collapse the frameset down to an energy spectrum.
-        
+
         The x and y dimensions will be averaged to give the final
         intensity at each energy. The ``index`` parameter will be used
         to select a timepoint. If index is a slice(), or something
         similar, you can retrieve mutliple spectra as a list.
-        
+
         Parameters
         ----------
         pixel : tuple, optional
@@ -910,13 +910,13 @@ class XanesFrameset():
         derivative : int, optional
           Calculate a derivative of the spectrum before returning
           it. If less than 1 (default), no derivative is calculated.
-        
+
         Returns
         -------
         spectrum : pd.Series
           A pandas Series with the spectrum, or a list of pandas
           Series if ``index`` parameter is a slice.
-        
+
         """
         # Retrieve data
         with self.store() as store:
@@ -930,16 +930,17 @@ class XanesFrameset():
                 frames = store.get_frames(representation)[index]
                 frames_shape = frames.shape[:-2]
 
-                # Filter out background pixels using edge mask
-                try:
-                    mask = self.frame_mask(mask_type=frame_filter, **frame_filter_kw)
-                except exceptions.XanesMathError:
-                    log.error("Could not find pre-edge energies, ignoring mask.")
+                if frame_filter:
+                    # Filter out background pixels using edge mask
+                    try:
+                        mask = self.frame_mask(mask_type=frame_filter, **frame_filter_kw)
+                    except exceptions.XanesMathError:
+                        log.error("Could not find pre-edge energies, ignoring mask.")
 
-                else:
-                    mask = np.broadcast_to(array=mask,
-                                           shape=(*frames_shape, *mask.shape))
-                    frames = np.ma.array(frames, mask=mask)
+                    else:
+                        mask = np.broadcast_to(array=mask,
+                                               shape=(*frames_shape, *mask.shape))
+                        frames = np.ma.array(frames, mask=mask)
 
                 # Take average of all pixel frames
                 flat = (*frames.shape[:frames.ndim-2], -1) # Collapse image dimension
@@ -961,7 +962,7 @@ class XanesFrameset():
             else:
                 series = spectrum
         return series
-    
+
     def plot_spectrum(self, ax=None, pixel=None,
                       norm_range=None, normalize=False,
                       representation: str="optical_depths",
@@ -970,7 +971,7 @@ class XanesFrameset():
                       linestyle=":", timeidx: int=0,
                       *args: Any, **kwargs: Any):
         """Calculate and plot the xanes spectrum for this field-of-view.
-        
+
         Arguments
         ---------
         ax : optional
@@ -990,7 +991,7 @@ class XanesFrameset():
           **kwargs to be passed into xp.XanesFrameset.frame_mask()
         args, kwargs : optional
           Passed to plotting functions.
-        
+
         """
         if show_fit:
             raise NotImplementedError("`show_fit` parameter coming soon")
@@ -1086,11 +1087,11 @@ class XanesFrameset():
     def fit_linear_combinations(self, sources, component='real', name='linear_combination',
                                 representation="optical_depths", *args, **kwargs):
         """Take a set of sources and fit the spectra with them.
-        
+
         Saves to the representation "linear_combinations". Also
         creates "linear_combination_sources" and
         "linear_combination_residuals" datasets.
-        
+
         Parameters
         ----------
         sources : numpy.ndarray
@@ -1103,14 +1104,14 @@ class XanesFrameset():
           What dataset to use as input for fitting.
         args, kwargs : optional
           Passed on to ``self.fit_spectra``.
-        
+
         Returns
         -------
         fits : numpy.ndarray
           The weights (as frames) for each source.
         residuals : numpy.ndarray
           Residual error after fitting, as maps.
-        
+
         """
         # Convert from complex number
         sources = get_component(sources, component)
@@ -1129,10 +1130,10 @@ class XanesFrameset():
             store.replace_dataset("%s_sources" % name, sources,
                                   context='metadata')
         return results
-    
+
     def fit_kedge(self, quiet=False, ncore=None):
         """Fit all spectra with a K-Edge curve.
-        
+
         Parameters
         ==========
         quiet : bool, optional
@@ -1140,7 +1141,7 @@ class XanesFrameset():
         ncore : int, optional
           How many processes to use in the pool. See
           :func:`~xanespy.utilities.nproc` for more details.
-        
+
         """
         # Prepare intial guess at parameters
         k_edge = KCurve(x=self.energies())
@@ -1174,7 +1175,7 @@ class XanesFrameset():
                 pass
 
     def fit_spectra(self, func, p0=None, pnames=None, name=None,
-                    frame_filter=True, frame_filter_kw: Mapping={},
+                    frame_filter='edge', frame_filter_kw: Mapping={},
                     nonnegative=False, component='real',
                     representation='optical_depths', dtype=None,
                     quiet=False, ncore=None):
@@ -1208,10 +1209,13 @@ class XanesFrameset():
           subsequent fits against the same dataset to be saved. If
           ``None``, we will attempt look for ``func.name``, then
           lastly we'll use "fit".
-        frame_filter : bool, optional
-          If true, only compute pixels based on masking by frame_mask().
-        frame_filter_kw : dic, optional
-          **kwargs to be passed into xp.XanesFrameset.frame_mask()
+        frame_filter : str or bool, optional
+          Allow the User to define which type of mask to apply.
+          (e.g 'edge', 'contrast', None)
+        frame_filter_kw
+          Additional arguments to be used for producing an frame_mask.
+           See :meth:`~xanespy.xanes_frameset.XanesFrameset.frame_mask`
+           for possible values.
         nonnegative : bool, optional
           If true (default), negative parameters will be avoided. This
           can also be a tuple to allow for fine-grained control. Eg:
@@ -1250,7 +1254,7 @@ class XanesFrameset():
         with self.store() as store:
             frames = get_component(store.get_dataset(representation), component)
         if frame_filter:
-            frames[..., self.frame_mask(**frame_filter_kw)] = np.nan
+            frames[..., self.frame_mask(mask_type=frame_filter, **frame_filter_kw)] = np.nan
         # Get the default curve name if necessary
         if name is None:
             name = getattr(func, 'name', 'fit')
@@ -1313,17 +1317,17 @@ class XanesFrameset():
             log.info(msg)
         # Return the results to the user
         return params, residuals
-    
+
     def calculate_whitelines(self, edge_mask=False):
         """Calculate and save a map of the whiteline position of each pixel by
         calculating the energy of simple maximum optical_depth.
-        
+
         Arguments
         ---------
         - edge_mask : If true, only pixels passing the edge_mask will
           be fit and the remaning pixels will be set to a default
           value. This can help reduce computing time.
-        
+
         """
         with self.store() as store:
             frames = store.optical_depths
@@ -1339,21 +1343,21 @@ class XanesFrameset():
         with self.store(mode='r+') as store:
             store.whiteline_max = whitelines
             store.whiteline_max.attrs['frame_source'] = 'optical_depths'
-    
+
     def calculate_maps(self):
         """Generate a set of maps based on pixel-wise Xanes spectra: whiteline
         position, particle labels.
-        
+
         This method does not do any advanced analysis, so something
         like ``~xanespy.xanes_frameset.XanesFrameset.fit_spectra`` may
         be necessary.
-        
+
         """
         self.calculate_whitelines()
         self.calculate_mean_frames()
         # Calculate particle_labels
         self.label_particles()
-    
+
     def calculate_mean_frames(self):
         # Calculate the mean and median maps
         with self.store(mode="r+") as store:
@@ -1364,17 +1368,17 @@ class XanesFrameset():
                 log.info('Creating new map %s', mean_name)
                 store.replace_dataset(mean_name, data=mean, context='map')
                 store.get_dataset(mean_name).attrs['frame_source'] = fs_name
-    
+
     def plot_line_scans(self, representation="optical_depths",
                         direction="horizontal", idx=None, ax=None,
                         form="lines",
                         time_idx=0):
         """Plot spectrum for each point on a line.
-        
+
         The ``direction`` and ``idx`` parameters control which lines
         are scanned. Eg. ``direction="vertical"`` and ``idx=3`` will plot
         a spectrum for each position in the 4th column.
-        
+
         Parameters
         ----------
         representation : str, optional
@@ -1392,12 +1396,12 @@ class XanesFrameset():
           How to plot the data: 'lines' or 'map'.
         timeidx : int, optional
           Which time step to use for plotting line scans.
-        
+
         Returns
         -------
         artists
           List of line of image artists return from plotting command
-        
+
         """
         # Get the data from disk
         with self.store(mode='r') as store:
@@ -1435,11 +1439,11 @@ class XanesFrameset():
                              'Valid values are "lines" or "map".'
                              ''.format(repr(form)))
         return artists
-    
+
     def plot_signals(self, cmap="viridis"):
         """Plot the signals from the previously extracted data. Requires that
         self.store().signals and self.store().signal_weights be set.
-        
+
         """
         with self.store() as store:
             signals = store.signals[()]
@@ -1487,20 +1491,20 @@ class XanesFrameset():
             ax2.legend(["Refined Mod", "Predicted Mod", "Phase", "Real", "Imag"], fontsize=8)
             # ax2.set_ylim(*specrange)
             ax2.set_title("Signal Component {idx}".format(idx=idx))
-    
+
     def plot_signal_map(self, ax=None, signals_idx=None, interpolation=None):
         """Plot the map of signal strength for signals extracted from
         self.calculate_signals().
-        
+
         Arguments
         ---------
         - ax : A matplotlib Axes object. If "None" (default) a new
           axes object is created.
-        
+
         - signals_idx : Indices of which signals to plot. This will be
         passed as a numpy array index. Special value None (default)
         means first three signals will be plotted.
-        
+
         - interpolation : str
           How to smooth the image when plotting.
         """
@@ -1522,13 +1526,13 @@ class XanesFrameset():
         ax.set_xlabel(px_unit)
         ax.set_ylabel(px_unit)
         ax.set_title("Composite of signals {}".format(signals_idx))
-    
+
     def calculate_signals(self, n_components=2, method="nmf",
                           frame_source='optical_depths',
-                          frame_filter=True, frame_filter_kw: Mapping={}):
+                          frame_filter='edge', frame_filter_kw: Mapping={}):
         """Extract signals and assign each pixel to a group, then save the
         resulting RGB cluster map.
-        
+
         Parameters
         ==========
         n_components : int, optional
@@ -1568,22 +1572,23 @@ class XanesFrameset():
         dummy_mask = np.ones(frame_shape, dtype=np.bool)
 
         # See if we need a mask
-        if frame_filter == 'edge' or frame_filter == 'contrast':
+        if frame_filter:
             # Clear caches to make sure we don't use stale mask data
             self.clear_caches()
+            # Now retrieve the mask - redundant, but makes it easier to place into code
+            try:
+                mask = ~self.frame_mask(mask_type=frame_filter,  **frame_filter_kw)
+            except exceptions.XanesMathError as e:
+                log.error(e)
+                log.warning("Failed to calculate mask, using all pixels.")
+                warnings.warn('Failed to calculate mask, using all pixels')
+                mask = dummy_mask
+            else:
+                log.debug("Using edge mask for signal extraction")
+
         else:
             log.debug("No edge mask for signal extraction")
             mask = dummy_mask
-
-        # Now retrieve the mask - redundant, but makes it easier to place into code
-        try:
-            mask = ~self.frame_mask(frame_filter=frame_filter, **frame_filter_kw)
-        except exceptions.XanesMathError as e:
-            log.error(e)
-            log.warning("Failed to calculate mask, using all pixels.")
-            mask = dummy_mask
-        else:
-            log.debug("Using edge mask for signal extraction")
 
         # Separate the data into signals
         if method.lower() == 'nmf':
@@ -1640,14 +1645,14 @@ class XanesFrameset():
             store.cluster_fit = label_frame
         # Return the signals and weights
         return signals, weight_frames
-    
+
     @functools.lru_cache(maxsize=2)
     def map_data(self, *, timeidx=0, representation="optical_depths"):
         """Return map data for the given time index and representation.
-        
+
         If `representation` is not really mapping data, then the
         result will have more dimensions than expected.
-        
+
         Parameters
         ----------
         timeidx : int
@@ -1657,12 +1662,12 @@ class XanesFrameset():
         representation : str
           The group name for these data. Eg "optical_depths",
           "whiteline_map", "intensities"
-        
+
         Returns
         -------
         map_data : np.ndarray
           A 2-dimensional array with the form (row, col).
-        
+
         """
         with self.store() as store:
             map_data = store.get_dataset(representation)
@@ -1677,17 +1682,17 @@ class XanesFrameset():
             else:
                 map_data = np.array(map_data)
         return map_data
-    
+
     def timestamps(self, relative=False, t0=None):
         """Retrieve an array with the timestamp for each scan.
-        
+
         This will be a numpy array with the ``datetime64`` (absolute)
         or ``float64`` (relative) dtype. Each frame has both a start
         and end time-stamp. Depending on the beamline, the individual
         energy frames might have timestamps based on the whole XANES
         scan. These timestamps are timezone naive, with a timezone
         based on the specifics of the beamline.
-        
+
         Parameters
         ----------
         relative : bool, optional
@@ -1696,14 +1701,14 @@ class XanesFrameset():
           If ``relative`` is truthy, this value be used as the start
           time for the frameset. If omitted, the earliest timestamp in
           the frameset will be used.
-        
+
         Returns
         -------
         timestamps : np.ndarray
           The timestamps for each energy frame with a shape described
           as (num_timesteps, num_energies, 2), where the last axis is
           for the start and end of the frame.
-        
+
         """
         datetime_dtype = 'datetime64[ms]'
         with self.store() as store:
@@ -1723,10 +1728,10 @@ class XanesFrameset():
     @functools.lru_cache(maxsize=2)
     def frames(self, representation="optical_depths", timeidx=0):
         """Return the frames for the given time index.
-        
+
         If `representation` is really mapping data, then the source
         frames will be returned.
-        
+
         Parameters
         ----------
         timeidx : int
@@ -1734,38 +1739,38 @@ class XanesFrameset():
         representation : str
           The group name for these data. Eg "optical_depths",
           "whiteline_map", "intensities"
-        
-        
+
+
         Returns
         -------
         frames : np.ndarray
           A 3-dimensional array with the form (energy, row, col).
-        
+
         """
         with self.store() as store:
             frames = store.get_frames(name=representation)[timeidx]
         return frames
-    
+
     @functools.lru_cache(maxsize=2)
     def energies(self, timeidx=0):
         """Return the array of beam energies for the given time index.
-        
+
         Returns
         -------
         energies: np.ndarray
           A 1-dimensional array with the energy for each frame.
-        
+
         """
         with self.store() as store:
             energies = store.energies[timeidx]
         return energies
-    
+
     def subtract_surroundings(self, sensitivity: float=1.):
         """Use the edge mask to separate "surroundings" from "sample", then
         subtract the average surrounding optical_depth from each
         frame. This effectively removes effects where the entire frame
         is brighter from one energy to the next.
-        
+
         Parameters
         ----------
         sensitivity : optional
@@ -1773,7 +1778,7 @@ class XanesFrameset():
           threshold. Higher values give better statistics, but might
           include the active material, lower values give worse
           statistics but are less likely to include active material.
-        
+
         """
         self.clear_caches()
         with self.store(mode='r+') as store:
@@ -1791,16 +1796,16 @@ class XanesFrameset():
                 bg = broadcast_reverse(bg, store.optical_depths.shape[1:])
                 # Save the resultant data to disk
                 store.optical_depths[timestep] = store.optical_depths[timestep] - bg
-    
+
     @functools.lru_cache(maxsize=64)
     def extent(self, representation='intensities', idx=...):
         """Determine physical dimensions for axes values.
-        
+
         If an index is given, it will first be applied to the frames
         array. For any remaining dimensions besides the last two, the
         median will be taken. For an array of extents for each frame,
         use the ``extent_array`` method.
-        
+
         Arguments
         ---------
         representation : str, optional
@@ -1808,13 +1813,13 @@ class XanesFrameset():
         idx : int, optional
           Index for choosing a frame. Any valid numpy index is
           allowed, eg. ``...`` (default) uses all frame.
-        
+
         Returns
         -------
         extent : tuple
           The spatial extent for the frame with order specified by
           ``utilities.Extent``
-        
+
         """
         pixel_size = self.pixel_size(representation=representation, timestep=idx)
         imshape = self.frame_shape(representation)
@@ -1828,12 +1833,12 @@ class XanesFrameset():
         extent = Extent(left=left, right=right,
                         bottom=bottom, top=top)
         return extent
-    
+
     def plot_frame(self, idx, ax=None, cmap="bone",
                    representation="optical_depths", component='modulus', *args,
                    **kwargs):
         """Plot the frame with given index as an image.
-        
+
         Parameters
         ==========
         idx : 2-tuple(int)
@@ -1846,14 +1851,14 @@ class XanesFrameset():
         component : str, optional
           The complex component (real, imag, modulus, phase) to use
           for plotting. Only applicable to complex-valued data.
-        *args, **kwargs : 
+        *args, **kwargs :
           Passed to the matplotlib ``imshow`` function.
-        
+
         Returns
         =======
         artist
           The imshow ImageArtist.
-        
+
         """
         if len(idx) != 2:
             raise ValueError("Index must be a 2-tuple in (timestep, energy) order.")
@@ -1861,32 +1866,32 @@ class XanesFrameset():
                                     representation=representation, cmap=cmap, timeidx=idx, *args,
                                     **kwargs)
         return artist
-    
+
     @property
     def num_timesteps(self):
         with self.store() as store:
             val = store.optical_depths.shape[0]
         return val
-    
+
     @property
     def timestep_names(self):
         with self.store() as store:
             names = store.timestep_names[()]
             names = names.astype('unicode')
         return names
-    
+
     @property
     def num_energies(self):
         with self.store() as store:
             val = store.energies.shape[-1]
         return val
-    
+
     def plot_map(self, ax=None, map_name="whiteline_fit", timeidx=0,
                  vmin=None, vmax=None, v0=0, median_size=0,
                  component="real", edge_filter=False, edge_filter_kw={},
                  *args, **kwargs):
         """Prepare data and plot a map of processed data.
-        
+
         Parameters
         ==========
         ax : optional
@@ -1913,13 +1918,13 @@ class XanesFrameset():
           The zero point for mapping values. This is subtracted from
           each reported map value. This is done before vmin and vmax
           are applied.
-        
+
         Returns
         =======
         artists
           A list of matplotlib artists returned when calling
           ``ax.imshow()`` or similar routines.
-        
+
         """
         with self.store() as store:
             # Get the data from disk
@@ -1944,14 +1949,14 @@ class XanesFrameset():
             extent=self.extent(representation=frame_source),
             *args, **kwargs)
         return artists
-    
+
     def plot_map_pixel_spectra(self, pixels, map_ax=None,
                                spectra_ax=None,
                                map_name="whiteline_map", timeidx=0,
                                step_size=0, *args, **kwargs):
         """Plot the frameset's map and highlight some pixels on it then plot
         those pixel's spectra on another set of axes.
-        
+
         Arguments
         ---------
         pixels : iterable
@@ -1972,7 +1977,7 @@ class XanesFrameset():
           Index of which timestep to use (default: 0).
         args, kwargs : optional
           Passed to plots.plot_pixel_spectra()
-        
+
         """
         # Create some axes if necessary
         if map_ax is None:
@@ -1993,7 +1998,7 @@ class XanesFrameset():
                                  map_ax=map_ax,
                                  spectra_ax=spectra_ax,
                                  step_size=step_size)
-    
+
     def plot_histogram(self, plotter=None, timeidx=None, ax=None,
                        vmin=None, vmax=None, goodness_filter=False,
                        representation="whiteline_fit",
@@ -2022,7 +2027,7 @@ class XanesFrameset():
         ax = artists[0].axes
         ax.set_xlabel(representation)
         return artists
-   
+
     def gui_viewer(self):
         """Launch a Qt GUI for inspecting the data."""
         cmd = os.path.join(os.path.split(__file__)[0], 'xanes_viewer.py')
@@ -2042,17 +2047,17 @@ class XanesFrameset():
         #     # Restore original values
         #     self.parent_name = init_parent_name
         #     self.data_name = init_data_name
-    
+
     def apply_internal_reference(self):
         """Use a portion of each frame for internal reference correction.
-        
+
         This function will extract an $I_0$ from the background by
         thresholding. Then calculate the optical depth by
-        
+
         .. math:: OD = ln(\\frac{I_0}{I})
-        
+
         This method is compatible with complex intensity data.
-        
+
         """
         with self.store() as store:
             Is = store.intensities[()]
