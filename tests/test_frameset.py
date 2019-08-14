@@ -277,10 +277,17 @@ class XanesFramesetTest(TestCase):
     def test_lc_fitting(self):
         # Prepare stubbed data
         store = MockStore()
+
+
         od_data = np.random.rand(1, 6, 16, 16)
+
+
         store.get_frames = mock.MagicMock(return_value=od_data)
         store.get_dataset = mock.MagicMock(return_value=od_data)
         Es = [np.linspace(840, 862, num=6)]
+
+        store.intensities = od_data
+
         store.energies = Es
         fs = self.create_frameset(store=store)
         spectrum = fs.spectrum()
@@ -446,18 +453,21 @@ class XanesFramesetTest(TestCase):
         frames = np.broadcast_to(spectrum, (10, 128, 128, 51))
         frames = np.swapaxes(frames, 3, 1)
         store.get_frames = mock.Mock(return_value=frames)
+        store.intensities = frames
         fs = self.create_frameset(store=store)
         # Check that the return value is correct
         result = fs.spectrum()
         np.testing.assert_equal(result.index, energies)
         np.testing.assert_almost_equal(result.values, spectrum)
         # Check that multiple spectra can be acquired simultaneously
+
         result = fs.spectrum(index=slice(0, 2))
         result = np.array([ser.values for ser in result])
         spectras = np.array([fs.spectrum(index=0), fs.spectrum(index=0)])
         np.testing.assert_equal(result, spectras)
         # Check that the derivative is calculated correctly
         derivative = 4*np.pi/100 * np.cos((energies-8300)*4*np.pi/100)
+
         result = fs.spectrum(derivative=1)
         np.testing.assert_almost_equal(result.values, derivative, decimal=3)
     
@@ -473,8 +483,10 @@ class XanesFramesetTest(TestCase):
         spectrum = np.sin(x_params)
         frames = np.broadcast_to(spectrum, (10, 128, 128, 7)) # 7, not 51
         frames = np.swapaxes(frames, 3, 1)
+        store.intensities = frames
         store.get_frames = mock.Mock(return_value=frames)
         fs = self.create_frameset(store=store)
+
         # Check that the return value is correct
         result = fs.spectrum()
         np.testing.assert_equal(result.index, np.arange(0, 7))
@@ -524,6 +536,8 @@ class XanesFramesetTest(TestCase):
         store.energies = np.array([[850, 853]])
         store.get_dataset.return_value = ODs
         store.get_frames.return_value = ODs
+        store.intensities = ODs
+
         fs = self.create_frameset(store=store)
         # Check that reference_frame arguments of the wrong shape are rejected
         with self.assertRaisesRegex(Exception, "does not match shape"):
