@@ -212,6 +212,38 @@ dimensions.
 	  
 	  fs.apply_median_filter(kernel)
 
+Masking Data
+============
+Sometimes it is necessary to mask background pixels from those which
+contain active material. Two masking methods have been created to
+differentiate these two areas. `edge` and `contrast`. If `mask_type`
+is set to `None`, then a blank mask object will be created.
+
+**Edge**
+
+Masking by the `edge` method determines if the pixel contains an edge
+jump (pre and post edge are defined by the edge variable in the XanesFrameset).
+Pixels containing edge jumps are not masked while, pixels without edge jumps are masked.
+Sometimes the background pixels contain partial edge jumps making this method
+inconsistent from sample to sample.
+
+.. code:: python
+
+  fs = XanesFrameset(hdf_filename="...")
+  mask = fs.frame_mask(mask_type='edge')
+
+**Contrast**
+
+Masking by the `contrast` method differentiates pixel contrast through a
+scipy.filters.threshold_otsu method. Based on the contrast difference from
+pixel to pixel, a mask will be created.
+
+.. code:: python
+
+  fs = XanesFrameset(hdf_filename="...")
+  mask = fs.frame_mask(mask_type='contrast')
+
+
 Subtracting Surroundings
 ========================
 
