@@ -962,16 +962,16 @@ class XanesFrameset():
             else:
                 series = spectrum
         return series
-
+    
     def plot_spectrum(self, ax=None, pixel=None,
                       norm_range=None, normalize=False,
-                      representation="optical_depths",
+                      representation: str="optical_depths",
                       show_fit=False, frame_filter=False,
                       frame_filter_kw: Mapping = {},
-                      linestyle=":", timeidx=0,
-                      *args, **kwargs):
+                      linestyle=":", timeidx: int=0,
+                      *args: Any, **kwargs: Any):
         """Calculate and plot the xanes spectrum for this field-of-view.
-
+        
         Arguments
         ---------
         ax : optional
@@ -991,7 +991,7 @@ class XanesFrameset():
           **kwargs to be passed into xp.XanesFrameset.frame_mask()
         args, kwargs : optional
           Passed to plotting functions.
-
+        
         """
         if show_fit:
             raise NotImplementedError("`show_fit` parameter coming soon")
@@ -1011,10 +1011,9 @@ class XanesFrameset():
             # Adjust the limits of the spectrum to be between 0 and 1
             normalized = edge.normalize(spectrum.values, spectrum.index)
             spectrum = pd.Series(normalized, index=spectrum.index)
-        scatter = plots.plot_spectrum(spectrum=spectrum, ax=ax,
-                                      energies=spectrum.index,
-                                      norm=norm,
-                                      *args, **kwargs)
+        scatter = plots.plot_spectrum( # type: ignore # https://github.com/python/mypy/issues/2582
+            spectrum=spectrum, ax=ax, energies=spectrum.index,
+            norm=norm, *args, **kwargs)
         # Plot lines at edge of normalization range or indicate peak positions
         if edge is not None:
             edge.annotate_spectrum(ax=ax)

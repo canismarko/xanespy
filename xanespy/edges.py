@@ -90,7 +90,7 @@ class Edge():
     def normalize(self, *args, **kwargs):
         raise NotImplementedError()
     
-    def annotate_spectrum(ax):
+    def annotate_spectrum(self, ax):
         pass
 
 
