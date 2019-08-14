@@ -1,3 +1,4 @@
+dist: bionic
 language: python
 env:
   - IS_TRAVIS: true
@@ -5,6 +6,7 @@ sudo: false
 python:
   - "3.5"
   - "3.6"
+  - "3.7"
 install:
   # We do this conditionally because it saves us some downloading if the
   # version is the same.
