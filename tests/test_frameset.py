@@ -443,13 +443,23 @@ class XanesFramesetTest(TestCase):
             # Check that the new edge mask is a boolean array
             self.assertEqual(fs.edge_mask().dtype, bool)
     
+    def test_line_spectra(self):
+        store = MockStore()
+        frames = np.multiply(*np.meshgrid(np.arange(0, 16), np.arange(0, 16)))
+        frames = np.broadcast_to(frames, (1, 4, 16, 16))
+        store.get_dataset = mock.MagicMock(return_value=frames)
+        store.intensities = frames
+        store.pixel_sizes = np.ones(shape=(*frames.shape[:2], 2))
+        frameset = self.create_frameset(store=store)
+        xy0, xy1 = ((1, 1), (1, 13))
+        result = frameset.line_spectra(xy0=xy0, xy1=xy1)
+        self.assertEqual(result.shape, (12, 4))
+    
     def test_spectrum(self):
         store = MockStore()
-
         # Prepare fake energy data
         energies = np.linspace(8300, 8400, num=51)
         store.energies = np.broadcast_to(energies, (10, 51))
-
         # Prepare fake spectrum (absorbance) data
         spectrum = np.sin((energies-8300)*4*np.pi/100)
         frames = np.broadcast_to(spectrum, (10, 128, 128, 51))
@@ -457,25 +467,21 @@ class XanesFramesetTest(TestCase):
         store.get_frames = mock.Mock(return_value=frames)
         store.intensities = frames
         fs = self.create_frameset(store=store)
-
         # Check that the return value is correct
         result = fs.spectrum()
         np.testing.assert_equal(result.index, energies)
         np.testing.assert_almost_equal(result.values, spectrum)
-
         # Check that multiple spectra can be acquired simultaneously
         result = fs.spectrum(index=slice(0, 2))
         result = np.array([ser.values for ser in result])
         spectras = np.array([fs.spectrum(index=0), fs.spectrum(index=0)])
         np.testing.assert_equal(result, spectras)
-
         # Check that the derivative is calculated correctly
         derivative = 4*np.pi/100 * np.cos((energies-8300)*4*np.pi/100)
         result = fs.spectrum(derivative=1)
         np.testing.assert_almost_equal(result.values, derivative, decimal=3)
     
     def test_nonenergy_spectrum(self):
-
         """If the frames aren't in energy order"""
         store = MockStore()
         # Prepare fake energy data
