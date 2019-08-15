@@ -441,7 +441,6 @@ class TXMStore():
                    "Valid choices are: {}."
                    "".format(name, self.data_group().name,
                              self.hdf_filename, all_valid_names))
-            print(GroupKeyError)
             raise GroupKeyError(msg)
         else:
             data = self.data_group()[name]

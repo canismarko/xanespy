@@ -481,8 +481,6 @@ class XanesMathTest(unittest.TestCase):
 
         # The first time idx - User selected in the xp.XanesFrameset.frames() method
         frames = self.coins()
-
-        print(np.shape(frames))
         # Set up the initial numpy frames
         mean_frames_image = np.mean(frames, axis=(0, 1))
         single_frame_image = frames[0][10]

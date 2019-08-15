@@ -924,17 +924,21 @@ class XanesFrameset():
                 frames = store.get_frames(representation)[index]
                 frames_shape = frames.shape[:-2]
 
-                if frame_filter:
-                    # Filter out background pixels using edge mask
-                    try:
-                        mask = self.frame_mask(mask_type=frame_filter, **frame_filter_kw)
-                    except exceptions.XanesMathError:
-                        log.error("Could not find pre-edge energies, ignoring mask.")
+                # if frame_filter:
+                #     # Filter out background pixels using edge mask
+                #     try:
+                #         mask = self.frame_mask(mask_type=frame_filter, **frame_filter_kw)
+                #     except exceptions.XanesMathError:
+                #         log.error("Could not find pre-edge energies, ignoring mask.")
+                #
+                #     else:
+                #         mask = np.broadcast_to(array=mask,
+                #                                shape=(*frames_shape, *mask.shape))
+                #         frames = np.ma.array(frames, mask=mask)
 
-                    else:
-                        mask = np.broadcast_to(array=mask,
-                                               shape=(*frames_shape, *mask.shape))
-                        frames = np.ma.array(frames, mask=mask)
+                mask = self.frame_mask(mask_type=frame_filter, **frame_filter_kw)
+
+                frames = np.ma.array(frames, mask=np.broadcast_to(array=mask, shape=(*frames_shape, *mask.shape)))
 
                 # Take average of all pixel frames
                 flat = (*frames.shape[:frames.ndim-2], -1) # Collapse image dimension
@@ -1014,12 +1018,12 @@ class XanesFrameset():
         return scatter
 
     def edge_mask(self, *args, **kwargs):
-        warnings.warn("edge_mask is deprecated, use frame_mask() instead.")
+        warnings.warn(DeprecationWarning("edge_mask is deprecated, use frame_mask() instead."))
         return self.frame_mask(mask_type='edge', *args, **kwargs)
 
     @functools.lru_cache()
-    def frame_mask(self, mask_type=None, sensitivity: float = 1,
-                   min_size: int = 0, frame_idx='mean') -> np.ndarray:
+    def frame_mask(self, mask_type=None, sensitivity: float = 1, min_size: int = 0, frame_idx='mean',
+                   representation='optical_depths') -> np.ndarray:
         """Calculate a mask for what is likely active material based on either
         the edge or the contrast of the first time index.
         
@@ -1041,41 +1045,33 @@ class XanesFrameset():
           xp.xanes_math.contrast_mask(). Allows User to create a
           contrast map from an individual (timestep - energy) rather
           than the mean image.
+        representation : str, optional
+          What dataset to use as input for calculating the frame mask.
         
         """
         with self.store() as store:
-            mask_is_possible = store.has_dataset('optical_depths') and self.edge is not None
-            if mask_is_possible:
-                # Check for complex values and convert to optical_depths only
-                ODs = np.real(store.optical_depths[()])
-                
-                if mask_type == 'contrast':
-                    # Create mask based on contrast maps
-                    mask = xm.contrast_mask(frames=ODs,
-                                        sensitivity=sensitivity,
-                                        min_size=min_size,
-                                        frame_idx=frame_idx)
-                
-                elif mask_type == 'edge':
-                    # Create mask based on edge jump
-                    mask = self.edge.mask(frames=ODs,
-                                          energies=store.energies,
-                                          sensitivity=sensitivity,
-                                          min_size=min_size)
-                
-                elif not mask_type:
-                    # Create blank mask array
-                    mask = np.zeros(shape=store.intensities.shape[-2:], dtype='bool')
-                else:
-                    # Show warning if all of these fail
-                    warnings.warn('Incorrect User input or invalid frames() dimensions')
-            
-            else:
-                # Store has no optical_depth data so just return a blank array
+            # Check for complex values and return representation data
+            frames = get_component(store.get_dataset(representation), 'real')
+            #ODs = np.real(store.optical_depths[()])
+            if mask_type == 'contrast':
+                # Create mask based on contrast maps
+                mask = xm.contrast_mask(frames=frames,
+                                    sensitivity=sensitivity,
+                                    min_size=min_size,
+                                    frame_idx=frame_idx)
+
+            elif mask_type == 'edge':
+                # Create mask based on edge jump
+                mask = self.edge.mask(frames=frames,
+                                      energies=store.energies,
+                                      sensitivity=sensitivity,
+                                      min_size=min_size)
+            elif not mask_type:
+                # Create blank mask array
                 mask = np.zeros(shape=store.intensities.shape[-2:], dtype='bool')
-                warnings.warn('No edge mask calculated. '
-                              'Could not find either optical_depth frames '
-                              'or `edge` attribute.')
+            else:
+                # Show warning if all of these fail
+                raise ValueError('Incorrect *mask_type*. Valid values are `edge`, `contrast` or None.')
         return mask
 
     def fit_linear_combinations(self, sources, component='real', name='linear_combination',

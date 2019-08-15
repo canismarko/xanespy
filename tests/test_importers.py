@@ -752,7 +752,6 @@ class SSRLImportTest(TestCase):
         # Check with using named tuples
         shape_list = [utilities.shape(1024, 1024), utilities.shape(1024, 1024)]
         min_shape = minimum_shape(shape_list)
-        print(min_shape)
     
     def test_rebin_image(self):
         my_list = [1, 2, 2, 3, 3, 3]

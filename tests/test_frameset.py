@@ -139,10 +139,13 @@ class XanesFramesetTest(TestCase):
     def dummy_frame_data(self, shape=(5, 5, 128, 128)):
         """Create some dummy data with a given shape. It's pretty much just an
         arange with reshaping."""
-        length = np.prod(shape)
-        data = np.arange(length)
-        data = np.reshape(data, shape)
-        return data
+        frames = np.multiply(*np.meshgrid(np.arange(0, shape[2]), np.arange(0, shape[3])))
+        frames = np.outer(np.arange(1, shape[1]+1), frames).reshape(*shape[1:])
+        frames = np.broadcast_to(frames, shape)
+        # length = np.prod(shape)
+        # data = np.arange(length)
+        # data = np.reshape(data, shape)
+        return frames
     
     def create_frameset(self, store=None, edge=None):
         if edge is None:
@@ -430,18 +433,20 @@ class XanesFramesetTest(TestCase):
     def test_edge_mask(self):
         store = MockStore()
         store.has_dataset = mock.MagicMock(return_value=False)
-        store.intensities = np.random.rand(128, 128)
-        store.optical_depths = np.random.rand(2, 3, 128, 128)
+        frames = self.dummy_frame_data((2, 3, 128, 128))
+        store.intensities = frames
+        store.optical_depths = frames
+        store.get_dataset = mock.MagicMock(return_value=frames)
         store.energies = np.array([[8250, 8325, 8360], [8250, 8325, 8360]])
         fs = self.create_frameset(store=store)
         # Check that the new edge mask has same shape as intensities
         with warnings.catch_warnings(record=True) as w:
             warnings.resetwarnings()
-            np.testing.assert_equal(fs.edge_mask(), np.zeros(shape=(128, 128)))
-            self.assertEqual(len(w), 2, 'Edge warning not emitted.')
-            np.testing.assert_equal(fs.edge_mask().shape, (128, 128))
+            np.testing.assert_equal(fs.frame_mask(mask_type='edge').shape, (128, 128))
+            self.assertEqual(len(w), 3, 'Edge warning not emitted.')
+            np.testing.assert_equal(fs.frame_mask(mask_type='edge').shape, (128, 128))
             # Check that the new edge mask is a boolean array
-            self.assertEqual(fs.edge_mask().dtype, bool)
+            self.assertEqual(fs.frame_mask(mask_type='edge').dtype, bool)
     
     def test_line_spectra(self):
         store = MockStore()
@@ -667,12 +672,12 @@ class XanesFramesetTest(TestCase):
         store = MockStore()
         frameset = self.create_frameset(store=store)
         # Check on getting data by timeidx
-        data = self.dummy_frame_data((10, 128, 128))
+        data = self.dummy_frame_data((1, 10, 128, 128))[0]
         store.get_dataset.return_value = data
         result = frameset.map_data(timeidx=5)
         np.testing.assert_equal(result, data[5])
         # Check on getting and already 2D map
-        data = self.dummy_frame_data((128, 128))
+        data = self.dummy_frame_data((1, 1, 128, 128))[0, 0]
         store.get_dataset.return_value = data
         frameset.clear_caches()
         result = frameset.map_data(timeidx=5)
@@ -700,7 +705,7 @@ class XanesFramesetTest(TestCase):
     def test_energies(self):
         # Make mocked data
         store = MockStore
-        data = self.dummy_frame_data((10, 61))
+        data = self.dummy_frame_data((1, 1, 10, 61))[0, 0]
         store.energies = data
         fs = self.create_frameset(store=store)
         # Check that the method returns the right data
@@ -796,7 +801,7 @@ class XanesFramesetTest(TestCase):
         with warnings.catch_warnings(record=True) as w:
             warnings.resetwarnings()
             np.testing.assert_equal(fs.frame_mask(), np.zeros(shape=(128, 128)))
-            self.assertEqual(len(w), 1, 'Edge warning not emitted.')
+            self.assertEqual(len(w), 0, 'No mask warning. Make sure code fails')
             np.testing.assert_equal(fs.frame_mask().shape, (128, 128))
             # Check that the new edge mask is a boolean array
             self.assertEqual(fs.frame_mask().dtype, bool)
