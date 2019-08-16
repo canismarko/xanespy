@@ -1117,7 +1117,7 @@ def contrast_mask(frames: np.ndarray, sensitivity: float = 1, min_size=0, frame_
     min_size : float, optional
       Objects below this size (in pixels) will be
       removed. Passing zero (default) will result in no effect.
-    frame_idx : str, tuple(time_step_index, energy_index), optional
+    frame_idx : tuple(time_step_index, energy_index), optional
       Allows the user to select which image to
 
     Returns
@@ -1138,6 +1138,7 @@ def contrast_mask(frames: np.ndarray, sensitivity: float = 1, min_size=0, frame_
     elif isinstance(frame_idx, tuple):
         time_idx, energy_idx = frame_idx
         image = frames[time_idx][energy_idx]
+    
 
     # Determining threshold
     img_bottom = image.min()
