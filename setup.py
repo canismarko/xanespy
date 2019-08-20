@@ -19,6 +19,7 @@ setup(name="xanespy",
           'pytz>=2013b', 'h5py', 'pandas', 'olefile', 'matplotlib>=3.0.0', 'scikit-image>=0.14.0',
           'scikit-learn', 'numpy', 'tqdm', 'jinja2', 'pandas',
       ],
+      python_requires='>=3.6',
       packages=['xanespy',],
       package_data={
           'xanespy': ['qt_map_window.ui', 'qt_frame_window.ui']

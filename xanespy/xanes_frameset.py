@@ -70,7 +70,7 @@ class XanesFrameset():
     absorption edge. Iterating over this object gives the individual
     Frame() objects. The class assumes that the data have been
     imported into an HDF file.
-
+    
     """
     active_group = ''
     parent_name = None
@@ -79,7 +79,7 @@ class XanesFrameset():
     _data_name = None
     # Places to store staged image transformations
     _transformations = None
-
+    
     def __init__(self, hdf_filename, edge, groupname=None):
         """Parameters
         ----------
@@ -91,9 +91,9 @@ class XanesFrameset():
           recommended.
         groupname : str, optional
           Top level HDF group corresponding to this frameset. This
-          argument is only required if there is more than one top-level
+          argument is required if there is more than one top-level
           group.
-
+        
         """
         self.hdf_filename = hdf_filename
         # Validate the edge object
