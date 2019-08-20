@@ -180,7 +180,7 @@ class APS32IDCImportTest(TestCase):
                                    total_timesteps=2, square=False, downsample=0)
         import_aps32idc_xanes_file(self.src_data,
                                    hdf_filename=self.hdf, hdf_groupname='experiment1',
-                                   total_timesteps=2, timestep=1, append=True, square=False,
+                                   total_timesteps=2, timeidx=1, append=True, square=False,
                                    downsample=0)
         with h5py.File(self.hdf, mode='r') as f:
             g = f['/experiment1/imported']

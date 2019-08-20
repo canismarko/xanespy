@@ -782,12 +782,12 @@ class XanesFrameset():
         with self.store() as store:
             imshape = store.get_dataset(representation).shape[-2:]
         return imshape
-
-    def pixel_size(self, representation='optical_depths', timestep=0):
+    
+    def pixel_size(self, representation='optical_depths', timeidx=0):
         """Return the size of the pixel (with units set by ``pixel_unit``)."""
         with self.store() as store:
             # Filter to only the requested frame
-            pixel_size = store.pixel_sizes[timestep]
+            pixel_size = store.pixel_sizes[timeidx]
             # Take the median across all pixel sizes (except the xy dim)
             pixel_size = np.median(pixel_size)
         return pixel_size
@@ -812,7 +812,7 @@ class XanesFrameset():
     
     def line_spectra(self, xy0: Tuple[int, int], xy1: Tuple[int, int],
                      representation="optical_depths",
-                     timestep=0, frame_filter=False, frame_filter_kw={}):
+                     timeidx=0, frame_filter=False, frame_filter_kw={}):
         """Return an array of spectra on a line between two points.
         
         This is effectively nearest neighbor interpolation between two (x,
@@ -831,7 +831,7 @@ class XanesFrameset():
           Ending point for the line.
         representation : str, optional
           Which type of data to use for extracting line profiles.
-        timestep : int, optional
+        timeidx : int, optional
           Which time step to use for extracting line profiles.
         frame_filter : bool, str, optional
           Whether to first apply an edge filter mask to the data
@@ -854,7 +854,7 @@ class XanesFrameset():
         mask = self.frame_mask(mask_type=frame_filter, **frame_filter_kw)
         # Extract the values along the line
         with self.store(mode='r') as store:
-            frames = store.get_dataset(representation)[timestep]
+            frames = store.get_dataset(representation)[timeidx]
             frames = np.ma.array(frames, mask=np.broadcast_to(mask, frames.shape))
             spectra = frames[:, y.astype(np.int), x.astype(np.int)]
             spectra = np.swapaxes(spectra, 0, 1)
@@ -960,7 +960,7 @@ class XanesFrameset():
             else:
                 series = spectrum
         return series
-
+    
     def plot_spectrum(self, ax=None, pixel=None,
                       norm_range=None, normalize=False,
                       representation: str="optical_depths",
@@ -969,7 +969,7 @@ class XanesFrameset():
                       linestyle=":", timeidx: int=0,
                       *args: Any, **kwargs: Any):
         """Calculate and plot the xanes spectrum for this field-of-view.
-
+        
         Arguments
         ---------
         ax : optional
@@ -987,9 +987,11 @@ class XanesFrameset():
           to apply to the data (e.g  'edge', 'contrast', None)
         frame_filter_kw : dict, optional
           **kwargs to be passed into xp.XanesFrameset.frame_mask()
+        timeidx
+          Which timestep index to use for retrieving data.
         args, kwargs : optional
           Passed to plotting functions.
-
+        
         """
         if show_fit:
             raise NotImplementedError("`show_fit` parameter coming soon")
@@ -1333,17 +1335,17 @@ class XanesFrameset():
     def calculate_maps(self):
         """Generate a set of maps based on pixel-wise Xanes spectra: whiteline
         position, particle labels.
-
+        
         This method does not do any advanced analysis, so something
         like ``~xanespy.xanes_frameset.XanesFrameset.fit_spectra`` may
         be necessary.
-
+        
         """
         self.calculate_whitelines()
         self.calculate_mean_frames()
         # Calculate particle_labels
         self.label_particles()
-
+    
     def calculate_mean_frames(self):
         # Calculate the mean and median maps
         with self.store(mode="r+") as store:
@@ -1354,82 +1356,11 @@ class XanesFrameset():
                 log.info('Creating new map %s', mean_name)
                 store.replace_dataset(mean_name, data=mean, context='map')
                 store.get_dataset(mean_name).attrs['frame_source'] = fs_name
-
-    def plot_line_scans(self, representation="optical_depths",
-                        direction="horizontal", idx=None, ax=None,
-                        form="lines",
-                        time_idx=0):
-        """Plot spectrum for each point on a line.
-
-        The ``direction`` and ``idx`` parameters control which lines
-        are scanned. Eg. ``direction="vertical"`` and ``idx=3`` will plot
-        a spectrum for each position in the 4th column.
-
-        Parameters
-        ----------
-        representation : str, optional
-          Which frameset to use for plotting.
-        direction : str, optional
-          Whether to do lines scans in "horizontal" (default) or
-          "vertical" orientation.
-        idx : int, optional
-          Which row or column to use for line scans. If omitted,
-          frames will be averaged across the unchanging dimension.
-        ax : mpl.Axes, optional
-          Matplotlib axes to use for plotting. If omitted, a new Axes
-          will be created.
-        form : str, optional
-          How to plot the data: 'lines' or 'map'.
-        timeidx : int, optional
-          Which time step to use for plotting line scans.
-
-        Returns
-        -------
-        artists
-          List of line of image artists return from plotting command
-
-        """
-        # Get the data from disk
-        with self.store(mode='r') as store:
-            frames = store.get_frames(representation)[time_idx]
-        energies=self.energies()
-        # Process the direction parameter to determine reshaping
-        if direction == "vertical":
-            mean_axis = 2
-        elif direction == "horizontal":
-            mean_axis = 1
-        else:
-            raise ValueError('Invalid ``direction`` argument "{}". '
-                             'Valid options are "horizontal" or "vertical"'
-                             ''.format(direction))
-        # Convert the data from frames into line spectra
-        spectra = np.mean(frames, axis=mean_axis)
-        spectra = np.moveaxis(spectra, 1, 0)
-        # Plot the spectra either as lines or as a map
-        if ax is None:
-            ax = plots.new_axes()
-        if form == 'lines':
-            artists = plots.plot_spectra(spectra, energies=energies, ax=ax)
-            ax.set_xlabel('Energy /eV')
-        elif form == 'map':
-            extent = self.extent(representation)[slice(0, 2)]
-            extent = (*extent, 0, len(energies))
-            artists = plots.plot_spectra_as_map(spectra,
-                                                energies=energies, ax=ax, extent=extent)
-            ax.set_xlabel('Energy /eV')
-            ax.xaxis.set_ticks([])
-            ax.set_xlabel('Energy /eV')
-            ax.set_ylabel("Position /{}".format(self.pixel_unit()))
-        else:
-            raise ValueError('Invalid value for ``form``: {}. '
-                             'Valid values are "lines" or "map".'
-                             ''.format(repr(form)))
-        return artists
-
+    
     def plot_signals(self, cmap="viridis"):
         """Plot the signals from the previously extracted data. Requires that
         self.store().signals and self.store().signal_weights be set.
-
+        
         """
         with self.store() as store:
             signals = store.signals[()]
@@ -1630,17 +1561,17 @@ class XanesFrameset():
     @functools.lru_cache(maxsize=2)
     def map_data(self, *, timeidx=0, representation="optical_depths"):
         """Return map data for the given time index and representation.
-
+        
         If `representation` is not really mapping data, then the
         result will have more dimensions than expected.
-
+        
         Parameters
         ----------
-        timeidx : int
+        timeidx
           Index for the first dimension of the combined data array. If
           the underlying map data has only 2 dimensions, this
           parameter is ignored.
-        representation : str
+        representation
           The group name for these data. Eg "optical_depths",
           "whiteline_map", "intensities"
 
@@ -1802,7 +1733,7 @@ class XanesFrameset():
           ``utilities.Extent``
         
         """
-        pixel_size = self.pixel_size(representation=representation, timestep=idx)
+        pixel_size = self.pixel_size(representation=representation, timeidx=idx)
         imshape = self.frame_shape(representation)
         height = imshape[0] * pixel_size
         width = imshape[1] * pixel_size

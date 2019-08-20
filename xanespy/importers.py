@@ -263,13 +263,13 @@ def import_aps32idc_xanes_files(filenames, hdf_filename, hdf_groupname, *args, *
     append = False
     for idx, filename in enumerate(filenames):
         import_aps32idc_xanes_file(filename, hdf_filename, hdf_groupname,
-                                   timestep=idx, total_timesteps=len(filenames),
+                                   timeidx=idx, total_timesteps=len(filenames),
                                    append=append, *args, **kwargs)
         append = True
 
 
 def import_aps32idc_xanes_file(filename, hdf_filename, hdf_groupname,
-                               timestep=0, total_timesteps=1,
+                               timeidx=0, total_timesteps=1,
                                append=False, downsample=1,
                                square=True, exclude=[],
                                median_filter_size=(1, 3, 3),
@@ -288,7 +288,7 @@ def import_aps32idc_xanes_file(filename, hdf_filename, hdf_groupname,
     hdf_groupname : str, optional
       A description of the dataset that will be used to form the HDF
       data group.
-    timestep : int, optional
+    timeidx : int, optional
       Which timestep index to use for saving data.
     total_timesteps : int, optional
       How many timesteps to use for creating new datasteps. Only
@@ -361,7 +361,6 @@ def import_aps32idc_xanes_file(filename, hdf_filename, hdf_groupname,
             src_flat = src_flat[slices]
             src_dark = src_dark[slices]
         shape = (total_timesteps, *src_data.shape)
-        time_idx = timestep
         data_group.require_dataset('intensities', shape=shape, dtype=src_data.dtype)
         data_group['intensities'].attrs['context'] = 'frameset'
         data_group.require_dataset('flat_fields', shape=shape, dtype=src_flat.dtype)
@@ -374,7 +373,7 @@ def import_aps32idc_xanes_file(filename, hdf_filename, hdf_groupname,
         # Create datasets for metadata
         pixels_shape = (total_timesteps, src_data.shape[0])
         data_group.require_dataset('pixel_sizes', shape=pixels_shape, dtype='float32')
-        data_group['pixel_sizes'][time_idx] = 0.02999 * (2**downsample)
+        data_group['pixel_sizes'][timeidx] = 0.02999 * (2**downsample)
         data_group['pixel_sizes'].attrs['unit'] = 'µm'
         data_group.require_dataset('energies', shape=shape[0:2], dtype='float32')
         timestamp_shape = (*shape[0:2], 2)
@@ -391,18 +390,18 @@ def import_aps32idc_xanes_file(filename, hdf_filename, hdf_groupname,
         start_dt = start_dt.astimezone(pytz.utc)
         out_fmt = "%Y-%m-%d %H:%M:%S"
         start_bytes = bytes(start_dt.strftime(out_fmt), encoding='ascii')
-        data_group['timestamps'][time_idx,:,0] = start_bytes
+        data_group['timestamps'][timeidx,:,0] = start_bytes
         end_bytes = bytes(end_dt.strftime(out_fmt), encoding='ascii')
-        data_group['timestamps'][time_idx,:,1] = end_bytes
-        soc_bytes = bytes("soc{:03d}".format(time_idx), encoding='ascii')
-        data_group['timestep_names'][time_idx] = soc_bytes
+        data_group['timestamps'][timeidx,:,1] = end_bytes
+        soc_bytes = bytes("soc{:03d}".format(timeidx), encoding='ascii')
+        data_group['timestep_names'][timeidx] = soc_bytes
         # Import actual datasets
-        data_group['intensities'][time_idx] = src_data
-        data_group['flat_fields'][time_idx] = src_flat
-        data_group['dark_fields'][time_idx] = src_dark
+        data_group['intensities'][timeidx] = src_data
+        data_group['flat_fields'][timeidx] = src_flat
+        data_group['dark_fields'][timeidx] = src_dark
         energies = 1000 * src_file['/exchange/energy'][frm_idx]
-        data_group['energies'][time_idx] = energies
-        data_group['filenames'][time_idx,:] = filename.encode('ascii')
+        data_group['energies'][timeidx] = energies
+        data_group['filenames'][timeidx,:] = filename.encode('ascii')
         # Apply median filter if requested
         if median_filter_size is not None:
             src_data = median_filter(src_data, size=median_filter_size)
@@ -418,7 +417,7 @@ def import_aps32idc_xanes_file(filename, hdf_filename, hdf_groupname,
         if np.any(np.isnan(ODs)):
             log.warn('nan values found after OD conversion')
         # Save optical depth data to disk
-        data_group['optical_depths'][time_idx] = ODs
+        data_group['optical_depths'][timeidx] = ODs
 
 
 def read_metadata(filenames, flavor, quiet=False):
