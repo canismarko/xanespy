@@ -443,7 +443,9 @@ class XanesFramesetTest(TestCase):
         with warnings.catch_warnings(record=True) as w:
             warnings.resetwarnings()
             np.testing.assert_equal(fs.frame_mask(mask_type='edge').shape, (128, 128))
-            self.assertEqual(len(w), 3, 'Edge warning not emitted.')
+            self.assertGreater(len(w), 0, 'Edge warning not emitted properly.')
+            edge_warning = w[-1]
+            self.assertIn('Encountered NaN values', str(edge_warning.message))
             np.testing.assert_equal(fs.frame_mask(mask_type='edge').shape, (128, 128))
             # Check that the new edge mask is a boolean array
             self.assertEqual(fs.frame_mask(mask_type='edge').dtype, bool)
