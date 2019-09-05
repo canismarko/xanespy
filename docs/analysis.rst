@@ -225,7 +225,9 @@ Masking by the `edge` method determines if the pixel contains an edge
 jump (pre and post edge are defined by the edge variable in the XanesFrameset).
 Pixels containing edge jumps are not masked while, pixels without edge jumps are masked.
 Sometimes the background pixels contain partial edge jumps making this method
-inconsistent from sample to sample.
+inconsistent from sample to sample. This method works exceptionally well with minimal
+extra User input values when the background is at a constant value. Using the 
+Contrast method might force Users to add extra parameters to obtain an accurate mask.
 
 .. code:: python
 
@@ -236,7 +238,9 @@ inconsistent from sample to sample.
 
 Masking by the `contrast` method differentiates pixel contrast through a
 scipy.filters.threshold_otsu method. Based on the contrast difference from
-pixel to pixel, a mask will be created.
+pixel to pixel, a mask will be created. This method is to be used for any
+non-static background samples. Additional parameters including 'senstivity', 
+'min_size', and 'frame_idx' should be used to achieve an accurate frame mask.
 
 .. code:: python
 
