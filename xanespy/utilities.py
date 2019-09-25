@@ -23,11 +23,12 @@ describing coordinates.
 """
 
 from collections import namedtuple
-import multiprocessing
+import multiprocessing as mp
 import threading
 import sys
 import logging
 import math
+from typing import Iterable, Callable
 
 import numpy as np
 import h5py
@@ -47,14 +48,16 @@ Pixel = namedtuple('Pixel', ('vertical', 'horizontal'))
 shape = namedtuple('shape', ('rows', 'columns'))
 Extent = namedtuple('extent', ('left', 'right', 'bottom', 'top'))
 
-CPU_COUNT = multiprocessing.cpu_count()
+CPU_COUNT = mp.cpu_count()
+
 
 def nproc(ncore):
     """How many processes to use in the pool with n cores.
     
-    If None, all cores will be used. If negative, the number of cores
-    will be subtracted from the total CPU count. Eg. ``ncore=-2`` on
-    an 8-core machine will spawn 6 processes.
+    If *ncore=None*, all cores will be used. If negative, the number
+    of cores will be subtracted from the total CPU
+    count. Eg. ``ncore=-2`` on an 8-core machine will spawn 6
+    processes.
     
     """
     # Determine how many processes to spawn
@@ -64,6 +67,45 @@ def nproc(ncore):
         nproc = np.max([CPU_COUNT + ncore, 1])
     else:
         nproc = ncore
+    return nproc
+
+
+def mp_map(func: Callable, iterable: Iterable, ncore: int=None, chunksize=None) -> np.ndarray:
+    """Iterable mapping in parallel.
+    
+    Similar to the built-in *map* function, but utilizing
+    multiprocessing. If ncore=1, mapping will be done with the python
+    built-in map function, otherwise a pool of processes is creating
+    to execute in parallel.
+    
+    Parameters
+    ==========
+    func
+      A callable that accepts each value in *iterable* and returns a
+      result.
+    iterable
+      An iterable with the values that are to be operated on.
+    ncore : optional
+      How many processes to spawn, determined by
+      :py:function:`~xanespy.utilities.nproc`
+    chunksize
+      Passed to the *Pool.map* method if multiprocessing is used.
+    
+    Returns
+    =======
+    result
+      The np.ndarray resulting from calling *func* on each element of
+      *iterable*. If *func* itself results an array, then *result* may
+      be multidimensional.
+    
+    """
+    nproc_ = nproc(ncore)
+    if nproc_ == 1:
+        result = list(map(func, iterable))
+    else:
+        with mp.Pool(nproc_) as pool:
+            result = pool.map(func, iterable, chunksize=chunksize)
+    return np.array(result)
 
 
 def foreach(f, l, threads=CPU_COUNT, return_=False):

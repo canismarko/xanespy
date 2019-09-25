@@ -425,7 +425,7 @@ class XanesMathTest(unittest.TestCase):
         data_imag = coins + coins * complex(0, 1)
         ret = transform_images(data_imag, transformations=Ts, quiet=True)
         self.assertEqual(ret.dtype, np.complex)
-
+    
     def test_extract_signals_nmf(self):
         # Prepare some testing data
         x = np.linspace(0, 2*np.pi, num=int(2*np.pi*50))
@@ -446,7 +446,7 @@ class XanesMathTest(unittest.TestCase):
         self.assertEqual(comps.shape, (2, len(x)))
         self.assertEqual(weights.shape, in_weights.shape)
         np.testing.assert_allclose(features, new_features, atol=0.01)
-
+    
     def test_extract_signals_pca(self):
         # Prepare some testing data
         x = np.linspace(0, 2*np.pi, num=int(2*np.pi*50))
@@ -466,7 +466,6 @@ class XanesMathTest(unittest.TestCase):
         new_features += np.outer(weights[1], comps[1])
         self.assertEqual(comps.shape, (2, len(x)))
         self.assertEqual(weights.shape, in_weights.shape)
-
         # plt.plot(x, comps[0], label='c0')
         # plt.plot(x, comps[1], label='c1')
         # plt.plot(x, features[0], label='f0')
@@ -476,19 +475,16 @@ class XanesMathTest(unittest.TestCase):
         # plt.legend()
         # plt.show()
         # np.testing.assert_allclose(features, new_features, atol=0.01)
-
+    
     def test_contrast_mask(self):
-
         # The first time idx - User selected in the xp.XanesFrameset.frames() method
         frames = self.coins()
         # Set up the initial numpy frames
         mean_frames_image = np.mean(frames, axis=(0, 1))
         single_frame_image = frames[0][10]
-
         # Check difference input values
         sensitivity_vals = [1, 0.5, 1.8]
         min_size_vals = [0, 10]
-
         # Determining masks for difference input values
         all_masks = []
         for image in [mean_frames_image, single_frame_image]:
@@ -499,13 +495,10 @@ class XanesMathTest(unittest.TestCase):
                     threshold = filters.threshold_otsu(image)
                     threshold = img_bottom + sensitivity * (threshold - img_bottom)
                     mask = image > threshold
-
                     # Min size thresholding
                     if min_size > 0:
                         mask = morphology.opening(mask, selem=morphology.disk(min_size))
-
                     all_masks.append(~mask)
-
         # Use the contrast_mask function
         mean_frames_check = []
         single_frames_check = []
@@ -519,7 +512,6 @@ class XanesMathTest(unittest.TestCase):
                                                        sensitivity=sensitivity,
                                                        min_size=min_size,
                                                        frame_idx=(0, 10)))
-
         # Check all the values
         np.testing.assert_equal(all_masks[0], mean_frames_check[0])
         np.testing.assert_equal(all_masks[0], mean_frames_check[0])
@@ -528,8 +520,6 @@ class XanesMathTest(unittest.TestCase):
         np.testing.assert_equal(all_masks[3], mean_frames_check[3])
         np.testing.assert_equal(all_masks[4], mean_frames_check[4])
         np.testing.assert_equal(all_masks[5], mean_frames_check[5])
-
-
         np.testing.assert_equal(all_masks[6], single_frames_check[0])
         np.testing.assert_equal(all_masks[7], single_frames_check[1])
         np.testing.assert_equal(all_masks[8], single_frames_check[2])

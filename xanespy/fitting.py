@@ -32,7 +32,7 @@ import tqdm
 
 from . import exceptions
 from .xanes_math import k_edge_jump, iter_indices, foreach
-from .utilities import nproc
+from .utilities import nproc, mp_map
 
 
 __all__ = ('prepare_p0', 'fit_spectra', 'Curve', 'Line',
@@ -71,8 +71,9 @@ def guess_p0(func, spectra, edge=None, quiet=False, ncore=None):
     # Execute the parameters guessing with multiprocessing
     guess_params = functools.partial(func.guess_params, edge=edge,
                                      named_tuple=False)
-    with Pool(nproc(ncore)) as pool:
-        p0 = np.array(pool.map(guess_params, spectra, chunksize=2000))
+    # with Pool(nproc(ncore)) as pool:
+    #     p0 = np.array(pool.map(guess_params, spectra, chunksize=2000))
+    p0 = mp_map(guess_params, spectra, chunksize=2000)
     return p0
 
 

@@ -24,6 +24,7 @@ from unittest import TestCase, mock
 import math
 import sys
 import os
+import multiprocessing
 from time import sleep
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir)))
 
@@ -31,17 +32,46 @@ import numpy as np
 
 from xanespy.utilities import (Extent, xy_to_pixel, xycoord, Pixel,
                                pixel_to_xy, get_component,
-                               broadcast_reverse, is_kernel, prog)
+                               broadcast_reverse, is_kernel, prog,
+                               nproc, mp_map)
+
+
+def add_one(x):
+    """Simple function for testing multiprocessing."""
+    return x+1
 
 
 class UtilitiesTest(TestCase):
-
+    def test_nproc(self):
+        cpu_count = multiprocessing.cpu_count()
+        # Test if it handles a simple number
+        processes = nproc(5)
+        self.assertEqual(processes, 5)
+        # Test if it handles all CPUs (default)
+        processes = nproc(None)
+        self.assertEqual(processes, cpu_count)
+        # Test if it handles negative numbers
+        processes = nproc(-1)
+        self.assertEqual(processes, cpu_count-1)
+        # Test if it handles excessively negative numbers
+        processes = nproc(-cpu_count-1)
+        self.assertEqual(processes, 1)
+    
+    def mp_map(self):
+        func = add_one
+        # Try it with one processes
+        result = mp_map(func, (0, 1, 3), ncore=1)
+        np.testing.assert_equal(result, (1, 2, 4))
+        # Try it with multiple processes
+        result = mp_map(func, (0, 1, 3), ncore=2)
+        np.testing.assert_equal(result, (1, 2, 4))
+    
     def test_broadcast_reverse(self):
         orig = np.zeros(shape=(7, 48))
         target_shape = (7, 48, 958, 432)
         response = broadcast_reverse(orig, shape=target_shape)
         self.assertEqual(response.shape, target_shape)
-
+    
     def test_interpret_complex(self):
         j = complex(0, 1)
         cmplx = np.array([[0+1j, 1+2j],
@@ -69,7 +99,7 @@ class UtilitiesTest(TestCase):
         # Check if real data works ok
         real = np.array([[0, 1],[1, 2]])
         np.testing.assert_array_equal(get_component(real, "modulus"), real)
-
+    
     def test_xy_to_pixel(self):
         extent = Extent(
             left=-1000, right=-900,
@@ -102,7 +132,7 @@ class UtilitiesTest(TestCase):
             shape=(10, 10)
         )
         self.assertEqual(result, Pixel(vertical=0, horizontal=0))
-        
+    
     def test_pixel_to_xy(self):
         extent = Extent(
             left=-1000, right=-900,
