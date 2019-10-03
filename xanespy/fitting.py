@@ -27,7 +27,7 @@ import functools
 from typing import Tuple, Callable
 
 import numpy as np
-from scipy.optimize import leastsq
+from scipy.optimize import leastsq, curve_fit
 import tqdm
 
 from . import exceptions
@@ -97,7 +97,32 @@ def prepare_p0(p0, frame_shape, num_timesteps=1):
     return out
 
 
-def error(guess: np.ndarray, obs: np.ndarray, func: Callable, nonnegative: bool=False) -> np.ndarray:
+def is_out_of_bounds(params, bounds) -> bool:
+    """Test if the parameters are within valid bounds."""
+    if bounds is not None:
+        out_of_bounds = np.any(
+            np.logical_or(
+                np.less(params, bounds[0]),
+                np.greater(params, bounds[1])
+            )
+        )
+    else:
+        out_of_bounds = False
+    return out_of_bounds
+
+
+def distance_to_bounds(params, bounds) -> float:
+    """Determine the L2 distance from params to the bounds box."""
+    zeros = np.zeros_like(params)
+    bottom_distance = np.maximum(np.subtract(bounds[0], params), zeros)
+    top_distance = np.maximum(np.subtract(params, bounds[1]), zeros)
+    all_distance = bottom_distance + top_distance
+    total_distance = np.linalg.norm(all_distance)
+    return total_distance
+
+
+def error(guess: np.ndarray, obs: np.ndarray, func: Callable,
+          bounds=None) -> np.ndarray:
     """Compare observed and predicted signal and return the difference.
     
     Parameters
@@ -113,6 +138,9 @@ def error(guess: np.ndarray, obs: np.ndarray, func: Callable, nonnegative: bool=
       If truthy, negative parameters in *guess* will be heavily
       punished. This can also be an array of booleans for each entry
       in *guess* (eg ``(True, False, False, ...)``).
+    bounds : 2-tuple of array_like, optional
+      Defines upper and lower bounds for fitting. See
+      :py:function:``scipy.optimize.curve_fit`` for more details.      
     
     Returns
     -------
@@ -121,20 +149,26 @@ def error(guess: np.ndarray, obs: np.ndarray, func: Callable, nonnegative: bool=
       the observed values.
     
     """
-    # Prepare error function
-    if np.any(np.logical_and(guess < 0, nonnegative)):
-        # Punish negative values
-        diff = np.empty_like(obs)
-        diff[:] = 1e6
-    else:
-        # Compare predicted with observed values
-        predicted = func(*guess)
-        diff = np.abs(obs - predicted)
+    # if is_out_of_bounds(guess, bounds):
+    #     # Punish negative values
+    #     diff = np.empty_like(obs)
+    #     diff[:] = 1e6
+    # else:
+    #     # Compare predicted with observed values
+    #     predicted = func(*guess)
+    #     diff = np.abs(obs - predicted)
+    # assert not np.any(np.isnan(diff))
+    # Compare predicted with observed values
+    predicted = func(*guess)
+    diff = np.abs(obs - predicted)
     assert not np.any(np.isnan(diff))
+    # Punish out of bounds values
+    if is_out_of_bounds(guess, bounds):
+        diff += distance_to_bounds(guess, bounds) * 10
     return diff
 
 
-def _fit_sources(inputs, func, nonnegative=False):
+def _fit_sources(inputs, func, nonnegative=False, bounds=None):
     spectrum, p0 = inputs
     # Don't bother fitting if there's NaN values
     if np.any(np.isnan(spectrum)):
@@ -142,8 +176,24 @@ def _fit_sources(inputs, func, nonnegative=False):
         p_fit[()] = np.nan
         res_ = np.nan
         return p_fit, res_
+    # Calculate bounds for fitting if needed
+    if bounds is None and nonnegative:
+        # Set bounds to 0 and np.inf
+        bounds = (
+            [0] * len(p0),
+            [np.inf] * len(p0)
+        )
+    elif bounds is None:
+        # Set bounds to -np.inf and np.inf
+        bounds = (
+            [-np.inf] * len(p0),
+            [np.inf] * len(p0)
+        )
+    if is_out_of_bounds(p0, bounds):
+        msg = 'Guess {} is outside of bounds {}'.format(p0, bounds)
+        warnings.warn(msg, RuntimeWarning)
     # Valid data, so fit the spectrum
-    results = leastsq(func=error, x0=p0, args=(spectrum, func, nonnegative), full_output=True)
+    results = leastsq(func=error, x0=p0, args=(spectrum, func, bounds), full_output=True)
     p_fit, cov_x, infodict, mesg, status = results
     # Status 4 is often a sign of mismatched datatypes.
     if status == 4:
@@ -161,7 +211,7 @@ def find_whiteline(params, curve):
     return whiteline
 
 
-def fit_spectra(observations, func, p0, nonnegative=False, quiet=False, ncore=None):
+def fit_spectra(observations, func, p0, nonnegative=False, bounds=None, quiet=False, ncore=None):
     """Fit a function to a series observations.
     
     The shapes of ``observations`` and ``p0`` parameters must match in
@@ -190,6 +240,9 @@ def fit_spectra(observations, func, p0, nonnegative=False, quiet=False, ncore=No
       can also be a tuple to allow for fine-grained control. Eg:
       (True, False) will only punish negative values in the first
       of the two parameters.
+    bounds : 2-tuple of array_like, optional
+      Defines upper and lower bounds for fitting. See
+      :py:function:``scipy.optimize.curve_fit`` for more details.
     quiet : bool, optional
       Whether to suppress the progress bar, etc.
     ncore : int, optional
@@ -225,7 +278,7 @@ def fit_spectra(observations, func, p0, nonnegative=False, quiet=False, ncore=No
         payload = tqdm.tqdm(payload, total=len(observations),
                             desc="Fitting spectra", unit='spctrm')
     with Pool(nproc(ncore)) as pool:
-        fitter = functools.partial(_fit_sources, func=func, nonnegative=nonnegative)
+        fitter = functools.partial(_fit_sources, func=func, nonnegative=nonnegative, bounds=bounds)
         params = pool.map(fitter, payload)
     # Prepare the results for returning
     params, residuals = zip(*params)

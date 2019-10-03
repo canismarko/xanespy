@@ -29,11 +29,13 @@ import warnings
 
 import numpy as np
 import pandas as pd
+import matplotlib.pyplot as plt
 
 from xanespy.fitting import (LinearCombination, KCurve, Gaussian,
                              L3Curve, prepare_p0, _fit_sources,
                              fit_spectra, Curve, Line, error,
-                             guess_p0, find_whiteline)
+                             guess_p0, find_whiteline,
+                             is_out_of_bounds, distance_to_bounds)
 from xanespy import edges
 
 
@@ -201,6 +203,72 @@ class FittingTestCase(TestCase):
         np.testing.assert_almost_equal(params, real_params[0])
         self.assertTrue(0 < residuals < 1e-9, residuals)
     
+    def test_fit_spectra_with_bounds(self):
+        # Define a function to fit
+        x = np.linspace(0, 10, num=11)
+        line = Line(x)
+        real_params = np.array([(2., -3.)])
+        real_data = line(*real_params[0])
+        spectra = np.array([real_data])
+        bounds = ([3, -2], [np.inf, np.inf])
+        # Execute the fit
+        p0 = np.array([(4, 0)])
+        params, residuals = fit_spectra(observations=spectra,
+                                        func=line, p0=p0, bounds=bounds)
+        # plt.plot(x, line(*params[0]))
+        # plt.plot(x, line(*bounds[0]))
+        # plt.plot(x, real_data, linestyle='None', marker='o')
+        # plt.show()
+        np.testing.assert_almost_equal(params, [(3, -1.8894082)])
+        self.assertTrue(0 < residuals < 10, residuals)
+        # Check that a warning is raised if the guess is outside of the bounds
+        # p0 = np.array([(1, 0)])
+        # with warnings.catch_warnings(record=True) as w:
+        #     warnings.resetwarnings()
+        #     params, residuals = fit_spectra(observations=spectra,
+        #                                     func=line, p0=p0, bounds=bounds)
+        # self.assertEqual(len(w), 1)
+    
+    def test_distance_to_bounds(self):
+        # In bounds parameters
+        result = distance_to_bounds(
+            [1, 3],
+            ([0, 0], [2, 4]),
+        )
+        self.assertEqual(result, 0)
+        # Out of bounds parameters (below)
+        result = distance_to_bounds(
+            [-1, 0],
+            ([0, 0], [2, 4]),
+        )
+        self.assertEqual(result, 1)
+        # Out of bounds parameters (above)
+        result = distance_to_bounds(
+            [3, 5],
+            ([0, 0], [2, 4]),
+        )
+        self.assertEqual(result, np.sqrt(2))
+    
+    def test_is_out_of_bounds(self):
+        # In bounds parameters
+        result = is_out_of_bounds(
+            [1, 3],
+            ([0, 0], [2, 4]),
+        )
+        self.assertFalse(result)
+        # Out of bounds parameters (below)
+        result = is_out_of_bounds(
+            [-1, 0],
+            ([0, 0], [2, 4]),
+        )
+        self.assertTrue(result)
+        # Out of bounds parameters (above)
+        result = is_out_of_bounds(
+            [1, 5],
+            ([0, 0], [2, 4]),
+        )
+        self.assertTrue(result)
+    
     def test_fit_sources(self):
         # Prepare some test data
         x = np.linspace(0, 1, num=10)
@@ -234,11 +302,14 @@ class FittingTestCase(TestCase):
         output = error(func=func, guess=np.array((1, 0)), obs=func(1, 1))
         np.testing.assert_almost_equal(output, np.ones_like(output))
         # Test non-negative constraint, but with only non-negative parameters
-        output = error(func=func, guess=np.array((1, 1)), obs=func(1, 2), nonnegative=True)
+        nonnegative = ([0, 0], [np.inf, np.inf])
+        output = error(func=func, guess=np.array((1, 1)), obs=func(1, 2), bounds=nonnegative)
         np.testing.assert_almost_equal(output, np.full_like(output, 1.))
         # Test non-negative constraint, including some negative parameters
-        output = error(func=func, guess=np.array((-1, 2)), obs=func(1, 2), nonnegative=True)
-        np.testing.assert_almost_equal(output, np.full_like(output, 1e6))
+        output = error(func=func, guess=np.array((-1, 2)), obs=func(1, 2), bounds=nonnegative)
+        self.assertEqual(np.min(output), 10)
         # Test non-negative constraint, with a array instead of individual values
-        output = error(func=func, guess=np.array((-1, 1)), obs=func(-1, 2), nonnegative=(False, True))
+        partial_nonnegative = ([-np.inf, 0], [np.inf, np.inf])
+        output = error(func=func, guess=np.array((-1, 1)),
+                       obs=func(-1, 2), bounds=partial_nonnegative)
         np.testing.assert_almost_equal(output, np.full_like(output, 1))
