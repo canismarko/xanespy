@@ -923,7 +923,6 @@ class XanesFrameset():
             else:
                 frames = store.get_frames(representation)[index]
                 frames_shape = frames.shape[:-2]
-
                 # if frame_filter:
                 #     # Filter out background pixels using edge mask
                 #     try:
@@ -935,11 +934,8 @@ class XanesFrameset():
                 #         mask = np.broadcast_to(array=mask,
                 #                                shape=(*frames_shape, *mask.shape))
                 #         frames = np.ma.array(frames, mask=mask)
-
                 mask = self.frame_mask(mask_type=frame_filter, **frame_filter_kw)
-
                 frames = np.ma.array(frames, mask=np.broadcast_to(array=mask, shape=(*frames_shape, *mask.shape)))
-
                 # Take average of all pixel frames
                 flat = (*frames.shape[:frames.ndim-2], -1) # Collapse image dimension
                 spectrum = np.mean(np.reshape(frames, flat), axis=-1)

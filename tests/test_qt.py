@@ -138,7 +138,7 @@ class QtTestCase(unittest.TestCase):
             frameset.frames = mock.Mock(return_value=frame_data)
             map_data = self.dummy_map_data()
             frameset.map_data = mock.Mock(return_value=map_data)
-            frameset.spectrum = mock.Mock(return_value=pd.Series())
+            frameset.spectrum = mock.Mock(return_value=pd.Series(dtype='float32'))
             extent = Extent(-10, 10, -10, 10)
             frameset.extent = mock.Mock(return_value=extent)
             frameset.frame_shape = mock.Mock(return_value=(128, 128))

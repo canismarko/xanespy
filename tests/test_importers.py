@@ -285,7 +285,7 @@ class CosmicTest(TestCase):
             self.assertEqual(store.filenames.shape, (1, 1))
             stored_filename = store.filenames[0,0].decode('utf-8')
             self.assertEqual(stored_filename, os.path.basename(self.ptycho_cxi))
-            np.testing.assert_equal(store.energies[()], [[855.9056362433222]])
+            np.testing.assert_almost_equal(store.energies[()], [[855.9056]], decimal=4)
             np.testing.assert_equal(store.pixel_sizes[()], [[6.0435606480754585]])
             np.testing.assert_equal(store.pixel_unit, 'nm')
             self.assertEqual(store.intensities.shape, (1, 1, 285, 285))
