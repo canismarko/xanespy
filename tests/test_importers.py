@@ -82,11 +82,40 @@ class APS32IDCImportTest(TestCase):
     def tearDown(self):
         if os.path.exists(self.hdf):
             os.remove(self.hdf)
+        # Delete any analyzed data from the source data file
+        with h5py.File(self.src_data, mode='a') as src_fp:
+            if 'xanespy' in src_fp:
+                del src_fp['xanespy']
+    
+    def test_default_file_naming(self):
+        """Make sure that omitted arguments for filenames, groupnames, etc,
+        use reasonable defaults.
+        
+        """
+        # Check that the processed data do not already exist
+        with h5py.File(self.src_data, mode='r') as fp:
+            self.assertNotIn('xanespy', fp.keys())
+        # Do the actual importing
+        import_aps32idc_xanes_file(self.src_data)
+        # Check that the processed data now exist
+        with h5py.File(self.src_data, mode='r') as fp:
+            self.assertIn('xanespy', fp.keys())
+    
+    def test_default_group_name(self):
+        # Check that the processed data do not already exist
+        self.assertFalse(os.path.exists(self.hdf))
+        # Do the actual importing
+        import_aps32idc_xanes_file(self.src_data, hdf_filename=self.hdf)
+        # Check that the processed data now exist
+        self.assertTrue(os.path.exists(self.hdf))
+        with h5py.File(self.hdf, mode='r') as h5fp:
+            self.assertIn('nca_32idc_xanes', h5fp)
     
     def test_imported_hdf(self):
         # Run the import function
         import_aps32idc_xanes_file(self.src_data,
-                                   hdf_filename=self.hdf, hdf_groupname='experiment1',
+                                   hdf_filename=self.hdf,
+                                   hdf_groupname='experiment1',
                                    downsample=1)
         # Check that the file was created
         self.assertTrue(os.path.exists(self.hdf))
@@ -134,9 +163,9 @@ class APS32IDCImportTest(TestCase):
             self.assertIn('timestep_names', keys)
             self.assertEqual(data_group['timestep_names'][0], bytes("soc000", 'ascii'))
             self.assertIn('filenames', keys)
+            # self.assertIn('original_positions', keys)
             self.assertEqual(data_group['filenames'].shape, (1, 3))
             self.assertEqual(data_group['filenames'][0, 0], self.src_data.encode('ascii'))
-            # self.assertIn('original_positions', keys)
     
     def test_exclude_frames(self):
         # Run the import function

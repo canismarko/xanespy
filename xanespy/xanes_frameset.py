@@ -708,22 +708,22 @@ class XanesFrameset():
           Array of the same shape as the map, with the particles
           segmented. If None (default), the `particle_labels`
           attribute of the TXM store will be used.
-
+        
         """
         with self.store() as store:
             if labels is None:
                 labels = store.particle_labels
             regions = measure.regionprops(labels,
                                           intensity_image=intensity_image)
-        # Put in order of descending area
-        regions.sort(key=lambda p: p.area, reverse=True)
+            # Put in order of descending area
+            regions.sort(key=lambda p: p.area, reverse=True)
         return np.array(regions)
-
+    
     def plot_mean_frame(self, ax=None, component="modulus",
                         representation="optical_depths",
                         cmap="bone", timeidx=..., *args, **kwargs):
         """Plot the mean image from the selected frames.
-
+        
         Parameters
         ==========
         ax : mpl.Axes, optional

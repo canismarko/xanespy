@@ -332,8 +332,14 @@ class TXMStore():
         file, then ``name`` will be returned. If ``name`` is not in
         the file, a GroupKeyError will be raised.
         """
-        if name is None and len(self._file.keys()) == 1:
-            new_name = list(self._file.keys())[0]
+        if name is None:
+            # Get a default parent_group based on file structure
+            if len(self._file.keys()) == 1:
+                new_name = list(self._file.keys())[0]
+            elif 'xanespy' in self._file.keys():
+                new_name = 'xanespy'
+            else:
+                raise GroupKeyError('Cannot load a default value for *parent_group*')
         elif name not in self._file.keys():
             raise GroupKeyError("Cannot load parent group '{group}'. "
                                 "Valid choices are {choices}."

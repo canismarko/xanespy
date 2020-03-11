@@ -268,7 +268,7 @@ def import_aps32idc_xanes_files(filenames, hdf_filename, hdf_groupname, *args, *
         append = True
 
 
-def import_aps32idc_xanes_file(filename, hdf_filename, hdf_groupname,
+def import_aps32idc_xanes_file(filename, hdf_filename=None, hdf_groupname=None,
                                timeidx=0, total_timesteps=1,
                                append=False, downsample=1,
                                square=True, exclude=[],
@@ -276,7 +276,13 @@ def import_aps32idc_xanes_file(filename, hdf_filename, hdf_groupname,
                                dark_idx=slice(None)):
     """Import XANES data from a HDF5 file produced at APS beamline 32-ID-C.
     
-    This is used for importing a single XANES dataset.
+    This is used for importing a single XANES dataset from an HDF5
+    file (*filename*). An additional HDF5 file (*hdf_filename*) will
+    be opened to store the results in an HDF group (*hdf_groupname*).
+    
+    If the *hdf_filename* and *hdf_groupname* parameters are not
+    given, the results file and group will watch the filename of the
+    source data file.
     
     Parameters
     ----------
@@ -319,11 +325,28 @@ def import_aps32idc_xanes_file(filename, hdf_filename, hdf_groupname,
       if some dark field images are not usable.
     
     """
-    # Open the source HDF file
-    src_file = h5py.File(filename, mode='r')
+    # Provide default results file if none is given
+    if hdf_filename is None:
+        log.debug("Saving data to source file %s", hdf_filename)
+        hdf_filename = filename
+        if hdf_groupname is None:
+            hdf_groupname = 'xanespy'
+            log.debug("Using default data group xanespy")
+        base, ext = os.path.splitext(filename)
+        # Open the source (and destination) HDF file
+        src_file = h5py.File(filename, mode='a')
+        h5file = src_file
+    else:
+        # Filename is given, so open the src and dest files separately
+        src_file = h5py.File(filename, mode='r')
+        h5file = h5py.File(hdf_filename, mode='a')
+    # Set a default group name if one wasn't given
+    if hdf_groupname is None:
+        hdf_groupname = os.path.splitext(os.path.split(filename)[1])[0]
+        log.debug("Using default groupname %s", hdf_groupname)
     # Prepare the destination HDF file and create datasets if needed
     log.info("Importing APS 32-ID-C file %s", filename)
-    with h5py.File(hdf_filename, mode='a') as h5file:
+    with h5file:
         # Prepare an HDF5 group with metadata for this experiment
         if append:
             parent_group = h5file[hdf_groupname]

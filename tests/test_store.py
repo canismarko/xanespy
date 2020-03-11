@@ -185,3 +185,40 @@ class TXMStoreTest(XanespyTestCase):
         merge_stores(stxm_store, ptycho_store, destination=dest_store)
         self.assertEqual(dest_store.energies, [[853, 859]])
         np.testing.assert_equal(dest_store.intensities, np.ones((1, 2, 32, 32)))
+    
+    def test_validate_parent_group(self):
+        # Prepare an HDF5 file
+        temp_filename = 'temp_data_file.h5'
+        temp_file = h5py.File(temp_filename, mode='a')
+        try:
+            temp_file.create_group('default_group_1')
+        except:
+            os.remove(temp_filename)
+        finally:
+            temp_file.close()
+        # Test the validate_parent_group function
+        try:
+            store = TXMStore(temp_filename, parent_name=None, data_name='data')
+            validated_name = store.validate_parent_group(None)
+            self.assertEqual(validated_name, 'default_group_1')
+        except:
+            os.remove(temp_filename)
+        else:
+            store.close()
+        # Make it look like an APS 32-ID-C data file
+        temp_file = h5py.File(temp_filename, mode='a')
+        try:
+            del temp_file['default_group_1']
+            temp_file.create_group('xanespy')
+            temp_file.create_group('exchange')
+        except:
+            os.remove(temp_filename)
+        finally:
+            temp_file.close()
+        # Test the updated store's *validate_parent_group* function
+        try:
+            store = TXMStore(temp_filename, parent_name=None, data_name='data')
+            validated_name = store.validate_parent_group(None)
+            self.assertEqual(validated_name, 'xanespy')
+        finally:
+            os.remove(temp_filename)
