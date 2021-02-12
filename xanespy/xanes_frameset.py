@@ -475,12 +475,19 @@ class XanesFrameset():
           plot. If omitted, a new axes will be created.
         quiet : bool, optional
           Suppress the progress bar
-
+        
+        Returns
+        =======
+        pass_distances : np.ndarray
+          An array with the RMS translations applied to each
+          frame. Shape is (pass, frames) where frames is flattened
+          across energy and timestep.
+        
         """
         logstart = time()
         log.info("Aligning frames with %s algorithm over %d passes",
                  method, passes)
-        pass_distances = np.zeros(shape=(passes, self.num_energies), dtype=float)
+        pass_distances = np.zeros(shape=(passes, self.num_energies*self.num_timesteps), dtype=float)
         # Sanity check on `method` argument
         valid_methods = ['cross_correlation', 'template_match']
         if method not in valid_methods:
@@ -555,6 +562,7 @@ class XanesFrameset():
             log.info("Committing final translations to disk")
             self.apply_transformations(crop=True, commit=True)
         log.info("Aligned %d passes in %d seconds", passes, time() - logstart)
+        return pass_distances
 
     def crop_frames(self, slices):
         """Reduce the image size for all frame-data in this group.
@@ -888,11 +896,12 @@ class XanesFrameset():
           larger part of the frame will be used, depending on the
           other arguments.
         frame_filter : str or bool, optional
-          Allow the User to define which type of mask to apply.
-          (e.g 'edge', 'contrast', None)
+          Allow the user to define which type of mask to apply.
+          (e.g. 'edge', 'contrast', None)
         frame_filter_kw
-          Additional arguments to be used for producing an frame_mask.
-           See :meth:`~xanespy.xanes_frameset.XanesFrameset.frame_mask`
+           Additional arguments to be used for producing an
+           frame_mask.  See
+           :meth:`~xanespy.xanes_frameset.XanesFrameset.frame_mask`
            for possible values.
         representation : str, optional
           What kind of data to use for creating the spectrum. This

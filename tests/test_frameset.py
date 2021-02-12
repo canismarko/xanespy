@@ -129,6 +129,7 @@ def _line(a, b, x):
     return a * x + b
 line = partial(_line, x=x)
 
+
 class XanesFramesetTest(TestCase):
     """Set of python tests that work on full framesets and require data
     from multiple frames to make sense.
@@ -357,6 +358,7 @@ class XanesFramesetTest(TestCase):
         Es = np.array([np.linspace(840, 862, num=6, dtype=np.float32)])
         store.energies = Es
         fs = self.create_frameset(store=store)
+        fs.clear_caches()
         params, residuals = fs.fit_spectra(line, p0=np.zeros((1, 2, 16, 16)),
                                            nonnegative=True, frame_filter=False,
                                            pnames=('slope', 'intercept'), quiet=True)

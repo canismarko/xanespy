@@ -192,6 +192,7 @@ def xy_to_pixel(xy, extent, shape):
 def pixel_to_xy(pixel, extent, shape):
     """Take an xy location on an image and convert it to a pixel location
     suitable for numpy indexing."""
+    pixel = Pixel(*pixel)
     ratio_h = ((pixel.horizontal+0.5) / shape[1])
     x = extent.left + ratio_h * (extent.right - extent.left)
     ratio_v = ((pixel.vertical+0.5) / shape[0])
