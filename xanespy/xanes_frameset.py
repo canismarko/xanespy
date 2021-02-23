@@ -879,6 +879,7 @@ class XanesFrameset():
         return names
 
     def spectrum(self, pixel=None, frame_filter=False, frame_filter_kw: Mapping={},
+                 normalize=False,
                  representation="optical_depths", index=0,
                  derivative=0):
         """Collapse the frameset down to an energy spectrum.
@@ -898,6 +899,9 @@ class XanesFrameset():
         frame_filter : str or bool, optional
           Allow the user to define which type of mask to apply.
           (e.g. 'edge', 'contrast', None)
+        normalize : bool, optional
+          If true, the spectrum will be normalized based on the
+          nature of the *edge*.
         frame_filter_kw
            Additional arguments to be used for producing an
            frame_mask.  See
@@ -932,17 +936,6 @@ class XanesFrameset():
             else:
                 frames = store.get_frames(representation)[index]
                 frames_shape = frames.shape[:-2]
-                # if frame_filter:
-                #     # Filter out background pixels using edge mask
-                #     try:
-                #         mask = self.frame_mask(mask_type=frame_filter, **frame_filter_kw)
-                #     except exceptions.XanesMathError:
-                #         log.error("Could not find pre-edge energies, ignoring mask.")
-                #
-                #     else:
-                #         mask = np.broadcast_to(array=mask,
-                #                                shape=(*frames_shape, *mask.shape))
-                #         frames = np.ma.array(frames, mask=mask)
                 mask = self.frame_mask(mask_type=frame_filter, **frame_filter_kw)
                 frames = np.ma.array(frames, mask=np.broadcast_to(array=mask, shape=(*frames_shape, *mask.shape)))
                 # Take average of all pixel frames
@@ -957,6 +950,10 @@ class XanesFrameset():
             if derivative > 0 and index is not None:
                 for i in range(derivative):
                     spectrum = np.gradient(spectrum, np.array(index))
+            # Normalize
+            if normalize:
+                # Adjust the limits of the spectrum to be between 0 and 1
+                spectrum = self.edge.normalize(spectrum, energies=index)
             # Convert to pandas series
             if spectrum.ndim == 1:
                 series = pd.Series(spectrum, index=index)
@@ -966,12 +963,11 @@ class XanesFrameset():
                 series = spectrum
         return series
     
-    def plot_spectrum(self, ax=None, pixel=None,
-                      norm_range=None, normalize=False,
-                      representation: str="optical_depths",
-                      show_fit=False, frame_filter=False,
-                      frame_filter_kw: Mapping = {},
-                      linestyle=":", timeidx: int=0,
+    def plot_spectrum(self, ax=None, pixel=None, norm_range=None,
+                      normalize=False, representation:
+                      str="optical_depths", show_fit=False,
+                      frame_filter=False, frame_filter_kw: Mapping =
+                      {}, linestyle=":", timeidx: int=0, voffset=0,
                       *args: Any, **kwargs: Any):
         """Calculate and plot the xanes spectrum for this field-of-view.
         
@@ -994,9 +990,11 @@ class XanesFrameset():
           **kwargs to be passed into xp.XanesFrameset.frame_mask()
         timeidx
           Which timestep index to use for retrieving data.
+        voffset
+          Vertical offset for this plot.
         args, kwargs : optional
           Passed to plotting functions.
-        
+
         """
         if show_fit:
             raise NotImplementedError("`show_fit` parameter coming soon")
@@ -1006,18 +1004,15 @@ class XanesFrameset():
             norm = None
         spectrum = self.spectrum(pixel=pixel,
                                  frame_filter=frame_filter,
+                                 normalize=normalize,
                                  frame_filter_kw=frame_filter_kw,
                                  representation=representation,
                                  index=timeidx)
         edge = self.edge
         if ax is None:
             ax = plots.new_axes()
-        if normalize:
-            # Adjust the limits of the spectrum to be between 0 and 1
-            normalized = edge.normalize(spectrum.values, spectrum.index)
-            spectrum = pd.Series(normalized, index=spectrum.index)
         scatter = plots.plot_spectrum( # type: ignore # https://github.com/python/mypy/issues/2582
-            spectrum=spectrum, ax=ax, energies=spectrum.index,
+            spectrum=spectrum + voffset, ax=ax, energies=spectrum.index,
             norm=norm, *args, **kwargs)
         # Plot lines at edge of normalization range or indicate peak positions
         if edge is not None:
@@ -1037,8 +1032,8 @@ class XanesFrameset():
         Parameters
         ----------
         mask_type : str, bool
-         Sets which type of mask to apply to the frame(s)
-         (e.g) 'edge_maks', 'contrast_mask', None
+          Sets which type of mask to apply to the frames:
+          'edge_mask', 'contrast_mask', or ``None``
         sensitivity : optional
           A multiplier for the otsu value to determine the actual
           threshold. Higher values give better statistics, but might
@@ -1055,6 +1050,12 @@ class XanesFrameset():
         representation : str, optional
           What dataset to use as input for calculating the frame mask.
         
+        Returns
+        -------
+        mask
+          An array matching the frame shape where true values indicate
+          pixels that should be considered background.
+        
         """
         with self.store() as store:
             # Check for complex values and return representation data
@@ -1063,10 +1064,9 @@ class XanesFrameset():
             if mask_type == 'contrast':
                 # Create mask based on contrast maps
                 mask = xm.contrast_mask(frames=frames,
-                                    sensitivity=sensitivity,
-                                    min_size=min_size,
-                                    frame_idx=frame_idx)
-
+                                        sensitivity=sensitivity,
+                                        min_size=min_size,
+                                        frame_idx=frame_idx)
             elif mask_type == 'edge':
                 # Create mask based on edge jump
                 mask = self.edge.mask(frames=frames,
@@ -1080,15 +1080,15 @@ class XanesFrameset():
                 # Show warning if all of these fail
                 raise ValueError('Incorrect *mask_type*. Valid values are `edge`, `contrast` or None.')
         return mask
-
+    
     def fit_linear_combinations(self, sources, component='real', name='linear_combination',
                                 representation="optical_depths", *args, **kwargs):
         """Take a set of sources and fit the spectra with them.
-
+        
         Saves to the representation "linear_combinations". Also
         creates "linear_combination_sources" and
         "linear_combination_residuals" datasets.
-
+        
         Parameters
         ----------
         sources : numpy.ndarray
@@ -1101,14 +1101,14 @@ class XanesFrameset():
           What dataset to use as input for fitting.
         args, kwargs : optional
           Passed on to ``self.fit_spectra``.
-
+        
         Returns
         -------
         fits : numpy.ndarray
           The weights (as frames) for each source.
         residuals : numpy.ndarray
           Residual error after fitting, as maps.
-
+        
         """
         # Convert from complex number
         sources = get_component(sources, component)
@@ -1915,7 +1915,7 @@ class XanesFrameset():
                                  map_ax=map_ax,
                                  spectra_ax=spectra_ax,
                                  step_size=step_size)
-
+    
     def plot_histogram(self, plotter=None, timeidx=None, ax=None,
                        vmin=None, vmax=None, goodness_filter=False,
                        representation="whiteline_fit",

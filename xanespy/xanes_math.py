@@ -539,7 +539,8 @@ def apply_references(intensities, references, out=None, quiet=False):
 
 
 def l_edge_mask(frames: np.ndarray, energies: np.ndarray, edge,
-                sensitivity: float=1, frame_dims=2, min_size=0):
+                sensitivity: float=1, frame_dims=2, min_size=0,
+                return_correlation=False):
     """Calculate a mask for what is likely active material at this
     edge. This is done by comparing each spectrum to the overall
     spectrum using the dot product. A normalization is first applied
@@ -564,12 +565,18 @@ def l_edge_mask(frames: np.ndarray, energies: np.ndarray, edge,
     min_size : float, optional
       Objects below this size (in pixels) will be
       removed. Passing zero (default) will result in no effect.
-    
+    return_correlation : boolean, optional
+      If true, the correlation image will be return along with the
+      mask.
+
     Returns
     -------
     mask : np.ndarray
       A boolean mask with the same shape as the last two dimensions of
       `frames` where True pixels are likely to be background material.
+    correlation : np.ndarray
+      The correlation array to which thresholding is applied. Only
+      returned if *return_correlation* is true.
     
     """
     # Take the mean over all timesteps
@@ -613,17 +620,20 @@ def l_edge_mask(frames: np.ndarray, energies: np.ndarray, edge,
     pixels = np.moveaxis(spectra, 0, 1)
     pixels = (pixels - baseline) / (maxima - minima)
     # Compute the overlap between the global and pixel spectra
-    overlap = np.dot(spectrum, pixels)
-    # Threshold the pixel overlap to find foreground vs background
-    threshold = filters.threshold_otsu(overlap) * sensitivity
-    mask = overlap > threshold
+    correlation = np.dot(spectrum, pixels)
+    # Threshold the pixel correlation to find foreground vs background
+    threshold = filters.threshold_otsu(correlation) * sensitivity
+    mask = correlation > threshold
     # Recreate the original image shape as a boolean array
     mask = np.reshape(mask, frame_shape)
     # Remove left-over background fuzz
     if min_size > 0:
         mask = morphology.opening(mask, selem=morphology.disk(min_size))
     mask = np.logical_not(mask)
-    return mask
+    if return_correlation:
+        return mask, correlation
+    else:
+        return mask
 
 
 def k_edge_mask(frames: np.ndarray, energies: np.ndarray, edge,
@@ -680,6 +690,32 @@ def k_edge_mask(frames: np.ndarray, energies: np.ndarray, edge,
     return mask
 
 
+def is_in_energy_range(energies: np.ndarray, energy_range):
+    """Return array similar to *energies* where values in *energy_range*
+    are True.
+    
+    """
+        # Prepare masks for the post-edge and the pre-edge
+    energy_mask = np.logical_and(np.greater_equal(energies, energy_range[0]),
+                                   np.less_equal(energies, energy_range[1]))
+    if not np.any(energy_mask):
+        raise XanesMathError("Could not find energy range "
+                             "{} in {}".format(energy_range, energies))
+    return energy_mask
+
+
+def normalize_k_edge(spectrum, energies, edge):
+    """Set the spectrum so it goes between 0 and 1."""
+    pre_edge_mask = is_in_energy_range(energies=energies, energy_range=edge.pre_edge)
+    post_edge_mask = is_in_energy_range(energies=energies, energy_range=edge.post_edge)
+    # Compare the post-edges and pre-edges
+    mean_pre = np.mean(spectrum[pre_edge_mask])
+    mean_post = np.mean(spectrum[post_edge_mask])
+    # Do the normalization
+    normed = (spectrum - mean_pre) / (mean_post - mean_pre)
+    return normed
+
+
 def k_edge_jump(frames: np.ndarray, energies: np.ndarray, edge):
     """Determine what the difference is between the post_edge and the
     pre_edge."""
@@ -687,20 +723,8 @@ def k_edge_jump(frames: np.ndarray, energies: np.ndarray, edge):
     if not frames.shape[0] == energies.shape[0]:
         msg = "First dimenions of frames and energies do not match ({} vs {})"
         raise ValueError(msg.format(frames.shape[0], energies.shape[0]))
-    pre_edge = edge.pre_edge
-    post_edge = edge.post_edge
-    # Prepare masks for the post-edge and the pre-edge
-    pre_edge_mask = np.logical_and(np.greater_equal(energies, pre_edge[0]),
-                                   np.less_equal(energies, pre_edge[1]))
-    if not np.any(pre_edge_mask):
-        raise XanesMathError("Could not find pre-edge "
-                             "{} in {}".format(pre_edge, energies))
-    post_edge_mask = np.logical_and(np.greater_equal(energies, post_edge[0]),
-                                    np.less_equal(energies, post_edge[1]))
-    if not np.any(post_edge_mask):
-        raise XanesMathError("Could not find post-edge "
-                             "{} in {}".format(post_edge, energies))
-        
+    pre_edge_mask = is_in_energy_range(energies=energies, energy_range=edge.pre_edge)
+    post_edge_mask = is_in_energy_range(energies=energies, energy_range=edge.post_edge)
     # Compare the post-edges and pre-edges
     mean_pre = np.mean(frames[pre_edge_mask], axis=0)
     mean_post = np.mean(frames[post_edge_mask], axis=0)
@@ -1127,29 +1151,22 @@ def contrast_mask(frames: np.ndarray, sensitivity: float = 1, min_size=0, frame_
       `frames` where True pixels are likely to be background material.
 
     """
-
     # Make sure we are using the real numbers
     frames = np.real(frames)
-
     # Obtain the correct image set
     if frame_idx == 'mean':
         image = np.mean(frames, axis=(0, 1))
-
     elif isinstance(frame_idx, tuple):
         time_idx, energy_idx = frame_idx
         image = frames[time_idx][energy_idx]
-    
-
     # Determining threshold
     img_bottom = image.min()
     threshold = filters.threshold_otsu(image)
     threshold = img_bottom + sensitivity * (threshold - img_bottom)
     mask = image > threshold
-
     # Min size thresholding
     if min_size > 0:
         mask = morphology.opening(mask, selem=morphology.disk(min_size))
-
     return ~mask
 
 

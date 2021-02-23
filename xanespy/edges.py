@@ -23,7 +23,7 @@ from typing import List, Tuple
 
 import numpy as np
 
-from .xanes_math import k_edge_mask, l_edge_mask
+from .xanes_math import k_edge_mask, l_edge_mask, normalize_k_edge
 
 
 class Edge():
@@ -87,7 +87,7 @@ class Edge():
     def mask(self, frames, *args, **kwargs):
         return np.zeros(shape=frames.shape[-2:])
     
-    def normalize(self, *args, **kwargs):
+    def normalize(self, spectrum, energies):
         raise NotImplementedError()
     
     def annotate_spectrum(self, ax):
@@ -134,6 +134,10 @@ class KEdge(Edge):
         
         """
         return k_edge_mask(*args, edge=self, **kwargs)
+    
+    def normalize(self, spectrum, energies):
+        """Normalize so that pre- and post-edges scale to 0 and 1."""
+        return normalize_k_edge(spectrum, energies, edge=self)
 
 
 class NCACobaltLEdge(LEdge):
@@ -237,7 +241,7 @@ class NCANickelKEdge(KEdge):
         (8440, 8640, 50),
     ]
     pre_edge = (8249, 8320)
-    post_edge = (8350, 8500)
+    post_edge = (8380, 8500)
     edge_range = (8341, 8360)
 
 
