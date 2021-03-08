@@ -17,6 +17,10 @@
 # You should have received a copy of the GNU General Public License
 # along with Xanespy. If not, see <http://www.gnu.org/licenses/>.
 
+from .importer_tomopy_cli import import_tomopy_hdf
+
+# The below code should be split out into separate files when possible
+
 import os
 import h5py
 import re

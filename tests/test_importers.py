@@ -29,6 +29,8 @@ import sys
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir)))
 import warnings
 import contextlib
+from pathlib import Path
+import re
 
 import pytz
 import numpy as np
@@ -36,7 +38,7 @@ import pandas as pd
 import h5py
 from skimage import data
 import matplotlib.pyplot as plt
-
+from tomopy.misc import phantom
 
 from xanespy import exceptions, utilities
 from xanespy.xradia import XRMFile, TXRMFile
@@ -54,19 +56,17 @@ from xanespy.importers import (magnification_correction,
                                import_aps32idc_xanes_file,
                                read_metadata, minimum_shape,
                                rebin_image, open_files)
+from xanespy.importer_tomopy_cli import import_tomopy_hdf, tomopy_metadata
 from xanespy.txmstore import TXMStore
 
 
-# logging.basicConfig(level=logging.DEBUG)
-
-
-TEST_DIR = os.path.dirname(__file__)
-SSRL_DIR = os.path.join(TEST_DIR, 'txm-data-ssrl')
-APS_DIR = os.path.join(TEST_DIR, 'txm-data-aps')
-APS32_DIR = os.path.join(TEST_DIR, 'txm-data-32-idc')
-PTYCHO_DIR = os.path.join(TEST_DIR, 'ptycho-data-als/NS_160406074')
-COSMIC_DIR = os.path.join(TEST_DIR, 'ptycho-data-cosmic')
-SXSTM_DIR = os.path.join(TEST_DIR, "sxstm-data-4idc/")
+TEST_DIR = Path(__file__).parent
+SSRL_DIR = TEST_DIR/'txm-data-ssrl'
+APS_DIR = TEST_DIR/'txm-data-aps'
+APS32_DIR = TEST_DIR/'txm-data-32-idc'
+PTYCHO_DIR = TEST_DIR/'ptycho-data-als/NS_160406074'
+COSMIC_DIR = TEST_DIR/'ptycho-data-cosmic'
+SXSTM_DIR = TEST_DIR/"sxstm-data-4idc/"
 
 
 class APS32IDCImportTest(TestCase):
@@ -1057,3 +1057,52 @@ class UtilitiesTestCase(unittest.TestCase):
             self.assertEqual(opened_files[0].path, 'file2')
             self.assertEqual(opened_files[1].path, 'file3')
             self.assertEqual(opened_files[2].path, 'file1')
+
+
+class TomopyHDFTestCase(unittest.TestCase):
+    """Tests for importing tomograms from tomopy_cli."""
+    test_tomograms = [
+        TEST_DIR/"phantom_test_001.h5",
+        TEST_DIR/"phantom_test_002.h5",
+        TEST_DIR/"phantom_test_003.h5",
+    ]
+    hdf = TEST_DIR/'testdata.h5'
+    
+    def tearDown(self):
+        # Remove tomography source files
+        for tomo in self.test_tomograms:
+            if tomo.exists():
+                tomo.unlink()
+        # Remove xanespy data file
+        if self.hdf.exists():
+            self.hdf.unlink()
+    
+    def setUp(self):
+        self.make_test_tomograms()
+    
+    def make_test_tomograms(self):
+        for tomo_file in self.test_tomograms:
+            # Create a new tomography file
+            with h5py.File(tomo_file, mode='w') as h5fp:
+                h5fp.create_dataset('volume', data=phantom.shepp3d(size=64))
+    
+    def test_tomopy_metadata(self):
+        # Test with a regular expression string
+        regex = "Cylinder_1_acid_formation_PAM_(?P<scan_num>[0-9]+)_rec.hdf"
+        fnames = [
+            "Cylinder_1_acid_formation_PAM_157_rec.hdf",
+            "Cylinder_1_acid_formation_PAM_158_rec.hdf",
+            "Cylinder_1_acid_formation_PAM_159_rec.hdf",
+        ]
+        metadata = tomopy_metadata(fnames, regex)
+        np.testing.assert_equal(metadata.tomogram_path.values, fnames)
+        np.testing.assert_equal(metadata.iloc[0].energy, None)
+    
+    def test_imported_hdf(self):
+        import_tomopy_hdf(source_files=self.test_tomograms, target_file=self.hdf,
+                          experiment_name="test_experiment")
+        # Check that a new HDF file was created
+        self.assertTrue(self.hdf.exists())
+        with h5py.File(self.hdf, mode='r') as h5fp:
+            self.assertIn("test_experiment", h5fp)
+            self.assertIn("test_experiment/imported", h5fp)
