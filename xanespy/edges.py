@@ -180,6 +180,8 @@ class LMOMnKEdge(KEdge):
         (6610, 6650, 10),
         (6700, 6850, 50),
     ]
+
+
 class FeKEdge(KEdge):
     name = "Fe"
     E_0 = 7100.0
@@ -193,6 +195,7 @@ class FeKEdge(KEdge):
     pre_edge = (7100, 7108)
     post_edge = (7150, 7250)
     edge_range = (7115, 7140)
+
 
 class GeKEdge(KEdge):
     name = "Ge"

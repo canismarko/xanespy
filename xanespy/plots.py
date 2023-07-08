@@ -63,13 +63,13 @@ def latexify(styles: List[str]=[], preamble: List[str]=[]):
         "font.serif": [],                   # blank entries should cause plots 
         "font.sans-serif": [],              # to inherit fonts from the document
         "font.monospace": [],
-        "pgf.preamble": [
+        "pgf.preamble": "\n".join([
             r"\usepackage[utf8x]{inputenc}",    # use utf8 fonts 
             r"\usepackage[T1]{fontenc}",        # plots will be generated
             r"\usepackage{fontspec}",
             r"\usepackage[detect-all,locale=DE,per-mode=reciprocal]{siunitx}",
             r"\usepackage[version=4]{mhchem}",
-        ] + preamble,
+        ] + preamble),
     }
     # Enter the context library
     with rc_context(rc=pgf_with_latex):

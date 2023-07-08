@@ -721,7 +721,7 @@ class XanesFrameset():
         with self.store() as store:
             if labels is None:
                 labels = store.particle_labels
-            regions = measure.regionprops(labels,
+            regions = measure.regionprops(labels[()],
                                           intensity_image=intensity_image)
             # Put in order of descending area
             regions.sort(key=lambda p: p.area, reverse=True)
